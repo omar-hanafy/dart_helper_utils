@@ -1,4 +1,4 @@
-![](https://raw.githubusercontent.com/omar-hanafy/dart_helper_utils/9bb44613da240f408d02a6e745f92e5f88050265/logo.svg)
+![](./logo.svg)
 
 The [dart_helper_utils](https://pub.dev/packages/dart_helper_utils) is a valuable tool for developers who want to speed up their development process. It offers various [extensions](https://dart.dev/language/extension-methods) and helper methods that can make development more efficient.
 
