@@ -1,5 +1,5 @@
 name: dart_helper_utils
-description: The Dart Helper Package offers various extensions and helper methods that can make development more efficient.
+description: This package offers a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extensions.
 repository: https://github.com/omar-hanafy/dart_helper_utils
 version: 1.0.0
 
