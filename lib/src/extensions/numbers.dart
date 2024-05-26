@@ -4,35 +4,76 @@ import 'dart:math';
 import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 import 'package:dart_helper_utils/src/src.dart';
 
-extension NullSafeNumExtensions on num? {
+/* SUGGESTIONS
+1. **Status Code Ranges:**
+   - Methods to check for various HTTP status code ranges, such as informational responses, redirection messages, client errors, and server errors. For example, methods like `isInformational`, `isSuccess`, `isRedirection`, `isClientError`, and `isServerError`.
+
+2. **Specific Status Checks:**
+   - Methods for commonly checked status codes, such as `isBadRequest`, `isUnauthorized`, `isForbidden`, `isNotFound`, `isMethodNotAllowed`, `isNotAcceptable`, `isRequestTimeout`, `isConflict`, `isGone`, `isInternalServerError`, `isNotImplemented`, `isBadGateway`, `isServiceUnavailable`, and `isGatewayTimeout`.
+
+3. **Category-Based Extensions:**
+   - You could also categorize the status codes by their first digit and create properties like `is1xx`, `is2xx`, `is3xx`, `is4xx`, and `is5xx` for a quick range check.
+
+4. **Custom Status Code Creators:**
+   - Functions that allow users to create custom status codes that might not be part of the standard HTTP statuses, which can be useful for APIs that use custom codes.
+
+5. **Retriable Status Check:**
+   - A method like `isRetriable` that returns true for status codes where a retry might be appropriate, such as network-related errors or server errors (503 Service Unavailable, 504 Gateway Timeout).
+
+6. **Redirection Helpers:**
+   - Additional helpers for common redirection status codes, like `isPermanentRedirect` and `isTemporaryRedirect`.
+
+7. **More Informative Enums:**
+   - Expanding the `HttpResStatus` enum to include more descriptive fields for each status, such as a human-readable message or description. For example, `success` could have a description like "The request has succeeded."
+
+8. **Conversion to Exception:**
+   - A method that converts a non-successful status code to an appropriate exception, which can be thrown in the application to handle HTTP errors more effectively.
+
+9. **Deprecation Notice:**
+   - If your API or application plans to deprecate certain endpoints, a method to mark status codes as deprecated could also be helpful, prompting developers to take notice and potentially update their code.
+
+10. **Retry-After Duration:**
+    - If the number represents a `Retry-After` status, you could include a method to parse this and provide a `Duration` object, suggesting after how much time one should retry the request.
+*/
+// TODO(ANY): add more http helpers from response code.
+extension FHUHttpEx on num? {
+  bool get isSuccessHttpResCode => this == 200 || this == 201;
+
+  bool get isValidPhoneNumber => toString().isValidPhoneNumber;
+
+  HttpResStatus get toHttpResStatus =>
+      HttpResStatus.values.firstWhereOrNull((s) => this == s.code) ??
+      HttpResStatus.notFound;
+}
+
+extension FHUNullSafeNumExtensions on num? {
   int? get tryToInt => this?.toInt();
 
   double? get tryToDouble => this?.toDouble();
 
-  num percentage(num total) {
+  num percentage(num total, {bool allowDecimals = true}) {
     if (this != null) {
-      return this! >= total ? 100 : max((this! / total) * 100, 0).floor();
+      final result = this! >= total ? 100 : max((this! / total) * 100, 0);
+      if (allowDecimals) {
+        return double.parse(result.toStringAsFixed(2));
+      } else {
+        return result.toInt();
+      }
     }
     return 0;
   }
 
-  /// Returns `true` if this integer is greater than *0*.
-  bool get asBool => (this ?? 0) > 0;
+  bool get isNegative => isNotNull && this! > 0;
 
-  bool get isNegativeOrNull => isNull || this! > 0;
-
-  bool get isPositiveOrNull => isNull || this! < 0;
+  bool get isPositive => isNotNull && this! > 0;
 
   bool get isZeroOrNull => isNull || this! == 0;
 
-  bool get isNotNegativeOrNull => !isNegativeOrNull;
-
-  bool get isNotPositiveOrNull => !isPositiveOrNull;
-
-  bool get isNotZeroOrNull => !isZeroOrNull;
+  /// Returns `true` if this integer is greater than *0*.
+  bool get asBool => (this ?? 0) > 0;
 }
 
-extension NumExtensions on num {
+extension FHUNumExtensions on num {
   /// Returns if the number is positive
   bool get isPositive => this > 0;
 
@@ -41,6 +82,8 @@ extension NumExtensions on num {
 
   /// Returns if the number is zer0
   bool get isZero => this == 0;
+
+  bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 
   /// Returns number of digits in this number
   int get numberOfDigits => toString().length;
@@ -65,22 +108,48 @@ extension NumExtensions on num {
   /// Returns half of the number
   double get half => this / 2;
 
-  /// convert numbers to greeks
-  /// e.g 1000 => 1k
-  ///     20000 => 20k
-  ///     1000000 => 1M
-  String get asGreeks {
+  int get getRandom => Random().nextInt(this.toInt());
+
+  /// Converts a number to a format that includes Greek symbols for thousands, millions, and beyond.
+  ///
+  /// Example usage:
+  ///   print(1000.asGreeks); // Output: 1.0K
+  ///   print(1500000.asGreeks); // Output: 1.5M
+  ///   print(2500000000.asGreeks); // Output: 2.5B
+  ///
+  /// Here is a list of all symbols along with their corresponding names and values.
+  /// k: Kilo, 10^3
+  /// M: Mega, 10^6
+  /// G: Giga, 10^9
+  /// T: Tera, 10^12
+  /// P: Peta, 10^15
+  /// E: Exa, 10^18
+  /// Z: Zetta, 10^21
+  /// Y: Yotta, 10^24
+  String asGreeks([int zerosFractionDigits = 0, int fractionDigits = 1]) {
+    const greekSymbols = <String>['K', 'M', 'B', 'T', 'Q', 'P', 'E', 'Z', 'Y'];
     if (this < 1000) {
-      return removeTrailingZero;
-    } else if (this < 1000000) {
-      return '${(this / 1000).removeTrailingZero}K';
+      return zerosFractionDigits <= 0
+          ? this.toInt().toString()
+          : toStringAsFixed(zerosFractionDigits);
     }
-    return '${(this / 1000000).removeTrailingZero}M';
+
+    var magnitude = 0;
+    var reducedNum = this;
+    while (reducedNum >= 1000 && magnitude < greekSymbols.length) {
+      reducedNum /= 1000;
+      magnitude++;
+    }
+
+    final symbol = magnitude > 0 ? greekSymbols[magnitude - 1] : '';
+
+    return fractionDigits <= 0
+        ? '${reducedNum.toInt()}$symbol'
+        : '${reducedNum.toStringAsFixed(fractionDigits)}$symbol';
   }
 
   /// Utility to delay some callback (or code execution).
-  // TODO(Omar): Add a separated implementation of delay() with the ability
-  /// to stop it.
+  // TODO(Omar): Add a separated implementation of delay() with the ability to stop it.
   ///
   /// Sample:
   /// ```
@@ -153,7 +222,7 @@ extension NumExtensions on num {
   }
 }
 
-extension IntExtensions on int {
+extension FHUIntExtensions on int {
   /// Return the min if this number is smaller then minimum
   /// Return the max if this number is bigger the the maximum
   /// Return this number if it's between the range
@@ -182,7 +251,7 @@ extension IntExtensions on int {
   int get squared => this * this;
 }
 
-extension DoubleExtensions on double {
+extension FHUDoubleExtensions on double {
   /// Return the min if this number is smaller then minimum
   /// Return the max if this number is bigger the the maximum
   /// Return this number if it's between the range

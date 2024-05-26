@@ -1,44 +1,72 @@
-// ignore_for_file: omit_local_variable_types, unused_local_variable
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-void main() async {
-// DATETIME:
-  final now = DateTime.now();
-  final DateTime tomorrow = now.addDays(1); // Adds 1 day to current date.
-  final DateTime afterOneHour = now.addHours(1); // Adds 1 hour to current date.
-  final String fullMonthName = now.month.toFullMonthName; // e.g March
-  final String fullSmallName = now.month.toSmallMonthName; // e.g Mar
-  final bool isToday = now.isToday; // true
+Future<void> main() async {
+  const rawJson = '''
+{
+    "name": "John",
+    "age": "30",
+    "wallet": "12.3",
+    "codes": "[1, 2, 3]",
+    "email": "john@example.com"
+}
+''';
 
-// DURATION:
-  const duration = Duration(seconds: 1, milliseconds: 30);
-  // Adds the Duration to the current DateTime and returns a DateTime in the future.
-  final DateTime futureDate = duration.fromNow;
-  // Subtracts the Duration from the current DateTime and returns a DateTime in the past
-  final DateTime pastDate = duration.ago;
-  await duration.delay<void>(); // run async delay
+  // Example of using dynamic conversions and decode on string.
+  final user = toMap<String, dynamic>(rawJson.decode());
 
-// NUMBERS:
-  const int number = 100;
-  final String greeks = number.asGreeks; // 10k
-  final Duration seconds = number.asSeconds; //  Duration(seconds: 100)
-  final int numberOfDigits = number.numberOfDigits; // 3
-  final int doubled = number.doubled; // 200
+  // Example of using safe int conversions for dynamic data.
+  final walletBalance = toInt(user['wallet']);
+  print('user walletBalance: $walletBalance');
 
-// TEXT:
-  const text = 'hello there!';
-  // wrap string at the specified index
-  final String wrappedString = text.wrapString(2);
-  final String capitalized = text.capitalizeFirstLetter; // 'Hello there!'
-  final String pascalCase = text.toPascalCase; // 'HelloThere!'.
-  final String camelCase = text.toCamelCase; // 'helloThere!'.
-  final String titleCase = text.toTitleCase; // 'Hello There!'.
-  final bool isAlphanumeric = text.isAlphanumeric; // false
-  // tryToInt, tryToDateTime are also available
-  final double? tryToDouble = text.tryToDouble;
-  // limit the string from the start. limitFromEnd also available
-  final String? limitFromStart = text.limitFromStart(3);
-  // check if the string is a valid username. 'isValidPhoneNumber', isValidEmail, isValidHTML, and more are also available
-  final bool isValidUsername = text.isValidUsername;
+  // Example of using list converter & extensions.
+  final codes = tryToList<int>(user['codes']);
+  print('First Code: ${codes.firstOrNull}');
+  print('Random Code: ${codes?.getRandom()}');
+
+  // Example of using string extensions
+  final userMail = toString1(user['email']);
+  print('Is Valid Email: ${userMail.isValidEmail}');
+
+  // Example of using map extensions
+  print('Flat JSON: ${user.flatJson()}');
+
+  // Example of using HttpResStatus
+  final status = 200.toHttpResStatus;
+  print('Status: ${status.code} - ${status.desc}');
+  print('Is Success: ${status.isSuccess}');
+  print('Is Client Error: ${status.isClientError}');
+
+  // Example of using TimeUtils to measure execution duration of
+  // a specific task. Works with both sync and async.
+  final executionDuration = await TimeUtils.executionDuration(() {
+    // measuring execution duration of generating 1 million list item 100 times;
+    for (var i = 0; i < 100; i++) {
+      List.generate(1000000, (index) => user);
+    }
+  });
+  print(
+      '1 Million list generated in: ${executionDuration.inMilliseconds} milliseconds');
+
+  // Example of comparing two tasks execution time using the TimeUtils class.
+  final (durationA, durationB) = await TimeUtils.compareExecutionTimes(
+    taskA: () {
+      for (var i = 0; i < 100; i++) {
+        List.generate(1000000, (index) => user);
+      }
+    },
+    taskB: () async => 2.secDelay,
+  );
+
+  print(
+    'TaskA took ${durationA.inMilliseconds} ms, TaskB took ${durationB.inMilliseconds} ms',
+  );
+
+  final result = await TimeUtils.runWithTimeout(
+    task: () async {
+      await 5.secDelay;
+      return 'Completed';
+    },
+    timeout: const Duration(seconds: 3),
+  );
+  print('Result: $result');
 }
