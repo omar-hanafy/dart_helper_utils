@@ -4,90 +4,54 @@ import 'dart:convert';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 extension DHUStringExtensions on String {
-  /// flutter and dart => Flutter and dart
-  String get capitalizeFirstLetter =>
-      '${this[0].toUpperCase()}${substring(1).toLowerCase()}';
-
-  /// flutter and dart => FlutterAndDart
-  String get toPascalCase => [
-        for (final e in toLowerCase().trim().split(' '))
-          e.capitalizeFirstLetter,
-      ].join();
-
-  /// flutter and dart => flutterAndDart
-  String get toCamelCase {
-    if (isEmpty) return '';
-    final result = splitMapJoin(
-      RegExp(r'[\s\-_.]'),
-      onMatch: (m) => '',
-      onNonMatch: (n) {
-        if (n.isEmpty) return '';
-        return n.substring(0, 1).toUpperCase() + n.substring(1).toLowerCase();
-      },
-    );
-    return result[0].toLowerCase() + result.substring(1);
-  }
-
-  /// flutter and dart => Flutter and Dart
-  String get toTitleCase {
-    if (isEmpty) return '';
-    return splitMapJoin(
-      RegExp(r'[\s\-_.]'), // Changed regular expression
-      onMatch: (m) => ' ',
-      onNonMatch: (n) {
-        if (n.isEmpty || shouldIgnoreCapitalization) return n;
-        return n.substring(0, 1).toUpperCase() + n.substring(1).toLowerCase();
-      },
-    );
-  }
-
-  /// similar to [toTitleCase] but [toTitle] ignores the `-` and `_`.
-  /// e.g. flutter-and-dart Flutter-And-Dart.
-  /// Useful in some cases when naming events, products etc
-  /// and want these characters to be shown.
-  String get toTitle {
-    if (isEmpty) return '';
-    return splitMapJoin(
-      RegExp(r'(\s|-|_|\b)'),
-      onMatch: (m) => m[0]!,
-      onNonMatch: (n) {
-        if (n.isEmpty || shouldIgnoreCapitalization) return n;
-        return n.substring(0, 1).toUpperCase() + n.substring(1).toLowerCase();
-      },
-    );
-  }
-
-  /// Determines if capitalization should be ignored for this string.
-  ///
-  /// Returns true in the following cases:
-  ///   * The string starts with a number.
-  ///   * The string (converted to lowercase) is a common word
-  ///     typically found in lowercase within titles (e.g., "a", "the", "and").
-  bool get shouldIgnoreCapitalization =>
-      startsWithNumber || _titleCaseExceptions.contains(toLowerCase());
-
   /// Removes consecutive empty lines, replacing them with single newlines.
+  /// Example: "Line1\n\n\nLine2" => "Line1\nLine2"
   String get removeEmptyLines =>
       replaceAll(RegExp(r'(?:[\t ]*(?:\r?\n|\r))+'), '\n');
 
-  /// Converts the string into a single line by replacing all newline characters with spaces.
-  String get toOneLine => replaceAll('\n', ' ');
+  /// Converts the string into a single line by replacing newline characters.
+  /// Example: "Line1\nLine2" => "Line1Line2"
+  String get toOneLine => replaceAll('\n', '');
 
   /// Removes all whitespace characters (spaces) from the string.
+  /// Example: "Line 1 Line 2" => "Line1Line2"
   String get removeWhiteSpaces => replaceAll(' ', '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
-  /// This is a combination of 'removeWhiteSpaces' and 'toOneLine'.
-  String get clean => removeWhiteSpaces.toOneLine;
+  /// Example: "Line 1\n Line 2" => "Line1Line2"
+  String get clean => toOneLine.removeWhiteSpaces;
 }
 
 extension DHUNullSafeStringExtensions on String? {
-  bool get isEmptyOrNull =>
-      this == null ||
-      this!.isEmpty ||
-      this!.removeEmptyLines.toOneLine.removeWhiteSpaces.isEmpty;
+  /// Converts the string into a single line by replacing newline characters.
+  String? get toOneLine => this?.replaceAll('\n', '');
 
+  /// Removes all whitespace characters (spaces) from the string.
+  String? get removeWhiteSpaces => this?.replaceAll(' ', '');
+
+  /// Removes all whitespace characters and collapses the string into a single line.
+  String? get clean => toOneLine.removeWhiteSpaces;
+
+  /// Returns true if the string is null, empty, or, after cleaning (collapsing into a single line, removing all whitespaces), is empty.
+  bool get isEmptyOrNull => this == null || this!.clean.isEmpty;
+
+  /// Returns true if the string is null, empty, or solely made of whitespace characters.
+  /// Alias for [isEmptyOrNull].
+  bool get isBlank => isEmptyOrNull;
+
+  /// Returns true if the string is not null, not empty, and, after cleaning (removing all whitespaces and collapsing into a single line), is not empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
+
+  /// Returns true if the string is neither null, empty, nor solely made of whitespace characters.
+  /// Alias for [isNotEmptyOrNull].
+  bool get isNotBlank => isNotEmptyOrNull;
+
+  /// Returns a list of characters from the string.
+  List<String> toCharArray() => isNotBlank ? this!.split('') : [];
+
+  /// Returns a new string in which a specified string is inserted at a specified index position in this instance.
+  String insert(int index, String str) =>
+      (List<String>.from(toCharArray())..insert(index, str)).join();
 
   /// Checks if the string is a palindrome.
   bool get isPalindrome {
@@ -107,138 +71,80 @@ extension DHUNullSafeStringExtensions on String? {
     return true;
   }
 
-  /// Checks if the string contains only letters, numbers.
+  /// Checks if the string contains only letters and numbers.
   bool get isAlphanumeric => hasMatch(r'^[a-zA-Z0-9]+$');
 
   /// Checks if the string contains any characters that are not letters, numbers, or spaces (i.e., special characters).
   bool get hasSpecialChars => hasMatch('[^a-zA-Z0-9 ]');
 
-  /// Checks if the string does NOT contains any characters that are not letters, numbers, or spaces (i.e., special characters).
+  /// Checks if the string does NOT contain any characters that are not letters, numbers, or spaces (i.e., special characters).
   bool get hasNoSpecialChars => !hasSpecialChars;
 
   /// Checks if the string starts with a number (digit).
   bool get startsWithNumber => hasMatch(r'^\d');
 
-  /// check if String contains any digits.
-  /// f1rstDate -> true
-  /// firstDate -> false
+  /// Checks if the string contains any digits.
+  /// Example: "f1rstDate" => true, "firstDate" => false
   bool get containsDigits => hasMatch(r'\d');
 
-  /// Checks if string is a valid username.
+  /// Checks if the string is a valid username.
   bool get isValidUsername =>
       hasMatch(r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$');
 
-  /// Checks if string is Currency.
+  /// Checks if the string is a valid currency format.
   bool get isValidCurrency => hasMatch(
         r'^(S?\$|\₩|Rp|\¥|\€|\₹|\₽|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$',
       );
 
-  /// Checks if string is phone number.
+  /// Checks if the string is a valid phone number.
   bool get isValidPhoneNumber {
     if (isEmptyOrNull || this!.length > 16 || this!.length < 9) return false;
     return hasMatch(
         r'(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?');
   }
 
-  /// Checks if string is email.
+  /// Checks if the string is a valid email address.
   bool get isValidEmail => hasMatch(
         r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$',
       );
 
-  /// Checks if string is an html file/url.
+  /// Checks if the string is an HTML file or URL.
   bool get isValidHTML => (this ?? ' ').toLowerCase().endsWith('.html');
 
-  /// check if the string is an IP Version 4
-  /// Accept:
-  ///   127.0.0.1
-  ///   192.168.1.1
-  ///   192.168.1.255
-  ///   255.255.255.255
-  ///   0.0.0.0
-  ///   1.1.1.01 -> This is an invalid IP address!
-  /// Reject:
-  ///   30.168.1.255.1
-  ///   127.1
-  ///   192.168.1.256
-  ///   -1.2.3.4
-  ///   1.1.1.1.
-  ///   3...3
+  /// Checks if the string is a valid IPv4 address.
   bool get isValidIp4 => hasMatch(
         r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
       );
 
-  /// Handle all condition for ipv6
-  /// Accepts:
-  /// FE80::8329
-  /// FE80::FFFF:8329
-  /// FE80::B3FF:FFFF:8329
-  /// FE80::0202:B3FF:FFFF:8329
-  /// FE80::0000:0202:B3FF:FFFF:8329
-  /// FE80::0000:0000:0202:B3FF:FFFF:8329
-  /// FE80:0000:0000:0000:0202:B3FF:FFFF:8329
-  ///
-  /// Test this RegEx here -> https://regex101.com/r/aL7tV3/1
+  /// Checks if the string is a valid IPv6 address.
   bool get isValidIp6 => hasMatch(
         r'/(?<protocol>(?:http|ftp|irc)s?:\/\/)?(?:(?<user>[^:\n\r]+):(?<pass>[^@\n\r]+)@)?(?<host>(?:www\.)?(?:[^:\/\n\r]+)(?::(?<port>\d+))?)\/?(?<request>[^?#\n\r]+)?\??(?<query>[^#\n\r]*)?\#?(?<anchor>[^\n\r]*)?/',
       );
 
-  /// checks if the string is valid URL or not.
-  bool get isValidUrl => isEmptyOrNull
-      ? isNotEmptyOrNull
-      : this!.toLowerCase().removeEmptyLines.removeWhiteSpaces.hasMatch(
-          r'''^((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))+$''',
-          caseSensitive: false,
-        );
+  /// Checks if the string is a valid URL.
+  bool get isValidUrl => tryToLowerCase.clean.hasMatch(
+        r'''^((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))+$''',
+        caseSensitive: false,
+      );
 
   bool hasMatch(String pattern, {bool caseSensitive = true}) => (this != null)
       ? RegExp(pattern, caseSensitive: caseSensitive).hasMatch(this!)
       : this != null;
 
-  /// Checks if string consist only Numbers. (No Whitespace)
+  /// Checks if the string consists only of numbers (no whitespace).
   bool get isNumeric => hasMatch(r'^\d+$');
 
-  /// Checks if string consist only Alphabet. (No Whitespace)
+  /// Checks if the string consists only of letters (no whitespace).
   bool get isAlphabet => hasMatch(r'^[a-zA-Z]+$');
 
-  /// Checks if string contains at least one Capital Letter
+  /// Checks if the string contains at least one capital letter.
   bool get hasCapitalLetter => hasMatch('[A-Z]');
 
-  /// Checks if string is boolean.
+  /// Checks if the string represents a boolean value.
   bool get isBool => this == 'true' || this == 'false';
 
-  String? get removeWhiteSpaces => this?.replaceAll(' ', '');
-
-  /// This method allows for dynamic text formatting, useful in scenarios where text needs to be displayed
-  /// in a constrained space or in a specific visual structure.
-  /// Extends the `String` class to include a `wrapString` method, allowing customized wrapping of text.
-  ///
-  /// This method provides flexible text wrapping based on the specified word count, wrapping behavior,
-  /// and custom delimiter for wrapping. It handles strings with leading, trailing, or multiple consecutive spaces gracefully.
-  ///
-  /// Parameters:
-  /// - `wrapCount`: An integer specifying after how many words the text should be wrapped.
-  ///   If less than or equal to 0, it defaults to 1. This parameter determines the granularity of wrapping.
-  /// - `wrapEach`: A boolean that controls the wrapping behavior. If true, the method wraps the text after every
-  ///   `wrapCount` words throughout the entire string. If false, the text is wrapped just once after the first
-  ///   `wrapCount` words, and the rest of the text remains unwrapped.
-  /// - `delimiter`: A string that specifies what character(s) to use for wrapping. Defaults to '\n'.
-  ///
-  /// Usage:
-  /// - To wrap each word individually, set `wrapEach` to true with `wrapCount` as 1.
-  ///   Example: `"This is a test".wrapString(wrapCount: 1, wrapEach: true)` results in:
-  ///   ```
-  ///   This
-  ///   is
-  ///   a
-  ///   test
-  ///   ```
-  ///
-  /// - To wrap the text once after a specific number of words, set `wrapEach` to false.
-  ///   Example: `"This is a test".wrapString(wrapCount: 2, wrapEach: false)` results in:
-  ///   ```
-  ///   This is
-  ///   a test
-  ///   ```
+  /// Wraps the string based on the specified word count, wrap behavior, and delimiter.
+  /// Example: "This is a test".wrapString(wrapCount: 2, wrapEach: false) => "This is\na test"
   String wrapString({
     int wordCount = 1,
     bool wrapEach = false,
@@ -275,37 +181,13 @@ extension DHUNullSafeStringExtensions on String? {
   }
 
   /// Compares the current string with another string for equality, ignoring case differences.
-  ///
-  /// This method performs a case-insensitive comparison between the current string instance and another string.
-  /// It returns `true` if the strings are considered equal when case differences are disregarded. This method is null-safe,
-  /// meaning it also considers two null values as equal, and a null value is not equal to a non-null value.
-  ///
-  /// Parameters:
-  /// - `other`: The string to compare with the current string. It can be null.
-  ///
-  /// Returns:
-  /// - `true` if the current string and the `other` string are both null, or if they are equal ignoring case differences.
-  /// - `false` otherwise, including when one string is null and the other is not.
-  ///
-  /// Example Usage:
-  /// ```dart
-  /// var str1 = 'Hello';
-  /// var str2 = 'hello';
-  /// var str3 = 'world';
-  /// var result1 = str1.equalsIgnoreCase(str2); // true
-  /// var result2 = str1.equalsIgnoreCase(str3); // false
-  /// var result3 = str1.equalsIgnoreCase(null); // false
-  /// var result4 = (null as String?).equalsIgnoreCase(null); // true
-  /// ```
-  ///
-  /// This method is useful for comparing strings in a way that is insensitive to whether letters are uppercase or lowercase.
   bool equalsIgnoreCase(String? other) =>
       (this == null && other == null) ||
       (this != null &&
           other != null &&
           this!.toLowerCase() == other.toLowerCase());
 
-  /// Return the string only if the delimiter exists in both ends, otherwise it will return the current string
+  /// Returns the string only if the delimiter exists at both ends, otherwise returns the current string.
   String? removeSurrounding(String delimiter) {
     if (this == null) return null;
     final prefix = delimiter;
@@ -319,8 +201,8 @@ extension DHUNullSafeStringExtensions on String? {
     return this;
   }
 
-  ///  Replace part of string after the first occurrence of given delimiter with the [replacement] string.
-  ///  If the string does not contain the delimiter, returns [defaultValue] which defaults to the original string.
+  /// Replaces part of the string after the first occurrence of the given delimiter with the [replacement] string.
+  /// If the string does not contain the delimiter, returns [defaultValue] which defaults to the original string.
   String? replaceAfter(
     String delimiter,
     String replacement, [
@@ -335,8 +217,8 @@ extension DHUNullSafeStringExtensions on String? {
         : this!.replaceRange(index + 1, this!.length, replacement);
   }
 
-  /// Replace part of string before the first occurrence of given delimiter with the [replacement] string.
-  ///  If the string does not contain the delimiter, returns [missingDelimiterValue?] which defaults to the original string.
+  /// Replaces part of the string before the first occurrence of the given delimiter with the [replacement] string.
+  /// If the string does not contain the delimiter, returns [defaultValue] which defaults to the original string.
   String? replaceBefore(
     String delimiter,
     String replacement, [
@@ -351,76 +233,65 @@ extension DHUNullSafeStringExtensions on String? {
         : this!.replaceRange(0, index, replacement);
   }
 
-  ///Returns `true` if at least one element matches the given [predicate].
-  /// the [predicate] should have only one character
+  /// Returns true if at least one character matches the given [predicate].
+  /// The [predicate] should have only one character.
   bool anyChar(bool Function(String element) predicate) =>
-      isEmptyOrNull ? isEmptyOrNull : this!.split('').any((s) => predicate(s));
+      isNotEmptyOrNull && this!.split('').any((s) => predicate(s));
 
-  /// Returns the string if it is not `null`, or the empty string otherwise
+  /// Returns the string if it is not null, or the empty string otherwise.
   String get orEmpty => this ?? '';
 
-  /// if the string is empty perform an action
+  /// If the string is empty, performs an action.
   Future<T>? ifEmpty<T>(Future<T> Function() action) =>
       isEmptyOrNull ? action() : null;
 
+  /// Returns the last character of the string.
   String get lastIndex {
     if (isEmptyOrNull) return '';
     return this![this!.length - 1];
   }
 
-  /// Parses the string as an num or returns `null` if it is not a number.
+  /// Parses the string as a num or returns null if it is not a number.
   num? get tryToNum => this == null ? null : num.tryParse(this!);
 
-  /// Parses the string as an double or returns `null` if it is not a number.
+  /// Parses the string as a double or returns null if it is not a number.
   double? get tryToDouble =>
       this == null ? null : num.tryParse(this!).tryToDouble;
 
-  /// Parses the string as an int or returns `null` if it is not a number.
+  /// Parses the string as an int or returns null if it is not a number.
   int? get tryToInt => this == null ? null : num.tryParse(this!).tryToInt;
 
-  /// Parses the string as an num or returns `null` if it is not a number.
+  /// Parses the string as a num or returns null if it is not a number.
   num get toNum => num.parse(this!);
 
-  /// Parses the string as an double or returns `null` if it is not a number.
+  /// Parses the string as a double or returns null if it is not a number.
   double get toDouble => num.parse(this!).toDouble();
 
-  /// Parses the string as an int or returns `null` if it is not a number.
+  /// Parses the string as an int or returns null if it is not a number.
   int get toInt => num.parse(this!).toInt();
 
-  /// Returns true if s is neither null, empty nor is solely made of whitespace characters.
-  bool get isNotBlank => this != null && this!.trim().isNotEmpty;
-
-  /// Returns a list of chars from a String
-  List<String> toCharArray() => isNotBlank ? this!.split('') : [];
-
-  /// Returns a new string in which a specified string is inserted at a specified index position in this instance.
-  String insert(int index, String str) =>
-      (List<String>.from(toCharArray())..insert(index, str)).join();
-
-  /// Indicates whether a specified string is `null`, `empty`, or consists only of `white-space` characters.
+  /// Indicates whether the string is null, empty, or consists only of whitespace characters.
   bool get isNullOrWhiteSpace {
     final length = (this?.split('') ?? []).where((x) => x == ' ').length;
     return length == (this?.length ?? 0) || isEmptyOrNull;
   }
 
-  /// Shrink a string to be no more than [maxSize] in length, extending from the end.
-  /// For example, in a string with 10 charachters, a [maxSize] of 3 would return the last 3 charachters.
+  /// Shrinks the string to be no more than [maxSize] in length, extending from the end.
+  /// Example: In a string with 10 characters, a [maxSize] of 3 would return the last 3 characters.
   String? limitFromEnd(int maxSize) => (this?.length ?? 0) < maxSize
       ? this
       : this!.substring(this!.length - maxSize);
 
-  /// Shrink a string to be no more than [maxSize] in length, extending from the start.
-  /// For example, in a string with 10 charachters, a [maxSize] of 3 would return the first 3 charachters.
+  /// Shrinks the string to be no more than [maxSize] in length, extending from the start.
+  /// Example: In a string with 10 characters, a [maxSize] of 3 would return the first 3 characters.
   String? limitFromStart(int maxSize) =>
       (this?.length ?? 0) < maxSize ? this : this!.substring(0, maxSize);
 
-  /// Convert this string into boolean.
-  ///
-  /// Returns `true` if this string is any of these values: `"true"`, `"yes"`, `"1"`, or if the string is a number and greater than 0, `false` if less than 1. This is also case insensitive.
+  /// Converts the string into a boolean.
+  /// Returns true if the string is any of these values: "true", "yes", "1", or if the string is a number and greater than 0, false if less than 1. This is also case insensitive.
   bool get asBool {
     try {
-      final s =
-          this?.removeWhiteSpaces.removeEmptyLines.toLowerCase() ?? 'false';
+      final s = clean.tryToLowerCase ?? 'false';
       return s == 'true' ||
           s == 'yes' ||
           s == '1' ||
@@ -432,103 +303,8 @@ extension DHUNullSafeStringExtensions on String? {
   }
 
   /// Decodes the JSON string into a dynamic data structure.
-  ///
-  /// This getter attempts to decode the current string as JSON. It's designed to be safe against
-  /// null or empty strings, returning null in such cases to avoid exceptions. For non-empty, valid
-  /// JSON strings, it returns the decode dynamic data structure, which could be a list, map, or any
-  /// other type that is a valid JSON structure.
-  ///
-  /// Returns:
-  /// - A dynamic data structure representing the decode JSON if the string is non-empty and valid.
-  /// - `null` if the string is null or empty, or if the string is not a valid JSON format.
-  ///
-  /// Example Usage:
-  /// ```dart
-  /// var jsonString = '{"name": "John", "age": 30}';
-  /// var decoded = jsonString.decode();
-  /// print(decoded); // Output: {name: John, age: 30}
-  ///
-  /// var emptyString = '';
-  /// var nullString = null;
-  /// print(emptyString.decode()); // Output: null
-  /// print(nullString.decode()); // Output: null
-  /// ```
-  ///
-  /// Note:
-  /// - This method does not handle parsing errors for invalid JSON formats. It's recommended to ensure
-  ///   that the string is a valid JSON before calling this getter or handle the potential `FormatException`
-  ///   that could be thrown by `json.decode` when dealing with unknown JSON strings.
+  /// Returns the decoded dynamic data structure if the string is non-empty and valid JSON.
+  /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
   dynamic decode({Object? Function(Object? key, Object? value)? reviver}) =>
       isEmptyOrNull ? null : json.decode(this!, reviver: reviver);
 }
-
-List<String> get _titleCaseExceptions => const <String>[
-      'a',
-      'abaft',
-      'about',
-      'above',
-      'afore',
-      'after',
-      'along',
-      'amid',
-      'among',
-      'an',
-      'apud',
-      'as',
-      'aside',
-      'at',
-      'atop',
-      'below',
-      'but',
-      'by',
-      'circa',
-      'down',
-      'for',
-      'from',
-      'given',
-      'in',
-      'into',
-      'lest',
-      'like',
-      'mid',
-      'midst',
-      'minus',
-      'near',
-      'next',
-      'of',
-      'off',
-      'on',
-      'onto',
-      'out',
-      'over',
-      'pace',
-      'past',
-      'per',
-      'plus',
-      'pro',
-      'qua',
-      'round',
-      'sans',
-      'save',
-      'since',
-      'than',
-      'thru',
-      'till',
-      'times',
-      'to',
-      'under',
-      'until',
-      'unto',
-      'up',
-      'upon',
-      'via',
-      'vice',
-      'with',
-      'worth',
-      'the',
-      'and',
-      'nor',
-      'or',
-      'yet',
-      'so',
-    ];

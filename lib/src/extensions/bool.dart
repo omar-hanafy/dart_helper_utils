@@ -17,7 +17,7 @@ extension FHUBoolNullablelEx on bool? {
 
   /// Gets a boolean value indicating whether the nullable boolean is false.
   ///
-  /// Returns `true` if the value is either null or false, otherwise returns `false`.
+  /// Returns `true` if the value is not null and false, otherwise returns `false`.
   bool get isFalse => !(this ?? true);
 
   /// Converts the nullable boolean to its binary representation as an integer.

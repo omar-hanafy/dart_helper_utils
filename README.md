@@ -1,4 +1,5 @@
 ![](https://raw.githubusercontent.com/omar-hanafy/dart_helper_utils/fb2b340acff23ad89b09319dac691d98f1ecca90/logo.svg)
+
 The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extensions.
 
 **Note:** This package is tailored for Dart projects. For Flutter projects, use [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), which includes all `dart_helper_utils` features plus additional utilities and extensions for Flutter, such as `Widget`, `Color`, and `BuildContext` extensions.
@@ -11,7 +12,6 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
     - [Optional Parameters](#optional-parameters)
   - [TimeUtils](#timeutils)
 - [Extensions](#extensions)
-  - [Bool Extensions](#bool-extensions)
   - [Date Extensions](#date-extensions)
     - [Month and Day Name Conversion](#month-and-day-name-conversion)
     - [Date and Time Parsing](#date-and-time-parsing)
@@ -45,6 +45,7 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
     - [Utility](#utility-1)
     - [Parsing](#parsing-1)
   - [Uri Extensions](#uri-extensions)
+  - [Bool Extensions](#bool-extensions)
 - [Exceptions](#exceptions)
 - [Contributions](#contributions)
 - [License](#license)
@@ -99,18 +100,15 @@ List myList = ConvertObject.toList(dynamicObject);
 ```
 
 ### Optional Parameters:
-
 Each method accepts two optional parameters: `listIndex` and `mapKey`. These parameters allow specific value extraction and conversion within a `List` or `Map`.
 
 #### Example with `listIndex`:
-
 ```dart
 dynamic dynamicList = ['10', '20', '30'];
 final int number = toInt(dynamicList, listIndex: 1); // 20
 ```
 
 #### Example with `mapKey`:
-
 ```dart
 dynamic dynamicMap = {
   'name': 'John',
@@ -120,6 +118,20 @@ dynamic dynamicMap = {
   }
 };
 final bool isHuman = toBool(dynamicMap['bools'], mapKey: 'isHuman'); // true
+```
+
+Absolutely! Here's the enhanced documentation for the `ConvertObject` class update:
+
+#### Auto Decoding of JSON Strings for Collections
+
+The `ConvertObject` class now simplifies working with JSON data by automatically decoding raw JSON strings when converting to `List`, `Set`, or `Map` types. This eliminates the need for manual parsing before conversion.
+
+**Example Usage:**
+
+```dart
+final myList = tryToList<int>("[1, 2, 3]"); // List<int>
+final mySet = tryToSet<String>('["hello", "world"]'); // Set<String>
+final myMap = tryToMap<String, dynamic>('{"name": "Alice", "age": 30}'); // Map<String, dynamic>
 ```
 
 ## TimeUtils:
@@ -152,14 +164,7 @@ try {
 ```
 
 # Extensions
-
-## Bool Extensions:
-
-- `isNull`: Checks if the object is null.
-- `isNotNull`: Checks if the object is not null.
-
 ## Date Extensions
-
 ### Month and Day Name Conversion
 - `toFullMonthName`: Numeric month (1-12) to full name (e.g., 1 to "January").
 - `toSmallMonthName`: Numeric month (1-12) to abbreviated name (e.g., 1 to "Jan").
@@ -223,7 +228,6 @@ try {
 - `addDays`, `addHours`: Adds days/hours to a `DateTime`.
 
 ## Date Extensions
-
 ### Month and Day Name Conversion
 - `toFullMonthName`: Numeric month (1-12) to full name (e.g., 1 to "January").
 - `toSmallMonthName`: Numeric month (1-12) to abbreviated name (e.g., 1 to "Jan").
@@ -287,13 +291,11 @@ try {
 - `addDays`, `addHours`: Adds days/hours to a `DateTime`.
 
 ## Duration Extensions:
-
 - `delayed(FutureOr<T> Function()? computation)`: Delays execution by the duration.
 * `fromNow`: Adds the Duration to the current DateTime and gives a future time.
 * `ago`: Subtracts the Duration from the current DateTime and gives a pastime.
 
 ## List and Iterable Extensions
-
 ### Nullable List Extensions
 - `of`: Retrieves the element at the specified index in a null-safe manner.
 - `tryRemoveAt`: Removes the element at the specified index in a null-safe manner.
@@ -350,7 +352,6 @@ try {
 - `flatJson({String delimiter = '.', bool safe = false, int? maxDepth})`: Flattens a JSON structure.
 
 ## Number Extensions
-
 ### For `num?`
 - `isSuccessHttpResCode`: Checks if the HTTP response code is 200 or 201.
 - `isValidPhoneNumber`: Checks if the number is a valid phone number.
@@ -410,14 +411,12 @@ try {
 - `asBool`: Returns true if the number is greater than zero.
 
 ## Objects Extensions:
-
 - `encode({Object? Function(dynamic object)? toEncodable})`: Encodes an object to JSON.
 - `isNull`: Checks if the object is null.
 - `isNotNull`: Checks if the object is not null.
 - `asBool`: Converts an object to a boolean value.
 
 ## Set Extensions:
-
 - `isEmptyOrNull`: Checks if the set is empty or null.
 - `isNotEmptyOrNull`: Checks if the set is not empty or null.
 - `addIfNotNull(T? value)`: Adds a value to the set if it's not null.
@@ -425,15 +424,31 @@ try {
 - `intersect(Iterable<T> other)`: Returns the intersection of two sets.
 
 ## String Extensions
-
 ### Case Conversion
-- `capitalizeFirstLetter`: Converts the first letter to uppercase and the rest to lowercase.
-- `toPascalCase`: Converts to PascalCase, removing spaces and capitalizing each word.
-- `toCamelCase`: Converts to camelCase, removing spaces and capitalizing each word except the first.
-- `toTitleCase`: Converts to Title Case, capitalizing each word and replacing delimiters with spaces.
-- `toTitle`: Similar to `toTitleCase`, but retains delimiters like `-` and `_`.
+- `toPascalCase`: PascalCase aka (UpperCamelCase).
+- `toTitleCase`: Title Case
+- `toCamelCase`: camelCase aka (dromedaryCase)
+- `toSnakeCase`: snake_case aka (snail_case, pothole_case).
+- `toKebabCase`: kebab-case aka (dash-case, lisp-case, spinal-case).
+- `toScreamingSnakeCase`: SCREAMING_SNAKE_CASE aka (MACRO_CASE, CONSTANT_CASE, ALL_CAPS).
+- `toScreamingKebabCase`: SCREAMING-KEBAB-CASE aka (COBOL-CASE).
+- `toPascalSnakeCase`: Pascal_Snake_Case.
+- `toPascalKebabCase`: Pascal-Kebab-Case.
+- `toTrainCase`: Train-Case aka (HTTP-Header-Case).
+- `toCamelSnakeCase`: camel_Snake_Case.
+- `toCamelKebabCase`: camel-Kebab-Case.
+- `toDotCase`: dot.case.
+- `toFlatCase`: flatcase.
+- `toScreamingCase`: SCREAMINGCASE.
+
+- `toTitle`: Capitalizes the first letter of each word in the string while retaining `-`, `_`, and space characters.
 
 ### Text Formatting
+- `lowercaseFirstLetter`: Lowercases only the first letter of the string, preserving the rest of the case.
+- `capitalizeFirstLetter`: Converts the first letter to uppercase and preserves the rest of the case.
+- `capitalizeFirstLowerRest`: Converts the first letter to uppercase and the rest to lowercase.
+- `tryToLowerCase`: Converts the string to lowercase if it's not null.
+- `tryToUpperCase`: Converts the string to uppercase if it's not null.
 - `removeEmptyLines`: Removes consecutive empty lines, replacing them with single newlines.
 - `toOneLine`: Converts to a single line by replacing all newline characters with spaces.
 - `removeWhiteSpaces`: Removes all whitespace characters.
@@ -493,10 +508,9 @@ try {
 - `toInt`: Parses the string as an integer.
 
 ## Null-Safe String Extensions
-
 ### Validation
-- `isEmptyOrNull`: Checks if the string is null or empty.
-- `isNotEmptyOrNull`: Checks if the string is not null and not empty.
+- `isEmptyOrNull` || `isBlank`: Checks if the string is null or empty.
+- `isNotEmptyOrNull` || `isNotBlank`: Checks if the string is not null and not empty.
 - `isPalindrome`: Checks if the string is a palindrome.
 - `isValidUrl`: Checks if the string is a valid URL.
 - `isNumeric`: Checks if the string consists only of numbers.
@@ -525,7 +539,6 @@ try {
 - `toInt`: Parses the string as an integer.
 
 ## Uri Extensions:
-
 - `isValidUri`: Checks if the string is a valid URI.
 - `toUri`: Converts the string to a URI object.
 - `isHttp`: Checks if the URI uses the HTTP scheme.
@@ -533,18 +546,21 @@ try {
 - `host`: Returns the host part of the URI.
 - `path`: Returns the path part of the URI.
 
-## Exceptions
+## Bool Extensions:
+- `toggled`: returns a new bool which is toggled from the current one.
+- `val` & `isTrue`: (nullable boolean): Returns `true` if the value is not null and true
+- `isFalse`: (nullable boolean): Returns `true` if the value is not null and false
+- `binary`: Returns `1` if the value is non-null and true, otherwise returns `0`.
 
+## Exceptions
 The `ConvertObject` class throws a `ParsingException` if there is an error while converting an object. This exception
 provides information about the type of the object and the method used for conversion.
 
 ## Contributions
-
 Contributions to this package are welcome. If you have any suggestions, issues, or feature requests, please create a
 pull request in the [repository](https://github.com/omar-hanafy/dart_helper_utils).
 
 ## License
-
 `dart_helper_utils` is available under the [BSD 3-Clause License.](https://opensource.org/license/bsd-3-clause/)
 
 <a href="https://www.buymeacoffee.com/omar.hanafy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
