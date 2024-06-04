@@ -1,6 +1,7 @@
 export 'bool.dart';
 export 'date.dart';
 export 'duration.dart';
+export 'for_intl/for_intl.dart';
 export 'iterable.dart';
 export 'map.dart';
 export 'numbers.dart';

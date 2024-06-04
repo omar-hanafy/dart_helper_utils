@@ -6,61 +6,63 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
 
 ## Table of Contents
 - [Featured](#featured)
-  - [Converting Objects](#converting-objects)
-    - [Sample Usage](#sample-usage)
-    - [Available Conversions](#available-conversions)
-    - [Optional Parameters](#optional-parameters)
-  - [TimeUtils](#timeutils)
+    - [Converting Objects](#converting-objects)
+        - [Sample Usage](#sample-usage)
+        - [Available Conversions](#available-conversions)
+        - [Optional Parameters](#optional-parameters)
+    - [TimeUtils](#timeutils)
+    
 - [Extensions](#extensions)
-  - [Date Extensions](#date-extensions)
-    - [Month and Day Name Conversion](#month-and-day-name-conversion)
-    - [Date and Time Parsing](#date-and-time-parsing)
-    - [Date and Time Formatting](#date-and-time-formatting)
-    - [Date and Time Comparison](#date-and-time-comparison)
-    - [Duration Calculations](#duration-calculations)
-    - [Basic DateTime Operations](#basic-datetime-operations)
-    - [DateTime Comparison](#datetime-comparison)
-    - [DateTime Manipulation](#datetime-manipulation)
-  - [Duration Extensions](#duration-extensions)
-  - [List and Iterable Extensions](#list-and-iterable-extensions)
-    - [Nullable List Extensions](#nullable-list-extensions)
-    - [Nullable Iterable Extensions](#nullable-iterable-extensions)
-    - [Iterable Extensions](#iterable-extensions)
-  - [Map Extensions](#map-extensions)
-  - [Number Extensions](#number-extensions)
-  - [Objects Extensions](#objects-extensions)
-  - [Set Extensions](#set-extensions)
-  - [String Extensions](#string-extensions)
-    - [Case Conversion](#case-conversion)
-    - [Text Formatting](#text-formatting)
-    - [String Replacement](#string-replacement)
-    - [String Comparison](#string-comparison)
-    - [String Limiting](#string-limiting)
-    - [Character Checks](#character-checks)
-    - [Validation](#validation)
-    - [Utility](#utility)
-    - [Parsing](#parsing)
-  - [Null-Safe String Extensions](#null-safe-string-extensions)
-    - [Validation](#validation-1)
-    - [Utility](#utility-1)
-    - [Parsing](#parsing-1)
-  - [Uri Extensions](#uri-extensions)
-  - [Bool Extensions](#bool-extensions)
-- [Exceptions](#exceptions)
-- [Contributions](#contributions)
-- [License](#license)
+    - [Date Extensions](#date-extensions)
+        - [Month and Day Name Conversion](#month-and-day-name-conversion)
+        - [Date and Time Parsing](#date-and-time-parsing)
+        - [Date and Time Formatting](#date-and-time-formatting)
+        - [Date and Time Comparison](#date-and-time-comparison)
+        - [Duration Calculations](#duration-calculations)
+        - [Basic DateTime Operations](#basic-datetime-operations)
+        - [DateTime Comparison](#datetime-comparison)
+        - [DateTime Manipulation](#datetime-manipulation)
+    - [String Extensions](#string-extensions)
+        - [Case Conversion](#case-conversion)
+        - [Text Formatting](#text-formatting)
+        - [String Replacement](#string-replacement)
+        - [String Comparison](#string-comparison)
+        - [String Limiting](#string-limiting)
+        - [Character Checks](#character-checks)
+        - [Validation](#validation)
+        - [Utility](#utility)
+        - [Parsing](#parsing)
+    - [Extensions For Intl](#extensions-for-intl)
+        - [General](#general)
+        - [DateFormats](#dateformats)
+        - [Bidi Extensions](#bidi-extensions)
+        - [Number Format Extensions](#number-format-extensions)
+    - [List and Iterable Extensions](#list-and-iterable-extensions)
+        - [List Extensions](#list-extensions)
+        - [Iterable Extensions](#iterable-extensions)
+    - [Duration Extensions](#duration-extensions)
+    - [Map Extensions](#map-extensions)
+    - [Number Extensions](#number-extensions)
+    - [Objects Extensions](#objects-extensions)
+    - [Set Extensions](#set-extensions)
+    - [Uri Extensions](#uri-extensions)
+    - [Bool Extensions](#bool-extensions)
+    
+    
 
 # Featured
 
 ## Converting Objects
 
-Convert objects to various types, such as `int`, `double`, `bool`, `String`, `List`, `Set`, and `Map`. These methods are useful when dealing with dynamic data from APIs, offering simple and flexible type conversions.
+Convert objects to various types, such as `int`, `double`, `bool`, `String`, `List`, `Set`, and `Map`. These methods are
+useful when dealing with dynamic data from APIs, offering simple and flexible type conversions.
 
 ### Sample Usage:
 
 Given an API response:
 
 ```dart
+
 Map<String, dynamic> apiResponse = {'score': '12.4'};
 
 // Using parse
@@ -173,15 +175,12 @@ try {
 
 ### Date and Time Parsing
 - `timestampToDate`: Timestamp (milliseconds since epoch) to `DateTime`.
-- `toDateWithFormat`: String to `DateTime` with specific format (e.g., 'd-M-y').
 - `tryToDateTime`: Safely parses a nullable string to a nullable `DateTime`.
 - `toDateTime`: String to `DateTime`.
-- `dateFormat`: Returns a `DateFormat` object based on the string pattern.
 
 ### Date and Time Formatting
 - `local`: Converts a nullable `DateTime` to local time.
 - `toUtcIso`: Converts a nullable `DateTime` to ISO 8601 format in UTC.
-- `tryFormat`: Formats a nullable `DateTime` to a string with the specified format.
 
 ### Date and Time Comparison
 - `isTomorrow`: Checks if the nullable `DateTime` is tomorrow.
@@ -227,112 +226,47 @@ try {
 - `min`, `max`: Returns the smaller/larger of two `DateTime` objects.
 - `addDays`, `addHours`: Adds days/hours to a `DateTime`.
 
-## Date Extensions
-### Month and Day Name Conversion
-- `toFullMonthName`: Numeric month (1-12) to full name (e.g., 1 to "January").
-- `toSmallMonthName`: Numeric month (1-12) to abbreviated name (e.g., 1 to "Jan").
-- `toFullDayName`: Numeric day (1-7) to full name (e.g., 1 to "Monday").
-- `toSmallDayName`: Numeric day (1-7) to abbreviated name (e.g., 1 to "Mon").
-
-### Date and Time Parsing
-- `timestampToDate`: Timestamp (milliseconds since epoch) to `DateTime`.
-- `toDateWithFormat`: String to `DateTime` with specific format (e.g., 'd-M-y').
-- `tryToDateTime`: Safely parses a nullable string to a nullable `DateTime`.
-- `toDateTime`: String to `DateTime`.
-- `dateFormat`: Returns a `DateFormat` object based on the string pattern.
-
-### Date and Time Formatting
-- `local`: Converts a nullable `DateTime` to local time.
-- `toUtcIso`: Converts a nullable `DateTime` to ISO 8601 format in UTC.
-- `tryFormat`: Formats a nullable `DateTime` to a string with the specified format.
-
-### Date and Time Comparison
-- `isTomorrow`: Checks if the nullable `DateTime` is tomorrow.
-- `isToday`: Checks if the nullable `DateTime` is today.
-- `isYesterday`: Checks if the nullable `DateTime` is yesterday.
-- `isPresent`: Checks if the nullable `DateTime` is in the future.
-- `isPast`: Checks if the nullable `DateTime` is in the past.
-- `isInPastWeek`: Checks if the nullable `DateTime` is within the past week.
-- `isInThisYear`: Checks if the nullable `DateTime` is in the current year.
-- `isFirstDayOfMonth`: Checks if the nullable `DateTime` is the first day of the month.
-- `isLastDayOfMonth`: Checks if the nullable `DateTime` is the last day of the month.
-- `isLeapYear`: Checks if the nullable `DateTime` is in a leap year.
-
-### Duration Calculations
-- `passedDuration`: Gets the duration since the nullable `DateTime`.
-- `remainingDuration`: Gets the duration until the nullable `DateTime`.
-- `remainingDays`: Gets the remaining days until the nullable `DateTime`.
-- `passedDays`: Gets the passed days since the nullable `DateTime`.
-
-### Basic DateTime Operations
-- `local`: Converts a `DateTime` to local time.
-- `format`: Formats a `DateTime` to a string with the specified format.
-- `toUtcIso`: Converts a `DateTime` to ISO 8601 format in UTC.
-- `passedDuration`: Gets the duration since the `DateTime`.
-- `passedDays`: Gets the passed days since the `DateTime`.
-- `remainingDuration`: Gets the duration until the `DateTime`.
-- `remainingDays`: Gets the remaining days until the `DateTime`.
-
-### DateTime Comparison
-- `isAtSameYearAs`, `isAtSameMonthAs`, `isAtSameDayAs`, `isAtSameHourAs`, `isAtSameMinuteAs`, `isAtSameSecondAs`, `isAtSameMillisecondAs`, `isAtSameMicrosecondAs`: Checks if another `DateTime` matches the same component.
-
-### DateTime Manipulation
-- `startOfDay`, `startOfMonth`, `startOfYear`: Gets the start of the day, month, year.
-- `tomorrow`, `yesterday`, `today`: Gets the date of tomorrow, yesterday, today.
-- `dateOnly`: Gets the date only (midnight time).
-- `daysInMonth`: Gets the list of days in the month.
-- `previousDay`, `nextDay`: Gets the previous/next day.
-- `previousWeek`, `nextWeek`: Gets the date of the previous/next week.
-- `firstDayOfWeek`, `lastDayOfWeek`: Gets the first/last day of the week.
-- `previousMonth`, `nextMonth`: Gets the date of the previous/next month.
-- `firstDayOfMonth`, `lastDayOfMonth`: Gets the first/last day of the month.
-- `addOrRemoveYears`, `addOrRemoveMonth`, `addOrRemoveDay`, `addOrRemoveMinutes`, `addOrRemoveSeconds`: Adds or removes years, months, days, minutes, seconds from a `DateTime`.
-- `min`, `max`: Returns the smaller/larger of two `DateTime` objects.
-- `addDays`, `addHours`: Adds days/hours to a `DateTime`.
-
-## Duration Extensions:
+## Duration Extensions
 - `delayed(FutureOr<T> Function()? computation)`: Delays execution by the duration.
-* `fromNow`: Adds the Duration to the current DateTime and gives a future time.
-* `ago`: Subtracts the Duration from the current DateTime and gives a pastime.
+- `fromNow`: Adds the Duration to the current DateTime and gives a future time.
+- `ago`: Subtracts the Duration from the current DateTime and gives a pastime.
 
 ## List and Iterable Extensions
-### Nullable List Extensions
+### List Extensions
 - `of`: Retrieves the element at the specified index in a null-safe manner.
 - `tryRemoveAt`: Removes the element at the specified index in a null-safe manner.
 - `indexOfOrNull`: Retrieves the index of the specified element in a null-safe manner.
 - `indexWhereOrNull`: Retrieves the index of the first element that matches the specified predicate in a null-safe manner.
 - `tryRemoveWhere`: Removes elements that match the specified condition in a null-safe manner.
+- `halfLength`: Returns half the size of the list.
+- `takeOnly`: Returns a list containing the first `n` elements.
+- `drop`: Returns a list containing all elements except the first `n` elements.
+- `firstHalf`: Returns the first half of the list.
+- `secondHalf`: Returns the second half of the list.
+- `swap`: Returns a list with two items swapped.
+- `getRandom`: Retrieves a random element from the list.
 
-### Nullable Iterable Extensions
+### Iterable Extensions
 - `isEmptyOrNull`: Returns true if the iterable is either null or empty.
 - `isNotEmptyOrNull`: Returns false if the iterable is either null or empty.
-- `_elementAtOrNull`: Retrieves the element at the specified index or returns null.
-- `_elementOrNull`: Retrieves the element at the specified index or returns a default value.
+- `elementAtOrNull`: Retrieves the element at the specified index or returns null.
+- `elementOrNull`: Retrieves the element at the specified index or returns a default value.
 - `firstOrNull`: Retrieves the first element or returns null.
 - `lastOrNull`: Retrieves the last element or returns null.
 - `firstWhereOrNull`: Retrieves the first element that matches the specified predicate or returns null.
 - `lastOrDefault`: Retrieves the last element or returns a default value.
 - `firstOrDefault`: Retrieves the first element or returns a default value.
 - `tryGetRandom`: Retrieves a random element from the iterable or returns null.
-
-### Iterable Extensions
 - `orEmpty`: Returns the iterable if it's not null and the empty list otherwise.
 - `any`: Returns true if at least one element matches the given predicate.
-- `concatWithSingleList`: Concatenates the current list with another iterable.
-- `concatWithMultipleList`: Concatenates the current list with multiple iterables.
+- `concatWithSingleList`: Concatenates the current iterable with another iterable.
+- `concatWithMultipleList`: Concatenates the current iterable with multiple iterables.
 - `toMutableSet`: Converts the iterable to a set.
 - `intersect`: Returns a set containing all elements that are contained by both this set and the specified collection.
 - `groupBy`: Groups the elements by the value returned by the specified key function.
 - `filter`: Returns a list containing only elements matching the given predicate.
 - `filterNot`: Returns a list containing all elements not matching the given predicate.
-- `halfLength`: Returns half the size of the list.
-- `takeOnly`: Returns a list containing the first `n` elements.
-- `drop`: Returns a list containing all elements except the first `n` elements.
 - `mapList`: Returns the result of applying a function to each element in the iterable as a list.
-- `firstHalf`: Returns the first half of the list.
-- `secondHalf`: Returns the second half of the list.
-- `swap`: Returns a list with two items swapped.
-- `getRandom`: Retrieves a random element from the iterable.
 - `whereIndexed`: Returns an iterable with all elements that satisfy the predicate.
 - `forEachIndexed`: Performs the given action on each element in the iterable, providing the sequential index with the element.
 - `sortedDescending`: Returns a new list with all elements sorted in descending order.
@@ -344,7 +278,7 @@ try {
 - `find`: Returns the first element matching the given predicate, or null if not found.
 - `encodedJson`: Encodes the iterable as a JSON string.
 
-## Map Extensions:
+## Map Extensions
 - `makeEncodable`: Converts a map to an encodable format.
 - `safelyEncodedJson`: Returns a safely encoded JSON string.
 - `isEmptyOrNull`: Checks if the map is empty or null.
@@ -352,14 +286,17 @@ try {
 - `flatJson({String delimiter = '.', bool safe = false, int? maxDepth})`: Flattens a JSON structure.
 
 ## Number Extensions
-### For `num?`
+### For `num`
 - `isSuccessHttpResCode`: Checks if the HTTP response code is 200 or 201.
 - `isValidPhoneNumber`: Checks if the number is a valid phone number.
 - `toHttpResStatus`: Converts the number to an `HttpResStatus` enum.
-
-### For `num`
+- `tryToInt`: Parses the number as an integer or returns null if it is not a number.
+- `tryToDouble`: Parses the number as a double or returns null if it is not a number.
+- `percentage`: Calculates the percentage of the number with respect to a total value, with an option to allow decimals.
+- `asBool`: Returns true if the number is greater than zero.
 - `isPositive`: Returns true if the number is positive.
 - `isNegative`: Returns true if the number is negative.
+- `isZeroOrNull`: Returns true if the number is zero or null.
 - `isZero`: Returns true if the number is zero.
 - `isValidPhoneNumber`: Checks if the number is a valid phone number.
 - `numberOfDigits`: Returns the number of digits in the number.
@@ -401,22 +338,13 @@ try {
 - `quadrupled`: Returns the number multiplied by four.
 - `squared`: Returns the square of the number.
 
-### For `num?` Null-Safe Extensions
-- `tryToInt`: Parses the number as an integer or returns null if it is not a number.
-- `tryToDouble`: Parses the number as a double or returns null if it is not a number.
-- `percentage`: Calculates the percentage of the number with respect to a total value, with an option to allow decimals.
-- `isNegative`: Returns true if the number is negative.
-- `isPositive`: Returns true if the number is positive.
-- `isZeroOrNull`: Returns true if the number is zero or null.
-- `asBool`: Returns true if the number is greater than zero.
-
-## Objects Extensions:
+## Objects Extensions
 - `encode({Object? Function(dynamic object)? toEncodable})`: Encodes an object to JSON.
 - `isNull`: Checks if the object is null.
 - `isNotNull`: Checks if the object is not null.
 - `asBool`: Converts an object to a boolean value.
 
-## Set Extensions:
+## Set Extensions
 - `isEmptyOrNull`: Checks if the set is empty or null.
 - `isNotEmptyOrNull`: Checks if the set is not empty or null.
 - `addIfNotNull(T? value)`: Adds a value to the set if it's not null.
@@ -424,6 +352,7 @@ try {
 - `intersect(Iterable<T> other)`: Returns the intersection of two sets.
 
 ## String Extensions
+
 ### Case Conversion
 - `toPascalCase`: PascalCase aka (UpperCamelCase).
 - `toTitleCase`: Title Case
@@ -442,6 +371,7 @@ try {
 - `toScreamingCase`: SCREAMINGCASE.
 
 - `toTitle`: Capitalizes the first letter of each word in the string while retaining `-`, `_`, and space characters.
+- `toWords`: Converts any `String` to a `List<String>`, handling complex cases more effectively than the native `split()` method.
 
 ### Text Formatting
 - `lowercaseFirstLetter`: Lowercases only the first letter of the string, preserving the rest of the case.
@@ -487,6 +417,9 @@ try {
 - `isValidIp4`: Checks if the string is a valid IPv4 address.
 - `isValidIp6`: Checks if the string is a valid IPv6 address.
 - `isValidUrl`: Checks if the string is a valid URL.
+- `isEmptyOrNull` || `isBlank`: Checks if the string is null or empty.
+- `isNotEmptyOrNull` || `isNotBlank`: Checks if the string is not null and not empty.
+- `isPalindrome`: Checks if the string is a palindrome.
 
 ### Utility
 - `orEmpty`: Returns the string if it is not null, or an empty string otherwise.
@@ -507,38 +440,7 @@ try {
 - `toDouble`: Parses the string as a double.
 - `toInt`: Parses the string as an integer.
 
-## Null-Safe String Extensions
-### Validation
-- `isEmptyOrNull` || `isBlank`: Checks if the string is null or empty.
-- `isNotEmptyOrNull` || `isNotBlank`: Checks if the string is not null and not empty.
-- `isPalindrome`: Checks if the string is a palindrome.
-- `isValidUrl`: Checks if the string is a valid URL.
-- `isNumeric`: Checks if the string consists only of numbers.
-- `isAlphabet`: Checks if the string consists only of alphabetic characters.
-- `hasCapitalLetter`: Checks if the string contains at least one capital letter.
-- `isBool`: Checks if the string is a boolean value (true or false).
-
-### Utility
-- `removeWhiteSpaces`: Removes all whitespace characters.
-- `orEmpty`: Returns the string if it is not null, or an empty string otherwise.
-- `ifEmpty`: Performs an action if the string is empty.
-- `lastIndex`: Gets the last character of the string.
-- `isNotBlank`: Returns true if the string is neither null, empty, nor solely made of whitespace characters.
-- `toCharArray`: Returns a list of characters.
-- `insert`: Inserts a specified string at a specified index position.
-- `isNullOrWhiteSpace`: Indicates whether the string is null, empty, or consists only of white-space characters.
-- `asBool`: Converts the string to a boolean.
-- `decode`: Decodes the JSON string into a dynamic data structure.
-
-### Parsing
-- `tryToNum`: Parses the string as a number, or returns null if it is not a number.
-- `tryToDouble`: Parses the string as a double, or returns null if it is not a number.
-- `tryToInt`: Parses the string as an integer, or returns null if it is not a number.
-- `toNum`: Parses the string as a number.
-- `toDouble`: Parses the string as a double.
-- `toInt`: Parses the string as an integer.
-
-## Uri Extensions:
+## Uri Extensions
 - `isValidUri`: Checks if the string is a valid URI.
 - `toUri`: Converts the string to a URI object.
 - `isHttp`: Checks if the URI uses the HTTP scheme.
@@ -546,11 +448,96 @@ try {
 - `host`: Returns the host part of the URI.
 - `path`: Returns the path part of the URI.
 
-## Bool Extensions:
+## Bool Extensions
 - `toggled`: returns a new bool which is toggled from the current one.
 - `val` & `isTrue`: (nullable boolean): Returns `true` if the value is not null and true
 - `isFalse`: (nullable boolean): Returns `true` if the value is not null and false
 - `binary`: Returns `1` if the value is non-null and true, otherwise returns `0`.
+
+## Extensions For Intl
+### General
+#### on Map
+- `intlSelectLogic`: Selects a value from the map based on a choice.
+- `intlSelect`: Formats a message based on the choice and returns the formatted message.
+
+#### on Num
+- `pluralize`: Returns a localized string based on the plural category of the number.
+- `getPluralCategory`: Determines the plural category of the number based on the current locale.
+
+#### on String
+- `setAsDefaultLocale`: Sets the string as the default locale for subsequent `Intl` operations.
+- `setAsSystemLocale`: Sets the string as the system locale.
+- `translate`: Translates the string using `Intl.message`.
+- `genderSelect`: Selects a localized string based on the gender associated with the string.
+- `getGenderCategory`: Determines the gender category of the string based on the current locale.
+
+### DateFormats
+#### on String
+- `dateFormat`: Returns a `DateFormat` object based on the string pattern.
+- `toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
+- `toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
+- `toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
+- `toDateFormattedUtc`: Parses the string to `DateTime` in UTC using the provided format and locale.
+- `tryToDateFormatted`: Attempts to parse the nullable string to `DateTime` with the provided format, locale, and UTC option.
+- `tryToDateFormattedLoose`: Attempts to parse the nullable string to `DateTime` using loose parsing.
+- `tryToDateFormattedStrict`: Attempts to parse the nullable string to `DateTime` using strict parsing.
+- `tryToDateFormattedUtc`: Attempts to parse the nullable string to `DateTime` in UTC using the provided format and locale.
+- `localeExists`: Checks if the locale exists in `DateFormat`.
+#### on DateTime
+- `tryFormat` and `format`: Formats the DateTime object using the provided pattern and optional locale.
+- A variety of methods to format `DateTime` objects in different styles:
+    - **Basic:** `yMMMMdFormat`, `d_Format`
+    - **Weekday:** `E_Format`, `EEEE_Format`, `EEEEE_Format`
+    - **Month:** `LLL_Format`, `LLLL_Format`, `MMMMEEEEd_Format`, etc.
+    - **Quarter:** `QQQ_Format`, `QQQQ_Format`
+    - **Year:** `y_Format`, `yMMM_Format`, `yQQQQ_Format`, etc.
+    - **Time:** `H_Format`, `Hm_Format`, `jms_Format`
+      All methods support an optional `locale` parameter.
+
+### Bidi Extensions
+#### on TextDirection
+- `toBidiFormatter`: Creates a BidiFormatter object based on the directionality.
+
+#### on String
+- `stripHtmlIfNeeded`: Strips HTML tags from the string if needed, preserving bidirectional text direction.
+- `startsWithLtr`: Checks if the string starts with left-to-right (LTR) text, optionally considering HTML markup.
+- `startsWithRtl`: Checks if the string starts with right-to-left (RTL) text, optionally considering HTML markup.
+- `endsWithLtr`: Checks if the string ends with left-to-right (LTR) text, optionally considering HTML markup.
+- `endsWithRtl`: Checks if the string ends with right-to-left (RTL) text, optionally considering HTML markup.
+- `hasAnyLtr`: Checks if the string contains any left-to-right (LTR) characters, optionally considering HTML markup.
+- `hasAnyRtl`: Checks if the string contains any right-to-left (RTL) characters, optionally considering HTML markup.
+- `isRtlLanguage`: Checks if the string represents a right-to-left (RTL) language text.
+- `enforceRtlInHtml`: Enforces right-to-left (RTL) directionality in HTML markup.
+- `enforceRtlIn`: Enforces right-to-left (RTL) directionality in plain text.
+- `enforceLtrInHtml`: Enforces left-to-right (LTR) directionality in HTML markup.
+- `enforceLtr`: Enforces left-to-right (LTR) directionality in plain text.
+- `guardBracketInHtml`: Guards brackets in HTML markup to maintain bidirectional text support.
+- `guardBracket`: Guards brackets in plain text to maintain bidirectional text support.
+- `guessDirection`: Guesses the text directionality based on its content, optionally considering HTML markup.
+- `detectRtlDirectionality`: Detects the predominant text directionality in the string, optionally considering HTML markup.
+- `wrapWithSpan`: Wraps the text with a `span` tag and sets the direction attribute (dir) based on the provided or estimated direction.
+- `wrapWithUnicode`: Wraps the text with unicode BiDi formatting characters based on the provided or estimated direction.
+
+## Number Format Extensions
+#### on String
+- `tryToNumFormatted`: Tries to parse the string to a number with the given pattern and locale.
+- `tryToIntFormatted`: Tries to parse the string to an integer with the given pattern and locale.
+- `tryToDoubleFormatted`: Tries to parse the string to a double with the given pattern and locale.
+- `toNumFormatted`: Parses the string to a number with the given pattern and locale.
+- `toIntFormatted`: Parses the string to an integer with the given pattern and locale.
+- `toDoubleFormatted`: Parses the string to a double with the given pattern and locale.
+
+#### on Num
+- `formatAsCurrency`: Formats the number as currency with the given locale, symbol, and decimal digits.
+- `formatAsSimpleCurrency`: Formats the number as simple currency with the given locale and name.
+- `formatAsCompact`: Formats the number in a compact form with the given locale.
+- `formatAsCompactLong`: Formats the number in a long compact form with the given locale.
+- `formatAsCompactCurrency`: Formats the number as compact simple currency with the given locale and name.
+- `formatAsDecimal`: Formats the number as a decimal with the given locale and decimal digits.
+- `formatAsPercentage`: Formats the number as a percentage with the given locale.
+- `formatAsDecimalPercent`: Formats the number as a decimal percentage with the given locale and decimal digits.
+- `formatAsScientific`: Formats the number as a scientific value with the given locale.
+- `formatWithCustomPattern`: Formats the number using a custom pattern with the given locale.
 
 ## Exceptions
 The `ConvertObject` class throws a `ParsingException` if there is an error while converting an object. This exception
@@ -564,3 +551,7 @@ pull request in the [repository](https://github.com/omar-hanafy/dart_helper_util
 `dart_helper_utils` is available under the [BSD 3-Clause License.](https://opensource.org/license/bsd-3-clause/)
 
 <a href="https://www.buymeacoffee.com/omar.hanafy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+**KEYWORDS:**
+extension pack, helpers, utilities, string manipulation, conversions, time utils, date extensions, datetime helper,
+iterable, map, number, object, set, URI, and boolean extensions, JSON encoding/decoding.

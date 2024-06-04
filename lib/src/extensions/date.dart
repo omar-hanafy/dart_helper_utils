@@ -1,51 +1,57 @@
-import 'dart:developer';
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-import 'package:intl/intl.dart';
 
-// TODO(OMAR): Add the the new updated [Intl] package methods and parsers.
 extension FHUDateString on String {
-  /// Parse string to [DateTime] but with a specific format, e.g, 'd-M-y'.
-  DateTime toDateWithFormat(String format, [String? locale]) =>
-      DateFormat(format, locale).parse(this);
+  /// Parse string to [DateTime] using null Safety
+  DateTime get toDateTime => DateTime.parse(this);
 }
 
 extension FHUDateNullString on String? {
-  /// Parse string to [DateTime] using null Safety
-  DateTime? get tryToDateTime {
-    try {
-      return DateTime.tryParse('$this');
-    } catch (e, s) {
-      log(
-        'toDateTime() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-      );
-      return null;
-    }
-  }
+  DateTime? get tryToDateTime => isBlank ? null : DateTime.tryParse(this!);
 
-  /// Parse string to [DateTime]
-  DateTime get toDateTime => DateTime.parse(this!);
-
-  DateFormat get dateFormat => DateFormat(this);
-
-  /// Parse string to nullable [DateTime] but with a specific format, e.g, 'd-M-y'.
-  DateTime? toDateWithFormat(String format, [String? locale]) =>
-      isEmptyOrNull ? null : DateFormat(format, locale).parse(this!);
-
-  DateTime get timestampToDate =>
-      DateTime.fromMillisecondsSinceEpoch(this.toInt);
+  DateTime get timestampToDate => this.toInt.timestampToDate;
 }
 
-extension FHUToDate on num {
-  String get toSmallMonthName => DateTime(0, this.toInt()).format('MMM');
+extension NumberToDateNames on num {
+  /// Gets the full month name (e.g., "January") corresponding to this number (1-12).
+  String get toFullMonthName {
+    final monthIndex = this.toInt().clamp(1, 12) - 1;
+    return [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ][monthIndex];
+  }
 
-  String get toFullMonthName => DateTime(0, this.toInt()).format('MMMM');
+  /// Gets the full day name (e.g., "Monday") corresponding to this number (1-7).
+  String get toFullDayName {
+    final dayIndex = (this.toInt() - 1) % 7; // Ensure value is within 0-6
+    return [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ][dayIndex];
+  }
 
-  String get toFullDayName => DateTime(0, 0, this.toInt()).format('EEEE');
+  /// Gets the short day name (e.g., "Mon") corresponding to this number (1-7).
+  String get toSmallDayName => toFullDayName.substring(0, 3);
 
-  String get toSmallDayName => DateTime(0, 0, this.toInt()).format('EEE');
+  /// Gets the short month name (e.g., "Jan") corresponding to this number (1-12).
+  String get toSmallMonthName => toFullMonthName.substring(0, 3);
 
+  // convert all to int and if the number is too large for month def is 12 if too small def is 1 and so on
   DateTime get timestampToDate =>
       DateTime.fromMillisecondsSinceEpoch(this.toInt());
 }
@@ -74,20 +80,11 @@ extension FHUNullableDateExtensions on DateTime? {
 
   bool get isInThisYear => isNotNull && this!.year == DateTime.now().year;
 
-  bool get isFirstDayOfMonth =>
-      isNotNull && DatesHelper.isSameDay(this!.firstDayOfMonth, this!);
-
-  bool get isLastDayOfMonth =>
-      isNotNull && DatesHelper.isSameDay(this!.lastDayOfMonth, this!);
-
   bool get isLeapYear {
     if (isNull) return false;
     return (this!.year % 4 == 0) &&
         ((this!.year % 100 != 0) || (this!.year % 400 == 0));
   }
-
-  String? tryFormat(String format) =>
-      isNotNull ? format.dateFormat.format(this!) : null;
 
   Duration? get passedDuration =>
       isNull ? null : DateTime.now().difference(this!);
@@ -95,163 +92,149 @@ extension FHUNullableDateExtensions on DateTime? {
   Duration? get remainingDuration =>
       isNull ? null : this!.difference(DateTime.now());
 
-  int? get remainingDays => isNull ? null : DatesHelper.diffInDays(to: this!);
+  /// Returns the number of days remaining until this DateTime.
+  int? get remainingDays => isNull ? null : this!.daysDifferenceTo();
 
-  int? get passedDays =>
-      isNull ? null : DatesHelper.diffInDays(to: DateTime.now(), from: this);
+  int? get passedDays => isNull ? null : DateTime.now().daysDifferenceTo(this);
 }
 
 extension FHUDateExtensions on DateTime {
+  /// Converts this DateTime to local time.
   DateTime get local => toLocal();
 
-  String format(String format) => format.dateFormat.format(this);
+  /// Converts this DateTime to UTC and returns an ISO 8601 string.
+  String get toUtcIso => toUtc().toIso;
 
-  String get toUtcIso => toUtc().toIso8601String();
+  String get toIso => toIso8601String();
 
-  /// Adds this DateTime and Duration and returns the sum as a new DateTime object.
+  /// Adds the specified duration to this DateTime.
   DateTime operator +(Duration duration) => add(duration);
 
-  /// Subtracts the Duration from this DateTime returns the difference as a new DateTime object.
+  /// Subtracts the specified duration from this DateTime.
   DateTime operator -(Duration duration) => subtract(duration);
 
+  /// Returns the duration that has passed since this DateTime.
   Duration get passedDuration => DateTime.now().difference(this);
 
-  int get passedDays => DatesHelper.diffInDays(to: DateTime.now(), from: this);
+  /// Returns the number of days that have passed since this DateTime.
+  int get passedDays => DateTime.now().daysDifferenceTo(this);
 
+  /// Returns the duration remaining until this DateTime.
   Duration get remainingDuration => difference(DateTime.now());
 
-  int get remainingDays => DatesHelper.diffInDays(to: this);
+  /// Returns the number of days remaining until this DateTime.
+  int get remainingDays => daysDifferenceTo();
 
-  /// Returns true if [other] is in the same year as [this].
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same year as [other].
   bool isAtSameYearAs(DateTime other) => year == other.year;
 
-  /// Returns true if [other] is in the same month as [this].
-  ///
-  /// This means the exact month, including year.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same month and year as [other].
   bool isAtSameMonthAs(DateTime other) =>
       isAtSameYearAs(other) && month == other.month;
 
-  /// Returns true if [other] is on the same day as [this].
-  ///
-  /// This means the exact day, including year and month.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is on the same day, month, and year as [other].
   bool isAtSameDayAs(DateTime other) =>
       isAtSameMonthAs(other) && day == other.day;
 
-  /// Returns true if [other] is at the same hour as [this].
-  ///
-  /// This means the exact hour, including year, month and day.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same hour, day, month, and year as [other].
   bool isAtSameHourAs(DateTime other) =>
       isAtSameDayAs(other) && hour == other.hour;
 
-  /// Returns true if [other] is at the same minute as [this].
-  ///
-  /// This means the exact minute, including year, month, day and hour.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same minute, hour, day, month, and year as [other].
   bool isAtSameMinuteAs(DateTime other) =>
       isAtSameHourAs(other) && minute == other.minute;
 
-  /// Returns true if [other] is at the same second as [this].
-  ///
-  /// This means the exact second, including year, month, day, hour and minute.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same second, minute, hour, day, month, and year as [other].
   bool isAtSameSecondAs(DateTime other) =>
       isAtSameMinuteAs(other) && second == other.second;
 
-  /// Returns true if [other] is at the same millisecond as [this].
-  ///
-  /// This means the exact millisecond,
-  /// including year, month, day, hour, minute and second.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same millisecond, second, minute, hour, day, month, and year as [other].
   bool isAtSameMillisecondAs(DateTime other) =>
       isAtSameSecondAs(other) && millisecond == other.millisecond;
 
-  /// Returns true if [other] is at the same microsecond as [this].
-  ///
-  /// This means the exact microsecond,
-  /// including year, month, day, hour, minute, second and millisecond.
-  ///
-  /// Does not account for timezones.
+  /// Checks if this DateTime is in the same microsecond, millisecond, second, minute, hour, day, month, and year as [other].
   bool isAtSameMicrosecondAs(DateTime other) =>
       isAtSameMillisecondAs(other) && microsecond == other.microsecond;
 
-  ///  Start time of Date times
+  /// Returns a DateTime representing the start of the day for this DateTime.
   DateTime get startOfDay => DateTime(year, month, day);
 
+  /// Returns a DateTime representing the start of the month for this DateTime.
   DateTime get startOfMonth => DateTime(year, month);
 
+  /// Returns a DateTime representing the start of the year for this DateTime.
   DateTime get startOfYear => DateTime(year);
 
-  /// next day
-  DateTime get tomorrow => DateTime(year, month, day + 1);
+  /// Returns a DateTime representing tomorrow relative to this DateTime.
+  DateTime get tomorrow => add(const Duration(days: 1));
 
-  /// last day
-  DateTime get yesterday => DateTime(year, month, day - 1);
+  /// Returns a DateTime representing yesterday relative to this DateTime.
+  DateTime get yesterday => subtract(const Duration(days: 1));
 
-  /// Returns a [DateTime] with the date of the original, but time set to
-  /// midnight.
+  /// Returns a DateTime representing only the date part of this DateTime.
   DateTime get dateOnly => DateTime(year, month, day);
 
-  /// The list of days in a given month
+  /// Returns a list of DateTimes representing the days in the same month as this DateTime.
   List<DateTime> get daysInMonth {
     final first = firstDayOfMonth;
     final daysBefore = first.weekday;
     final firstToDisplay = first.subtract(Duration(days: daysBefore));
     final last = lastDayOfMonth;
-
     var daysAfter = 7 - last.weekday;
-
-    // If the last day is sunday (7) the entire week must be rendered
     if (daysAfter == 0) {
       daysAfter = 7;
     }
-
     final lastToDisplay = last.add(Duration(days: daysAfter));
-    return DatesHelper.daysInRange(firstToDisplay, lastToDisplay).toList();
+    return firstToDisplay.daysUpTo(lastToDisplay).toList();
   }
 
-  /// The day previous this [DateTime]
+  /// Returns a DateTime representing the previous day relative to this DateTime.
   DateTime get previousDay => addDays(-1);
 
-  /// The day after this [DateTime]
+  /// Returns a DateTime representing the next day relative to this DateTime.
   DateTime get nextDay => addDays(1);
 
+  /// Returns a DateTime representing the previous week relative to this DateTime.
   DateTime get previousWeek => subtract(const Duration(days: 7));
 
+  /// Returns a DateTime representing the next week relative to this DateTime.
   DateTime get nextWeek => add(const Duration(days: 7));
 
-  DateTime get firstDayOfWeek {
-    /// Handle Daylight Savings by setting hour to 12:00 Noon
-    /// rather than the default of Midnight
-    final day = DateTime.utc(year, month, this.day, 12);
+  /// Returns a DateTime representing the first day of the week for this DateTime.
+  ///
+  /// [startOfWeek] is an optional parameter specifying the weekday that is considered
+  /// the start of the week (1 for Monday, 7 for Sunday, etc.). Defaults to Monday.
+  DateTime firstDayOfWeek({int startOfWeek = DateTime.monday}) {
+    // Normalize the startOfWeek value to be within the range of 1-7
+    final normalizedStartOfWeek =
+        ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
 
-    /// Weekday is on a 1-7 scale Monday - Sunday,
-    /// This Calendar works from Sunday - Monday
-    final decreaseNum = day.weekday % 7;
-    return subtract(Duration(days: decreaseNum));
+    // Calculate the difference between the current weekday and normalizedStartOfWeek
+    // and adjust it to be positive and within the range of 0-6
+    final daysToSubtract =
+        (weekday - normalizedStartOfWeek + DateTime.daysPerWeek) %
+            DateTime.daysPerWeek;
+
+    return subtract(Duration(days: daysToSubtract));
   }
 
-  DateTime get lastDayOfWeek {
-    /// Handle Daylight Savings by setting hour to 12:00 Noon
-    /// rather than the default of Midnight
-    final day = DateTime.utc(year, month, this.day, 12);
+  /// Returns a DateTime representing the last day of the week for this DateTime.
+  ///
+  /// [startOfWeek] is an optional parameter specifying the weekday that is considered
+  /// the start of the week (1 for Monday, 7 for Sunday, etc.). Defaults to Monday.
+  DateTime lastDayOfWeek({int startOfWeek = DateTime.monday}) {
+    final normalizedStartOfWeek =
+        ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
+    final daysToAdd =
+        (DateTime.daysPerWeek - weekday + normalizedStartOfWeek - 1) %
+            DateTime.daysPerWeek;
 
-    /// Weekday is on a 1-7 scale Monday - Sunday,
-    /// This Calendar's Week starts on Sunday
-    final increaseNum = day.weekday % 7;
-    return day.add(Duration(days: 7 - increaseNum));
+    // Convert to UTC and then back to the original timezone to ensure correct midnight
+    final utcLastDayOfWeek = toUtc().add(Duration(days: daysToAdd));
+    return utcLastDayOfWeek.toLocal();
   }
 
+  /// Returns a DateTime representing the previous month relative to this Date Time.
   DateTime get previousMonth {
     var year = this.year;
     var month = this.month;
@@ -264,10 +247,10 @@ extension FHUDateExtensions on DateTime {
     return DateTime(year, month);
   }
 
+  /// Returns a DateTime representing the next month relative to this DateTime.
   DateTime get nextMonth {
     var year = this.year;
     var month = this.month;
-
     if (month == 12) {
       year++;
       month = 1;
@@ -277,126 +260,145 @@ extension FHUDateExtensions on DateTime {
     return DateTime(year, month);
   }
 
+  /// Returns a DateTime representing the first day of the month for this DateTime.
   DateTime get firstDayOfMonth => DateTime(year, month);
 
-  /// The last day of a given month
+  /// Returns a DateTime representing the last day of the month for this DateTime.
   DateTime get lastDayOfMonth {
     final beginningNextMonth =
-        (month < 12) ? DateTime(year, month + 1) : DateTime(year + 1);
+        (month < 12) ? DateTime(year, month + 1) : DateTime(year + 1, 1);
     return beginningNextMonth.subtract(const Duration(days: 1));
   }
 
-  /// to add years to a [DateTime] add a positive number
-  /// to remove years pass a negative number
+  /// Adds or removes the specified number of years from this DateTime.
   DateTime addOrRemoveYears(int years) {
-    return DateTime(year + years, month, day, minute, second);
+    final newYear = year + years;
+    final newMonth = month;
+    var newDay = day;
+    // Adjust the day if it exceeds the number of days in the new month
+    while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
+      newDay--;
+    }
+    return DateTime(newYear, newMonth, newDay, hour, minute, second);
   }
 
-  /// to add month to a [DateTime] add a positive number
-  /// to remove years pass a negative number
-  DateTime addOrRemoveMonth(int months) {
-    return DateTime(year, month + months, day, minute, second);
+  /// Adds or removes the specified number of months from this DateTime.
+  DateTime addOrRemoveMonths(int months) {
+    final totalMonths = month + months;
+    final newYear = year + (totalMonths ~/ 12);
+    final newMonth = totalMonths % 12 == 0 ? 12 : totalMonths % 12;
+    var newDay = day;
+    // Adjust the day if it exceeds the number of days in the new month
+    while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
+      newDay--;
+    }
+    return DateTime(newYear, newMonth, newDay, hour, minute, second);
   }
 
-  /// to add days to a [DateTime] add a positive number
-  /// to remove days pass a negative number
-  DateTime addOrRemoveDay(int days) {
-    return DateTime(year, month, day + days, minute, second);
-  }
+  /// Adds or removes the specified number of days from this DateTime.
+  DateTime addOrRemoveDays(int days) => add(Duration(days: days));
 
-  /// to add min to a [DateTime] add a positive number
-  /// to remove min pass a negative number
-  DateTime addOrRemoveMinutes(int min) {
-    return DateTime(year, month, day, minute + min, second);
-  }
+  /// Adds or removes the specified number of minutes from this DateTime.
+  DateTime addOrRemoveMinutes(int minutes) => add(Duration(minutes: minutes));
 
-  /// to add sec to a [DateTime] add a positive number
-  /// to remove sec pass a negative number
-  DateTime addOrRemoveSeconds(int sec) {
-    return DateTime(year, month, day, minute, second + sec);
-  }
+  /// Adds or removes the specified number of seconds from this DateTime.
+  DateTime addOrRemoveSeconds(int seconds) => add(Duration(seconds: seconds));
 
-  /// return the smaller date between
+  /// Returns the minimum of this DateTime and [that].
   DateTime min(DateTime that) =>
       (millisecondsSinceEpoch < that.millisecondsSinceEpoch) ? this : that;
 
+  /// Returns the maximum of this DateTime and [that].
   DateTime max(DateTime that) =>
       (millisecondsSinceEpoch > that.millisecondsSinceEpoch) ? this : that;
 
-  /// Add a certain amount of days to this date
-  DateTime addDays(int amount) => DateTime(
-        year,
-        month,
-        day + amount,
-        hour,
-        minute,
-        second,
-        millisecond,
-        microsecond,
-      );
+  /// Adds the specified number of days to this DateTime.
+  DateTime addDays(int amount) => add(Duration(days: amount));
 
-  /// Add a certain amount of hours to this date
-  DateTime addHours(int amount) => DateTime(
-        year,
-        month,
-        day,
-        hour + amount,
-        minute,
-        second,
-        millisecond,
-        microsecond,
-      );
+  /// Adds the specified number of hours to this DateTime.
+  DateTime addHours(int amount) => add(Duration(hours: amount));
+
+  /// Checks if this DateTime occurs on the same hour as another DateTime,
+  /// regardless of time zone.
+  bool isSameHourAs(DateTime other) => hour == other.hour && isSameDayAs(other);
+
+  /// Checks if this DateTime occurs on the same day as another DateTime,
+  /// regardless of time zone.
+  bool isSameDayAs(DateTime other) =>
+      day == other.day && month == other.month && year == other.year;
+
+  /// Checks if this DateTime occurs within the same week as another DateTime,
+  /// regardless of time zone.  Considers a week to start on Monday.
+  bool isSameWeekAs(DateTime other) {
+    final thisNoonUtc = DateTime.utc(year, month, day, 12);
+    final otherNoonUtc = DateTime.utc(other.year, other.month, other.day, 12);
+
+    if (thisNoonUtc.difference(otherNoonUtc).inDays.abs() >= 7) return false;
+
+    // Find the start of the week (Monday) for both dates
+    final startOfWeekThis =
+        thisNoonUtc.subtract(Duration(days: thisNoonUtc.weekday - 1));
+    final startOfWeekOther =
+        otherNoonUtc.subtract(Duration(days: otherNoonUtc.weekday - 1));
+
+    return startOfWeekThis.isAtSameMomentAs(startOfWeekOther);
+  }
+
+  /// Calculates the absolute difference in whole days between this DateTime
+  /// and another DateTime (or the current time if none is provided).
+  /// Ignores hours, minutes, seconds, and milliseconds.
+  int daysDifferenceTo([DateTime? other]) {
+    final comparisonDate = other ?? DateTime.now();
+    return DateTime(year, month, day)
+        .difference(DateTime(
+            comparisonDate.year, comparisonDate.month, comparisonDate.day))
+        .inDays
+        .abs(); // Ensure positive result
+  }
+
+  /// Generates a sequence of DateTime objects representing each day in the range
+  /// starting from `this` DateTime (inclusive) up to but not including the `end` DateTime.
+  ///
+  /// Handles time zone adjustments to ensure accurate day boundaries.
+  Iterable<DateTime> daysUpTo(DateTime end) sync* {
+    var current = this;
+    var currentOffset = current.timeZoneOffset; // Store initial offset
+    while (current.isBefore(end)) {
+      yield current;
+      current = current.add(const Duration(days: 1));
+
+      // Adjust for potential time zone changes during iteration
+      final offsetDifference = current.timeZoneOffset - currentOffset;
+      if (offsetDifference.inSeconds != 0) {
+        currentOffset = current.timeZoneOffset; // Update offset
+        current =
+            current.subtract(Duration(seconds: offsetDifference.inSeconds));
+      }
+    }
+  }
 }
 
 abstract class DatesHelper {
   // Whether or not two times are on the same hour.
-  static bool isSameHour(DateTime a, DateTime b) =>
-      a.difference(b).inMinutes < 60;
+  static bool isSameHour(DateTime a, DateTime b) => a.isSameHourAs(b);
 
   // Whether or not two times are on the same day.
-  static bool isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
+  static bool isSameDay(DateTime a, DateTime b) => a.isSameDayAs(b);
 
-  static bool isSameWeek(DateTime a, DateTime b) {
-    /// Handle Daylight Savings by setting hour to 12:00 Noon
-    /// rather than the default of Midnight
-    final t1 = DateTime.utc(a.year, a.month, a.day);
-    final t2 = DateTime.utc(b.year, b.month, b.day);
-    final diff = a.toUtc().difference(b.toUtc()).inDays;
-    if (diff.abs() >= 7) return false;
-    final t1IsBefore = t1.isBefore(t2);
-    final min = t1IsBefore ? t1 : t2;
-    final max = t1IsBefore ? t2 : t1;
-    return max.weekday % 7 - min.weekday % 7 >= 0;
-  }
+  static bool isSameWeek(DateTime a, DateTime b) => a.isSameWeekAs(b);
 
   /// Returns the absolute value of the difference in days between two dates.
   /// The difference is calculated by comparing only the year, month, and day values of the dates.
   /// The hour, minute, second, and millisecond values are ignored.
   /// For example, if date1 is August 22nd at 11 p.m. and date2 is August 24th at 12 a.m. midnight,
   /// the difference in days is 2, not a fraction of a day.
-  static int diffInDays({required DateTime to, DateTime? from}) {
-    final f = from ?? DateTime.now();
-    return DateTime(to.year, to.month, to.day)
-        .difference(DateTime(f.year, f.month, f.day))
-        .inDays;
-  }
+  static int diffInDays({required DateTime to, DateTime? from}) =>
+      to.daysDifferenceTo(from);
 
   /// Returns a [DateTime] for each day the given range.
   ///
   /// [start] inclusive
   /// [end] exclusive
-  static Iterable<DateTime> daysInRange(DateTime start, DateTime end) sync* {
-    var i = start;
-    var offset = start.timeZoneOffset;
-    while (i.isBefore(end)) {
-      yield i;
-      i = i.add(const Duration(days: 1));
-      final timeZoneDiff = i.timeZoneOffset - offset;
-      if (timeZoneDiff.inSeconds != 0) {
-        offset = i.timeZoneOffset;
-        i = i.subtract(Duration(seconds: timeZoneDiff.inSeconds));
-      }
-    }
-  }
+  static Iterable<DateTime> daysInRange(DateTime start, DateTime end) =>
+      start.daysUpTo(end);
 }

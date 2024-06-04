@@ -1,3 +1,47 @@
+# CHANGELOG
+
+## [2.0.0]
+In this version, we have made extensive use of the `intl` package with a comprehensive set of new extensions to provide robust localization and formatting capabilities.
+
+### Added
+- **Intl Extensions**:
+  - **General**:
+    - Map: `intlSelectLogic`, `intlSelect`
+    - Num: `pluralize`, `getPluralCategory`
+    - String: `setAsDefaultLocale`, `setAsSystemLocale`, `translate`, `genderSelect`, `getGenderCategory`
+  - **DateFormats**:
+    - DateTime: `tryFormat`, `format`, and various formatting methods.
+    - String: `dateFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`
+    - Nullable String: `tryToDateFormatted`, `tryToDateFormattedLoose`, `tryToDateFormattedStrict`, `tryToDateFormattedUtc`, `localeExists`
+  - **Bidi Extensions**:
+    - TextDirection: `toBidiFormatter`
+    - String: Various bidi text manipulation methods
+  - **Number Format Extensions**:
+    - String: `tryToNumFormatted`, `tryToIntFormatted`, `tryToDoubleFormatted`, `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted`
+    - Num: Various number formatting methods
+- **Global Functions**:
+  - Enhanced number and date conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`, `toDateTime`, `tryToDateTime`) to include optional `format` and `locale` parameters.
+
+### Changes and Fixes 
+- Fixed an issue in `makeEncodable` on Maps where sets were not properly converted to JSON-encodable lists.
+- Consolidated several DateTime manipulation methods to ensure consistency and accuracy.
+- Addressed various minor bugs and inconsistencies in existing extension methods.
+- Enhanced documentation across several methods to improve clarity and usability.
+
+### Breaking Changes
+- `toDateWithFormat` replaced with `toDateFormatted()` on String.
+- `lastDayOfWeek` and `firstDayOfWeek` are now methods with an optional `startOfWeek` parameter to customize the first day of the week (defaults to Monday). Improved time zone handling and added tests.
+
+### [1.2.0]
+
+- **New Feature:** Added the `toWords` getter on `String`, which converts any `String` to a `List<String>`, handling complex cases more effectively than the native `split()` method.
+  
+  - **Example Usage:**
+    
+    ```dart
+    print("FlutterAndDart_are-AWESOME".toWords); // [Flutter, And, Dart, are, AWESOME]
+    ```
+
 ### [1.1.0]
 
 #### Enhancements

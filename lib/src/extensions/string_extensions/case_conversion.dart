@@ -11,17 +11,17 @@ extension DHUNullSafeCaseConversionExtensions on String? {
 
 extension DHUCaseConversionExtensions on String {
   /// Splits the string into a list of words based on camel case, underscores, hyphens, and spaces.
-  List<String> get _splitAll =>
+  List<String> get toWords =>
       split(RegExp(r'(?<=[a-z])(?=[A-Z])|[_\-\s]+|(?<=[A-Z])(?=[A-Z][a-z])'));
 
   /// Converts the string to PascalCase (UpperCamelCase).
   /// Example: "hello_world" => "HelloWorld"
   String get toPascalCase =>
-      _splitAll.map((word) => word.capitalizeFirstLowerRest).join();
+      toWords.map((word) => word.capitalizeFirstLowerRest).join();
 
   /// Converts the string to Title Case.
   /// Example: "hello_world" => "Hello World"
-  String get toTitleCase => _splitAll
+  String get toTitleCase => toWords
       .map((word) => word.shouldIgnoreCapitalization
           ? word.toLowerCase()
           : word.capitalizeFirstLowerRest)
@@ -30,7 +30,7 @@ extension DHUCaseConversionExtensions on String {
   /// Converts the string to camelCase (dromedaryCase).
   /// Example: "hello_world" => "helloWorld"
   String get toCamelCase {
-    final words = _splitAll;
+    final words = toWords;
     for (var i = 0; i < words.length; i++) {
       words[i] =
           (i == 0 ? words[i].toLowerCase() : words[i].capitalizeFirstLowerRest);
@@ -40,39 +40,39 @@ extension DHUCaseConversionExtensions on String {
 
   /// Converts the string to snake_case (snail_case, pothole_case).
   /// Example: "helloWorld" => "hello_world"
-  String get toSnakeCase => _splitAll.join('_').toLowerCase();
+  String get toSnakeCase => toWords.join('_').toLowerCase();
 
   /// Converts the string to kebab-case (dash-case, lisp-case, spinal-case).
   /// Example: "helloWorld" => "hello-world"
-  String get toKebabCase => _splitAll.join('-').toLowerCase();
+  String get toKebabCase => toWords.join('-').toLowerCase();
 
   /// Converts the string to SCREAMING_SNAKE_CASE (MACRO_CASE, CONSTANT_CASE, ALL_CAPS).
   /// Example: "helloWorld" => "HELLO_WORLD"
-  String get toScreamingSnakeCase => _splitAll.join('_').toUpperCase();
+  String get toScreamingSnakeCase => toWords.join('_').toUpperCase();
 
   /// Converts the string to SCREAMING-KEBAB-CASE (COBOL-CASE).
   /// Example: "helloWorld" => "HELLO-WORLD"
-  String get toScreamingKebabCase => _splitAll.join('-').toUpperCase();
+  String get toScreamingKebabCase => toWords.join('-').toUpperCase();
 
   /// Converts the string to Pascal_Snake_Case.
   /// Example: "helloWorld" => "Hello_World"
   String get toPascalSnakeCase =>
-      _splitAll.map((word) => word.capitalizeFirstLowerRest).join('_');
+      toWords.map((word) => word.capitalizeFirstLowerRest).join('_');
 
   /// Converts the string to Pascal-Kebab-Case.
   /// Example: "helloWorld" => "Hello-World"
   String get toPascalKebabCase =>
-      _splitAll.map((word) => word.capitalizeFirstLowerRest).join('-');
+      toWords.map((word) => word.capitalizeFirstLowerRest).join('-');
 
   /// Converts the string to Train-Case (HTTP-Header-Case).
   /// Example: "helloWorld" => "Hello-World"
   String get toTrainCase =>
-      _splitAll.map((word) => word.capitalizeFirstLowerRest).join('-');
+      toWords.map((word) => word.capitalizeFirstLowerRest).join('-');
 
   /// Converts the string to camel_Snake_Case.
   /// Example: "helloWorld" => "hello_World"
   String get toCamelSnakeCase {
-    final words = _splitAll;
+    final words = toWords;
     for (var i = 0; i < words.length; i++) {
       words[i] =
           (i == 0 ? words[i].toLowerCase() : words[i].capitalizeFirstLowerRest);
@@ -83,7 +83,7 @@ extension DHUCaseConversionExtensions on String {
   /// Converts the string to camel-Kebab-Case.
   /// Example: "helloWorld" => "hello-World"
   String get toCamelKebabCase {
-    final words = _splitAll;
+    final words = toWords;
     for (var i = 0; i < words.length; i++) {
       words[i] =
           (i == 0 ? words[i].toLowerCase() : words[i].capitalizeFirstLowerRest);
@@ -93,15 +93,15 @@ extension DHUCaseConversionExtensions on String {
 
   /// Converts the string to dot.case.
   /// Example: "helloWorld" => "hello.world"
-  String get toDotCase => _splitAll.join('.').toLowerCase();
+  String get toDotCase => toWords.join('.').toLowerCase();
 
   /// Converts the string to flatcase.
   /// Example: "HelloWorld" => "helloworld"
-  String get toFlatCase => _splitAll.join().toLowerCase();
+  String get toFlatCase => toWords.join().toLowerCase();
 
   /// Converts the string to SCREAMINGCASE (UPPERCASE).
   /// Example: "helloWorld" => "HELLOWORLD"
-  String get toScreamingCase => _splitAll.join().toUpperCase();
+  String get toScreamingCase => toWords.join().toUpperCase();
 
   /// Capitalizes only the first letter of the string, preserving the rest of the case.
   /// Example: "flutter AND DART" => "Flutter AND DART"

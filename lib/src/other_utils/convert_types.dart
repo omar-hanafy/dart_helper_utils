@@ -145,6 +145,8 @@ abstract class ConvertObject {
     dynamic object, {
     Object? mapKey,
     int? listIndex,
+    String? format,
+    String? locale,
   }) {
     if (object == null) {
       throw ParsingException.nullObject(
@@ -160,6 +162,7 @@ abstract class ConvertObject {
       return toNum(object.of(listIndex));
     }
     try {
+      if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
       return '$object'.toNum;
     } catch (e, s) {
       throw ParsingException(
@@ -201,6 +204,8 @@ abstract class ConvertObject {
   static num? tryToNum(
     dynamic object, {
     Object? mapKey,
+    String? format,
+    String? locale,
     int? listIndex,
   }) {
     if (object is num?) return object;
@@ -212,7 +217,9 @@ abstract class ConvertObject {
       return tryToNum(object.of(listIndex));
     }
     try {
-      return num.tryParse('$object');
+      if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
+
+      return '$object'.tryToNum;
     } catch (e, s) {
       log(
         'tryToNum() Unsupported object type: exception message -> $e',
@@ -253,6 +260,8 @@ abstract class ConvertObject {
     dynamic object, {
     Object? mapKey,
     int? listIndex,
+    String? format,
+    String? locale,
   }) {
     if (object is int) return object;
     if (mapKey != null && object is Map<dynamic, dynamic>) {
@@ -262,7 +271,8 @@ abstract class ConvertObject {
       return toInt(object.of(listIndex));
     }
     try {
-      return toNum(object).toInt();
+      if (format.isNotBlank) return '$object'.toIntFormatted(format, locale);
+      return '$object'.toInt;
     } catch (e, s) {
       throw ParsingException(
         error: e,
@@ -303,6 +313,8 @@ abstract class ConvertObject {
   static int? tryToInt(
     dynamic object, {
     Object? mapKey,
+    String? format,
+    String? locale,
     int? listIndex,
   }) {
     if (object is int?) return object;
@@ -314,7 +326,10 @@ abstract class ConvertObject {
       return tryToInt(object.of(listIndex));
     }
     try {
-      return tryToNum(object).tryToInt;
+      if (format.isNotBlank) {
+        return '$object'.tryToIntFormatted(format, locale);
+      }
+      return '$object'.tryToInt;
     } catch (e, s) {
       log(
         'tryToInt() Unsupported object type: exception message -> $e',
@@ -465,6 +480,8 @@ abstract class ConvertObject {
     dynamic object, {
     Object? mapKey,
     int? listIndex,
+    String? format,
+    String? locale,
   }) {
     if (object is double) return object;
     if (mapKey != null && object is Map<dynamic, dynamic>) {
@@ -474,7 +491,10 @@ abstract class ConvertObject {
       return toDouble(object.of(listIndex));
     }
     try {
-      return toNum(object).toDouble();
+      if (format.isNotBlank) {
+        return '$object'.toDoubleFormatted(format, locale);
+      }
+      return '$object'.toDouble;
     } catch (e, s) {
       throw ParsingException(
         error: e,
@@ -516,6 +536,8 @@ abstract class ConvertObject {
     dynamic object, {
     Object? mapKey,
     int? listIndex,
+    String? format,
+    String? locale,
   }) {
     if (object is double?) return object;
     if (mapKey != null && object is Map<dynamic, dynamic>) {
@@ -525,7 +547,10 @@ abstract class ConvertObject {
       return tryToDouble(object.of(listIndex));
     }
     try {
-      return tryToNum(object).tryToDouble;
+      if (format.isNotBlank) {
+        return '$object'.tryToDoubleFormatted(format, locale);
+      }
+      return '$object'.tryToDouble;
     } catch (e, s) {
       log(
         'tryToDouble() Unsupported object type: exception message -> $e',
@@ -667,7 +692,8 @@ abstract class ConvertObject {
     Object? mapKey,
     int? listIndex,
     String? format,
-    String? local,
+    String? locale,
+    bool utc = false,
   }) {
     if (object == null) {
       throw ParsingException.nullObject(
@@ -683,10 +709,11 @@ abstract class ConvertObject {
       return toDateTime(object.of(listIndex));
     }
     try {
-      if (format.isEmptyOrNull) return DateTime.parse('$object');
-      return '$object'.toDateWithFormat(
-        format!,
-      );
+      if (format.isEmptyOrNull) {
+        final date = DateTime.parse('$object');
+        return utc ? date.toUtc() : date;
+      }
+      return '$object'.toDateFormatted(format, locale, utc);
     } catch (e, s) {
       throw ParsingException(
         error: e,
@@ -729,6 +756,7 @@ abstract class ConvertObject {
     int? listIndex,
     String? format,
     String? locale,
+    bool utc = false,
   }) {
     if (object is DateTime?) return object;
     if (mapKey != null && object is Map<dynamic, dynamic>) {
@@ -738,8 +766,11 @@ abstract class ConvertObject {
       return tryToDateTime(object.of(listIndex));
     }
     try {
-      if (format.isEmptyOrNull) return DateTime.tryParse('$object');
-      return '$object'.toDateWithFormat(format!, locale);
+      if (format.isEmptyOrNull) {
+        final date = DateTime.tryParse('$object');
+        return utc ? date?.toUtc() : date;
+      }
+      return '$object'.tryToDateFormatted(format, locale, utc);
     } catch (e, s) {
       log(
         'tryToDateTime() Unsupported object type: exception message -> $e',

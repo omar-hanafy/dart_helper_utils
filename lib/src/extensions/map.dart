@@ -12,7 +12,7 @@ dynamic _makeValueEncodable(dynamic value) {
   } else if (value is List) {
     return value.map(_makeValueEncodable).toList();
   } else if (value is Set) {
-    return value.map(_makeValueEncodable).toSet();
+    return value.map(_makeValueEncodable).toList();
   } else if (value is Map) {
     return value.makeEncodable;
   } else {
@@ -22,21 +22,6 @@ dynamic _makeValueEncodable(dynamic value) {
 
 extension DHUMapExtension<K, V> on Map<K, V> {
   /// Converts a map with dynamic keys and values to a map with string keys and JSON-encodable values.
-  ///
-  /// This function is useful for serializing maps to a format compatible with JSON serialization.
-  /// It ensures that all keys are strings and that all values are in a form that can be
-  /// encoded into JSON. Complex objects and types are processed recursively to make them encodable.
-  ///
-  /// [inputMap] is the map with dynamic keys and values that needs to be converted.
-  ///
-  /// Returns a new map where all keys are strings and all values are JSON-encodable.
-  ///
-  /// Example:
-  /// ```dart
-  /// var originalMap = {123: 'value', 'key': {'innerKey': DateTime.now()}};
-  /// var encodableMap = makeMapEncodable(originalMap);
-  /// // encodableMap is now {'123': 'value', 'key': {'innerKey': '2021-08-01T12:00:00'}}
-  /// ```
   Map<String, dynamic> get makeEncodable {
     final result = <String, dynamic>{};
     forEach((key, value) {
@@ -46,42 +31,6 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   }
 
   /// Converts a map with potentially complex data types to a formatted JSON string.
-  ///
-  /// This function utilizes `makeMapEncodable` to prepare the map for JSON encoding,
-  /// ensuring compatibility with JSON standards, especially for non-primitive types like enums
-  /// or DateTime. It then uses `JsonEncoder.withIndent` to convert the map to a
-  /// human-readable JSON string with proper indentation.
-  ///
-  /// Example:
-  /// ```dart
-  /// Map<dynamic, dynamic> yourMap = {
-  ///   'id': 1,
-  ///   'name': 'Flutter Helper',
-  ///   'isActive': true,
-  ///   'registeredDate': DateTime(2024, 01, 06),
-  ///   'category': Category.mobile // Assuming Category is an enum.
-  /// };
-  ///
-  /// String jsonOutput = yourMap.formattedJsonString;
-  /// print(jsonOutput);
-  /// ```
-  ///
-  /// Sample Output:
-  /// ```json
-  /// {
-  ///   "id": 1,
-  ///   "name": "Flutter Helper",
-  ///   "isActive": true,
-  ///   "registeredDate": "2024-01-06T00:00:00",
-  ///   "category": "mobile"
-  /// }
-  /// ```
-  ///
-  /// Parameters:
-  ///   [map] - A Map with dynamic keys and values, potentially containing complex data types.
-  ///
-  /// Returns:
-  ///   A string representing the formatted JSON.
   String get safelyEncodedJson =>
       const JsonEncoder.withIndent('  ').convert(makeEncodable);
 }

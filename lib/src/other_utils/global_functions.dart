@@ -106,8 +106,16 @@ num toNum(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? format,
+  String? locale,
 }) =>
-    ConvertObject.toNum(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toNum(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
 
 /// Attempts to convert an object to a [num], or returns `null` if the object is `null` or conversion fails.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -142,8 +150,16 @@ num? tryToNum(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? format,
+  String? locale,
 }) =>
-    ConvertObject.tryToNum(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToNum(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
 
 /// Converts an object to an [int].
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -176,8 +192,16 @@ int toInt(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? format,
+  String? locale,
 }) =>
-    ConvertObject.toInt(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
 
 /// Attempts to convert an object to an [int], or returns `null` if the object is `null` or conversion fails.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -212,8 +236,16 @@ int? tryToInt(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? format,
+  String? locale,
 }) =>
-    ConvertObject.tryToInt(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
 
 /// Converts an object to a [BigInt].
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -317,8 +349,16 @@ double toDouble(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? format,
+  String? locale,
 }) =>
-    ConvertObject.toDouble(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toDouble(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
 
 /// Attempts to convert an object to a [double], or returns `null` if the object is `null` or conversion fails.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -353,8 +393,16 @@ double? tryToDouble(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? format,
+  String? locale,
 }) =>
-    ConvertObject.tryToDouble(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToDouble(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
 
 /// Converts an object to a `bool`.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -475,12 +523,14 @@ DateTime toDateTime(
   Object? mapKey,
   int? listIndex,
   String? format,
+  String? locale,
 }) =>
     ConvertObject.toDateTime(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
       format: format,
+      locale: locale,
     );
 
 /// Attempts to convert an object to a [DateTime], or returns `null` if the object is `null` or conversion fails.
@@ -516,12 +566,14 @@ DateTime? tryToDateTime(
   Object? mapKey,
   int? listIndex,
   String? format,
+  String? locale,
 }) =>
     ConvertObject.tryToDateTime(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
       format: format,
+      locale: locale,
     );
 
 /// Converts an object to a [Uri].
