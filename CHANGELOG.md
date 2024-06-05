@@ -2,27 +2,23 @@
 
 ## [2.0.0]
 In this version, we have made extensive use of the `intl` package with a comprehensive set of new extensions to provide robust localization and formatting capabilities.
-
-### Added
-- **Intl Extensions**:
-  - **General**:
+- **[Intl Extensions](https://pub.dev/packages/dart_helper_utils#extensions-for-intl)**:
+  - **[General](https://pub.dev/packages/dart_helper_utils#general)**:
     - Map: `intlSelectLogic`, `intlSelect`
     - Num: `pluralize`, `getPluralCategory`
     - String: `setAsDefaultLocale`, `setAsSystemLocale`, `translate`, `genderSelect`, `getGenderCategory`
-  - **DateFormats**:
+  - **[DateFormat](https://pub.dev/packages/dart_helper_utils#dateformat)**:
     - DateTime: `tryFormat`, `format`, and various formatting methods.
-    - String: `dateFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`
-    - Nullable String: `tryToDateFormatted`, `tryToDateFormattedLoose`, `tryToDateFormattedStrict`, `tryToDateFormattedUtc`, `localeExists`
-  - **Bidi Extensions**:
+    - String: `dateFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`, `localeExists`.
+  - **[Bidi Extensions](https://pub.dev/packages/dart_helper_utils#bidi)**:
     - TextDirection: `toBidiFormatter`
-    - String: Various bidi text manipulation methods
-  - **Number Format Extensions**:
-    - String: `tryToNumFormatted`, `tryToIntFormatted`, `tryToDoubleFormatted`, `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted`
-    - Num: Various number formatting methods
-- **Global Functions**:
-  - Enhanced number and date conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`, `toDateTime`, `tryToDateTime`) to include optional `format` and `locale` parameters.
+    - String: Various bidi text manipulation methods.
+  - **[NumberFormat Extensions](https://pub.dev/packages/dart_helper_utils#numberformat)**:
+    - String: `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted`.
+    - Num: `formatAsCurrency`, `formatAsCompact`, and various other formatting methods.
 
-### Changes and Fixes 
+### Enhancements and Fixes
+- Enhanced number and date conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`, `toDateTime`, `tryToDateTime`) to include optional `format` and `locale` parameters.
 - Fixed an issue in `makeEncodable` on Maps where sets were not properly converted to JSON-encodable lists.
 - Consolidated several DateTime manipulation methods to ensure consistency and accuracy.
 - Addressed various minor bugs and inconsistencies in existing extension methods.

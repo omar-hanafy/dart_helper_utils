@@ -1,64 +1,58 @@
 ![](https://raw.githubusercontent.com/omar-hanafy/dart_helper_utils/fb2b340acff23ad89b09319dac691d98f1ecca90/logo.svg)
 
-The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extensions.
+The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extension.
 
-**Note:** This package is tailored for Dart projects. For Flutter projects, use [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), which includes all `dart_helper_utils` features plus additional utilities and extensions for Flutter, such as `Widget`, `Color`, and `BuildContext` extensions.
+**Note:** This package is tailored for Dart projects. For Flutter projects, use [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), which includes all `dart_helper_utils` features plus additional utilities and extension for Flutter, such as `Widget`, `Color`, and `BuildContext` extension.
 
 ## Table of Contents
 - [Featured](#featured)
-    - [Converting Objects](#converting-objects)
-        - [Sample Usage](#sample-usage)
-        - [Available Conversions](#available-conversions)
-        - [Optional Parameters](#optional-parameters)
-    - [TimeUtils](#timeutils)
-    
+  - [Converting Objects](#converting-objects)
+    - [Sample Usage](#sample-usage)
+    - [Available Conversions](#available-conversions)
+    - [Optional Parameters](#optional-parameters)
+  - [TimeUtils](#timeutils)
 - [Extensions](#extensions)
-    - [Date Extensions](#date-extensions)
-        - [Month and Day Name Conversion](#month-and-day-name-conversion)
-        - [Date and Time Parsing](#date-and-time-parsing)
-        - [Date and Time Formatting](#date-and-time-formatting)
-        - [Date and Time Comparison](#date-and-time-comparison)
-        - [Duration Calculations](#duration-calculations)
-        - [Basic DateTime Operations](#basic-datetime-operations)
-        - [DateTime Comparison](#datetime-comparison)
-        - [DateTime Manipulation](#datetime-manipulation)
-    - [String Extensions](#string-extensions)
-        - [Case Conversion](#case-conversion)
-        - [Text Formatting](#text-formatting)
-        - [String Replacement](#string-replacement)
-        - [String Comparison](#string-comparison)
-        - [String Limiting](#string-limiting)
-        - [Character Checks](#character-checks)
-        - [Validation](#validation)
-        - [Utility](#utility)
-        - [Parsing](#parsing)
-    - [Extensions For Intl](#extensions-for-intl)
-        - [General](#general)
-        - [DateFormats](#dateformats)
-        - [Bidi Extensions](#bidi-extensions)
-        - [Number Format Extensions](#number-format-extensions)
-    - [List and Iterable Extensions](#list-and-iterable-extensions)
-        - [List Extensions](#list-extensions)
-        - [Iterable Extensions](#iterable-extensions)
-    - [Duration Extensions](#duration-extensions)
-    - [Map Extensions](#map-extensions)
-    - [Number Extensions](#number-extensions)
-    - [Objects Extensions](#objects-extensions)
-    - [Set Extensions](#set-extensions)
-    - [Uri Extensions](#uri-extensions)
-    - [Bool Extensions](#bool-extensions)
+  - [Date Extensions](#date-extensions)
+    - [Parsing](#parsing)
+    - [Formatting](#formatting)
+    - [Comparison](#comparison)
+    - [Duration Calculation](#duration-calculation)
+    - [Manipulation](#manipulation)
+  - [Extensions For Intl](#extensions-for-intl)
+    - [DateFormat](#dateformat)
+    - [NumberFormat](#numberformat)
+    - [General](#general)
+    - [Bidi](#bidi)
+  - [String Extension](#string-extension)
+    - [Case Conversion](#case-conversion)
+    - [Text Formatting](#text-formatting)
+    - [String Replacement](#string-replacement)
+    - [String Comparison](#string-comparison)
+    - [String Limiting](#string-limiting)
+    - [Character Checks](#character-checks)
+    - [Validation](#validation)
+    - [Utility](#utility)
+    - [Parsing](#parsing)
+  - [Collection Extension](#collection-extension)
+    - [Iterable Extension](#iterable-extension)
+    - [List Extension](#list-extension)
+    - [Set Extension](#set-extension)
+    - [Map Extension](#map-extension)
+  - [Number Extension](#number-extension)
+      - [For All](#for-all-num)
+      - [For Int](#for-int)
+      - [For Double](#for-double)
+  - [Duration Extension](#duration-extension)
+  - [Uri Extension](#uri-extension)
+  - [Bool Extension](#bool-extension)
+  - [Objects Extension](#objects-extension)
     
-    
-
 # Featured
-
 ## Converting Objects
-
 Convert objects to various types, such as `int`, `double`, `bool`, `String`, `List`, `Set`, and `Map`. These methods are
 useful when dealing with dynamic data from APIs, offering simple and flexible type conversions.
 
 ### Sample Usage:
-
 Given an API response:
 
 ```dart
@@ -102,7 +96,9 @@ List myList = ConvertObject.toList(dynamicObject);
 ```
 
 ### Optional Parameters:
-Each method accepts two optional parameters: `listIndex` and `mapKey`. These parameters allow specific value extraction and conversion within a `List` or `Map`.
+- Each method accepts two optional parameters: `listIndex` and `mapKey`. These parameters allow specific value extraction and conversion within a `List` or `Map`.
+- All dates and number conversion methods accepts extra format, and local for better localization and formatting.
+
 
 #### Example with `listIndex`:
 ```dart
@@ -121,8 +117,6 @@ dynamic dynamicMap = {
 };
 final bool isHuman = toBool(dynamicMap['bools'], mapKey: 'isHuman'); // true
 ```
-
-Absolutely! Here's the enhanced documentation for the `ConvertObject` class update:
 
 #### Auto Decoding of JSON Strings for Collections
 
@@ -167,192 +161,143 @@ try {
 
 # Extensions
 ## Date Extensions
-### Month and Day Name Conversion
-- `toFullMonthName`: Numeric month (1-12) to full name (e.g., 1 to "January").
-- `toSmallMonthName`: Numeric month (1-12) to abbreviated name (e.g., 1 to "Jan").
-- `toFullDayName`: Numeric day (1-7) to full name (e.g., 1 to "Monday").
-- `toSmallDayName`: Numeric day (1-7) to abbreviated name (e.g., 1 to "Mon").
+### Parsing
+- `timestampToDate`: Converts a timestamp (milliseconds since epoch) to a `DateTime` object.
+- `tryToDateTime`: Safely parses a potentially null string into a nullable `DateTime`.
+- `toDateTime`: Converts a string to a `DateTime` object.
 
-### Date and Time Parsing
-- `timestampToDate`: Timestamp (milliseconds since epoch) to `DateTime`.
-- `tryToDateTime`: Safely parses a nullable string to a nullable `DateTime`.
-- `toDateTime`: String to `DateTime`.
+### Formatting
+- `local`: Converts a potentially null `DateTime` to local time.
+- `toUtcIso`: Converts a potentially null `DateTime` to ISO 8601 format in UTC.
+- `format`: Formats a `DateTime` object into a string according to the given format.
 
-### Date and Time Formatting
-- `local`: Converts a nullable `DateTime` to local time.
-- `toUtcIso`: Converts a nullable `DateTime` to ISO 8601 format in UTC.
+### Comparison
+- Relative to Current Time:
+  - `isTomorrow`
+  - `isToday`
+  - `isYesterday`
+  - `isInFuture`
+  - `isInPast`
+  - `isInPastWeek`
+  - `isInThisYear`
+- Within the Month/Year:
+  - `isFirstDayOfMonth`
+  - `isLastDayOfMonth`
+  - `isLeapYear`
+- Component-Level: (Compare two `DateTime` objects)
+  - `isAtSameYearAs(other: DateTime)`
+  - `isAtSameMonthAs(other: DateTime)`
+  - `isAtSameDayAs(other: DateTime)`
+  - ... (and so on for hour, minute, etc.)
 
-### Date and Time Comparison
-- `isTomorrow`: Checks if the nullable `DateTime` is tomorrow.
-- `isToday`: Checks if the nullable `DateTime` is today.
-- `isYesterday`: Checks if the nullable `DateTime` is yesterday.
-- `isPresent`: Checks if the nullable `DateTime` is in the future.
-- `isPast`: Checks if the nullable `DateTime` is in the past.
-- `isInPastWeek`: Checks if the nullable `DateTime` is within the past week.
-- `isInThisYear`: Checks if the nullable `DateTime` is in the current year.
-- `isFirstDayOfMonth`: Checks if the nullable `DateTime` is the first day of the month.
-- `isLastDayOfMonth`: Checks if the nullable `DateTime` is the last day of the month.
-- `isLeapYear`: Checks if the nullable `DateTime` is in a leap year.
+### Duration Calculation
+- `passedDuration`: Gets the duration that has passed since the given (potentially null) `DateTime`.
+- `remainingDuration`: Gets the duration remaining until the given (potentially null) `DateTime`.
+- `passedDays`: Gets the number of days that have passed since the given (potentially null) `DateTime`.
+- `remainingDays`: Gets the number of days remaining until the given (potentially null) `DateTime`.
 
-### Duration Calculations
-- `passedDuration`: Gets the duration since the nullable `DateTime`.
-- `remainingDuration`: Gets the duration until the nullable `DateTime`.
-- `remainingDays`: Gets the remaining days until the nullable `DateTime`.
-- `passedDays`: Gets the passed days since the nullable `DateTime`.
+### Manipulation
+- Start Points:
+  - `startOfDay`: Gets the start of the day (midnight) for the given `DateTime`.
+  - `startOfMonth`: Gets the start of the month for the given `DateTime`.
+  - `startOfYear`: Gets the start of the year for the given `DateTime`.
+- Extraction:
+  - `dateOnly`: Extracts only the date portion (midnight time) from the `DateTime`.
+- Lists:
+  - `daysInMonth`: Gets a list of all the `DateTime` objects representing the days in the month of the given `DateTime`.
+- Navigation:
+  - `previousDay`, `nextDay`: Gets the `DateTime` for the previous/next day.
+  - `previousWeek`, `nextWeek`: Gets the `DateTime` for the previous/next week.
+  - `firstDayOfWeek`, `lastDayOfWeek`: Gets the `DateTime` for the first/last day of the week.
+  - `previousMonth`, `nextMonth`: Gets the `DateTime` for the previous/next month.
+  - `firstDayOfMonth`, `lastDayOfMonth`: Gets the `DateTime` for the first/last day of the month.
 
-### Basic DateTime Operations
-- `local`: Converts a `DateTime` to local time.
-- `format`: Formats a `DateTime` to a string with the specified format.
-- `toUtcIso`: Converts a `DateTime` to ISO 8601 format in UTC.
-- `passedDuration`: Gets the duration since the `DateTime`.
-- `passedDays`: Gets the passed days since the `DateTime`.
-- `remainingDuration`: Gets the duration until the `DateTime`.
-- `remainingDays`: Gets the remaining days until the `DateTime`.
+## Extensions For Intl
+### DateFormat
+#### on String
+- `dateFormat`: Returns a `DateFormat` object based on the string pattern.
+- `toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
+- `toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
+- `toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
+- `toDateFormattedUtc`: Parses the string to `DateTime` in UTC using the provided format and locale.
+- `tryToDateFormatted`: Attempts to parse the nullable string to `DateTime` with the provided format, locale, and UTC option.
+- `tryToDateFormattedLoose`: Attempts to parse the nullable string to `DateTime` using loose parsing.
+- `tryToDateFormattedStrict`: Attempts to parse the nullable string to `DateTime` using strict parsing.
+- `tryToDateFormattedUtc`: Attempts to parse the nullable string to `DateTime` in UTC using the provided format and locale.
+- `localeExists`: Checks if the locale exists in `DateFormat`.
+#### on DateTime
+- `tryFormat` and `format`: Formats the DateTime object using the provided pattern and optional locale.
+- A variety of methods to format `DateTime` objects in different styles:
+  - **Basic:** `yMMMMdFormat`, `formatAsd`
+  - **Weekday:** `formatAsEEEE`, `formatAsEEEEE`
+  - **Month:** `formatAsLLL`, `formatAsLLLL`, `formatAsMMMMEEEEd`, etc.
+  - **Quarter:** `formatAsQQQ`, `formatAsQQQQ`
+  - **Year:** `formatAsyMMM`, `formatAsyQQQQ`, etc.
+  - **Time:** `formatAsH`, `formatAsHm`, etc.
+    All methods support an optional `locale` parameter.
 
-### DateTime Comparison
-- `isAtSameYearAs`, `isAtSameMonthAs`, `isAtSameDayAs`, `isAtSameHourAs`, `isAtSameMinuteAs`, `isAtSameSecondAs`, `isAtSameMillisecondAs`, `isAtSameMicrosecondAs`: Checks if another `DateTime` matches the same component.
+## NumberFormat
+#### on String
+- `tryToNumFormatted`: Tries to parse the string to a number with the given pattern and locale.
+- `tryToIntFormatted`: Tries to parse the string to an integer with the given pattern and locale.
+- `tryToDoubleFormatted`: Tries to parse the string to a double with the given pattern and locale.
+- `toNumFormatted`: Parses the string to a number with the given pattern and locale.
+- `toIntFormatted`: Parses the string to an integer with the given pattern and locale.
+- `toDoubleFormatted`: Parses the string to a double with the given pattern and locale.
 
-### DateTime Manipulation
-- `startOfDay`, `startOfMonth`, `startOfYear`: Gets the start of the day, month, year.
-- `tomorrow`, `yesterday`, `today`: Gets the date of tomorrow, yesterday, today.
-- `dateOnly`: Gets the date only (midnight time).
-- `daysInMonth`: Gets the list of days in the month.
-- `previousDay`, `nextDay`: Gets the previous/next day.
-- `previousWeek`, `nextWeek`: Gets the date of the previous/next week.
-- `firstDayOfWeek`, `lastDayOfWeek`: Gets the first/last day of the week.
-- `previousMonth`, `nextMonth`: Gets the date of the previous/next month.
-- `firstDayOfMonth`, `lastDayOfMonth`: Gets the first/last day of the month.
-- `addOrRemoveYears`, `addOrRemoveMonth`, `addOrRemoveDay`, `addOrRemoveMinutes`, `addOrRemoveSeconds`: Adds or removes years, months, days, minutes, seconds from a `DateTime`.
-- `min`, `max`: Returns the smaller/larger of two `DateTime` objects.
-- `addDays`, `addHours`: Adds days/hours to a `DateTime`.
+#### on Num
+- `formatAsCurrency`: Formats the number as currency with the given locale, symbol, and decimal digits.
+- `formatAsSimpleCurrency`: Formats the number as simple currency with the given locale and name.
+- `formatAsCompact`: Formats the number in a compact form with the given locale.
+- `formatAsCompactLong`: Formats the number in a long compact form with the given locale.
+- `formatAsCompactCurrency`: Formats the number as compact simple currency with the given locale and name.
+- `formatAsDecimal`: Formats the number as a decimal with the given locale and decimal digits.
+- `formatAsPercentage`: Formats the number as a percentage with the given locale.
+- `formatAsDecimalPercent`: Formats the number as a decimal percentage with the given locale and decimal digits.
+- `formatAsScientific`: Formats the number as a scientific value with the given locale.
+- `formatWithCustomPattern`: Formats the number using a custom pattern with the given locale.
 
-## Duration Extensions
-- `delayed(FutureOr<T> Function()? computation)`: Delays execution by the duration.
-- `fromNow`: Adds the Duration to the current DateTime and gives a future time.
-- `ago`: Subtracts the Duration from the current DateTime and gives a pastime.
+### General
+#### on Map
+- `intlSelectLogic`: Selects a value from the map based on a choice.
+- `intlSelect`: Formats a message based on the choice and returns the formatted message.
 
-## List and Iterable Extensions
-### List Extensions
-- `of`: Retrieves the element at the specified index in a null-safe manner.
-- `tryRemoveAt`: Removes the element at the specified index in a null-safe manner.
-- `indexOfOrNull`: Retrieves the index of the specified element in a null-safe manner.
-- `indexWhereOrNull`: Retrieves the index of the first element that matches the specified predicate in a null-safe manner.
-- `tryRemoveWhere`: Removes elements that match the specified condition in a null-safe manner.
-- `halfLength`: Returns half the size of the list.
-- `takeOnly`: Returns a list containing the first `n` elements.
-- `drop`: Returns a list containing all elements except the first `n` elements.
-- `firstHalf`: Returns the first half of the list.
-- `secondHalf`: Returns the second half of the list.
-- `swap`: Returns a list with two items swapped.
-- `getRandom`: Retrieves a random element from the list.
+#### on Num
+- `pluralize`: Returns a localized string based on the plural category of the number.
+- `getPluralCategory`: Determines the plural category of the number based on the current locale.
 
-### Iterable Extensions
-- `isEmptyOrNull`: Returns true if the iterable is either null or empty.
-- `isNotEmptyOrNull`: Returns false if the iterable is either null or empty.
-- `elementAtOrNull`: Retrieves the element at the specified index or returns null.
-- `elementOrNull`: Retrieves the element at the specified index or returns a default value.
-- `firstOrNull`: Retrieves the first element or returns null.
-- `lastOrNull`: Retrieves the last element or returns null.
-- `firstWhereOrNull`: Retrieves the first element that matches the specified predicate or returns null.
-- `lastOrDefault`: Retrieves the last element or returns a default value.
-- `firstOrDefault`: Retrieves the first element or returns a default value.
-- `tryGetRandom`: Retrieves a random element from the iterable or returns null.
-- `orEmpty`: Returns the iterable if it's not null and the empty list otherwise.
-- `any`: Returns true if at least one element matches the given predicate.
-- `concatWithSingleList`: Concatenates the current iterable with another iterable.
-- `concatWithMultipleList`: Concatenates the current iterable with multiple iterables.
-- `toMutableSet`: Converts the iterable to a set.
-- `intersect`: Returns a set containing all elements that are contained by both this set and the specified collection.
-- `groupBy`: Groups the elements by the value returned by the specified key function.
-- `filter`: Returns a list containing only elements matching the given predicate.
-- `filterNot`: Returns a list containing all elements not matching the given predicate.
-- `mapList`: Returns the result of applying a function to each element in the iterable as a list.
-- `whereIndexed`: Returns an iterable with all elements that satisfy the predicate.
-- `forEachIndexed`: Performs the given action on each element in the iterable, providing the sequential index with the element.
-- `sortedDescending`: Returns a new list with all elements sorted in descending order.
-- `containsAll`: Returns true if all elements in the specified collection are contained in this collection.
-- `count`: Returns the number of elements that match the given predicate.
-- `all`: Returns true if all elements match the given predicate.
-- `distinctBy`: Returns a list containing only elements that have distinct keys, determined by the predicate.
-- `subtract`: Returns a set containing all elements that are contained by this collection and not contained by the specified collection.
-- `find`: Returns the first element matching the given predicate, or null if not found.
-- `encodedJson`: Encodes the iterable as a JSON string.
+#### on String
+- `setAsDefaultLocale`: Sets the string as the default locale for subsequent `Intl` operations.
+- `setAsSystemLocale`: Sets the string as the system locale.
+- `translate`: Translates the string using `Intl.message`.
+- `genderSelect`: Selects a localized string based on the gender associated with the string.
+- `getGenderCategory`: Determines the gender category of the string based on the current locale.
 
-## Map Extensions
-- `makeEncodable`: Converts a map to an encodable format.
-- `safelyEncodedJson`: Returns a safely encoded JSON string.
-- `isEmptyOrNull`: Checks if the map is empty or null.
-- `isNotEmptyOrNull`: Checks if the map is not empty or null.
-- `flatJson({String delimiter = '.', bool safe = false, int? maxDepth})`: Flattens a JSON structure.
+### Bidi
+#### on TextDirection
+- `toBidiFormatter`: Creates a BidiFormatter object based on the directionality.
 
-## Number Extensions
-### For `num`
-- `isSuccessHttpResCode`: Checks if the HTTP response code is 200 or 201.
-- `isValidPhoneNumber`: Checks if the number is a valid phone number.
-- `toHttpResStatus`: Converts the number to an `HttpResStatus` enum.
-- `tryToInt`: Parses the number as an integer or returns null if it is not a number.
-- `tryToDouble`: Parses the number as a double or returns null if it is not a number.
-- `percentage`: Calculates the percentage of the number with respect to a total value, with an option to allow decimals.
-- `asBool`: Returns true if the number is greater than zero.
-- `isPositive`: Returns true if the number is positive.
-- `isNegative`: Returns true if the number is negative.
-- `isZeroOrNull`: Returns true if the number is zero or null.
-- `isZero`: Returns true if the number is zero.
-- `isValidPhoneNumber`: Checks if the number is a valid phone number.
-- `numberOfDigits`: Returns the number of digits in the number.
-- `removeTrailingZero`: Removes trailing zeros from the number's string representation.
-- `roundToFiftyOrHundred`: Rounds the number to the nearest fifty or hundred.
-- `roundToTenth`: Rounds the number to the nearest tenth.
-- `tenth`: Returns a tenth of the number.
-- `fourth`: Returns a fourth of the number.
-- `third`: Returns a third of the number.
-- `half`: Returns half of the number.
-- `getRandom`: Returns a random integer between 0 and the number.
-- `asGreeks`: Converts the number to a format that includes Greek symbols for thousands, millions, and beyond.
-- `delay`: Delays code execution by the number of seconds.
-- `daysDelay`: Delays code execution by the number of days.
-- `hoursDelay`: Delays code execution by the number of hours.
-- `minDelay`: Delays code execution by the number of minutes.
-- `secDelay`: Delays code execution by the number of seconds.
-- `millisecondsDelay`: Delays code execution by the number of milliseconds.
-- `asMilliseconds`: Converts the number to a `Duration` in milliseconds.
-- `asSeconds`: Converts the number to a `Duration` in seconds.
-- `asMinutes`: Converts the number to a `Duration` in minutes.
-- `asHours`: Converts the number to a `Duration` in hours.
-- `asDays`: Converts the number to a `Duration` in days.
-- `until`: Generates a sequence of numbers starting from the current number up to the specified end value, with the specified step size.
+#### on String
+- `stripHtmlIfNeeded`: Strips HTML tags from the string if needed, preserving bidirectional text direction.
+- `startsWithLtr`: Checks if the string starts with left-to-right (LTR) text, optionally considering HTML markup.
+- `startsWithRtl`: Checks if the string starts with right-to-left (RTL) text, optionally considering HTML markup.
+- `endsWithLtr`: Checks if the string ends with left-to-right (LTR) text, optionally considering HTML markup.
+- `endsWithRtl`: Checks if the string ends with right-to-left (RTL) text, optionally considering HTML markup.
+- `hasAnyLtr`: Checks if the string contains any left-to-right (LTR) characters, optionally considering HTML markup.
+- `hasAnyRtl`: Checks if the string contains any right-to-left (RTL) characters, optionally considering HTML markup.
+- `isRtlLanguage`: Checks if the string represents a right-to-left (RTL) language text.
+- `enforceRtlInHtml`: Enforces right-to-left (RTL) directionality in HTML markup.
+- `enforceRtlIn`: Enforces right-to-left (RTL) directionality in plain text.
+- `enforceLtrInHtml`: Enforces left-to-right (LTR) directionality in HTML markup.
+- `enforceLtr`: Enforces left-to-right (LTR) directionality in plain text.
+- `guardBracketInHtml`: Guards brackets in HTML markup to maintain bidirectional text support.
+- `guardBracket`: Guards brackets in plain text to maintain bidirectional text support.
+- `guessDirection`: Guesses the text directionality based on its content, optionally considering HTML markup.
+- `detectRtlDirectionality`: Detects the predominant text directionality in the string, optionally considering HTML markup.
+- `wrapWithSpan`: Wraps the text with a `span` tag and sets the direction attribute (dir) based on the provided or estimated direction.
+- `wrapWithUnicode`: Wraps the text with unicode BiDi formatting characters based on the provided or estimated direction.
 
-### For `int`
-- `inRangeOf`: Returns the number if it is within the specified range, otherwise returns the min or max value.
-- `absolute`: Returns the absolute value of the number.
-- `doubled`: Returns the number multiplied by two.
-- `tripled`: Returns the number multiplied by three.
-- `quadrupled`: Returns the number multiplied by four.
-- `squared`: Returns the square of the number.
-
-### For `double`
-- `inRangeOf`: Returns the number if it is within the specified range, otherwise returns the min or max value.
-- `absolute`: Returns the absolute value of the number.
-- `doubled`: Returns the number multiplied by two.
-- `tripled`: Returns the number multiplied by three.
-- `quadrupled`: Returns the number multiplied by four.
-- `squared`: Returns the square of the number.
-
-## Objects Extensions
-- `encode({Object? Function(dynamic object)? toEncodable})`: Encodes an object to JSON.
-- `isNull`: Checks if the object is null.
-- `isNotNull`: Checks if the object is not null.
-- `asBool`: Converts an object to a boolean value.
-
-## Set Extensions
-- `isEmptyOrNull`: Checks if the set is empty or null.
-- `isNotEmptyOrNull`: Checks if the set is not empty or null.
-- `addIfNotNull(T? value)`: Adds a value to the set if it's not null.
-- `toMutableSet()`: Converts the set to a mutable set.
-- `intersect(Iterable<T> other)`: Returns the intersection of two sets.
-
-## String Extensions
-
+## String Extension
 ### Case Conversion
 - `toPascalCase`: PascalCase aka (UpperCamelCase).
 - `toTitleCase`: Title Case
@@ -369,7 +314,6 @@ try {
 - `toDotCase`: dot.case.
 - `toFlatCase`: flatcase.
 - `toScreamingCase`: SCREAMINGCASE.
-
 - `toTitle`: Capitalizes the first letter of each word in the string while retaining `-`, `_`, and space characters.
 - `toWords`: Converts any `String` to a `List<String>`, handling complex cases more effectively than the native `split()` method.
 
@@ -440,7 +384,126 @@ try {
 - `toDouble`: Parses the string as a double.
 - `toInt`: Parses the string as an integer.
 
-## Uri Extensions
+## Collection Extension
+### Iterable Extension
+- `isEmptyOrNull`: Returns true if the iterable is either null or empty.
+- `isNotEmptyOrNull`: Returns false if the iterable is either null or empty.
+- `elementAtOrNull`: Retrieves the element at the specified index or returns null.
+- `elementOrNull`: Retrieves the element at the specified index or returns a default value.
+- `firstOrNull`: Retrieves the first element or returns null.
+- `lastOrNull`: Retrieves the last element or returns null.
+- `firstWhereOrNull`: Retrieves the first element that matches the specified predicate or returns null.
+- `lastOrDefault`: Retrieves the last element or returns a default value.
+- `firstOrDefault`: Retrieves the first element or returns a default value.
+- `tryGetRandom`: Retrieves a random element from the iterable or returns null.
+- `orEmpty`: Returns the iterable if it's not null and the empty list otherwise.
+- `any`: Returns true if at least one element matches the given predicate.
+- `concatWithSingleList`: Concatenates the current iterable with another iterable.
+- `concatWithMultipleList`: Concatenates the current iterable with multiple iterables.
+- `toMutableSet`: Converts the iterable to a set.
+- `intersect`: Returns a set containing all elements that are contained by both this set and the specified collection.
+- `groupBy`: Groups the elements by the value returned by the specified key function.
+- `filter`: Returns a list containing only elements matching the given predicate.
+- `filterNot`: Returns a list containing all elements not matching the given predicate.
+- `mapList`: Returns the result of applying a function to each element in the iterable as a list.
+- `whereIndexed`: Returns an iterable with all elements that satisfy the predicate.
+- `forEachIndexed`: Performs the given action on each element in the iterable, providing the sequential index with the element.
+- `sortedDescending`: Returns a new list with all elements sorted in descending order.
+- `containsAll`: Returns true if all elements in the specified collection are contained in this collection.
+- `count`: Returns the number of elements that match the given predicate.
+- `all`: Returns true if all elements match the given predicate.
+- `distinctBy`: Returns a list containing only elements that have distinct keys, determined by the predicate.
+- `subtract`: Returns a set containing all elements that are contained by this collection and not contained by the specified collection.
+- `find`: Returns the first element matching the given predicate, or null if not found.
+- `encodedJson`: Encodes the iterable as a JSON string.
+
+### List Extension
+- `of`: Retrieves the element at the specified index in a null-safe manner.
+- `tryRemoveAt`: Removes the element at the specified index in a null-safe manner.
+- `indexOfOrNull`: Retrieves the index of the specified element in a null-safe manner.
+- `indexWhereOrNull`: Retrieves the index of the first element that matches the specified predicate in a null-safe manner.
+- `tryRemoveWhere`: Removes elements that match the specified condition in a null-safe manner.
+- `halfLength`: Returns half the size of the list.
+- `takeOnly`: Returns a list containing the first `n` elements.
+- `drop`: Returns a list containing all elements except the first `n` elements.
+- `firstHalf`: Returns the first half of the list.
+- `secondHalf`: Returns the second half of the list.
+- `swap`: Returns a list with two items swapped.
+- `getRandom`: Retrieves a random element from the list.
+
+### Set Extension
+- `isEmptyOrNull`: Checks if the set is empty or null.
+- `isNotEmptyOrNull`: Checks if the set is not empty or null.
+- `addIfNotNull(T? value)`: Adds a value to the set if it's not null.
+- `toMutableSet()`: Converts the set to a mutable set.
+- `intersect(Iterable<T> other)`: Returns the intersection of two sets.
+
+### Map Extension
+- `makeEncodable`: Converts a map to an encodable format.
+- `safelyEncodedJson`: Returns a safely encoded JSON string.
+- `flatJson({String delimiter = '.', bool safe = false, int? maxDepth})`: Flattens a JSON structure.
+- `isEmptyOrNull`: Checks if the map is empty or null.
+- `isNotEmptyOrNull`: Checks if the map is not empty or null.
+
+## Number Extension
+### For all `num`
+- `isSuccessHttpResCode`: Checks if the HTTP response code is 200 or 201.
+- `isValidPhoneNumber`: Checks if the number is a valid phone number.
+- `toHttpResStatus`: Converts the number to an `HttpResStatus` enum.
+- `tryToInt`: Parses the number as an integer or returns null if it is not a number.
+- `tryToDouble`: Parses the number as a double or returns null if it is not a number.
+- `percentage`: Calculates the percentage of the number with respect to a total value, with an option to allow decimals.
+- `asBool`: Returns true if the number is greater than zero.
+- `isPositive`: Returns true if the number is positive.
+- `isNegative`: Returns true if the number is negative.
+- `isZeroOrNull`: Returns true if the number is zero or null.
+- `isZero`: Returns true if the number is zero.
+- `isValidPhoneNumber`: Checks if the number is a valid phone number.
+- `numberOfDigits`: Returns the number of digits in the number.
+- `removeTrailingZero`: Removes trailing zeros from the number's string representation.
+- `roundToFiftyOrHundred`: Rounds the number to the nearest fifty or hundred.
+- `roundToTenth`: Rounds the number to the nearest tenth.
+- `tenth`: Returns a tenth of the number.
+- `fourth`: Returns a fourth of the number.
+- `third`: Returns a third of the number.
+- `half`: Returns half of the number.
+- `getRandom`: Returns a random integer between 0 and the number.
+- `asGreeks`: Converts the number to a format that includes Greek symbols for thousands, millions, and beyond.
+- `delay`: Delays code execution by the number of seconds.
+- `daysDelay`: Delays code execution by the number of days.
+- `hoursDelay`: Delays code execution by the number of hours.
+- `minDelay`: Delays code execution by the number of minutes.
+- `secDelay`: Delays code execution by the number of seconds.
+- `millisecondsDelay`: Delays code execution by the number of milliseconds.
+- `asMilliseconds`: Converts the number to a `Duration` in milliseconds.
+- `asSeconds`: Converts the number to a `Duration` in seconds.
+- `asMinutes`: Converts the number to a `Duration` in minutes.
+- `asHours`: Converts the number to a `Duration` in hours.
+- `asDays`: Converts the number to a `Duration` in days.
+- `until`: Generates a sequence of numbers starting from the current number up to the specified end value, with the specified step size.
+
+### For `int`
+- `inRangeOf`: Returns the number if it is within the specified range, otherwise returns the min or max value.
+- `absolute`: Returns the absolute value of the number.
+- `doubled`: Returns the number multiplied by two.
+- `tripled`: Returns the number multiplied by three.
+- `quadrupled`: Returns the number multiplied by four.
+- `squared`: Returns the square of the number.
+
+### For `double`
+- `inRangeOf`: Returns the number if it is within the specified range, otherwise returns the min or max value.
+- `absolute`: Returns the absolute value of the number.
+- `doubled`: Returns the number multiplied by two.
+- `tripled`: Returns the number multiplied by three.
+- `quadrupled`: Returns the number multiplied by four.
+- `squared`: Returns the square of the number.
+
+## Duration Extension
+- `delayed(FutureOr<T> Function()? computation)`: Delays execution by the duration.
+- `fromNow`: Adds the Duration to the current DateTime and gives a future time.
+- `ago`: Subtracts the Duration from the current DateTime and gives a pastime.
+
+## Uri Extension
 - `isValidUri`: Checks if the string is a valid URI.
 - `toUri`: Converts the string to a URI object.
 - `isHttp`: Checks if the URI uses the HTTP scheme.
@@ -448,96 +511,17 @@ try {
 - `host`: Returns the host part of the URI.
 - `path`: Returns the path part of the URI.
 
-## Bool Extensions
+## Bool Extension
 - `toggled`: returns a new bool which is toggled from the current one.
 - `val` & `isTrue`: (nullable boolean): Returns `true` if the value is not null and true
 - `isFalse`: (nullable boolean): Returns `true` if the value is not null and false
 - `binary`: Returns `1` if the value is non-null and true, otherwise returns `0`.
 
-## Extensions For Intl
-### General
-#### on Map
-- `intlSelectLogic`: Selects a value from the map based on a choice.
-- `intlSelect`: Formats a message based on the choice and returns the formatted message.
-
-#### on Num
-- `pluralize`: Returns a localized string based on the plural category of the number.
-- `getPluralCategory`: Determines the plural category of the number based on the current locale.
-
-#### on String
-- `setAsDefaultLocale`: Sets the string as the default locale for subsequent `Intl` operations.
-- `setAsSystemLocale`: Sets the string as the system locale.
-- `translate`: Translates the string using `Intl.message`.
-- `genderSelect`: Selects a localized string based on the gender associated with the string.
-- `getGenderCategory`: Determines the gender category of the string based on the current locale.
-
-### DateFormats
-#### on String
-- `dateFormat`: Returns a `DateFormat` object based on the string pattern.
-- `toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
-- `toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
-- `toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
-- `toDateFormattedUtc`: Parses the string to `DateTime` in UTC using the provided format and locale.
-- `tryToDateFormatted`: Attempts to parse the nullable string to `DateTime` with the provided format, locale, and UTC option.
-- `tryToDateFormattedLoose`: Attempts to parse the nullable string to `DateTime` using loose parsing.
-- `tryToDateFormattedStrict`: Attempts to parse the nullable string to `DateTime` using strict parsing.
-- `tryToDateFormattedUtc`: Attempts to parse the nullable string to `DateTime` in UTC using the provided format and locale.
-- `localeExists`: Checks if the locale exists in `DateFormat`.
-#### on DateTime
-- `tryFormat` and `format`: Formats the DateTime object using the provided pattern and optional locale.
-- A variety of methods to format `DateTime` objects in different styles:
-    - **Basic:** `yMMMMdFormat`, `d_Format`
-    - **Weekday:** `E_Format`, `EEEE_Format`, `EEEEE_Format`
-    - **Month:** `LLL_Format`, `LLLL_Format`, `MMMMEEEEd_Format`, etc.
-    - **Quarter:** `QQQ_Format`, `QQQQ_Format`
-    - **Year:** `y_Format`, `yMMM_Format`, `yQQQQ_Format`, etc.
-    - **Time:** `H_Format`, `Hm_Format`, `jms_Format`
-      All methods support an optional `locale` parameter.
-
-### Bidi Extensions
-#### on TextDirection
-- `toBidiFormatter`: Creates a BidiFormatter object based on the directionality.
-
-#### on String
-- `stripHtmlIfNeeded`: Strips HTML tags from the string if needed, preserving bidirectional text direction.
-- `startsWithLtr`: Checks if the string starts with left-to-right (LTR) text, optionally considering HTML markup.
-- `startsWithRtl`: Checks if the string starts with right-to-left (RTL) text, optionally considering HTML markup.
-- `endsWithLtr`: Checks if the string ends with left-to-right (LTR) text, optionally considering HTML markup.
-- `endsWithRtl`: Checks if the string ends with right-to-left (RTL) text, optionally considering HTML markup.
-- `hasAnyLtr`: Checks if the string contains any left-to-right (LTR) characters, optionally considering HTML markup.
-- `hasAnyRtl`: Checks if the string contains any right-to-left (RTL) characters, optionally considering HTML markup.
-- `isRtlLanguage`: Checks if the string represents a right-to-left (RTL) language text.
-- `enforceRtlInHtml`: Enforces right-to-left (RTL) directionality in HTML markup.
-- `enforceRtlIn`: Enforces right-to-left (RTL) directionality in plain text.
-- `enforceLtrInHtml`: Enforces left-to-right (LTR) directionality in HTML markup.
-- `enforceLtr`: Enforces left-to-right (LTR) directionality in plain text.
-- `guardBracketInHtml`: Guards brackets in HTML markup to maintain bidirectional text support.
-- `guardBracket`: Guards brackets in plain text to maintain bidirectional text support.
-- `guessDirection`: Guesses the text directionality based on its content, optionally considering HTML markup.
-- `detectRtlDirectionality`: Detects the predominant text directionality in the string, optionally considering HTML markup.
-- `wrapWithSpan`: Wraps the text with a `span` tag and sets the direction attribute (dir) based on the provided or estimated direction.
-- `wrapWithUnicode`: Wraps the text with unicode BiDi formatting characters based on the provided or estimated direction.
-
-## Number Format Extensions
-#### on String
-- `tryToNumFormatted`: Tries to parse the string to a number with the given pattern and locale.
-- `tryToIntFormatted`: Tries to parse the string to an integer with the given pattern and locale.
-- `tryToDoubleFormatted`: Tries to parse the string to a double with the given pattern and locale.
-- `toNumFormatted`: Parses the string to a number with the given pattern and locale.
-- `toIntFormatted`: Parses the string to an integer with the given pattern and locale.
-- `toDoubleFormatted`: Parses the string to a double with the given pattern and locale.
-
-#### on Num
-- `formatAsCurrency`: Formats the number as currency with the given locale, symbol, and decimal digits.
-- `formatAsSimpleCurrency`: Formats the number as simple currency with the given locale and name.
-- `formatAsCompact`: Formats the number in a compact form with the given locale.
-- `formatAsCompactLong`: Formats the number in a long compact form with the given locale.
-- `formatAsCompactCurrency`: Formats the number as compact simple currency with the given locale and name.
-- `formatAsDecimal`: Formats the number as a decimal with the given locale and decimal digits.
-- `formatAsPercentage`: Formats the number as a percentage with the given locale.
-- `formatAsDecimalPercent`: Formats the number as a decimal percentage with the given locale and decimal digits.
-- `formatAsScientific`: Formats the number as a scientific value with the given locale.
-- `formatWithCustomPattern`: Formats the number using a custom pattern with the given locale.
+## Objects Extension
+- `encode({Object? Function(dynamic object)? toEncodable})`: Encodes an object to JSON.
+- `isNull`: Checks if the object is null.
+- `isNotNull`: Checks if the object is not null.
+- `asBool`: Converts an object to a boolean value.
 
 ## Exceptions
 The `ConvertObject` class throws a `ParsingException` if there is an error while converting an object. This exception
@@ -553,5 +537,5 @@ pull request in the [repository](https://github.com/omar-hanafy/dart_helper_util
 <a href="https://www.buymeacoffee.com/omar.hanafy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 **KEYWORDS:**
-extension pack, helpers, utilities, string manipulation, conversions, time utils, date extensions, datetime helper,
-iterable, map, number, object, set, URI, and boolean extensions, JSON encoding/decoding.
+extension pack, helpers, utilities, string manipulation, conversions, time utils, date extension, datetime helper,
+iterable, map, number, object, set, URI, and boolean extension, JSON encoding/decoding.
