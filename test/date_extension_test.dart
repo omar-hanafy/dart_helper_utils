@@ -2,7 +2,7 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('FHUDateExtensions', () {
+  group('DHUDateExtensions', () {
     final testDate = DateTime(2022, 5, 10, 10, 30);
 
     test('local', () {
@@ -270,8 +270,8 @@ void main() {
       expect(days.last, DateTime(2022, 5, 14));
     });
 
-    // Tests for FHUDateNullString extension
-    group('FHUDateNullString', () {
+    // Tests for DHUDateNullString extension
+    group('DHUDateNullString', () {
       test('tryToDateTime', () {
         expect('2022-05-10'.tryToDateTime, DateTime(2022, 5, 10));
         expect('invalid-date'.tryToDateTime, null);
@@ -287,8 +287,8 @@ void main() {
       });
     });
 
-    // Tests for FHUToDate extension
-    group('FHUToDate', () {
+    // Tests for DHUToDate extension
+    group('DHUToDate', () {
       test('toSmallMonthName', () {
         expect(1.toSmallMonthName, 'Jan');
         expect(12.toSmallMonthName, 'Dec');

@@ -1,11 +1,11 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-extension FHUDateString on String {
+extension DHUDateString on String {
   /// Parse string to [DateTime] using null Safety
   DateTime get toDateTime => DateTime.parse(this);
 }
 
-extension FHUDateNullString on String? {
+extension DHUDateNullString on String? {
   DateTime? get tryToDateTime => isBlank ? null : DateTime.tryParse(this!);
 
   DateTime get timestampToDate => this.toInt.timestampToDate;
@@ -56,7 +56,7 @@ extension NumberToDateNames on num {
       DateTime.fromMillisecondsSinceEpoch(this.toInt());
 }
 
-extension FHUNullableDateExtensions on DateTime? {
+extension DHUNullableDateExtensions on DateTime? {
   DateTime? get local => this?.toLocal();
 
   String? get toUtcIso => this?.toUtc().toIso8601String();
@@ -98,7 +98,7 @@ extension FHUNullableDateExtensions on DateTime? {
   int? get passedDays => isNull ? null : DateTime.now().daysDifferenceTo(this);
 }
 
-extension FHUDateExtensions on DateTime {
+extension DHUDateExtensions on DateTime {
   /// Converts this DateTime to local time.
   DateTime get local => toLocal();
 

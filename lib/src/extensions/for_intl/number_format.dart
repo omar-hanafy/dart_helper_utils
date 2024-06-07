@@ -1,7 +1,6 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:intl/intl.dart';
 
-// TODO(OMAR): use formatted logic in the [ConvertObject].
 extension DHUNumberFormatNullableStringExtensions on String? {
   /// Tries to parse the string to a number with the given [newPattern] and [locale].
   /// Returns null if the string is null or empty.
@@ -36,7 +35,7 @@ extension DHUNumberFormatStringExtensions on String {
 extension DHUNumberFormatExtensions on num {
   /// Formats the number as currency with the given [locale], [symbol], and [decimalDigits].
   String formatAsCurrency({
-    String locale = 'en_US',
+    String? locale,
     String symbol = r'$',
     int decimalDigits = 2,
   }) {
@@ -46,51 +45,50 @@ extension DHUNumberFormatExtensions on num {
   }
 
   /// Formats the number as simple currency with the given [locale] and [name].
-  String formatAsSimpleCurrency({String locale = 'en_US', String? name}) {
+  String formatAsSimpleCurrency({String? locale, String? name}) {
     return NumberFormat.simpleCurrency(locale: locale, name: name).format(this);
   }
 
   /// Formats the number in a compact form with the given [locale].
-  String formatAsCompact({String locale = 'en_US'}) {
+  String formatAsCompact({String? locale}) {
     return NumberFormat.compact(locale: locale).format(this);
   }
 
   /// Formats the number in a long compact form with the given [locale].
-  String formatAsCompactLong({String locale = 'en_US'}) {
+  String formatAsCompactLong({String? locale}) {
     return NumberFormat.compactLong(locale: locale).format(this);
   }
 
   /// Formats the number as compact simple currency with the given [locale] and [name].
-  String formatAsCompactCurrency({String locale = 'en_US', String? name}) {
+  String formatAsCompactCurrency({String? locale, String? name}) {
     return NumberFormat.compactSimpleCurrency(locale: locale, name: name)
         .format(this);
   }
 
   /// Formats the number as a decimal with the given [locale] and [decimalDigits].
-  String formatAsDecimal({String locale = 'en_US', int decimalDigits = 2}) {
+  String formatAsDecimal({String? locale, int decimalDigits = 2}) {
     return NumberFormat.decimalPattern(locale).format(this);
   }
 
   /// Formats the number as a percentage with the given [locale].
-  String formatAsPercentage({String locale = 'en_US'}) {
+  String formatAsPercentage({String? locale}) {
     return NumberFormat.percentPattern(locale).format(this);
   }
 
   /// Formats the number as a decimal percentage with the given [locale] and [decimalDigits].
-  String formatAsDecimalPercent(
-      {String locale = 'en_US', int decimalDigits = 2}) {
+  String formatAsDecimalPercent({String? locale, int decimalDigits = 2}) {
     return NumberFormat.decimalPercentPattern(
             locale: locale, decimalDigits: decimalDigits)
         .format(this);
   }
 
   /// Formats the number as a scientific value with the given [locale].
-  String formatAsScientific({String locale = 'en_US'}) {
+  String formatAsScientific({String? locale}) {
     return NumberFormat.scientificPattern(locale).format(this);
   }
 
   /// Formats the number using a custom [pattern] with the given [locale].
-  String formatWithCustomPattern(String pattern, {String locale = 'en_US'}) {
+  String formatWithCustomPattern(String pattern, {String? locale}) {
     return NumberFormat(pattern, locale).format(this);
   }
 }

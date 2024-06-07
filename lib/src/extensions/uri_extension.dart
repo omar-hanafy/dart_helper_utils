@@ -1,6 +1,6 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-extension FHUNullSafeURIExtensions on String? {
+extension DHUNullSafeURIExtensions on String? {
   Uri? get toUri => this == null ? null : Uri.tryParse(this!.clean);
 
   Uri? get toPhoneUri => this == null
@@ -8,14 +8,14 @@ extension FHUNullSafeURIExtensions on String? {
       : Uri.parse(this!.startsWith('tel://') ? this! : 'tel://${this!.clean}');
 }
 
-extension FHUURIExtensions on String {
+extension DHUURIExtensions on String {
   Uri get toUri => Uri.parse(clean);
 
   Uri get toPhoneUri =>
       Uri.parse(startsWith('tel://') ? clean : 'tel://$clean');
 }
 
-extension FHUUriEx on Uri {
+extension DHUUriEx on Uri {
   /// Extracts the domain name from a URL.
   /// Supports URLs with or without 'www' and different TLDs.
   String get domainName {

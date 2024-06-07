@@ -1,11 +1,11 @@
 import 'package:mime/mime.dart';
 
-extension FHUMimeChecksExtensions on String? {
+extension DHUMimeChecksExtensions on String? {
   String? mimeType({List<int>? headerBytes}) =>
       lookupMimeType(this ?? '', headerBytes: headerBytes);
 }
 
-extension FHUVideoMimeChecksExtensions on String? {
+extension DHUVideoMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a video file.
   bool get isVideo {
     final mt = mimeType();
@@ -55,7 +55,7 @@ extension FHUVideoMimeChecksExtensions on String? {
   }
 }
 
-extension FHUImageMimeChecksExtensions on String? {
+extension DHUImageMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an image file.
   bool get isImage {
     final mt = mimeType();
@@ -134,7 +134,7 @@ extension FHUImageMimeChecksExtensions on String? {
   }
 }
 
-extension FHUDocumentMimeChecksExtensions on String? {
+extension DHUDocumentMimeChecksExtensions on String? {
   /// Checks if the file path or URL represents a PDF document.
   ///
   /// Returns `true` if the MIME type is `application/pdf`.
@@ -225,7 +225,7 @@ extension FHUDocumentMimeChecksExtensions on String? {
   }
 }
 
-extension FHUAudioMimeChecksExtensions on String? {
+extension DHUAudioMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an audio file.
   bool get isAudio {
     final mt = mimeType();
@@ -269,7 +269,7 @@ extension FHUAudioMimeChecksExtensions on String? {
   }
 }
 
-extension FHUArchiveMimeChecksExtensions on String? {
+extension DHUArchiveMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an archive file.
   bool get isArchive {
     final mt = mimeType();
@@ -326,7 +326,7 @@ extension FHUArchiveMimeChecksExtensions on String? {
   }
 }
 
-extension FHUProgrammingMimeChecksExtensions on String? {
+extension DHUProgrammingMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an HTML file.
   bool get isHTML {
     final mt = mimeType();
@@ -424,7 +424,7 @@ extension FHUProgrammingMimeChecksExtensions on String? {
   }
 }
 
-extension FHUContactMimeChecksExtensions on String? {
+extension DHUContactMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a contact file.
   bool get isContact {
     final mt = mimeType();
@@ -432,7 +432,7 @@ extension FHUContactMimeChecksExtensions on String? {
   }
 }
 
-extension FHUFontMimeChecksExtensions on String? {
+extension DHUFontMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a font file.
   bool get isFont {
     final mt = mimeType();

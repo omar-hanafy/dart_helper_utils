@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-extension FHUObjectNullableExtensions on Object? {
+extension DHUObjectNullableExtensions on Object? {
   /// Encodes the object into a JSON string.
   ///
   /// This method attempts to encode the current object as a JSON string using Dart's `json.encode` method.
