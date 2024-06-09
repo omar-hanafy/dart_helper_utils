@@ -3,12 +3,26 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 extension DHUDateString on String {
   /// Parse string to [DateTime] using null Safety
   DateTime get toDateTime => DateTime.parse(this);
+
+  DateTime get timestampToDate => this.toInt.timestampToDate;
 }
 
 extension DHUDateNullString on String? {
-  DateTime? get tryToDateTime => isBlank ? null : DateTime.tryParse(this!);
+  DateTime? get tryToDateTime {
+    if (isBlank) return null;
+    try {
+      return DateTime.tryParse(this!);
+    } catch (_) {}
+    return null;
+  }
 
-  DateTime get timestampToDate => this.toInt.timestampToDate;
+  DateTime? get tryTimestampToDate {
+    if (isBlank) return null;
+    try {
+      this.toInt.timestampToDate;
+    } catch (_) {}
+    return null;
+  }
 }
 
 extension NumberToDateNames on num {

@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-import 'package:intl/intl.dart';
 
 extension DHUNDateFormatExtension on DateTime? {
   /// Formats the DateTime object using the provided pattern and optional locale.
@@ -120,16 +121,117 @@ extension DHUDateFormatExtension on DateTime {
 }
 
 extension DHUDateFormatStringExtension on String {
-  /// Creates a DateFormat object using the string as the pattern and optional locale.
-  DateFormat dateFormat([String? locale]) => DateFormat(this, locale);
-
-  /// Parses the string to [DateTime] using the provided format, locale, and UTC option.
-  DateTime toDateFormatted([
+  DateTime toDateFormatted({
     String? format,
     String? locale,
+    bool autoDetectFormat = true,
+    bool useCurrentLocale = false,
     bool utc = false,
-  ]) =>
-      DateFormat(format, locale).parse(this, utc);
+  }) {
+    // Determine the locale to use
+    final effectiveLocale =
+        locale ?? (useCurrentLocale ? Intl.getCurrentLocale() : null);
+
+    // 1. Explicit Format Parsing (if provided)
+    if (format != null) {
+      try {
+        final parsedDate = DateFormat(format, effectiveLocale).parse(this);
+        return utc ? parsedDate.toUtc() : parsedDate;
+      } catch (_) {}
+    }
+
+    // 2. Common Format Parsing (without explicit format)
+    try {
+      final parsedDate = DateTime.parse(
+          this); // ISO 8601 (with or without time, 'Z' or offset)
+      return utc ? parsedDate.toUtc() : parsedDate;
+    } catch (_) {}
+
+    try {
+      final parsedDate = HttpDate.parse(this); // Requires 'dart:io' import
+      return utc ? parsedDate.toUtc() : parsedDate;
+    } catch (_) {}
+
+    if (!autoDetectFormat) throw FormatException('Invalid date format', this);
+
+    final formats = [
+      // Most Common Formats First
+      'yyyy-MM-dd HH:mm:ss', // ISO 8601-like (but without 'T' separator)
+      'yyyy/MM/dd HH:mm:ss',
+      'MM/dd/yyyy HH:mm:ss',
+
+      // Variations with Hyphens/Slashes/Dots
+      'yyyy-MM-dd',
+      'yyyy/MM/dd',
+      'MM-dd-yyyy',
+      'MM/dd/yyyy',
+      'yyyy.MM.dd',
+      'MM.dd.yyyy',
+
+      // Date Only (Different Ordering)
+      'dd-MM-yyyy',
+      'dd/MM/yyyy',
+
+      // Compact Formats
+      'yyyyMMddHHmmss', // YYYYMMDDHHmmss
+      'yyyyMMdd', // YYYYMMDD
+      'ddMMyyyy HH:mm:ss', // DDMMYYYYHHmmss
+      'ddMMyyyy', // DDMMYYYY
+
+      // With Full Month Name
+      'MMMM d, yyyy HH:mm:ss', // April 23, 1999 14:30:00
+      'MMMM d, yyyy', // April 23, 1999
+
+      // Time Only
+      'HH:mm:ss', // 24-hour format with seconds
+      'hh:mm:ss a', // 12-hour format with AM/PM and seconds
+      'HH:mm', // 24-hour format without seconds
+      'hh:mm a', // 12-hour format without seconds
+
+      // Additional ISO 8601
+      'yyyy-MM-ddTHH:mm:ss.SSSZ', // With milliseconds and timezone 'Z'
+    ];
+
+    for (final format in formats) {
+      try {
+        final parsedDate = DateFormat(format, effectiveLocale).parse(this);
+        return utc ? parsedDate.toUtc() : parsedDate;
+      } catch (_) {}
+    }
+
+    // 4. Regex Parsing with Locale and UTC Handling
+    final match = RegExp(
+            r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?(?:\s*([+\-]\d{2}:\d{2})?)?')
+        .firstMatch(this);
+
+    if (match != null) {
+      final year = int.parse(match.group(1)!);
+      final month = int.parse(match.group(2)!);
+      final day = int.parse(match.group(3)!);
+      final hour = match.group(4) != null ? int.parse(match.group(4)!) : 0;
+      final minute = match.group(5) != null ? int.parse(match.group(5)!) : 0;
+      final second = match.group(6) != null ? int.parse(match.group(6)!) : 0;
+      final offset =
+          match.group(7) != null ? _parseTimeZoneOffset(match.group(7)!) : null;
+
+      return offset != null
+          ? DateTime(year, month, day, hour, minute, second).toUtc().add(offset)
+          : DateTime(year, month, day, hour, minute, second);
+    }
+
+    throw FormatException('Invalid date format', this);
+  }
+
+  Duration? _parseTimeZoneOffset(String offsetString) {
+    final match = RegExp(r'([+\-])(\d{2}):(\d{2})').firstMatch(offsetString);
+    if (match != null) {
+      final isNegative = match.group(1) == '-';
+      final hours = int.parse(match.group(2)!);
+      final minutes = int.parse(match.group(3)!);
+      return Duration(hours: hours, minutes: minutes) * (isNegative ? -1 : 1);
+    }
+    return null;
+  }
 
   /// Parses the string to [DateTime] using the provided format, locale, and UTC option, with loose parsing.
   DateTime toDateFormattedLoose([
@@ -156,13 +258,29 @@ extension DHUDateFormatStringExtension on String {
 }
 
 extension DHUDateFormatNStringExtension on String? {
+  /// Creates a DateFormat object using the string as the pattern and optional locale.
+  DateFormat dateFormat([String? locale]) => DateFormat(this, locale);
+
   /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option.
-  DateTime? tryToDateFormatted([
+  DateTime? tryToDateFormatted({
     String? format,
     String? locale,
+    bool autoDetectFormat = true,
+    bool useCurrentLocale = false,
     bool utc = false,
-  ]) =>
-      isBlank ? null : DateFormat(format, locale).tryParse(this!, utc);
+  }) {
+    if (isBlank) return null;
+    try {
+      this!.toDateFormatted(
+        format: format,
+        locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
+    } catch (_) {}
+    return null;
+  }
 
   /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option, with loose parsing.
   DateTime? tryToDateFormattedLoose([

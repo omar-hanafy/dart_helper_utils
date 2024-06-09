@@ -1,24 +1,29 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-import 'package:intl/intl.dart';
 
 Future<void> main() async {
+  // parsing raw array of doubles to List<int>.
   print(tryToList<int>('[1.5, 2.3, 3.4]'));
 
-  // {hello, world}
+  // quickly use normal date parsing.
+  print('1997-08-12 00:00:00.000'.toDateTime);
+
+  // parsing complex datetime formats.
+  print('12/08/1997'.toDateFormatted());
+
+  // parsing raw array of Strings to Set<String>.
   print(toSet<String>('["hello", "world"]'));
 
-  const rawJson = '''
+  // parsing raw Json to Map<String, dynamic>
+  final user = toMap<String, dynamic>('''
 {
     "name": "John",
-    "age": "30",
-    "wallet": "12.3",
-    "codes": "[1, 2, 3]",
-    "email": "john@example.com"
+    "age": 30,
+    "wallet": 12.3,
+    "codes": [1, 2, 3],
+    "email": "john@example.com",
+    "birthday": "12/12/1997"
 }
-''';
-
-  // Example of using dynamic conversions and decode on string.
-  final user = toMap<String, dynamic>(rawJson);
+''');
 
   // Example of using safe int conversions for dynamic data.
   final walletBalance = toInt(user['wallet']);
@@ -32,9 +37,6 @@ Future<void> main() async {
   // Example of using string extensions
   final userMail = toString1(user['email']);
   print('Is Valid Email: ${userMail.isValidEmail}');
-
-  // Example of using map extensions
-  print('Flat JSON: ${user.flatJson()}');
 
   // Example of using HttpResStatus
   final status = 200.toHttpResStatus;
@@ -129,67 +131,35 @@ Future<void> main() async {
   };
 
   // Convert the map to a formatted JSON string
-  final jsonString = exampleMap.safelyEncodedJson;
+  print(exampleMap.encodedJsonString);
 
-  // Print the JSON string
-  print(jsonString);
+  // Convert the Map into a single-level map.
+  print('Flat JSON: ${exampleMap.flatMap()}');
 
-  const value = 12345.6789;
+  // Currency Formatting
+  // Egypt Pound
+  print('Currency format: ${'E£'.symbolCurrencyFormat().currencyName}');
+  // European Euro
+  print('Currency format: ${'€'.symbolCurrencyFormat().currencyName}');
+  // Japanese Yen
+  print('Currency format: ${'¥'.symbolCurrencyFormat().currencyName}');
+  // United State Dollar
+  print('Currency format: ${r'$'.symbolCurrencyFormat().currencyName}');
 
-  print(value.formatAsCurrency()); // Output: $12,345.68
-  print(value.formatAsSimpleCurrency()); // Output: $12,345.68
-  print(value.formatAsCompact()); // Output: 12K
-  print(value.formatAsCompactLong()); // Output: 12 thousand
-  print(value.formatAsCompactCurrency()); // Output: $12K
-  print(value.formatAsDecimal()); // Output: 12,345.68
-  print(value.formatAsPercentage()); // Output: 1,234,568%
-  print(value.formatWithCustomPattern('#,##0.00')); // Output: 12,345.68
+  // Examples for num extensions
+  const num myNumber = 1234.56789;
+  const num largeNumber = 123456789012345.6789;
 
-  // Add tryParse to NumberFormat
-  final numberFormat = NumberFormat.currency(locale: 'en_US', symbol: r'$');
-  final parsedNumber = numberFormat.tryParse(r'1,234.56');
-  print('${numberFormat.symbols} Parsed number: $parsedNumber');
-
-  // Add tryParse, tryParseStrict, tryParseLoose, tryParseUtc to DateFormat
-  final dateFormat = DateFormat('yyyy-MM-dd');
-  final parsedDate = dateFormat.tryParse('2024-06-03');
-  final parsedDateStrict = dateFormat.tryParseStrict('2024-06-03');
-  final parsedDateLoose = dateFormat.tryParseLoose('June 3, 2024');
-  final parsedDateUtc = dateFormat.tryParseUtc('2024-06-03T00:00:00Z');
-  print('Parsed date (tryParse): $parsedDate');
-  print('Parsed date (tryParseStrict): $parsedDateStrict');
-  print('Parsed date (tryParseLoose): $parsedDateLoose');
-  print('Parsed date (tryParseUtc): $parsedDateUtc');
-
-  // Add fallback for deprecated locales, such as he <-> iw
-  final deprecatedLocaleFormat = DateFormat.yMMMMd('en_US');
-  print(
-      'Deprecated locale fallback example: ${deprecatedLocaleFormat.format(DateTime.now())}');
-
-  // Switch QAR currency name to Riyal
-  final qarFormat = NumberFormat.simpleCurrency(name: 'QAR');
-  print('QAR currency name: ${qarFormat.currencyName}');
-
-  // Update CVE currency symbol
-  final cveFormat = NumberFormat.simpleCurrency(name: 'CVE');
-  print('CVE currency symbol: ${cveFormat.currencySymbol}');
-
-  // Add EEEEE skeleton for DateFormat
-  final eeeeeFormat = DateFormat('EEEEE', 'en_US');
-  print('EEEEE skeleton example: ${eeeeeFormat.format(DateTime.now())}');
-
-  // Fix issue #483 about date parsing with a yy skeleton
-  final yyFormat = DateFormat('yy');
-  final parsedYYDate = yyFormat.parse('24');
-  print('Parsed date (yy): ${parsedYYDate.year}');
-
-  // Update to CLDR v42 (usage remains the same, but benefits from latest data)
-  final cldr42Format = DateFormat.yMMMMd('en_US');
-  print('CLDR v42 example: ${cldr42Format.format(DateTime.now())}');
-
-  // Update ruble sign and update corresponding test
-  final rubFormat = NumberFormat.simpleCurrency(name: 'RUB');
-  print('Ruble currency symbol: ${rubFormat.currencySymbol}');
+  print('Currency: ${myNumber.formatAsCurrency()}');
+  print('Simple Currency: ${myNumber.formatAsSimpleCurrency(name: 'USD')}');
+  print('Compact: ${myNumber.formatAsCompact()}');
+  print('Compact Long: ${largeNumber.formatAsCompactLong()}');
+  print('Compact Currency: ${myNumber.formatAsCompactCurrency(name: '¥')}');
+  print('Decimal: ${myNumber.formatAsDecimal()}');
+  print('Percentage: ${myNumber.formatAsPercentage()}');
+  print('Decimal Percent: ${myNumber.formatAsDecimalPercent()}');
+  print('Scientific: ${myNumber.formatAsScientific()}');
+  print('Custom Pattern: ${myNumber.formatWithCustomPattern('#,##0.00 €')}');
 }
 
 // Example enum used in the map

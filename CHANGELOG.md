@@ -1,32 +1,71 @@
 # CHANGELOG
+### [2.0.0]
 
-## [2.0.0]
-In this version, we have made extensive use of the `intl` package with a comprehensive set of new extensions to provide robust localization and formatting capabilities.
-- **[Intl Extensions](https://pub.dev/packages/dart_helper_utils#extensions-for-intl)**:
-  - **[General](https://pub.dev/packages/dart_helper_utils#general)**:
-    - Map: `intlSelectLogic`, `intlSelect`
-    - Num: `pluralize`, `getPluralCategory`
-    - String: `setAsDefaultLocale`, `setAsSystemLocale`, `translate`, `genderSelect`, `getGenderCategory`
-  - **[DateFormat](https://pub.dev/packages/dart_helper_utils#dateformat)**:
-    - DateTime: `tryFormat`, `format`, and various formatting methods.
-    - String: `dateFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`, `localeExists`.
-  - **[Bidi Extensions](https://pub.dev/packages/dart_helper_utils#bidi)**:
-    - TextDirection: `toBidiFormatter`
-    - String: Various bidi text manipulation methods.
-  - **[NumberFormat Extensions](https://pub.dev/packages/dart_helper_utils#numberformat)**:
-    - String: `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted`.
-    - Num: `formatAsCurrency`, `formatAsCompact`, and various other formatting methods.
+This major release focuses on significantly enhancing internationalization (i18n) capabilities, expanding utility functions for maps and numbers, refining date/time manipulation, and introducing substantial improvements to type conversions.
 
-### Enhancements and Fixes
-- Enhanced number and date conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`, `toDateTime`, `tryToDateTime`) to include optional `format` and `locale` parameters.
-- Fixed an issue in `makeEncodable` on Maps where sets were not properly converted to JSON-encodable lists.
-- Consolidated several DateTime manipulation methods to ensure consistency and accuracy.
-- Addressed various minor bugs and inconsistencies in existing extension methods.
-- Enhanced documentation across several methods to improve clarity and usability.
+#### Internationalization (i18n)
+- **`intl` Package Integration:**
+  - Introduced comprehensive support for localization and formatting using the `intl` package.
+  - **Extensions:**
+    - **General:**
+      - `intlSelectLogic`, `intlSelect` (Map)
+      - `pluralize`, `getPluralCategory` (Num)
+      - `setAsDefaultLocale`, `setAsSystemLocale`, `translate`, `genderSelect`, `getGenderCategory` (String)
+    - **DateFormat:**
+      - `tryFormat`, `format`, and various formatting methods (DateTime)
+      - `dateFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`, `localeExists` (String)
+    - **Bidi:**
+      - `toBidiFormatter` (TextDirection)
+      - Various bidi text manipulation methods (String)
+    - **NumberFormat:**
+      - `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted` (String)
+      - `formatAsCurrency`, `formatAsCompact`, and various other formatting methods (Num)
 
-### Breaking Changes
-- `toDateWithFormat` replaced with `toDateFormatted()` on String.
-- `lastDayOfWeek` and `firstDayOfWeek` are now methods with an optional `startOfWeek` parameter to customize the first day of the week (defaults to Monday). Improved time zone handling and added tests.
+#### Map Utilities
+- **New Methods:**
+  - `setIfMissing` (add entries conditionally)
+  - `update` (update values based on a condition)
+  - `filter` (filter entries using predicates)
+  - `keysList`, `valuesList`, `keysSet`, `valuesSet` (get lists or sets of keys/values)
+
+#### Date and Time Utilities
+- **Enhanced DateTime Parsing:**
+  - Replaced `try/toDateWithFormat` with more versatile `try/toDateFormatted` methods supporting various formats, locales, and time zones.
+- **Flexible Weekday Customization:**
+  - Added optional `startOfWeek` parameter to `firstDayOfWeek` and `lastDayOfWeek`.
+- **Streamlined DateTime Calculations:**
+  - Consolidated various DateTime manipulation methods for consistency and added tests.
+
+#### Conversion Functions
+- **Enhanced Flexibility:**
+  - Added optional `format` and `locale` parameters to numeric conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`).
+  - Added optional `format`, `locale`, `autoDetectFormat`, `useCurrentLocale`, and `utc` parameters to datetime conversion functions (`toDateTime`, `tryToDateTime`).
+
+#### Additional Improvements
+- Fixed various minor bugs and inconsistencies in extension methods.
+- Enhanced documentation for clarity and usability.
+- Added test coverage for all date related extensions, with more tests planned for the future.
+
+#### Breaking Changes 
+- **`try/toDateWithFormat` renamed to `try/toDateFormatted`:**
+  - It can autodetect popular formats if the format is not provided.
+  - Due to the expanded range of supported formats, some strings that previously caused errors might now be parsed successfully but with different values.
+  - to disable autodetect formats set the `autoDetectFormat: false` in the method signature.
+  - Update any code referencing `try/toDateWithFormat` to use `try/toDateFormatted` instead.
+
+- **`flatJson` (Map) renamed to `flatMap`:**
+  - Update any code referencing `flatJson` to use `flatMap` instead.
+
+- **`makeEncodable` and `safelyEncodedJson` renamed to `encodableCopy` and `encodedJsonString`:**
+  - Fixed an issue where sets were not correctly converted to JSON-encodable lists.
+  - Update any code referencing these methods to use their new names.
+
+- **`firstDayOfWeek` and `lastDayOfWeek`:**
+  - These methods now have an optional `startOfWeek` parameter, which may affect behavior if not explicitly specified.
+
+#### Migration Guide
+- You can see the migration guide for this version from [here](https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides/mg_2.0.0.md).
+- You can see all the migration guides in the GitHub repo from [here](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides). 
 
 ### [1.2.0]
 

@@ -1,7 +1,9 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-import 'package:intl/intl.dart';
 
 extension DHUNumberFormatNullableStringExtensions on String? {
+  /// Creates a [NumberFormat] object using the string as the pattern, along with the given [locale].
+  NumberFormat numberFormat({String? locale}) => NumberFormat(this, locale);
+
   /// Tries to parse the string to a number with the given [newPattern] and [locale].
   /// Returns null if the string is null or empty.
   num? tryToNumFormatted([String? newPattern, String? locale]) =>
@@ -30,6 +32,28 @@ extension DHUNumberFormatStringExtensions on String {
   /// Parses the string to a double with the given [newPattern] and [locale].
   double toDoubleFormatted([String? newPattern, String? locale]) =>
       toNumFormatted(newPattern, locale).toDouble();
+
+  /// Creates a [NumberFormat] object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
+  NumberFormat symbolCurrencyFormat({
+    String? locale,
+    int decimalDigits = 2,
+  }) {
+    return NumberFormat.currency(
+      symbol: this,
+      locale: locale,
+      decimalDigits: decimalDigits,
+    );
+  }
+
+  ///  Creates a [NumberFormat] object as simple currency using the string as the currency name, along with the given locale.
+  NumberFormat simpleCurrencyFormat({String? locale}) {
+    return NumberFormat.simpleCurrency(locale: locale, name: this);
+  }
+
+  /// Creates a [NumberFormat] object as compact simple currency using the string as the currency name, along with the given locale.
+  NumberFormat compactCurrencyFormat({String? locale}) {
+    return NumberFormat.compactSimpleCurrency(locale: locale, name: this);
+  }
 }
 
 extension DHUNumberFormatExtensions on num {

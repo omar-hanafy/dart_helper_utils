@@ -1,4 +1,6 @@
-![](https://raw.githubusercontent.com/omar-hanafy/dart_helper_utils/fb2b340acff23ad89b09319dac691d98f1ecca90/logo.svg)
+[![dart_helper_utils logo](https://raw.githubusercontent.com/omar-hanafy/dart_helper_utils/fb2b340acff23ad89b09319dac691d98f1ecca90/logo.svg)](https://pub.dev/packages/dart_helper_utils)
+
+[![pub package](https://img.shields.io/pub/v/dart_helper_utils)](https://pub.dev/packages/dart_helper_utils)
 
 The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extension.
 
@@ -163,8 +165,7 @@ try {
 ## Date Extensions
 ### Parsing
 - `timestampToDate`: Converts a timestamp (milliseconds since epoch) to a `DateTime` object.
-- `tryToDateTime`: Safely parses a potentially null string into a nullable `DateTime`.
-- `toDateTime`: Converts a string to a `DateTime` object.
+- `try/toDateTime`: Converts a string to a `DateTime` object.
 
 ### Formatting
 - `local`: Converts a potentially null `DateTime` to local time.
@@ -216,15 +217,12 @@ try {
 ### DateFormat
 #### on String
 - `dateFormat`: Returns a `DateFormat` object based on the string pattern.
-- `toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
-- `toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
-- `toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
-- `toDateFormattedUtc`: Parses the string to `DateTime` in UTC using the provided format and locale.
-- `tryToDateFormatted`: Attempts to parse the nullable string to `DateTime` with the provided format, locale, and UTC option.
-- `tryToDateFormattedLoose`: Attempts to parse the nullable string to `DateTime` using loose parsing.
-- `tryToDateFormattedStrict`: Attempts to parse the nullable string to `DateTime` using strict parsing.
-- `tryToDateFormattedUtc`: Attempts to parse the nullable string to `DateTime` in UTC using the provided format and locale.
+- `try/toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
+- `try/toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
+- `try/toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
+- `try/toDateFormattedUtc`: Parses the string to `DateTime` in UTC using the provided format and locale.
 - `localeExists`: Checks if the locale exists in `DateFormat`.
+
 #### on DateTime
 - `tryFormat` and `format`: Formats the DateTime object using the provided pattern and optional locale.
 - A variety of methods to format `DateTime` objects in different styles:
@@ -238,12 +236,14 @@ try {
 
 ## NumberFormat
 #### on String
-- `tryToNumFormatted`: Tries to parse the string to a number with the given pattern and locale.
-- `tryToIntFormatted`: Tries to parse the string to an integer with the given pattern and locale.
-- `tryToDoubleFormatted`: Tries to parse the string to a double with the given pattern and locale.
-- `toNumFormatted`: Parses the string to a number with the given pattern and locale.
-- `toIntFormatted`: Parses the string to an integer with the given pattern and locale.
-- `toDoubleFormatted`: Parses the string to a double with the given pattern and locale.
+- `numberFormat`: Returns a `NumberFormat` object based on the string pattern.
+- `try/toNumFormatted`: Parses the string to a number with the given pattern and locale.
+- `try/toIntFormatted`: Parses the string to an integer with the given pattern and locale.
+- `try/toDoubleFormatted`: Parses the string to a double with the given pattern and locale.
+- `numberFormat`: Creates a `NumberFormat` object using the string as the pattern, along with the given locale.
+- `symbolCurrencyFormat`: Creates a `NumberFormat` object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
+- `simpleCurrencyFormat`: Creates a `NumberFormat` object as simple currency using the string as the currency name, along with the given locale.
+- `compactCurrencyFormat`: Creates a `NumberFormat` object as compact simple currency using the string as the currency name, along with the given locale.
 
 #### on Num
 - `formatAsCurrency`: Formats the number as currency with the given locale, symbol, and decimal digits.
@@ -377,12 +377,9 @@ try {
 - `decode`: Decodes the JSON string into a dynamic data structure.
 
 ### Parsing
-- `tryToNum`: Parses the string as a number or returns null if it is not a number.
-- `tryToDouble`: Parses the string as a double or returns null if it is not a number.
-- `tryToInt`: Parses the string as an integer or returns null if it is not a number.
-- `toNum`: Parses the string as a number.
-- `toDouble`: Parses the string as a double.
-- `toInt`: Parses the string as an integer.
+- `try/toNum`: Parses the string as a number.
+- `try/toDouble`: Parses the string as a double.
+- `try/toInt`: Parses the string as an integer.
 
 ## Collection Extension
 ### Iterable Extension
@@ -441,9 +438,13 @@ try {
 ### Map Extension
 - `makeEncodable`: Converts a map to an encodable format.
 - `safelyEncodedJson`: Returns a safely encoded JSON string.
-- `flatJson({String delimiter = '.', bool safe = false, int? maxDepth})`: Flattens a JSON structure.
+- `flatMap` Flatten nested maps into single-level structures.
 - `isEmptyOrNull`: Checks if the map is empty or null.
 - `isNotEmptyOrNull`: Checks if the map is not empty or null.
+- `setIfMissing` Add entries conditionally.
+- `update` Update values based on a condition.
+- `filter` Filter entries using predicates.
+- `keysList`, `valuesList`, `keysSet`, `valuesSet` Get lists or sets of keys and values.
 
 ## Number Extension
 ### For all `num`

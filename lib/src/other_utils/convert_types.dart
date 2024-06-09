@@ -693,6 +693,8 @@ abstract class ConvertObject {
     int? listIndex,
     String? format,
     String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
     bool utc = false,
   }) {
     if (object == null) {
@@ -703,17 +705,34 @@ abstract class ConvertObject {
     }
     if (object is DateTime) return object;
     if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toDateTime(object[mapKey]);
+      return toDateTime(
+        object[mapKey],
+        format: format,
+        locale: locale,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
     }
     if (listIndex != null && object is List<dynamic>) {
-      return toDateTime(object.of(listIndex));
+      return toDateTime(
+        object.of(listIndex),
+        format: format,
+        locale: locale,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
     }
     try {
-      if (format.isEmptyOrNull) {
-        final date = DateTime.parse('$object');
-        return utc ? date.toUtc() : date;
+      if (format != null || autoDetectFormat) {
+        return '$object'.toDateFormatted(
+          format: format,
+          locale: locale,
+          autoDetectFormat: autoDetectFormat,
+          useCurrentLocale: useCurrentLocale,
+          utc: utc,
+        );
       }
-      return '$object'.toDateFormatted(format, locale, utc);
+      return '$object'.toDateTime;
     } catch (e, s) {
       throw ParsingException(
         error: e,
@@ -756,21 +775,40 @@ abstract class ConvertObject {
     int? listIndex,
     String? format,
     String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
     bool utc = false,
   }) {
     if (object is DateTime?) return object;
     if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToDateTime(object[mapKey]);
+      return tryToDateTime(
+        object[mapKey],
+        format: format,
+        locale: locale,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
     }
     if (listIndex != null && object is List<dynamic>) {
-      return tryToDateTime(object.of(listIndex));
+      return tryToDateTime(
+        object.of(listIndex),
+        format: format,
+        locale: locale,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
     }
     try {
-      if (format.isEmptyOrNull) {
-        final date = DateTime.tryParse('$object');
-        return utc ? date?.toUtc() : date;
+      if (format != null || autoDetectFormat) {
+        return '$object'.tryToDateFormatted(
+          format: format,
+          locale: locale,
+          autoDetectFormat: autoDetectFormat,
+          useCurrentLocale: useCurrentLocale,
+          utc: utc,
+        );
       }
-      return '$object'.tryToDateFormatted(format, locale, utc);
+      return '$object'.tryToDateTime;
     } catch (e, s) {
       log(
         'tryToDateTime() Unsupported object type: exception message -> $e',
@@ -925,6 +963,7 @@ abstract class ConvertObject {
         stackTrace: StackTrace.current,
       );
     }
+    if (object is String) return toMap(object.decode());
     if (object is Map && object.isEmpty) return <K, V>{};
     if (listIndex != null && object is List<dynamic>) {
       return toMap(object.of(listIndex));
@@ -932,7 +971,6 @@ abstract class ConvertObject {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
       return toMap(object[mapKey]);
     }
-    if (object is String) return toMap(object.decode());
     if (object is Map<K, V>) return object;
     try {
       return object as Map<K, V>;
@@ -986,6 +1024,7 @@ abstract class ConvertObject {
     Object? mapKey,
     int? listIndex,
   }) {
+    if (object is String) return tryToMap(object.decode());
     if (object is Map && object.isEmpty) return <K, V>{};
     if (listIndex != null && object is List<dynamic>) {
       return tryToMap(object.of(listIndex));
@@ -993,7 +1032,6 @@ abstract class ConvertObject {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
       return tryToMap(object[mapKey]);
     }
-    if (object is String) return tryToMap(object.decode());
     if (object is Map<K, V>?) return object;
     try {
       return object as Map<K, V>;
@@ -1050,6 +1088,7 @@ abstract class ConvertObject {
         stackTrace: StackTrace.current,
       );
     }
+    if (object is String) return toSet(object.decode());
     if (object is Iterable && object.isEmpty) return <T>{};
     if (listIndex != null && object is List<dynamic>) {
       return toSet<T>(object.of(listIndex));
@@ -1057,7 +1096,6 @@ abstract class ConvertObject {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
       return toSet<T>(object[mapKey]);
     }
-    if (object is String) return toSet(object.decode());
     if (object is Set<T>) return object;
     if (object is T) return <T>{object};
     if (object is Map<dynamic, T>) return object.values.toSet();
@@ -1111,6 +1149,7 @@ abstract class ConvertObject {
     Object? mapKey,
     int? listIndex,
   }) {
+    if (object is String) return tryToSet(object.decode());
     if (object is Iterable && object.isEmpty) return <T>{};
     if (listIndex != null && object is List<dynamic>) {
       return tryToSet<T>(object.of(listIndex));
@@ -1118,7 +1157,6 @@ abstract class ConvertObject {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
       return tryToSet<T>(object[mapKey]);
     }
-    if (object is String) return tryToSet(object.decode());
     if (object is Set<T>?) return object;
     if (object is T) return <T>{object};
     if (object is Map<dynamic, T>) return object.values.toSet();
@@ -1187,6 +1225,7 @@ abstract class ConvertObject {
         stackTrace: StackTrace.current,
       );
     }
+    if (object is String) return toList(object.decode());
     if (object is Iterable && object.isEmpty) return <T>[];
     if (listIndex != null && object is List<dynamic>) {
       return toList<T>(object.of(listIndex));
@@ -1194,7 +1233,6 @@ abstract class ConvertObject {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
       return toList<T>(object[mapKey]);
     }
-    if (object is String) return toList(object.decode());
     if (object is List<T>) return object;
     if (object is T) return <T>[object];
     if (object is Map<dynamic, T>) return object.values.toList();
@@ -1259,6 +1297,7 @@ abstract class ConvertObject {
     Object? mapKey,
     int? listIndex,
   }) {
+    if (object is String) return tryToList(object.decode());
     if (object is Iterable && object.isEmpty) return <T>[];
     if (listIndex != null && object is List<dynamic>) {
       return tryToList<T>(object.of(listIndex));
@@ -1266,7 +1305,6 @@ abstract class ConvertObject {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
       return tryToList<T>(object[mapKey]);
     }
-    if (object is String) return tryToList(object.decode());
     if (object is List<T>?) return object;
     if (object is T) return <T>[object];
     if (object is Map<dynamic, T>) return object.values.toList();
