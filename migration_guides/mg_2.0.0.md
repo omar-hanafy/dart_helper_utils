@@ -2,41 +2,27 @@
 
 ### 1. Date and Time Parsing
 
-The `try/toDateWithFormat` methods have been replaced with a more versatile `try/toDateFormatted` methods.
-- This new methods offers enhanced flexibility by supporting various date/time formats, locales, and time zones.
-- It can autodetect popular formats if the format is not provided.
-- Due to the expanded range of supported formats, some strings that previously caused errors might now be parsed successfully but with different values.
-- to disable autodetect formats set the `autoDetectFormat: false` in the method signature.
+- **`try/toDateWithFormat` renamed to `try/toDateFormatted`:**
+    - **Action:** Update all instances of `try/toDateWithFormat` in your code to `try/toDateFormatted`.
 
-New signatures are:
-- String? format,
-- String? locale,
-- bool autoDetectFormat = true,
-- bool useCurrentLocale = false,
-- bool utc = false,
-
-**Old Usage:**
-
-```dart
-String dateString = "2024-06-08";
-DateTime? dateTime = dateString.tryToDateWithFormat(format: 'YYYY-MM-dd'); // or dateString.toDateTime
-```
-
-**New Usage:**
-
-```dart
-String dateString = "2024/06/08";
-// you can also pass the format but it auto detects it now.
-DateTime? dateTime = dateString.tryToDateFormatted(); // or dateString.toDateTime()
-```
+- **`dateFormat` on String is now a method with an optional `locale` parameter:**
+This change gives you more control over the formatting process, allowing you to specify the locale explicitly for accurate results.
+    - **Old Usage:**
+      ```dart
+      String formattedDate = '2024-06-10'.dateFormat; // Used default or current locale
+      ```
+    - **New Usage:**
+      ```dart
+      String formattedDate = '2024-06-10'.dateFormat(); // Uses default locale
+      String formattedDateUS = '2024-06-10'.dateFormat('en_US'); // Explicitly uses US locale
+      ```
 
 ### 2. `firstDayOfWeek` and `lastDayOfWeek`
-
 These methods now have an optional `startOfWeek` parameter to customize the first day of the week. The default value is `DateTime.monday`.
 
 **Old Usage:**
 
-```
+```dart
 DateTime now = DateTime.now();
 DateTime firstDayOfWeek = now.firstDayOfWeek;
 DateTime lastDayOfWeek = now.lastDayOfWeek;
@@ -44,7 +30,7 @@ DateTime lastDayOfWeek = now.lastDayOfWeek;
 
 **New Usage:**
 
-```
+```dart
 DateTime now = DateTime.now();
 DateTime firstDayOfWeek = now.firstDayOfWeek(); // Defaults to Monday
 DateTime lastDayOfWeek = now.lastDayOfWeek(); // Defaults to Monday

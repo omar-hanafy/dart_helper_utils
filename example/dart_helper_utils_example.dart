@@ -4,15 +4,6 @@ Future<void> main() async {
   // parsing raw array of doubles to List<int>.
   print(tryToList<int>('[1.5, 2.3, 3.4]'));
 
-  // quickly use normal date parsing.
-  print('1997-08-12 00:00:00.000'.toDateTime);
-
-  // parsing complex datetime formats.
-  print('12/08/1997'.toDateFormatted());
-
-  // parsing raw array of Strings to Set<String>.
-  print(toSet<String>('["hello", "world"]'));
-
   // parsing raw Json to Map<String, dynamic>
   final user = toMap<String, dynamic>('''
 {
@@ -23,7 +14,7 @@ Future<void> main() async {
     "email": "john@example.com",
     "birthday": "12/12/1997"
 }
-''');
+'''); // you can also use the ConvertObject.toMap(...) to avoid ambiguity.
 
   // Example of using safe int conversions for dynamic data.
   final walletBalance = toInt(user['wallet']);
@@ -43,6 +34,18 @@ Future<void> main() async {
   print('Status: ${status.code} - ${status.desc}');
   print('Is Success: ${status.isSuccess}');
   print('Is Client Error: ${status.isClientError}');
+
+  // quickly use normal date parsing.
+  print('1997-08-12 00:00:00.000'.toDateTime);
+
+  // parsing complex datetime formats.
+  const dateStr1 = '2024-06-09T15:30:00Z';
+  const dateStr2 = 'June 9, 2024 3:30 PM';
+  const dateStr3 = 'Tuesday, June 11th, 2024 at 2:15 PM';
+
+  print(dateStr1.toDateAutoFormat());
+  print(dateStr2.toDateAutoFormat());
+  print(dateStr3.toDateAutoFormat());
 
   const stringToConvert =
       '123Lorem-Ipsum_is_simply 12DummyText & of THE_PRINTING AND type_setting-industry.';
@@ -78,6 +81,45 @@ Future<void> main() async {
 
   print('FlutterAndDart_are-AWESOME'.toWords); // [FlutterAndDart, are-AWESOME]
 
+  // Converting a map with potentially complex data types to
+  // a formatted JSON string using the safelyEncodedJson getter.
+  final exampleMap = {
+    'id': 2,
+    'firstName': 'John',
+    'lastName': 'Doe',
+    'timePeriod': TimePeriod.week, // Example enum.
+    'date': DateTime.now(),
+    'isActive': true,
+    'scores': [95, 85, 90], // List of integers
+    'tags': {'flutter', 'dart'}, // Set of strings
+    'nestedMap': {
+      'key1': 'value1',
+      'key2': 123,
+      'key3': DateTime.now() - 1.asDays,
+    }
+  };
+
+  // Convert the map to a formatted JSON string
+  print(exampleMap.encodedJsonString);
+
+  // Convert the Map into a single-level map.
+  print('Flat JSON: ${exampleMap.flatMap()}');
+
+  // Examples for num extensions
+  const num myNumber = 1234.56789;
+  const num largeNumber = 123456789012345.6789;
+
+  print('Currency: ${myNumber.formatAsCurrency()}');
+  print('Simple Currency: ${myNumber.formatAsSimpleCurrency(name: 'USD')}');
+  print('Compact: ${myNumber.formatAsCompact()}');
+  print('Compact Long: ${largeNumber.formatAsCompactLong()}');
+  print('Compact Currency: ${myNumber.formatAsCompactCurrency(name: '¥')}');
+  print('Decimal: ${myNumber.formatAsDecimal()}');
+  print('Percentage: ${myNumber.formatAsPercentage()}');
+  print('Decimal Percent: ${myNumber.formatAsDecimalPercent()}');
+  print('Scientific: ${myNumber.formatAsScientific()}');
+  print('Custom Pattern: ${myNumber.formatWithCustomPattern('#,##0.00 €')}');
+
   // Example of using TimeUtils to measure execution duration of
   // a specific task. Works with both sync and async.
   final executionDuration = await TimeUtils.executionDuration(() {
@@ -111,55 +153,6 @@ Future<void> main() async {
     timeout: const Duration(seconds: 1),
   );
   print('Result: $result');
-
-  // Converting a map with potentially complex data types to
-  // a formatted JSON string using the safelyEncodedJson getter.
-  final exampleMap = {
-    'id': 2,
-    'firstName': 'John',
-    'lastName': 'Doe',
-    'timePeriod': TimePeriod.week, // Example enum.
-    'date': DateTime.now(),
-    'isActive': true,
-    'scores': [95, 85, 90], // List of integers
-    'tags': {'flutter', 'dart'}, // Set of strings
-    'nestedMap': {
-      'key1': 'value1',
-      'key2': 123,
-      'key3': DateTime.now() - 1.asDays,
-    }
-  };
-
-  // Convert the map to a formatted JSON string
-  print(exampleMap.encodedJsonString);
-
-  // Convert the Map into a single-level map.
-  print('Flat JSON: ${exampleMap.flatMap()}');
-
-  // Currency Formatting
-  // Egypt Pound
-  print('Currency format: ${'E£'.symbolCurrencyFormat().currencyName}');
-  // European Euro
-  print('Currency format: ${'€'.symbolCurrencyFormat().currencyName}');
-  // Japanese Yen
-  print('Currency format: ${'¥'.symbolCurrencyFormat().currencyName}');
-  // United State Dollar
-  print('Currency format: ${r'$'.symbolCurrencyFormat().currencyName}');
-
-  // Examples for num extensions
-  const num myNumber = 1234.56789;
-  const num largeNumber = 123456789012345.6789;
-
-  print('Currency: ${myNumber.formatAsCurrency()}');
-  print('Simple Currency: ${myNumber.formatAsSimpleCurrency(name: 'USD')}');
-  print('Compact: ${myNumber.formatAsCompact()}');
-  print('Compact Long: ${largeNumber.formatAsCompactLong()}');
-  print('Compact Currency: ${myNumber.formatAsCompactCurrency(name: '¥')}');
-  print('Decimal: ${myNumber.formatAsDecimal()}');
-  print('Percentage: ${myNumber.formatAsPercentage()}');
-  print('Decimal Percent: ${myNumber.formatAsDecimalPercent()}');
-  print('Scientific: ${myNumber.formatAsScientific()}');
-  print('Custom Pattern: ${myNumber.formatWithCustomPattern('#,##0.00 €')}');
 }
 
 // Example enum used in the map

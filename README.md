@@ -217,6 +217,7 @@ try {
 ### DateFormat
 #### on String
 - `dateFormat`: Returns a `DateFormat` object based on the string pattern.
+- `try/toDateAutoFormat`: Parses the string to `DateTime` and autodetect the format, with the provided locale, useCurrentLocale, and UTC option.
 - `try/toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
 - `try/toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
 - `try/toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
@@ -539,4 +540,5 @@ pull request in the [repository](https://github.com/omar-hanafy/dart_helper_util
 
 **KEYWORDS:**
 extension pack, helpers, utilities, string manipulation, conversions, time utils, date extension, datetime helper,
-iterable, map, number, object, set, URI, and boolean extension, JSON encoding/decoding.
+DateFormat, intl, extensions, iterable, map, number, object, set, URI, and boolean extension, JSON encoding/decoding,
+parsing, safe parsing, object conversion, cast, list casting.

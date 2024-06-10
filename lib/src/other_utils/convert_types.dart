@@ -723,11 +723,10 @@ abstract class ConvertObject {
       );
     }
     try {
-      if (format != null || autoDetectFormat) {
-        return '$object'.toDateFormatted(
-          format: format,
+      if (format != null) return '$object'.toDateFormatted(format, locale, utc);
+      if (autoDetectFormat) {
+        return '$object'.toDateAutoFormat(
           locale: locale,
-          autoDetectFormat: autoDetectFormat,
           useCurrentLocale: useCurrentLocale,
           utc: utc,
         );
@@ -799,11 +798,11 @@ abstract class ConvertObject {
       );
     }
     try {
-      if (format != null || autoDetectFormat) {
-        return '$object'.tryToDateFormatted(
-          format: format,
+      if (format != null)
+        return '$object'.tryToDateFormatted(format, locale, utc);
+      if (autoDetectFormat) {
+        return '$object'.tryToDateAutoFormat(
           locale: locale,
-          autoDetectFormat: autoDetectFormat,
           useCurrentLocale: useCurrentLocale,
           utc: utc,
         );

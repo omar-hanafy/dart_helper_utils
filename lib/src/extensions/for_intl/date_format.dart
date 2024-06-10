@@ -121,24 +121,56 @@ extension DHUDateFormatExtension on DateTime {
 }
 
 extension DHUDateFormatStringExtension on String {
-  DateTime toDateFormatted({
-    String? format,
+  /// Parses a date-time string into a `DateTime` object, automatically trying
+  /// various formats to handle diverse inputs.
+  ///
+  /// This function intelligently handles a wide range of date and time formats,
+  /// from ISO 8601 to more casual expressions. It prioritizes formats that are
+  /// less ambiguous (e.g., 'yyyy-MM-dd') over those that might vary by locale or
+  /// interpretation (e.g., 'MM/dd/yyyy').
+  ///
+  /// **Parameters:**
+  ///
+  /// - `locale` (optional): A locale string (e.g., 'en_US') to customize the
+  ///    parsing behavior for region-specific formats. If `null`, uses the default
+  ///    locale or the current locale if `useCurrentLocale` is true.
+  /// - `useCurrentLocale` (optional, default: `false`): If `true` and `locale` is
+  ///    null, the current system locale will be used.
+  /// - `utc` (optional, default: `false`): If `true`, the returned `DateTime`
+  ///    object will be in UTC timezone. Otherwise, it will be in the local timezone.
+  ///
+  /// **Returns:**
+  ///
+  /// - A `DateTime` object representing the parsed date and time.
+  ///
+  /// **Exceptions:**
+  ///
+  /// - Throws a `FormatException` if the input string cannot be parsed successfully
+  ///   using any of the supported formats.
+  ///
+  /// **Example Usage:**
+  ///
+  /// ```dart
+  /// // Simple ISO 8601
+  /// DateTime date1 = "2024-06-10T10:30:00Z".toDateAutoFormat();
+  /// print(date1); // 2024-06-10 10:30:00.000Z
+  ///
+  /// // Compact file name format
+  /// DateTime date2 = "20240610_1545".toDateAutoFormat();
+  /// print(date2); // 2024-06-10 15:45:00.000
+  ///
+  /// // Casual format with locale
+  /// DateTime date3 = "Tuesday, June 11th, 2024 at 2:15 PM".toDateAutoFormat(locale: 'en_US');
+  /// print(date3); // 2024-06-11 14:15:00.000
+  /// ```
+  DateTime toDateAutoFormat({
     String? locale,
-    bool autoDetectFormat = true,
     bool useCurrentLocale = false,
     bool utc = false,
   }) {
     // Determine the locale to use
     final effectiveLocale =
         locale ?? (useCurrentLocale ? Intl.getCurrentLocale() : null);
-
-    // 1. Explicit Format Parsing (if provided)
-    if (format != null) {
-      try {
-        final parsedDate = DateFormat(format, effectiveLocale).parse(this);
-        return utc ? parsedDate.toUtc() : parsedDate;
-      } catch (_) {}
-    }
 
     // 2. Common Format Parsing (without explicit format)
     try {
@@ -152,71 +184,77 @@ extension DHUDateFormatStringExtension on String {
       return utc ? parsedDate.toUtc() : parsedDate;
     } catch (_) {}
 
-    if (!autoDetectFormat) throw FormatException('Invalid date format', this);
+    final formats = {
+      // ISO 8601-like (most standard, unambiguous)
+      'yyyy-MM-ddTHH:mm:ss.SSSZ',
+      'yyyy-MM-ddTHH:mm:ssZ',
+      'yyyy-MM-dd HH:mm:ss',
+      "EEEE, MMMM d'th', yyyy 'at' h:mm a",
+      "EEEE, MMMM d'th', yyyy 'at' h:mm",
+      "EEEE, MMMM d'th', yyyy",
 
-    final formats = [
-      // Most Common Formats First
-      'yyyy-MM-dd HH:mm:ss', // ISO 8601-like (but without 'T' separator)
-      'yyyy/MM/dd HH:mm:ss',
+      // Unambiguous Month and Day Formats
+      'MMMM d, yyyy HH:mm:ss',
+      // June 9, 2024 15:30:00
+      'd MMMM yyyy HH:mm:ss',
+      // 9 June 2024 15:30:00
+      'MMMM d, yyyy',
+      // June 9, 2024
+      'd MMMM yyyy',
+      // 9 June 2024
+
+      // Compact (often used in file names)
+      'yyyyMMddHHmmss',
+      // YYYYMMDDHHmmss
+      'yyyyMMdd',
+      // YYYYMMDD
+
+      // Other Unambiguous Formats
+      'EEEE, MMMM d, yyyy',
+      // Saturday, June 9, 2024
+      'EEEE d MMMM yyyy',
+      // Saturday 9 June 2024
+      'MMMM d, yyyy h:mm a',
+      // June 9, 2024 3:30 PM
+      'dd/MM/yyyy HH:mm Z',
+      // 09/06/2024 15:30 +02:00
+
+      // Potentially Ambiguous Formats (place these lower in the list)
+      'ddMMyyyy HH:mm:ss',
+      // 09062024 15:30:00 (could be June 9th or September 6th)
+      'ddMMyyyy',
+      // 09062024
       'MM/dd/yyyy HH:mm:ss',
-
-      // Variations with Hyphens/Slashes/Dots
-      'yyyy-MM-dd',
-      'yyyy/MM/dd',
-      'MM-dd-yyyy',
+      // 06/09/2024 15:30:00 (could be June 9th or September 6th)
+      'dd/MM/yyyy HH:mm:ss',
+      // 09/06/2024 15:30:00
       'MM/dd/yyyy',
-      'yyyy.MM.dd',
-      'MM.dd.yyyy',
-
-      // Date Only (Different Ordering)
-      'dd-MM-yyyy',
+      // 06/09/2024
       'dd/MM/yyyy',
-
-      // Compact Formats
-      'yyyyMMddHHmmss', // YYYYMMDDHHmmss
-      'yyyyMMdd', // YYYYMMDD
-      'ddMMyyyy HH:mm:ss', // DDMMYYYYHHmmss
-      'ddMMyyyy', // DDMMYYYY
-
-      // With Full Month Name
-      'MMMM d, yyyy HH:mm:ss', // April 23, 1999 14:30:00
-      'MMMM d, yyyy', // April 23, 1999
+      // 09/06/2024
 
       // Time Only
-      'HH:mm:ss', // 24-hour format with seconds
-      'hh:mm:ss a', // 12-hour format with AM/PM and seconds
-      'HH:mm', // 24-hour format without seconds
-      'hh:mm a', // 12-hour format without seconds
+      'HH:mm:ss',
+      'hh:mm:ss a',
+      'HH:mm',
+      'hh:mm a',
 
-      // Additional ISO 8601
-      'yyyy-MM-ddTHH:mm:ss.SSSZ', // With milliseconds and timezone 'Z'
-    ];
+      // Individual Components (least specific)
+      'yyyy',
+      'MM',
+      'MMM',
+      'MMMM',
+      'dd',
+      'EEEE',
+      'EEE',
+    };
 
     for (final format in formats) {
       try {
-        final parsedDate = DateFormat(format, effectiveLocale).parse(this);
+        final parsedDate =
+            DateFormat(format, effectiveLocale).parseStrict(this);
         return utc ? parsedDate.toUtc() : parsedDate;
       } catch (_) {}
-    }
-
-    // 4. Regex Parsing with Locale and UTC Handling
-    final match = RegExp(
-            r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})(?:\s+(\d{1,2}):(\d{1,2}):(\d{1,2}))?(?:\s*([+\-]\d{2}:\d{2})?)?')
-        .firstMatch(this);
-
-    if (match != null) {
-      final year = int.parse(match.group(1)!);
-      final month = int.parse(match.group(2)!);
-      final day = int.parse(match.group(3)!);
-      final hour = match.group(4) != null ? int.parse(match.group(4)!) : 0;
-      final minute = match.group(5) != null ? int.parse(match.group(5)!) : 0;
-      final second = match.group(6) != null ? int.parse(match.group(6)!) : 0;
-      final offset =
-          match.group(7) != null ? _parseTimeZoneOffset(match.group(7)!) : null;
-
-      return offset != null
-          ? DateTime(year, month, day, hour, minute, second).toUtc().add(offset)
-          : DateTime(year, month, day, hour, minute, second);
     }
 
     throw FormatException('Invalid date format', this);
@@ -232,6 +270,14 @@ extension DHUDateFormatStringExtension on String {
     }
     return null;
   }
+
+  /// Parses the string to [DateTime] using the provided format, locale, and UTC option.
+  DateTime toDateFormatted([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      DateFormat(format, locale).parse(this, utc);
 
   /// Parses the string to [DateTime] using the provided format, locale, and UTC option, with loose parsing.
   DateTime toDateFormattedLoose([
@@ -261,26 +307,30 @@ extension DHUDateFormatNStringExtension on String? {
   /// Creates a DateFormat object using the string as the pattern and optional locale.
   DateFormat dateFormat([String? locale]) => DateFormat(this, locale);
 
-  /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option.
-  DateTime? tryToDateFormatted({
-    String? format,
+  /// uses the original `toDateFormatted] but returns null on any errors.
+  DateTime? tryToDateAutoFormat({
     String? locale,
-    bool autoDetectFormat = true,
     bool useCurrentLocale = false,
     bool utc = false,
   }) {
     if (isBlank) return null;
     try {
-      this!.toDateFormatted(
-        format: format,
+      this!.toDateAutoFormat(
         locale: locale,
-        autoDetectFormat: autoDetectFormat,
         useCurrentLocale: useCurrentLocale,
         utc: utc,
       );
     } catch (_) {}
     return null;
   }
+
+  /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option.
+  DateTime? tryToDateFormatted([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      isBlank ? null : DateFormat(format, locale).tryParse(this!, utc);
 
   /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option, with loose parsing.
   DateTime? tryToDateFormattedLoose([

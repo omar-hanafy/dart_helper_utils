@@ -13,7 +13,7 @@ This major release focuses on significantly enhancing internationalization (i18n
       - `setAsDefaultLocale`, `setAsSystemLocale`, `translate`, `genderSelect`, `getGenderCategory` (String)
     - **DateFormat:**
       - `tryFormat`, `format`, and various formatting methods (DateTime)
-      - `dateFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`, `localeExists` (String)
+      - `dateFormat`, `toDateAutoFormat`, `toDateFormatted`, `toDateFormattedLoose`, `toDateFormattedStrict`, `toDateFormattedUtc`, `localeExists` (String)
     - **Bidi:**
       - `toBidiFormatter` (TextDirection)
       - Various bidi text manipulation methods (String)
@@ -29,8 +29,8 @@ This major release focuses on significantly enhancing internationalization (i18n
   - `keysList`, `valuesList`, `keysSet`, `valuesSet` (get lists or sets of keys/values)
 
 #### Date and Time Utilities
-- **Enhanced DateTime Parsing:**
-  - Replaced `try/toDateWithFormat` with more versatile `try/toDateFormatted` methods supporting various formats, locales, and time zones.
+- **New Getters:**
+  - `httpFormat` (formats this date according to [RFC-1123](http://tools.ietf.org/html/rfc1123 "RFC-1123") e.g. `"Thu, 1 Jan 2024 00:00:00 GMT"`)
 - **Flexible Weekday Customization:**
   - Added optional `startOfWeek` parameter to `firstDayOfWeek` and `lastDayOfWeek`.
 - **Streamlined DateTime Calculations:**
@@ -48,11 +48,11 @@ This major release focuses on significantly enhancing internationalization (i18n
 
 #### Breaking Changes 
 - **`try/toDateWithFormat` renamed to `try/toDateFormatted`:**
-  - It can autodetect popular formats if the format is not provided.
-  - Due to the expanded range of supported formats, some strings that previously caused errors might now be parsed successfully but with different values.
-  - to disable autodetect formats set the `autoDetectFormat: false` in the method signature.
   - Update any code referencing `try/toDateWithFormat` to use `try/toDateFormatted` instead.
-
+  
+- **`dateFormat` on String is no longer a getter, its a method that aceepts optional `locale`:**
+  - instead of `'yyyy MM'.dateFormat` use `'yyyy MM'.dateFormat()` or `yyyy MM'.dateFormat('en_US')`.
+  
 - **`flatJson` (Map) renamed to `flatMap`:**
   - Update any code referencing `flatJson` to use `flatMap` instead.
 
