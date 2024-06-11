@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 
@@ -1003,22 +1001,22 @@ T? tryToType<T>(dynamic object) {
 /// bool isStringPrimitive = isPrimitiveType('Hello'); // true
 /// bool isComplexObjectPrimitive = isPrimitiveType(MyCustomClass()); // false
 /// ```
-bool isPrimitiveType(dynamic value) {
-  return value is num || // Includes both int and double
-      value is bool ||
-      value is String ||
-      value is BigInt ||
-      value is DateTime ||
-      value is Uint8List ||
-      _isCollectionOfPrimitives(value);
-}
+bool isValuePrimitive(dynamic value) => value is Object && value.isPrimitive();
 
-bool _isCollectionOfPrimitives(dynamic value) {
-  if (value is List) return value.every(isPrimitiveType);
-  if (value is Set) return value.every(isPrimitiveType);
-  if (value is Map) {
-    return value.keys.every(isPrimitiveType) &&
-        value.values.every(isPrimitiveType);
-  }
-  return false;
+bool isTypePrimitive<T>() => switch (T) {
+      const (num) ||
+      const (int) ||
+      const (double) ||
+      const (bool) ||
+      const (String) ||
+      const (BigInt) ||
+      const (DateTime) =>
+        true,
+      _ => false,
+    };
+
+bool isEqual(dynamic a, dynamic b) {
+  if (a is Map && b is Map) return a.isEqual(b);
+  if (a is Iterable && b is Iterable) return a.isEqual(b);
+  return a == b;
 }

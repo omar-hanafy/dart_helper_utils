@@ -21,25 +21,45 @@ This major release focuses on significantly enhancing internationalization (i18n
       - `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted` (String)
       - `formatAsCurrency`, `formatAsCompact`, and various other formatting methods (Num)
 
-#### Map Utilities
-- **New Methods:**
-  - `setIfMissing` (add entries conditionally)
-  - `update` (update values based on a condition)
-  - `filter` (filter entries using predicates)
-  - `keysList`, `valuesList`, `keysSet`, `valuesSet` (get lists or sets of keys/values)
-
 #### Date and Time Utilities
 - **New Getters:**
-  - `httpFormat` (formats this date according to [RFC-1123](http://tools.ietf.org/html/rfc1123 "RFC-1123") e.g. `"Thu, 1 Jan 2024 00:00:00 GMT"`)
+  - `httpFormat` (formats this date according to [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123") e.g. `"Thu, 1 Jan 2024 00:00:00 GMT"`)
 - **Flexible Weekday Customization:**
   - Added optional `startOfWeek` parameter to `firstDayOfWeek` and `lastDayOfWeek`.
 - **Streamlined DateTime Calculations:**
   - Consolidated various DateTime manipulation methods for consistency and added tests.
 
+#### Other Utilities
+- **New Methods on Map:**
+  - `isEqual`: checks for deep equality with other Map of the same type.
+  - `setIfMissing` (add entries conditionally)
+  - `update` (update values based on a condition)
+  - `filter` (filter entries using predicates)
+  - `keysList`, `valuesList`, `keysSet`, `valuesSet` (get lists or sets of keys/values)
+  - `isPrimitive`: checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
+
+- **New Methods on Iterable:**
+  - `isEqual`: checks for deep equality with other iterable of the same type.
+  - `isPrimitive`: checks if every element is a [primitive type](https://dart.dev/language/built-in-types).
+
+**New Global Methods:**
+- `isEqual(dynamic a, dynamic b)`: Determines deep equality between two objects, including nested lists, maps,and custom types.
+- `isValuePrimitive(dynamic value)`: Checks if a given value is a [primitive type](https://dart.dev/language/built-in-types) (e.g., `num`, `bool`, `String`,`DateTime`, etc.) based on its runtime type.
+- `isTypePrimitive<T>()`: Checks if a given type `T` is considered a primitive type at compile time.
+
+- **New Extractions on Map & Iterable:**
+  - Added a new set of type-safe converters to safely extract values from `Map<K, V>` and `List<E>`:
+    -  `getString`, `getNum`, `getInt`, `getBigInt`, `getDouble`, `getBool`, `getDateTime`,`getUri`, `getMap`, `getSet`, `getList`.
+    - It also supports nullable converters such as  `tryGetString`, `tryGetNum`, `tryGetInt`, etc.
+    - for Map, it requires the key e.g. `map.getNum('key')`
+    - for List, it requires the index e.g. `list.getNum(1)`
+    - all other optionals in the `ConvertObject` class are also supported.
+
 #### Conversion Functions
 - **Enhanced Flexibility:**
   - Added optional `format` and `locale` parameters to numeric conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`).
   - Added optional `format`, `locale`, `autoDetectFormat`, `useCurrentLocale`, and `utc` parameters to datetime conversion functions (`toDateTime`, `tryToDateTime`).
+  - All of these optionals are available to all static methods int he ConvertObject class, as well the global methods and the new extraction methods on the Map and Iterable.
 
 #### Additional Improvements
 - Fixed various minor bugs and inconsistencies in extension methods.
@@ -50,9 +70,12 @@ This major release focuses on significantly enhancing internationalization (i18n
 - **`try/toDateWithFormat` renamed to `try/toDateFormatted`:**
   - Update any code referencing `try/toDateWithFormat` to use `try/toDateFormatted` instead.
   
-- **`dateFormat` on String is no longer a getter, its a method that aceepts optional `locale`:**
+- **`dateFormat` on String is no longer a getter, it's a method that accepts optional `locale`:**
   - instead of `'yyyy MM'.dateFormat` use `'yyyy MM'.dateFormat()` or `yyyy MM'.dateFormat('en_US')`.
   
+- **`isPrimitiveType` (Global) renamed to `isValuePrimitive`:**
+  - Update any code referencing `isPrimitiveType` to use `isValuePrimitive` instead.
+
 - **`flatJson` (Map) renamed to `flatMap`:**
   - Update any code referencing `flatJson` to use `flatMap` instead.
 

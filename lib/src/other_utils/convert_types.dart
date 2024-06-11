@@ -798,8 +798,9 @@ abstract class ConvertObject {
       );
     }
     try {
-      if (format != null)
+      if (format != null) {
         return '$object'.tryToDateFormatted(format, locale, utc);
+      }
       if (autoDetectFormat) {
         return '$object'.tryToDateAutoFormat(
           locale: locale,

@@ -5,7 +5,7 @@ Future<void> main() async {
   print(tryToList<int>('[1.5, 2.3, 3.4]'));
 
   // parsing raw Json to Map<String, dynamic>
-  final user = toMap<String, dynamic>('''
+  final userMap = toMap<String, dynamic>('''
 {
     "name": "John",
     "age": 30,
@@ -17,16 +17,19 @@ Future<void> main() async {
 '''); // you can also use the ConvertObject.toMap(...) to avoid ambiguity.
 
   // Example of using safe int conversions for dynamic data.
-  final walletBalance = toInt(user['wallet']);
+  final walletBalance = toInt(userMap['wallet']);
+  // OR
+  // final walletBalance = userMap.getInt('wallet');
+  // final walletBalance = ConvertObject.toInt(userMap['wallet']);
   print('user walletBalance: $walletBalance');
 
   // Example of using list converter & extensions.
-  final codes = tryToList<int>(user['codes']);
+  final codes = userMap.getList<int>('codes');
   print('First Code: ${codes.firstOrNull}');
-  print('Random Code: ${codes?.getRandom()}');
+  print('Random Code: ${codes.getRandom()}');
 
   // Example of using string extensions
-  final userMail = toString1(user['email']);
+  final userMail = toString1(userMap['email']);
   print('Is Valid Email: ${userMail.isValidEmail}');
 
   // Example of using HttpResStatus
@@ -125,7 +128,7 @@ Future<void> main() async {
   final executionDuration = await TimeUtils.executionDuration(() {
     // measuring execution duration of generating 1 million list item 100 times;
     for (var i = 0; i < 100; i++) {
-      List.generate(1000000, (index) => user);
+      List.generate(1000000, (index) => userMap);
     }
   });
   print(
@@ -135,7 +138,7 @@ Future<void> main() async {
   final durations = await TimeUtils.compareExecutionTimes(
     taskA: () {
       for (var i = 0; i < 100; i++) {
-        List.generate(1000000, (index) => user);
+        List.generate(1000000, (index) => userMap);
       }
     },
     taskB: () async => 100.millisecondsDelay,

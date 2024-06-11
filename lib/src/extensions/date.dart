@@ -118,8 +118,8 @@ extension DHUDateExtensions on DateTime {
   /// Converts this DateTime to local time.
   DateTime get local => toLocal();
 
-  /// Format a date according to
-  /// [RFC-1123](http://tools.ietf.org/html/rfc1123 "RFC-1123"),
+  /// Format a date to "DAY, DD MON YYYY hh:mm:ss GMT" according to
+  /// [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123"),
   /// e.g. `Thu, 1 Jan 1970 00:00:00 GMT`.
   String get httpFormat => HttpDate.format(this);
 
@@ -311,7 +311,7 @@ extension DHUDateExtensions on DateTime {
   /// Returns a DateTime representing the last day of the month for this DateTime.
   DateTime get lastDayOfMonth {
     final beginningNextMonth =
-        (month < 12) ? DateTime(year, month + 1) : DateTime(year + 1, 1);
+        (month < 12) ? DateTime(year, month + 1) : DateTime(year + 1);
     return beginningNextMonth.subtract(const Duration(days: 1));
   }
 

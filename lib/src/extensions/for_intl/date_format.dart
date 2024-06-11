@@ -195,43 +195,28 @@ extension DHUDateFormatStringExtension on String {
 
       // Unambiguous Month and Day Formats
       'MMMM d, yyyy HH:mm:ss',
-      // June 9, 2024 15:30:00
       'd MMMM yyyy HH:mm:ss',
-      // 9 June 2024 15:30:00
       'MMMM d, yyyy',
-      // June 9, 2024
       'd MMMM yyyy',
-      // 9 June 2024
+      'DAY, DD MON YYYY hh:mm:ss GMT',
 
       // Compact (often used in file names)
       'yyyyMMddHHmmss',
-      // YYYYMMDDHHmmss
       'yyyyMMdd',
-      // YYYYMMDD
 
       // Other Unambiguous Formats
       'EEEE, MMMM d, yyyy',
-      // Saturday, June 9, 2024
       'EEEE d MMMM yyyy',
-      // Saturday 9 June 2024
       'MMMM d, yyyy h:mm a',
-      // June 9, 2024 3:30 PM
       'dd/MM/yyyy HH:mm Z',
-      // 09/06/2024 15:30 +02:00
 
       // Potentially Ambiguous Formats (place these lower in the list)
       'ddMMyyyy HH:mm:ss',
-      // 09062024 15:30:00 (could be June 9th or September 6th)
       'ddMMyyyy',
-      // 09062024
       'MM/dd/yyyy HH:mm:ss',
-      // 06/09/2024 15:30:00 (could be June 9th or September 6th)
       'dd/MM/yyyy HH:mm:ss',
-      // 09/06/2024 15:30:00
       'MM/dd/yyyy',
-      // 06/09/2024
       'dd/MM/yyyy',
-      // 09/06/2024
 
       // Time Only
       'HH:mm:ss',
@@ -258,17 +243,6 @@ extension DHUDateFormatStringExtension on String {
     }
 
     throw FormatException('Invalid date format', this);
-  }
-
-  Duration? _parseTimeZoneOffset(String offsetString) {
-    final match = RegExp(r'([+\-])(\d{2}):(\d{2})').firstMatch(offsetString);
-    if (match != null) {
-      final isNegative = match.group(1) == '-';
-      final hours = int.parse(match.group(2)!);
-      final minutes = int.parse(match.group(3)!);
-      return Duration(hours: hours, minutes: minutes) * (isNegative ? -1 : 1);
-    }
-    return null;
   }
 
   /// Parses the string to [DateTime] using the provided format, locale, and UTC option.

@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:math';
 
-import 'package:dart_helper_utils/src/extensions/extensions.dart';
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
 
 /* SUGGESTIONS:
 When designing utility extensions for a language like Dart, which is used extensively in Flutter development, it’s crucial to consider both the common use cases and the pain points that developers might encounter. Here are some suggestions to consider adding to your `ListExtensions` class, which might provide additional value to users of your `dart_helper_utils` package:
@@ -50,14 +51,6 @@ typedef IndexedPredicate<T> = bool Function(int index, T);
 typedef Predicate<T> = bool Function(T);
 
 extension DHUNullableListExtensions<E> on List<E>? {
-  /// similar to list[index] but it is null safe.
-  E? of(int index) {
-    if (isNotEmptyOrNull && index >= 0 && this!.length > index) {
-      return this![index];
-    }
-    return null;
-  }
-
   /// same behavior as [removeAt] but it is null safe which means
   /// it do nothing when [List] return [isEmptyOrNull] to true.
   void tryRemoveAt(int index) {
@@ -87,37 +80,28 @@ extension DHUNullableListExtensions<E> on List<E>? {
       isEmptyOrNull ? null : this!.removeWhere((element) => false);
 }
 
-extension DHUCollectionsExtensionsNS<T> on Iterable<T>? {
+extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
+  /// similar to list[index] but it is null safe.
+  E? of(int index) {
+    if (isNotEmptyOrNull && index >= 0 && this!.length > index) {
+      return this!.elementAt(index);
+    }
+    return null;
+  }
+
   ///Returns [true] if this nullable iterable is either null or empty.
   bool get isEmptyOrNull => isNull || this!.isEmpty;
 
   ///Returns [false] if this nullable iterable is either null or empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 
-  // get an element at specific index or return null
-  T? _elementAtOrNull(int index) {
-    return _elementOrNull(index, (_) => null);
-  }
-
-  T? _elementOrNull(int index, T? Function(int index) defaultElement) {
-    if (isEmptyOrNull) return null;
-    if (index < 0) return defaultElement(index);
-    var counter = 0;
-    for (final element in this!) {
-      if (index == counter++) {
-        return element;
-      }
-    }
-    return defaultElement(index);
-  }
-
   /// get the first element return null
-  T? get firstOrNull => _elementAtOrNull(0);
+  E? get firstOrNull => of(0);
 
   /// get the last element if the list is not empty or return null
-  T? get lastOrNull => isNotEmptyOrNull ? this!.last : null;
+  E? get lastOrNull => isNotEmptyOrNull ? this!.last : null;
 
-  T? firstWhereOrNull(Predicate<T> predicate) {
+  E? firstWhereOrNull(Predicate<E> predicate) {
     if (isEmptyOrNull) return null;
     for (final element in this!) {
       if (predicate(element)) return element;
@@ -129,29 +113,236 @@ extension DHUCollectionsExtensionsNS<T> on Iterable<T>? {
   /// example:
   /// var name = [danny, ronny, james].lastOrDefault["jack"]; // james
   /// var name = [].lastOrDefault["jack"]; // jack
-  T? lastOrDefault(T defaultValue) => lastOrNull ?? defaultValue;
+  E? lastOrDefault(E defaultValue) => lastOrNull ?? defaultValue;
 
   /// get the first element or provider default
   /// example:
   /// var name = [danny, ronny, james].firstOrDefault["jack"]; // danny
   /// var name = [].firstOrDefault["jack"]; // jack
-  T firstOrDefault(T defaultValue) => firstOrNull ?? defaultValue;
+  E firstOrDefault(E defaultValue) => firstOrNull ?? defaultValue;
 
-  T? tryGetRandom() {
+  ////// gets random element from the list or return null. uses the
+  E? tryGetRandom() {
     final iterable = this;
     if (iterable == null) return null;
     final generator = Random();
     final index = generator.nextInt(iterable.length);
     return iterable.toList()[index];
   }
+
+  /// checks if every element is a [primitive type](https://dart.dev/language/built-in-types).
+  bool isPrimitive() {
+    if (this == null) return false;
+    return isTypePrimitive<E>() || this!.every(isValuePrimitive);
+  }
+
+  /// Compares two lists for element-by-element equality.
+  ///
+  /// Returns true if the lists are both null, or if they are both non-null, have
+  /// the same length, and contain the same members in the same order. Returns
+  /// false otherwise.
+  bool isEqual(Iterable<E>? other) {
+    final curr = this;
+    if (identical(curr, other)) return true;
+    if (curr == null || other == null) return false;
+    if (curr.length != other.length) return false;
+
+    final iterA = curr.iterator;
+    final iterB = other.iterator;
+    while (iterA.moveNext() && iterB.moveNext()) {
+      if (!gf.isEqual(iterA.current, iterB.current)) return false;
+    }
+    return true;
+  }
+
+  /// uses the [tryToString] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [String] or return null.
+  String? tryGetString(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToString(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [num] or return null.
+  num? tryGetNum(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToNum(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [int] or return null.
+  int? tryGetInt(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToInt(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [BigInt] or return null.
+  BigInt? tryGetBigInt(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToBigInt(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [double] or return null.
+  double? tryGetDouble(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToDouble(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [bool] or return null.
+  bool? tryGetBool(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToBool(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [DateTime] or return null.
+  DateTime? tryGetDateTime(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToDateTime(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Uri] or return null.
+  Uri? tryGetUri(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToUri(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Map] or return null.
+  Map<K2, V2>? tryGetMap<K2, V2>(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToMap(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Set] or return null.
+  Set<T>? tryGetSet<T>(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToSet(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToList] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [List] or return null.
+  List<T>? tryGetList<T>(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToList(
+              this!.elementAt(index),
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
 }
 
-extension DHUCollectionsExtensions<T> on Iterable<T> {
+extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Returns this Iterable if it's not `null` and the empty list otherwise.
-  Iterable<T> orEmpty() => this;
+  Iterable<E> orEmpty() => this;
 
   /// Returns `true` if at least one element matches the given [predicate].
-  bool any(Predicate<T> predicate) {
+  bool any(Predicate<E> predicate) {
     if (isEmptyOrNull) return false;
     for (final element in orEmpty()) {
       if (predicate(element)) return true;
@@ -160,25 +351,25 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   }
 
   /// Return a list concatenates the output of the current list and another [iterable]
-  List<T> concatWithSingleList(Iterable<T> iterable) {
+  List<E> concatWithSingleList(Iterable<E> iterable) {
     if (isEmptyOrNull || iterable.isEmptyOrNull) return [];
 
-    return <T>[...orEmpty(), ...iterable];
+    return <E>[...orEmpty(), ...iterable];
   }
 
   /// Return a list concatenates the output of the current list and multiple [iterables]
-  List<T> concatWithMultipleList(List<Iterable<T>> iterables) {
+  List<E> concatWithMultipleList(List<Iterable<E>> iterables) {
     if (isEmptyOrNull || iterables.isEmptyOrNull) return [];
     final list = iterables.toList(growable: false).expand((i) => i);
-    return <T>[...orEmpty(), ...list];
+    return <E>[...orEmpty(), ...list];
   }
 
   /// Convert iterable to set
-  Set<T> toMutableSet() => Set.from(this);
+  Set<E> toMutableSet() => Set.from(this);
 
   /// Returns a set containing all elements that are contained
   /// by both this set and the specified collection.
-  Set<T> intersect(Iterable<T> other) => toMutableSet()..addAll(other);
+  Set<E> intersect(Iterable<E> other) => toMutableSet()..addAll(other);
 
   /// Groups the elements in values by the value returned by key.
   ///
@@ -195,8 +386,8 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   }
 
   /// Returns a list containing only elements matching the given [predicate].
-  List<T> filter(Predicate<T> test) {
-    final result = <T>[];
+  List<E> filter(Predicate<E> test) {
+    final result = <E>[];
     forEach((e) {
       if (e != null && test(e)) {
         result.add(e);
@@ -206,8 +397,8 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   }
 
   /// Returns a list containing all elements not matching the given [predicate] and will filter nulls as well.
-  List<T> filterNot(Predicate<T> test) {
-    final result = <T>[];
+  List<E> filterNot(Predicate<E> test) {
+    final result = <E>[];
     forEach((e) {
       if (e != null && !test(e)) {
         result.add(e);
@@ -220,11 +411,11 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   int get halfLength => (length / 2).floor();
 
   /// Returns a list containing first [n] elements.
-  List<T> takeOnly(int n) {
+  List<E> takeOnly(int n) {
     if (n == 0) return [];
 
-    final list = List<T>.empty();
-    final thisList = toList();
+    final list = List<E>.empty();
+    final thisList = this.toList();
     final resultSize = length - n;
     if (resultSize <= 0) return [];
     if (resultSize == 1) return [last];
@@ -237,11 +428,11 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   }
 
   /// Returns a list containing all elements except first [n] elements.
-  List<T> drop(int n) {
+  List<E> drop(int n) {
     if (n == 0) return [];
 
-    final list = List<T>.empty();
-    final originalList = toList();
+    final list = List<E>.empty();
+    final originalList = this.toList();
     final resultSize = length - n;
     if (resultSize <= 0) return [];
     if (resultSize == 1) return [last];
@@ -254,33 +445,33 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   }
 
   // Returns map operation as a List
-  List<E> mapList<E>(E Function(T e) f) => map(f).toList();
+  List<E2> mapList<E2>(E2 Function(E e) f) => map(f).toList();
 
   // Takes the first half of a list
-  List<T> firstHalf() => take(halfLength).toList();
+  List<E> firstHalf() => take(halfLength).toList();
 
   // Takes the second half of a list
-  List<T> secondHalf() => drop(halfLength).toList();
+  List<E> secondHalf() => drop(halfLength).toList();
 
   /// returns a list with two swapped items
   /// [i] first item
   /// [j] second item
-  List<T> swap(int i, int j) {
-    final list = toList();
+  List<E> swap(int i, int j) {
+    final list = this.toList();
     final aux = list[i];
     list[i] = list[j];
     list[j] = aux;
     return list;
   }
 
-  T getRandom() {
+  E getRandom() {
     final generator = Random();
     final index = generator.nextInt(length);
-    return toList()[index];
+    return this.toList()[index];
   }
 
   /// Will retrun new [Iterable] with all elements that satisfy the predicate [predicate],
-  Iterable<T> whereIndexed(IndexedPredicate<T> predicate) =>
+  Iterable<E> whereIndexed(IndexedPredicate<E> predicate) =>
       _IndexedWhereIterable(this, predicate);
 
   ///
@@ -296,7 +487,7 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   /// a, 0
   /// b, 1
   /// c, 2
-  void forEachIndexed(void Function(T element, int index) action) {
+  void forEachIndexed(void Function(E element, int index) action) {
     var index = 0;
     for (final element in this) {
       action(element, index++);
@@ -305,12 +496,12 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
 
   /// Returns a new list with all elements sorted according to descending
   /// natural sort order.
-  List<T> sortedDescending() =>
-      toList()..sort((a, b) => -(a as Comparable).compareTo(b));
+  List<E> sortedDescending() =>
+      this.toList()..sort((a, b) => -(a as Comparable).compareTo(b));
 
   /// Checks if all elements in the specified [collection] are contained in
   /// this collection.
-  bool containsAll(Iterable<T> collection) {
+  bool containsAll(Iterable<E> collection) {
     for (final element in collection) {
       if (!contains(element)) return false;
     }
@@ -324,7 +515,7 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   ///    User(45, "ronit"),
   ///    User(19, "amsalam"),
   ///  ].count((user) => user.age > 20); // 2
-  int count([Predicate<T>? predicate]) {
+  int count([Predicate<E>? predicate]) {
     var count = 0;
     if (predicate == null) {
       return length;
@@ -343,7 +534,7 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   /// Example:
   /// [5, 19, 2].all(isEven), isFalse)
   /// [6, 12, 2].all(isEven), isTrue)
-  bool all(Predicate<T>? predicate) {
+  bool all(Predicate<E>? predicate) {
     for (final e in this) {
       if (!predicate!(e)) return false;
     }
@@ -370,11 +561,11 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   /// 30 Josh
   /// 36 Ran
   // ignore: inference_failure_on_function_return_type
-  List<T> distinctBy(Predicate<T> predicate) {
+  List<E> distinctBy(Predicate<E> predicate) {
     // ignore: inference_failure_on_instance_creation
     final set = HashSet();
-    final list = <T>[];
-    toList().forEach((e) {
+    final list = <E>[];
+    this.toList().forEach((e) {
       if (set.add(predicate(e))) {
         list.add(e);
       }
@@ -393,11 +584,11 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   /// result:
   /// 1,2,3
 
-  dynamic subtract(Iterable<T> other) => toSet()..removeAll(other);
+  dynamic subtract(Iterable<E> other) => this.toSet()..removeAll(other);
 
   /// Returns the first element matching the given [predicate], or `null`
   /// if element was not found.
-  T? find(Predicate<T> predicate) {
+  E? find(Predicate<E> predicate) {
     for (final element in this) {
       if (predicate(element)) {
         return element;
@@ -408,6 +599,165 @@ extension DHUCollectionsExtensions<T> on Iterable<T> {
   }
 
   String get encodedJson => json.encode(this);
+
+  /// uses the [toString] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [String].
+  String getString(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toString1(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toNum] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [num].
+  num getNum(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toNum(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [int].
+  int getInt(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toInt(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [BigInt].
+  BigInt getBigInt(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toBigInt(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toDouble] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [double].
+  double getDouble(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toDouble(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toBool] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [bool].
+  bool getBool(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toBool(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [DateTime].
+  DateTime getDateTime(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toDateTime(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toUri] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Uri].
+  Uri getUri(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toUri(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toMap] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Map].
+  Map<K2, V2> getMap<K2, V2>(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toMap(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toSet] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Set].
+  Set<T> getSet<T>(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toSet(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toList] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [List].
+  List<T> getList<T>(
+    int index, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toList(
+        elementAt(index),
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
 }
 
 // A lazy [Iterable] skip elements do **NOT** match the predicate [_f].

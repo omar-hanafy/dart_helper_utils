@@ -12,6 +12,7 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
     - [Sample Usage](#sample-usage)
     - [Available Conversions](#available-conversions)
     - [Optional Parameters](#optional-parameters)
+    - [Extract and Convert](#extract-and-convert)
   - [TimeUtils](#timeutils)
 - [Extensions](#extensions)
   - [Date Extensions](#date-extensions)
@@ -76,7 +77,7 @@ int score = toInt(apiResponse['score']);
 - `toInt()` / `tryToInt()`
 - `toDouble()` / `tryToDouble()`
 - `toBool()` / `tryToBool()`
-- `toString1()` / `tryToString1()`
+- `toString1()` / `tryToString()`
 - `toList<T>()` / `tryToList<T>()`
 - `toSet<T>()` / `tryToSet<T>()`
 - `toMap<K, V>()` / `tryToMap<K, V>()`
@@ -110,7 +111,7 @@ final int number = toInt(dynamicList, listIndex: 1); // 20
 
 #### Example with `mapKey`:
 ```dart
-dynamic dynamicMap = {
+final dynamicMap = <dynamic, dynamic>{
   'name': 'John',
   'age': '30',
   'bools': {
@@ -130,6 +131,40 @@ The `ConvertObject` class now simplifies working with JSON data by automatically
 final myList = tryToList<int>("[1, 2, 3]"); // List<int>
 final mySet = tryToSet<String>('["hello", "world"]'); // Set<String>
 final myMap = tryToMap<String, dynamic>('{"name": "Alice", "age": 30}'); // Map<String, dynamic>
+```
+
+### Extract And Convert
+
+Starting from version 2.0.0 and above, we added a new set of type-safe converters to safely extract values from `Map<K, V>` and `List<E>`
+
+They also use the same static methods in the `ConvertObject` class, and all supported types and optionals are also included.
+
+- `getString`, `getNum`, `getInt`, `getBigInt`, `getDouble`, `getBool`, `getDateTime`, `getUri`, `getMap`, `getSet`, and `getList`.
+- They also supports nullable converters such as  `tryGetString`, `tryGetNum`, `tryGetInt`, etc.
+- For Map, it requires the key e.g. `map.getNum('key')` 
+- For List, it requires the index e.g. `list.getNum(1)`
+
+Sample:
+
+```dart
+final dynamicMap = <dynamic, dynamic>{
+  'name': 'John',
+  'age': '30',
+  'bools': {
+    'isHuman': 'yes',
+  }
+};
+
+final age = map.getInt('age'); // 30
+final score = map.tryGetInt('score'); // null
+final isHuman = map.getBool('bools', innerKey: 'isHuman'); // true
+```
+
+or with List:
+
+```dart
+final dynamicList = <dynamic>['John', 30, true];
+final age = dynamicList.getInt(1); // 30
 ```
 
 ## TimeUtils:
@@ -384,15 +419,15 @@ try {
 
 ## Collection Extension
 ### Iterable Extension
+-  Type-safe converters like `getInt(index)`, `getDateTime(index)`, `getMap(index)` etc.
 - `isEmptyOrNull`: Returns true if the iterable is either null or empty.
 - `isNotEmptyOrNull`: Returns false if the iterable is either null or empty.
-- `elementAtOrNull`: Retrieves the element at the specified index or returns null.
-- `elementOrNull`: Retrieves the element at the specified index or returns a default value.
+- `of`: Retrieves the element at the specified index in a null-safe manner.
 - `firstOrNull`: Retrieves the first element or returns null.
 - `lastOrNull`: Retrieves the last element or returns null.
 - `firstWhereOrNull`: Retrieves the first element that matches the specified predicate or returns null.
-- `lastOrDefault`: Retrieves the last element or returns a default value.
 - `firstOrDefault`: Retrieves the first element or returns a default value.
+- `lastOrDefault`: Retrieves the last element or returns a default value.
 - `tryGetRandom`: Retrieves a random element from the iterable or returns null.
 - `orEmpty`: Returns the iterable if it's not null and the empty list otherwise.
 - `any`: Returns true if at least one element matches the given predicate.
@@ -416,7 +451,6 @@ try {
 - `encodedJson`: Encodes the iterable as a JSON string.
 
 ### List Extension
-- `of`: Retrieves the element at the specified index in a null-safe manner.
 - `tryRemoveAt`: Removes the element at the specified index in a null-safe manner.
 - `indexOfOrNull`: Retrieves the index of the specified element in a null-safe manner.
 - `indexWhereOrNull`: Retrieves the index of the first element that matches the specified predicate in a null-safe manner.

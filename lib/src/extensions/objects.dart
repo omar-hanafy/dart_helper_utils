@@ -59,4 +59,15 @@ extension DHUObjectNullableExtensions on Object? {
     if (self is num) return self.asBool;
     return self.toString().asBool;
   }
+
+  bool isPrimitive() {
+    final value = this;
+    if (value is Iterable) return value.isPrimitive();
+    if (value is Map) return value.isPrimitive();
+    return value is num ||
+        value is bool ||
+        value is String ||
+        value is BigInt ||
+        value is DateTime;
+  }
 }

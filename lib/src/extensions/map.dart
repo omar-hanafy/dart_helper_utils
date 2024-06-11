@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
+
 dynamic _makeValueEncodable(dynamic value) {
   if (value is String ||
       value is int ||
@@ -89,9 +92,372 @@ extension DHUMapExtension<K, V> on Map<K, V> {
 
   /// Returns a set containing all the keys in the map.
   Set<K> get keysSet => keys.toSet();
+
+  /// uses the [toString] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [String].
+  String getString(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toString1(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toNum] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [num].
+  num getNum(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toNum(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [int].
+  int getInt(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toInt(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [BigInt].
+  BigInt getBigInt(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toBigInt(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toDouble] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [double].
+  double getDouble(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toDouble(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toBool] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [bool].
+  bool getBool(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toBool(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [DateTime].
+  DateTime getDateTime(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      ConvertObject.toDateTime(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+      );
+
+  /// uses the [toUri] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Uri].
+  Uri getUri(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toUri(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toMap] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Map].
+  Map<K2, V2> getMap<K2, V2>(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toMap(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toSet] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Set].
+  Set<T> getSet<T>(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toSet(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
+
+  /// uses the [toList] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [List].
+  List<T> getList<T>(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      ConvertObject.toList(
+        this[key],
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+      );
 }
 
 extension DHUMapNullableExtension<K, V> on Map<K, V>? {
+  /// uses the [tryToString] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [String] or return null.
+  String? tryGetString(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToString(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [num] or return null.
+  num? tryGetNum(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToNum(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [int] or return null.
+  int? tryGetInt(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToInt(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [BigInt] or return null.
+  BigInt? tryGetBigInt(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToBigInt(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [double] or return null.
+  double? tryGetDouble(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToDouble(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [bool] or return null.
+  bool? tryGetBool(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToBool(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [DateTime] or return null.
+  DateTime? tryGetDateTime(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToDateTime(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+              format: format,
+              locale: locale,
+            );
+
+  /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Uri] or return null.
+  Uri? tryGetUri(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToUri(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Map] or return null.
+  Map<K2, V2>? tryGetMap<K2, V2>(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToMap(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Set] or return null.
+  Set<T>? tryGetSet<T>(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToSet(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// uses the [tryToList] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [List] or return null.
+  List<T>? tryGetList<T>(
+    K key, {
+    Object? innerKey,
+    int? innerListIndex,
+  }) =>
+      isEmptyOrNull
+          ? null
+          : ConvertObject.tryToList(
+              this![key],
+              mapKey: innerKey,
+              listIndex: innerListIndex,
+            );
+
+  /// Compares two maps for element-by-element equality.
+  ///
+  /// Returns true if the maps are both null, or if they are both non-null, have
+  /// the same length, and contain the same keys associated with the same values.
+  /// Returns false otherwise.
+  bool isEqual(Map<K, V>? b) {
+    final a = this;
+    if (identical(a, b)) return true;
+    if (a == null || b == null) return a == b;
+    if (a.length != b.length) return false;
+    for (final key in a.keys) {
+      if (!b.containsKey(key) || !gf.isEqual(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  /// checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
+  bool isPrimitive() {
+    if (this == null) return false;
+    return (isTypePrimitive<K>() || this!.keys.every(isValuePrimitive)) &&
+        (isTypePrimitive<V>() || this!.values.every(isValuePrimitive));
+  }
+
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
   bool get isNotEmptyOrNull => !isEmptyOrNull;
