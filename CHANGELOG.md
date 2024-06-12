@@ -1,11 +1,10 @@
 # CHANGELOG
-### [2.0.0]
+## [2.0.0]
 
 This major release focuses on significantly enhancing internationalization (i18n) capabilities, expanding utility functions for maps and numbers, refining date/time manipulation, and introducing substantial improvements to type conversions.
 
-#### Internationalization (i18n)
-- **`intl` Package Integration:**
-  - Introduced comprehensive support for localization and formatting using the `intl` package.
+### Internationalization (i18n)
+#### **`intl` Package Integration:**
   - **Extensions:**
     - **General:**
       - `intlSelectLogic`, `intlSelect` (Map)
@@ -20,34 +19,38 @@ This major release focuses on significantly enhancing internationalization (i18n
     - **NumberFormat:**
       - `toNumFormatted`, `toIntFormatted`, `toDoubleFormatted` (String)
       - `formatAsCurrency`, `formatAsCompact`, and various other formatting methods (Num)
+  - **Access:**
+    - We provided direct access to the intl common classes like `Intl`, `Bidi`, `BidiFormatter`, `NumberFormat`, and `DateFormat`.
+    - Instead of directly exposing the `TextDirection` class (which could cause confusion with the `TextDirection` enum in Flutter's `dart:ui` library), we've provided three global constants:
+      - `textDirectionLTR`, `textDirectionRTL`, and `textDirectionUNKNOWN`.
 
-#### Date and Time Utilities
-- **New Getters:**
+### Date and Time Utilities
+#### **New Getters:**
   - `httpFormat` (formats this date according to [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123") e.g. `"Thu, 1 Jan 2024 00:00:00 GMT"`)
-- **Flexible Weekday Customization:**
+#### **Flexible Weekday Customization:**
   - Added optional `startOfWeek` parameter to `firstDayOfWeek` and `lastDayOfWeek`.
-- **Streamlined DateTime Calculations:**
+#### **Streamlined DateTime Calculations:**
   - Consolidated various DateTime manipulation methods for consistency and added tests.
 
-#### Other Utilities
-- **New Methods on Map:**
+### Other Utilities
+#### **New Methods on Map:**
   - `isEqual`: checks for deep equality with other Map of the same type.
+  - `isPrimitive`: checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
   - `setIfMissing` (add entries conditionally)
   - `update` (update values based on a condition)
   - `filter` (filter entries using predicates)
   - `keysList`, `valuesList`, `keysSet`, `valuesSet` (get lists or sets of keys/values)
-  - `isPrimitive`: checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
 
-- **New Methods on Iterable:**
+#### **New Methods on Iterable:**
   - `isEqual`: checks for deep equality with other iterable of the same type.
   - `isPrimitive`: checks if every element is a [primitive type](https://dart.dev/language/built-in-types).
 
-**New Global Methods:**
+#### **New Global Methods:**
 - `isEqual(dynamic a, dynamic b)`: Determines deep equality between two objects, including nested lists, maps,and custom types.
 - `isValuePrimitive(dynamic value)`: Checks if a given value is a [primitive type](https://dart.dev/language/built-in-types) (e.g., `num`, `bool`, `String`,`DateTime`, etc.) based on its runtime type.
 - `isTypePrimitive<T>()`: Checks if a given type `T` is considered a primitive type at compile time.
 
-- **New Extractions on Map & Iterable:**
+#### **New Extractions on Map & Iterable:**
   - Added a new set of type-safe converters to safely extract values from `Map<K, V>` and `List<E>`:
     -  `getString`, `getNum`, `getInt`, `getBigInt`, `getDouble`, `getBool`, `getDateTime`,`getUri`, `getMap`, `getSet`, `getList`.
     - It also supports nullable converters such as  `tryGetString`, `tryGetNum`, `tryGetInt`, etc.
@@ -55,43 +58,42 @@ This major release focuses on significantly enhancing internationalization (i18n
     - for List, it requires the index e.g. `list.getNum(1)`
     - all other optionals in the `ConvertObject` class are also supported.
 
-#### Conversion Functions
-- **Enhanced Flexibility:**
+### Conversion Functions
+#### **Enhanced Flexibility:**
   - Added optional `format` and `locale` parameters to numeric conversion functions (`toNum`, `tryToNum`, `toInt`, `tryToInt`, `toDouble`, `tryToDouble`).
   - Added optional `format`, `locale`, `autoDetectFormat`, `useCurrentLocale`, and `utc` parameters to datetime conversion functions (`toDateTime`, `tryToDateTime`).
   - All of these optionals are available to all static methods int he ConvertObject class, as well the global methods and the new extraction methods on the Map and Iterable.
 
-#### Additional Improvements
+### Additional Improvements
 - Fixed various minor bugs and inconsistencies in extension methods.
-- Enhanced documentation for clarity and usability.
+- Enhanced documentation.
 - Added test coverage for all date related extensions, with more tests planned for the future.
 
-#### Breaking Changes 
-- **`try/toDateWithFormat` renamed to `try/toDateFormatted`:**
+### Breaking Changes 
+#### **`try/toDateWithFormat` renamed to `try/toDateFormatted`:**
   - Update any code referencing `try/toDateWithFormat` to use `try/toDateFormatted` instead.
-  
-- **`dateFormat` on String is no longer a getter, it's a method that accepts optional `locale`:**
+
+#### **`dateFormat` on String is no longer a getter, it's a method that accepts optional `locale`:**
   - instead of `'yyyy MM'.dateFormat` use `'yyyy MM'.dateFormat()` or `yyyy MM'.dateFormat('en_US')`.
-  
-- **`isPrimitiveType` (Global) renamed to `isValuePrimitive`:**
+
+#### **`isPrimitiveType` (Global) renamed to `isValuePrimitive`:**
   - Update any code referencing `isPrimitiveType` to use `isValuePrimitive` instead.
 
-- **`flatJson` (Map) renamed to `flatMap`:**
+#### **`flatJson` (Map) renamed to `flatMap`:**
   - Update any code referencing `flatJson` to use `flatMap` instead.
 
-- **`makeEncodable` and `safelyEncodedJson` renamed to `encodableCopy` and `encodedJsonString`:**
+#### **`makeEncodable` and `safelyEncodedJson` renamed to `encodableCopy` and `encodedJsonString`:**
   - Fixed an issue where sets were not correctly converted to JSON-encodable lists.
   - Update any code referencing these methods to use their new names.
 
-- **`firstDayOfWeek` and `lastDayOfWeek`:**
+#### **`firstDayOfWeek` and `lastDayOfWeek`:**
   - These methods now have an optional `startOfWeek` parameter, which may affect behavior if not explicitly specified.
 
-#### Migration Guide
+### Migration Guide
 - You can see the migration guide for this version from [here](https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides/mg_2.0.0.md).
 - You can see all the migration guides in the GitHub repo from [here](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides). 
 
-### [1.2.0]
-
+## [1.2.0]
 - **New Feature:** Added the `toWords` getter on `String`, which converts any `String` to a `List<String>`, handling complex cases more effectively than the native `split()` method.
   
   - **Example Usage:**
@@ -100,14 +102,13 @@ This major release focuses on significantly enhancing internationalization (i18n
     print("FlutterAndDart_are-AWESOME".toWords); // [Flutter, And, Dart, are, AWESOME]
     ```
 
-### [1.1.0]
-
-#### Enhancements
+## [1.1.0]
+### Enhancements
 - **String Case Conversions:**
   - `capitalizeFirstLetter`: Now **only** capitalizes the first letter, preserving the rest of the case.
   - **NEW:** `capitalizeFirstLowerRest`: Provides the previous behavior, capitalizing the first letter and lowercasing the rest.
 
-#### Added
+### Added
 - **Expanded String Case Conversions:** Added comprehensive case conversion extensions:
   - `toPascalCase`: PascalCase (UpperCamelCase).
   - `toTitleCase`: Title Case.
@@ -134,16 +135,14 @@ This major release focuses on significantly enhancing internationalization (i18n
 - **String Utility:**
   - `isBlank`: Alias for `isEmptyOrNull`, checks if a string is null, empty, or solely whitespace.
 
-### [1.0.1]
-
+## [1.0.1]
 - Updated the README.
 
-### [1.0.0] - 2024-05-25
-
+## [1.0.0] - 2024-05-25
 Initial release of [`dart_helper_utils`](https://pub.dev/packages/dart_helper_utils), which includes all the Dart utilities from [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils) up to version
 4.1.0
 
-#### Added
+### Added
 
 - `ConvertObject` class now accepts raw JSON strings for `List`, `Set`, and `Map` conversions, e.g., `tryToList<int>("[1,2,3]")`.
 - **New** `TimeUtils` class for measuring and comparing execution times, with methods like:
@@ -154,7 +153,7 @@ Initial release of [`dart_helper_utils`](https://pub.dev/packages/dart_helper_ut
     - `runPeriodically`: Executes a function periodically with a given interval.
     - `runWithTimeout`: Executes a function with a timeout, cancelling if it exceeds the specified duration.
 
-#### Notes
+### Notes
 
 - Future updates and feature changes for Dart-specific utilities will be added to the [`dart_helper_utils`](https://pub.dev/packages/dart_helper_utils) package.
 - If you were using Dart-specific utilities from [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), migrate to [`dart_helper_utils`](https://pub.dev/packages/dart_helper_utils). If you are

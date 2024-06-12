@@ -97,7 +97,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [String].
   String getString(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toString1(
@@ -110,7 +110,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [num].
   num getNum(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
@@ -127,7 +127,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [int].
   int getInt(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
@@ -144,7 +144,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [BigInt].
   BigInt getBigInt(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toBigInt(
@@ -157,7 +157,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [double].
   double getDouble(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
@@ -174,7 +174,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [bool].
   bool getBool(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toBool(
@@ -187,10 +187,13 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [DateTime].
   DateTime getDateTime(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
   }) =>
       ConvertObject.toDateTime(
         this[key],
@@ -198,13 +201,16 @@ extension DHUMapExtension<K, V> on Map<K, V> {
         listIndex: innerListIndex,
         format: format,
         locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
       );
 
   /// uses the [toUri] defined in the [ConvertObject] class to convert a
   /// specific element by [key] in that Iterable to [Uri].
   Uri getUri(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toUri(
@@ -217,7 +223,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [Map].
   Map<K2, V2> getMap<K2, V2>(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toMap(
@@ -230,7 +236,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [Set].
   Set<T> getSet<T>(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toSet(
@@ -243,7 +249,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// specific element by [key] in that Iterable to [List].
   List<T> getList<T>(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       ConvertObject.toList(
@@ -258,7 +264,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [String] or return null.
   String? tryGetString(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull
@@ -273,7 +279,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [num] or return null.
   num? tryGetNum(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
@@ -292,7 +298,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [int] or return null.
   int? tryGetInt(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
@@ -311,7 +317,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [BigInt] or return null.
   BigInt? tryGetBigInt(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull
@@ -326,7 +332,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [double] or return null.
   double? tryGetDouble(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
@@ -345,7 +351,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [bool] or return null.
   bool? tryGetBool(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull
@@ -360,10 +366,13 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [DateTime] or return null.
   DateTime? tryGetDateTime(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
     String? format,
     String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
   }) =>
       isEmptyOrNull
           ? null
@@ -373,13 +382,16 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
               listIndex: innerListIndex,
               format: format,
               locale: locale,
+              autoDetectFormat: autoDetectFormat,
+              useCurrentLocale: useCurrentLocale,
+              utc: utc,
             );
 
   /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
   /// specific element by [key] in that Iterable to [Uri] or return null.
   Uri? tryGetUri(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull
@@ -394,7 +406,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [Map] or return null.
   Map<K2, V2>? tryGetMap<K2, V2>(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull
@@ -409,7 +421,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [Set] or return null.
   Set<T>? tryGetSet<T>(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull
@@ -424,7 +436,7 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// specific element by [key] in that Iterable to [List] or return null.
   List<T>? tryGetList<T>(
     K key, {
-    Object? innerKey,
+    dynamic innerKey,
     int? innerListIndex,
   }) =>
       isEmptyOrNull

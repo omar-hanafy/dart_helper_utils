@@ -25,6 +25,7 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
     - [DateFormat](#dateformat)
     - [NumberFormat](#numberformat)
     - [General](#general)
+    - [TextDirection](#textdirection)
     - [Bidi](#bidi)
   - [String Extension](#string-extension)
     - [Case Conversion](#case-conversion)
@@ -135,19 +136,17 @@ final myMap = tryToMap<String, dynamic>('{"name": "Alice", "age": 30}'); // Map<
 
 ### Extract And Convert
 
-Starting from version 2.0.0 and above, we added a new set of type-safe converters to safely extract values from `Map<K, V>` and `List<E>`
-
-They also use the same static methods in the `ConvertObject` class, and all supported types and optionals are also included.
-
+Starting from version 2.0.0 and above, we added a new methods to easily extract values from `Map<K, V>` and `List<E>`, and, safely convert it to a specific type!
 - `getString`, `getNum`, `getInt`, `getBigInt`, `getDouble`, `getBool`, `getDateTime`, `getUri`, `getMap`, `getSet`, and `getList`.
-- They also supports nullable converters such as  `tryGetString`, `tryGetNum`, `tryGetInt`, etc.
 - For Map, it requires the key e.g. `map.getNum('key')` 
 - For List, it requires the index e.g. `list.getNum(1)`
+- They also supports nullable converters such as  `tryGetString`, `tryGetNum`, `tryGetInt`, etc.
+- all supported types and optionals in the `ConvertObject` class are also included.
 
 Sample:
 
 ```dart
-final dynamicMap = <dynamic, dynamic>{
+final map = <dynamic, dynamic>{
   'name': 'John',
   'age': '30',
   'bools': {
@@ -309,6 +308,12 @@ try {
 - `genderSelect`: Selects a localized string based on the gender associated with the string.
 - `getGenderCategory`: Determines the gender category of the string based on the current locale.
 
+### TextDirection
+These constants eliminate the need to import and use the `TextDirection` class from the `intl` package, which could be confused with Flutter's `TextDirection` enum.
+- `textDirectionLTR`: Represents left-to-right text direction (e.g., English, French).
+- `textDirectionRTL`: Represents right-to-left text direction (e.g., Arabic, Hebrew).
+- `textDirectionUNKNOWN`: Represents unknown or neutral text direction.
+
 ### Bidi
 #### on TextDirection
 - `toBidiFormatter`: Creates a BidiFormatter object based on the directionality.
@@ -419,7 +424,7 @@ try {
 
 ## Collection Extension
 ### Iterable Extension
--  Type-safe converters like `getInt(index)`, `getDateTime(index)`, `getMap(index)` etc.
+-  Type-safe extract and convert methods like `getInt(index)`, `getDateTime(index)`, `getMap(index)` etc.
 - `isEmptyOrNull`: Returns true if the iterable is either null or empty.
 - `isNotEmptyOrNull`: Returns false if the iterable is either null or empty.
 - `of`: Retrieves the element at the specified index in a null-safe manner.
@@ -471,6 +476,7 @@ try {
 - `intersect(Iterable<T> other)`: Returns the intersection of two sets.
 
 ### Map Extension
+-  Type-safe extract and convert methods like `getInt(key)`, `getDateTime(key)`, `getMap(key)` etc.
 - `makeEncodable`: Converts a map to an encodable format.
 - `safelyEncodedJson`: Returns a safely encoded JSON string.
 - `flatMap` Flatten nested maps into single-level structures.

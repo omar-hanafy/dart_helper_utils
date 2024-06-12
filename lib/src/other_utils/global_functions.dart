@@ -518,10 +518,13 @@ bool? tryToBool(
 /// ```
 DateTime toDateTime(
   dynamic object, {
-  Object? mapKey,
+  dynamic mapKey,
   int? listIndex,
   String? format,
   String? locale,
+  bool autoDetectFormat = false,
+  bool useCurrentLocale = false,
+  bool utc = false,
 }) =>
     ConvertObject.toDateTime(
       object,
@@ -529,6 +532,9 @@ DateTime toDateTime(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      autoDetectFormat: autoDetectFormat,
+      useCurrentLocale: useCurrentLocale,
+      utc: utc,
     );
 
 /// Attempts to convert an object to a [DateTime], or returns `null` if the object is `null` or conversion fails.
@@ -561,10 +567,13 @@ DateTime toDateTime(
 /// ```
 DateTime? tryToDateTime(
   dynamic object, {
-  Object? mapKey,
+  dynamic mapKey,
   int? listIndex,
   String? format,
   String? locale,
+  bool autoDetectFormat = false,
+  bool useCurrentLocale = false,
+  bool utc = false,
 }) =>
     ConvertObject.tryToDateTime(
       object,
@@ -572,6 +581,9 @@ DateTime? tryToDateTime(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      autoDetectFormat: autoDetectFormat,
+      useCurrentLocale: useCurrentLocale,
+      utc: utc,
     );
 
 /// Converts an object to a [Uri].

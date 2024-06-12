@@ -34,7 +34,7 @@ abstract class ConvertObject {
   /// ```
   static String toString1(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -89,7 +89,7 @@ abstract class ConvertObject {
   /// ```
   static String? tryToString(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object is String?) return object;
@@ -143,7 +143,7 @@ abstract class ConvertObject {
   /// ```
   static num toNum(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
     String? format,
     String? locale,
@@ -203,7 +203,7 @@ abstract class ConvertObject {
   /// ```
   static num? tryToNum(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     String? format,
     String? locale,
     int? listIndex,
@@ -258,7 +258,7 @@ abstract class ConvertObject {
   /// ```
   static int toInt(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
     String? format,
     String? locale,
@@ -312,7 +312,7 @@ abstract class ConvertObject {
   /// ```
   static int? tryToInt(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     String? format,
     String? locale,
     int? listIndex,
@@ -370,7 +370,7 @@ abstract class ConvertObject {
   /// ```
   static BigInt toBigInt(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -427,7 +427,7 @@ abstract class ConvertObject {
   /// ```
   static BigInt? tryToBigInt(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object is BigInt?) return object;
@@ -478,7 +478,7 @@ abstract class ConvertObject {
   /// ```
   static double toDouble(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
     String? format,
     String? locale,
@@ -534,7 +534,7 @@ abstract class ConvertObject {
   /// ```
   static double? tryToDouble(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
     String? format,
     String? locale,
@@ -596,7 +596,7 @@ abstract class ConvertObject {
   /// ```
   static bool toBool(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (mapKey != null && object is Map<dynamic, dynamic>) {
@@ -642,7 +642,7 @@ abstract class ConvertObject {
   /// ```
   static bool? tryToBool(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -689,7 +689,7 @@ abstract class ConvertObject {
   /// ```
   static DateTime toDateTime(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
     String? format,
     String? locale,
@@ -770,7 +770,7 @@ abstract class ConvertObject {
   /// ```
   static DateTime? tryToDateTime(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
     String? format,
     String? locale,
@@ -845,7 +845,7 @@ abstract class ConvertObject {
   /// ```
   static Uri toUri(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -899,7 +899,7 @@ abstract class ConvertObject {
   /// ```
   static Uri? tryToUri(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object is Uri?) return object;
@@ -954,7 +954,7 @@ abstract class ConvertObject {
   /// ```
   static Map<K, V> toMap<K, V>(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -1021,7 +1021,7 @@ abstract class ConvertObject {
   /// ```
   static Map<K, V>? tryToMap<K, V>(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object is String) return tryToMap(object.decode());
@@ -1079,7 +1079,7 @@ abstract class ConvertObject {
   /// ```
   static Set<T> toSet<T>(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -1146,7 +1146,7 @@ abstract class ConvertObject {
   /// ```
   static Set<T>? tryToSet<T>(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object is String) return tryToSet(object.decode());
@@ -1216,7 +1216,7 @@ abstract class ConvertObject {
   /// ```
   static List<T> toList<T>(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object == null) {
@@ -1294,7 +1294,7 @@ abstract class ConvertObject {
   /// ```
   static List<T>? tryToList<T>(
     dynamic object, {
-    Object? mapKey,
+    dynamic mapKey,
     int? listIndex,
   }) {
     if (object is String) return tryToList(object.decode());

@@ -76,7 +76,7 @@ extension DHUBidiStringExtensions on String {
   /// If [resetDir] is true and the overall directionality or the exit directionality of the text is opposite to the context directionality,
   /// a trailing unicode BiDi mark matching the context directionality is appended (LRM or RLM).
   String wrapWithSpan({
-    TextDirection textDirection = TextDirection.UNKNOWN,
+    TextDirection textDirection = textDirectionUNKNOWN,
     bool isHtml = false,
     bool resetDir = true,
   }) {
@@ -97,7 +97,7 @@ extension DHUBidiStringExtensions on String {
   /// If [resetDir] is true and the overall directionality or the exit directionality of the text is opposite to the context directionality,
   /// a trailing unicode BiDi mark matching the context directionality is appended (LRM or RLM).
   String wrapWithUnicode({
-    TextDirection textDirection = TextDirection.UNKNOWN,
+    TextDirection textDirection = textDirectionUNKNOWN,
     bool isHtml = false,
     bool resetDir = true,
   }) =>
@@ -108,3 +108,7 @@ extension DHUBidiStringExtensions on String {
             direction: textDirection,
           );
 }
+
+const textDirectionLTR = TextDirection.LTR;
+const textDirectionRTL = TextDirection.RTL;
+const textDirectionUNKNOWN = TextDirection.UNKNOWN;
