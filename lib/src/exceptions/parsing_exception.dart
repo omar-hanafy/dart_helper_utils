@@ -10,7 +10,7 @@ class ParsingException implements Exception {
     required String parsingInfo,
   }) {
     return ParsingException(
-      error: 'Object Is Null',
+      error: 'object is unsupported or null',
       parsingInfo: parsingInfo,
       stackTrace: stackTrace,
     );

@@ -5,6 +5,37 @@ import 'package:dart_helper_utils/src/src.dart';
 
 /// A utility class for converting objects to different types.
 abstract class ConvertObject {
+  static T? _convertObject<T>(
+    dynamic object, {
+    dynamic mapKey,
+    int? listIndex,
+    bool decodeInput = false,
+    T Function(dynamic)? converter,
+  }) {
+    if (object == null) return null;
+    if (object is T) return object;
+    if (decodeInput && object is String) {
+      return _convertObject(
+        object.tryDecode(),
+        mapKey: mapKey,
+        listIndex: listIndex,
+        converter: converter,
+      );
+    }
+    if (listIndex != null && object is List<dynamic>) {
+      return _convertObject(object[listIndex], converter: converter);
+    }
+    if (mapKey != null && object is Map<dynamic, dynamic>) {
+      return _convertObject(object[mapKey], converter: converter);
+    }
+    try {
+      return converter?.call(object);
+    } catch (e, s) {
+      log('Unsupported object type ($T): $e', stackTrace: s, error: e);
+      return null;
+    }
+  }
+
   /// Converts any object to a string if the object is not `null`.
   ///
   /// - Converts various object types to their string representation.
@@ -37,29 +68,21 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
+    final data = _convertObject<String>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) => object.toString(),
+    );
+
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toString',
         stackTrace: StackTrace.current,
       );
-    } else {
-      if (object is String) return object;
-      if (mapKey != null && object is Map<dynamic, dynamic>) {
-        return object[mapKey].toString();
-      }
-      if (listIndex != null && object is List<dynamic>) {
-        return toString1(object.of(listIndex));
-      }
-      try {
-        return object.toString();
-      } catch (e, s) {
-        throw ParsingException(
-          error: e,
-          parsingInfo: 'toString',
-          stackTrace: s,
-        );
-      }
     }
+
+    return data;
   }
 
   /// Converts any object to a string, or returns `null` if the object is `null`.
@@ -92,23 +115,12 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object is String?) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return object[mapKey].toString();
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToString(object.of(listIndex));
-    }
-    try {
-      return object != null ? '$object' : null;
-    } catch (e, s) {
-      log(
-        'tryToString() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<String>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) => object.toString(),
+    );
   }
 
   /// Converts an object to a [num].
@@ -148,29 +160,22 @@ abstract class ConvertObject {
     String? format,
     String? locale,
   }) {
-    if (object == null) {
+    final data = _convertObject<num>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
+        return '$object'.toNum;
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toNum',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is num) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toNum(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return toNum(object.of(listIndex));
-    }
-    try {
-      if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
-      return '$object'.toNum;
-    } catch (e, s) {
-      throw ParsingException(
-        error: e,
-        parsingInfo: 'toNum',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [num], or returns `null` if the object is `null` or conversion fails.
@@ -208,26 +213,15 @@ abstract class ConvertObject {
     String? locale,
     int? listIndex,
   }) {
-    if (object is num?) return object;
-
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToNum(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToNum(object.of(listIndex));
-    }
-    try {
-      if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
-
-      return '$object'.tryToNum;
-    } catch (e, s) {
-      log(
-        'tryToNum() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<num?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
+        return '$object'.tryToNum;
+      },
+    );
   }
 
   /// Converts an object to an [int].
@@ -263,23 +257,22 @@ abstract class ConvertObject {
     String? format,
     String? locale,
   }) {
-    if (object is int) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toInt(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return toInt(object.of(listIndex));
-    }
-    try {
-      if (format.isNotBlank) return '$object'.toIntFormatted(format, locale);
-      return '$object'.toInt;
-    } catch (e, s) {
-      throw ParsingException(
-        error: e,
+    final data = _convertObject<int>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format.isNotBlank) return '$object'.toIntFormatted(format, locale);
+        return '$object'.toInt;
+      },
+    );
+    if (data == null) {
+      throw ParsingException.nullObject(
         parsingInfo: 'toInt',
-        stackTrace: s,
+        stackTrace: StackTrace.current,
       );
     }
+    return data;
   }
 
   /// Attempts to convert an object to an [int], or returns `null` if the object is `null` or conversion fails.
@@ -317,27 +310,17 @@ abstract class ConvertObject {
     String? locale,
     int? listIndex,
   }) {
-    if (object is int?) return object;
-
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToInt(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToInt(object.of(listIndex));
-    }
-    try {
-      if (format.isNotBlank) {
-        return '$object'.tryToIntFormatted(format, locale);
-      }
-      return '$object'.tryToInt;
-    } catch (e, s) {
-      log(
-        'tryToInt() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<int?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format.isNotBlank) {
+          return '$object'.tryToIntFormatted(format, locale);
+        }
+        return '$object'.tryToInt;
+      },
+    );
   }
 
   /// Converts an object to a [BigInt].
@@ -373,29 +356,22 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
+    final data = _convertObject<BigInt>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is num) return BigInt.from(object);
+        return BigInt.parse('$object');
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toBigInt',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is BigInt) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toBigInt(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return toBigInt(object.of(listIndex));
-    }
-    try {
-      if (object is num) return BigInt.from(object);
-      return BigInt.parse('$object');
-    } catch (e, s) {
-      throw ParsingException(
-        error: e,
-        parsingInfo: 'toBigInt',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [BigInt], or returns `null` if the object is `null` or conversion fails.
@@ -430,24 +406,15 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object is BigInt?) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToBigInt(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToBigInt(object.of(listIndex));
-    }
-    try {
-      if (object is num) return BigInt.from(object);
-      return BigInt.tryParse('$object');
-    } catch (e, s) {
-      log(
-        'tryToBigInt() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<BigInt?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is num) return BigInt.from(object);
+        return BigInt.tryParse('$object');
+      },
+    );
   }
 
   /// Converts an object to a [double].
@@ -483,25 +450,24 @@ abstract class ConvertObject {
     String? format,
     String? locale,
   }) {
-    if (object is double) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toDouble(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return toDouble(object.of(listIndex));
-    }
-    try {
-      if (format.isNotBlank) {
-        return '$object'.toDoubleFormatted(format, locale);
-      }
-      return '$object'.toDouble;
-    } catch (e, s) {
-      throw ParsingException(
-        error: e,
-        parsingInfo: 'toDouble',
-        stackTrace: s,
+    final data = _convertObject<double>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format.isNotBlank) {
+          return '$object'.toDoubleFormatted(format, locale);
+        }
+        return '$object'.toDouble;
+      },
+    );
+    if (data == null) {
+      throw ParsingException.nullObject(
+        parsingInfo: 'toNum',
+        stackTrace: StackTrace.current,
       );
     }
+    return data;
   }
 
   /// Attempts to convert an object to a [double], or returns `null` if the object is `null` or conversion fails.
@@ -539,26 +505,17 @@ abstract class ConvertObject {
     String? format,
     String? locale,
   }) {
-    if (object is double?) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToDouble(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToDouble(object.of(listIndex));
-    }
-    try {
-      if (format.isNotBlank) {
-        return '$object'.tryToDoubleFormatted(format, locale);
-      }
-      return '$object'.tryToDouble;
-    } catch (e, s) {
-      log(
-        'tryToDouble() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<double?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format.isNotBlank) {
+          return '$object'.tryToDoubleFormatted(format, locale);
+        }
+        return '$object'.tryToDouble;
+      },
+    );
   }
 
   /// Converts an object to a `bool`.
@@ -599,13 +556,13 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return (object[mapKey] as Object?).asBool;
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return (object.of(listIndex) as Object?).asBool;
-    }
-    return (object as Object?).asBool;
+    final data = _convertObject<bool?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) => (object as Object?).asBool,
+    );
+    return data ?? false;
   }
 
   /// Attempts to convert an object to a `bool`, or returns `null` if the object is `null` or conversion is not applicable.
@@ -645,17 +602,12 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
-      return null;
-    } else {
-      if (mapKey != null && object is Map<dynamic, dynamic>) {
-        return (object[mapKey] as Object?).asBool;
-      }
-      if (listIndex != null && object is List<dynamic>) {
-        return (object.of(listIndex) as Object?).asBool;
-      }
-      return (object as Object?).asBool;
-    }
+    return _convertObject<bool?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) => (object as Object?).asBool,
+    );
   }
 
   /// Converts an object to a [DateTime].
@@ -697,48 +649,31 @@ abstract class ConvertObject {
     bool useCurrentLocale = false,
     bool utc = false,
   }) {
-    if (object == null) {
+    final data = _convertObject<DateTime>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format != null) {
+          return '$object'.toDateFormatted(format, locale, utc);
+        }
+        if (autoDetectFormat) {
+          return '$object'.toDateAutoFormat(
+            locale: locale,
+            useCurrentLocale: useCurrentLocale,
+            utc: utc,
+          );
+        }
+        return '$object'.toDateTime;
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toDateTime',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is DateTime) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toDateTime(
-        object[mapKey],
-        format: format,
-        locale: locale,
-        useCurrentLocale: useCurrentLocale,
-        utc: utc,
-      );
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return toDateTime(
-        object.of(listIndex),
-        format: format,
-        locale: locale,
-        useCurrentLocale: useCurrentLocale,
-        utc: utc,
-      );
-    }
-    try {
-      if (format != null) return '$object'.toDateFormatted(format, locale, utc);
-      if (autoDetectFormat) {
-        return '$object'.toDateAutoFormat(
-          locale: locale,
-          useCurrentLocale: useCurrentLocale,
-          utc: utc,
-        );
-      }
-      return '$object'.toDateTime;
-    } catch (e, s) {
-      throw ParsingException(
-        error: e,
-        parsingInfo: 'toDateTime',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [DateTime], or returns `null` if the object is `null` or conversion fails.
@@ -778,45 +713,24 @@ abstract class ConvertObject {
     bool useCurrentLocale = false,
     bool utc = false,
   }) {
-    if (object is DateTime?) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToDateTime(
-        object[mapKey],
-        format: format,
-        locale: locale,
-        useCurrentLocale: useCurrentLocale,
-        utc: utc,
-      );
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToDateTime(
-        object.of(listIndex),
-        format: format,
-        locale: locale,
-        useCurrentLocale: useCurrentLocale,
-        utc: utc,
-      );
-    }
-    try {
-      if (format != null) {
-        return '$object'.tryToDateFormatted(format, locale, utc);
-      }
-      if (autoDetectFormat) {
-        return '$object'.tryToDateAutoFormat(
-          locale: locale,
-          useCurrentLocale: useCurrentLocale,
-          utc: utc,
-        );
-      }
-      return '$object'.tryToDateTime;
-    } catch (e, s) {
-      log(
-        'tryToDateTime() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<DateTime?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (format != null) {
+          return '$object'.tryToDateFormatted(format, locale, utc);
+        }
+        if (autoDetectFormat) {
+          return '$object'.tryToDateAutoFormat(
+            locale: locale,
+            useCurrentLocale: useCurrentLocale,
+            utc: utc,
+          );
+        }
+        return '$object'.tryToDateTime;
+      },
+    );
   }
 
   /// Converts an object to a [Uri].
@@ -848,30 +762,23 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
+    final data = _convertObject<Uri>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        final ob = object.toString();
+        if (ob.isValidPhoneNumber) return ob.toPhoneUri;
+        return ob.toUri;
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toUri',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is Uri) return object;
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toUri(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return toUri(object.of(listIndex));
-    }
-    try {
-      final ob = object.toString();
-      if (ob.isValidPhoneNumber) return ob.toPhoneUri;
-      return ob.toUri;
-    } catch (e, s) {
-      throw ParsingException(
-        error: e,
-        parsingInfo: 'toUri',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [Uri], or returns `null` if the object is `null` or conversion fails.
@@ -902,26 +809,16 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object is Uri?) return object;
-
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToUri(object[mapKey]);
-    }
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToUri(object.of(listIndex));
-    }
-    try {
-      final ob = object.toString();
-      if (ob.isValidPhoneNumber) return ob.toPhoneUri;
-      return ob.toUri;
-    } catch (e, s) {
-      log(
-        'tryToUri() Unsupported object type: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<Uri?>(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        final ob = object.toString();
+        if (ob.isValidPhoneNumber) return ob.toPhoneUri;
+        return ob.toUri;
+      },
+    );
   }
 
   /// Converts an object to a [Map] with keys of type `K` and values of type `V`.
@@ -957,39 +854,27 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
+    final data = _convertObject<Map<K, V>>(
+      object,
+      decodeInput: true,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is Map && object.isEmpty) return <K, V>{};
+        try {
+          return object as Map<K, V>;
+        } catch (_) {}
+        return (object as Map)
+            .map((key, value) => MapEntry(key as K, value as V));
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toMap',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is String) return toMap(object.decode());
-    if (object is Map && object.isEmpty) return <K, V>{};
-    if (listIndex != null && object is List<dynamic>) {
-      return toMap(object.of(listIndex));
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toMap(object[mapKey]);
-    }
-    if (object is Map<K, V>) return object;
-    try {
-      return object as Map<K, V>;
-    } catch (_) {}
-    try {
-      return (object as Map)
-          .map((key, value) => MapEntry(key as K, value as V));
-    } catch (e, s) {
-      log(
-        'toMap() Unsupported Map type <$K, $V>: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      throw ParsingException(
-        error: e.toString(),
-        parsingInfo: 'toMap',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [Map] with keys of type `K` and values of type `V`.
@@ -1024,29 +909,21 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object is String) return tryToMap(object.decode());
-    if (object is Map && object.isEmpty) return <K, V>{};
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToMap(object.of(listIndex));
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToMap(object[mapKey]);
-    }
-    if (object is Map<K, V>?) return object;
-    try {
-      return object as Map<K, V>;
-    } catch (_) {}
-    try {
-      return (object as Map)
-          .map((key, value) => MapEntry(key as K, value as V));
-    } catch (e, s) {
-      log(
-        'tryToMap() Unsupported Map type <$K, $V>: exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-    }
-    return null;
+    return _convertObject<Map<K, V>>(
+      object,
+      decodeInput: true,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is Map && object.isEmpty) return <K, V>{};
+        try {
+          return object as Map<K, V>;
+        } catch (_) {}
+        return (object as Map).map(
+          (key, value) => MapEntry(key as K, value as V),
+        );
+      },
+    );
   }
 
   /// Converts an object to a [Set] of type `T`.
@@ -1082,39 +959,28 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
+    final data = _convertObject<Set<T>>(
+      object,
+      decodeInput: true,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is Iterable && object.isEmpty) return <T>{};
+        if (object is Set<T>) return object;
+        if (object is T) return <T>{object};
+        if (object is Map<dynamic, T>) return object.values.toSet();
+        return (object as Iterable)
+            .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
+            .toSet();
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toSet',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is String) return toSet(object.decode());
-    if (object is Iterable && object.isEmpty) return <T>{};
-    if (listIndex != null && object is List<dynamic>) {
-      return toSet<T>(object.of(listIndex));
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toSet<T>(object[mapKey]);
-    }
-    if (object is Set<T>) return object;
-    if (object is T) return <T>{object};
-    if (object is Map<dynamic, T>) return object.values.toSet();
-    try {
-      return (object as Iterable)
-          .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-          .toSet();
-    } catch (e, s) {
-      log(
-        'toSet() Unsupported object type ($T): exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      throw ParsingException(
-        error: e.toString(),
-        parsingInfo: 'toSet',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [Set] of type `T`, or returns null if conversion is not possible.
@@ -1149,33 +1015,21 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object is String) return tryToSet(object.decode());
-    if (object is Iterable && object.isEmpty) return <T>{};
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToSet<T>(object.of(listIndex));
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToSet<T>(object[mapKey]);
-    }
-    if (object is Set<T>?) return object;
-    if (object is T) return <T>{object};
-    if (object is Map<dynamic, T>) return object.values.toSet();
-    try {
-      if (mapKey != null && object is Map<dynamic, dynamic>) {
-        return tryToSet(object[mapKey]);
-      }
-      if (object == null) return null;
-      return (object as Iterable)
-          .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-          .toSet();
-    } catch (e, s) {
-      log(
-        'toSet() Unsupported object type ($T): exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<Set<T>?>(
+      object,
+      decodeInput: true,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is Iterable && object.isEmpty) return <T>{};
+        if (object is Set<T>?) return object;
+        if (object is T) return <T>{object};
+        if (object is Map<dynamic, T>) return object.values.toSet();
+        return (object as Iterable)
+            .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
+            .toSet();
+      },
+    );
   }
 
   /// Converts an object to a [List] of type `T`.
@@ -1219,39 +1073,28 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object == null) {
+    final data = _convertObject<List<T>?>(
+      object,
+      decodeInput: true,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is Iterable && object.isEmpty) return <T>[];
+        if (object is List<T>) return object;
+        if (object is T) return <T>[object];
+        if (object is Map<dynamic, T>) return object.values.toList();
+        return (object as Iterable)
+            .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
+            .toList();
+      },
+    );
+    if (data == null) {
       throw ParsingException.nullObject(
         parsingInfo: 'toList',
         stackTrace: StackTrace.current,
       );
     }
-    if (object is String) return toList(object.decode());
-    if (object is Iterable && object.isEmpty) return <T>[];
-    if (listIndex != null && object is List<dynamic>) {
-      return toList<T>(object.of(listIndex));
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return toList<T>(object[mapKey]);
-    }
-    if (object is List<T>) return object;
-    if (object is T) return <T>[object];
-    if (object is Map<dynamic, T>) return object.values.toList();
-    try {
-      return (object as Iterable)
-          .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-          .toList();
-    } catch (e, s) {
-      log(
-        'toList() Unsupported object type ($T): exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      throw ParsingException(
-        error: e.toString(),
-        parsingInfo: 'toList',
-        stackTrace: s,
-      );
-    }
+    return data;
   }
 
   /// Attempts to convert an object to a [List] of type `T`, or returns `null` if conversion is not possible.
@@ -1297,30 +1140,20 @@ abstract class ConvertObject {
     dynamic mapKey,
     int? listIndex,
   }) {
-    if (object is String) return tryToList(object.decode());
-    if (object is Iterable && object.isEmpty) return <T>[];
-    if (listIndex != null && object is List<dynamic>) {
-      return tryToList<T>(object.of(listIndex));
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return tryToList<T>(object[mapKey]);
-    }
-    if (object is List<T>?) return object;
-    if (object is T) return <T>[object];
-    if (object is Map<dynamic, T>) return object.values.toList();
-
-    try {
-      if (object == null) return null;
-      return (object as Iterable)
-          .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-          .toList();
-    } catch (e, s) {
-      log(
-        'tryToList() Unsupported object type ($T): exception message -> $e',
-        stackTrace: s,
-        error: e,
-      );
-      return null;
-    }
+    return _convertObject<List<T>?>(
+      object,
+      decodeInput: true,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      converter: (object) {
+        if (object is Iterable && object.isEmpty) return <T>[];
+        if (object is List<T>?) return object;
+        if (object is T) return <T>[object];
+        if (object is Map<dynamic, T>) return object.values.toList();
+        return (object as Iterable)
+            .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
+            .toList();
+      },
+    );
   }
 }

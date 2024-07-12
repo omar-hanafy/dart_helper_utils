@@ -536,46 +536,72 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return count;
   }
 
-  /// Returns `true` if all elements match the given predicate.
+  /// Returns a new list containing the first occurrence of each distinct element
+  /// from the original iterable, as determined by the provided `keySelector` function.
+  ///
+  /// The `keySelector` is applied to each element, and elements are considered
+  /// distinct if their keys are unique. The order of the elements in the resulting
+  /// list is the same as their first occurrence in the original iterable.
+  ///
+  /// Optional parameters allow for custom comparison logic:
+  /// - `equals`: A custom equality function for comparing keys. Useful for case-insensitive comparisons or complex objects.
+  /// - `hashCode`: A custom hash code function for generating hash codes for keys. Useful for optimizing performance with specific key characteristics.
+  /// - `isValidKey`: A custom function to validate keys. Useful for filtering or handling invalid keys.
+  ///
   /// Example:
-  /// [5, 19, 2].all(isEven), isFalse)
-  /// [6, 12, 2].all(isEven), isTrue)
-  bool all(Predicate<E>? predicate) {
-    for (final e in this) {
-      if (!predicate!(e)) return false;
-    }
-    return true;
-  }
-
-  /// Returns a list containing only the elements from given collection having distinct keys.
   ///
-  /// Basically it's just like distinct function but with a predicate
-  /// example:
-  /// [
-  ///    User(22, "Sasha"),
-  ///    User(23, "Mika"),
-  ///    User(23, "Miryam"),
-  ///    User(30, "Josh"),
-  ///    User(36, "Ran"),
-  ///  ].distinctBy((u) => u.age).forEach((user) {
-  ///    print("${user.age} ${user.name}");
-  ///  });
+  /// ```dart
+  /// final people = [
+  ///   Person('Alice', 25),
+  ///   Person('Bob', 30),
+  ///   Person('Alice', 28), // Duplicate name
+  /// ];
   ///
-  /// result:
-  /// 22 Sasha
-  /// 23 Mika
-  /// 30 Josh
-  /// 36 Ran
-  // ignore: inference_failure_on_function_return_type
-  List<E> distinctBy(Predicate<E> predicate) {
-    // ignore: inference_failure_on_instance_creation
-    final set = HashSet();
+  /// final uniquePeople = people.distinctBy((p) => p.name);
+  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  ///
+  /// // Using custom equality and hash code functions
+  /// final uniquePeopleCustom = people.distinctBy(
+  ///   (p) => p.name,
+  ///   equals: (a, b) => a.toLowerCase() == b.toLowerCase(),
+  ///   hashCode: (key) => key.toLowerCase().hashCode,
+  /// );
+  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  ///
+  /// // Using a custom key validation function
+  /// final peopleWithInvalidKeys = [
+  ///   Person('Alice', 25),
+  ///   Person('Bob', 30),
+  ///   Person('', 28), // Invalid key (empty string)
+  ///   Person(null, 28), // Invalid key (null)
+  /// ];
+  ///
+  /// final uniquePeopleValid = peopleWithInvalidKeys.distinctBy(
+  ///   (p) => p.name,
+  ///   isValidKey: (key) => key != null && key.isNotEmpty,
+  /// );
+  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  /// ```
+  ///
+  /// This method is efficient, using a [HashSet] internally to track unique keys.
+  List<E> distinctBy<R>(
+    R Function(E) keySelector, {
+    bool Function(R, R)? equals,
+    int Function(R)? hashCode,
+    bool Function(dynamic)? isValidKey,
+  }) {
+    final set = HashSet<R>(
+      equals: equals,
+      hashCode: hashCode,
+      isValidKey: isValidKey,
+    );
     final list = <E>[];
-    this.toList().forEach((e) {
-      if (set.add(predicate(e))) {
+    for (final e in this) {
+      final key = keySelector(e);
+      if (set.add(key)) {
         list.add(e);
       }
-    });
+    }
     return list;
   }
 

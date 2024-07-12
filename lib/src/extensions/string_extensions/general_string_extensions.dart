@@ -307,4 +307,14 @@ extension DHUNullSafeStringExtensions on String? {
   /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
   dynamic decode({Object? Function(Object? key, Object? value)? reviver}) =>
       isEmptyOrNull ? null : json.decode(this!, reviver: reviver);
+
+  /// Decodes the JSON string into a dynamic data structure.
+  /// Returns the decoded dynamic data structure if the string is non-empty and valid JSON.
+  /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
+  dynamic tryDecode({Object? Function(Object? key, Object? value)? reviver}) {
+    try {
+      return decode(reviver: reviver);
+    } catch (_) {}
+    return null;
+  }
 }

@@ -82,7 +82,8 @@ Future<void> main() async {
   print('Generating a title while ignoring - and _');
   print(stringToConvert.toTitle);
 
-  print('FlutterAndDart_are-AWESOME'.toWords); // [FlutterAndDart, are-AWESOME]
+  // [Flutter, And, Dart, are, AWESOME]
+  print('FlutterAndDart_are-AWESOME'.toWords);
 
   // Converting a map with potentially complex data types to
   // a formatted JSON string using the safelyEncodedJson getter.

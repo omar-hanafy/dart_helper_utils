@@ -415,7 +415,7 @@ These constants eliminate the need to import and use the `TextDirection` class f
 - `insert`: Inserts a specified string at a specified index position.
 - `isNullOrWhiteSpace`: Indicates whether the string is null, empty, or consists only of white-space characters.
 - `asBool`: Converts the string to a boolean.
-- `decode`: Decodes the JSON string into a dynamic data structure.
+- `decode/tryDecode`: Decodes the JSON string into a dynamic data structure (`tryDecode` returns null upon failure).
 
 ### Parsing
 - `try/toNum`: Parses the string as a number.
@@ -450,7 +450,7 @@ These constants eliminate the need to import and use the `TextDirection` class f
 - `containsAll`: Returns true if all elements in the specified collection are contained in this collection.
 - `count`: Returns the number of elements that match the given predicate.
 - `all`: Returns true if all elements match the given predicate.
-- `distinctBy`: Returns a list containing only elements that have distinct keys, determined by the predicate.
+- `distinctBy`: Returns a new list containing the first occurrence of each element with a unique key, as determined by the provided key selector function.
 - `subtract`: Returns a set containing all elements that are contained by this collection and not contained by the specified collection.
 - `find`: Returns the first element matching the given predicate, or null if not found.
 - `encodedJson`: Encodes the iterable as a JSON string.
