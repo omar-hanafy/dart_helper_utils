@@ -1,8 +1,8 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
-  // parsing raw array of doubles to List<int>.
-  print(tryToList<int>('[1.5, 2.3, 3.4]'));
+  final intList = tryToList<int>('[1.5, 2.3, 3.4]');
+  print(intList);
 
   // parsing raw Json to Map<String, dynamic>
   final userMap = toMap<String, dynamic>('''
@@ -16,17 +16,17 @@ Future<void> main() async {
 }
 '''); // you can also use the ConvertObject.toMap(...) to avoid ambiguity.
 
+  // Example of using list converter & extensions.
+  final codes = userMap.getList<int>('codes');
+  print('First Code: ${codes.firstOrNull}');
+  print('Random Code: ${codes.getRandom()}');
+
   // Example of using safe int conversions for dynamic data.
   final walletBalance = toInt(userMap['wallet']);
   // OR
   // final walletBalance = userMap.getInt('wallet');
   // final walletBalance = ConvertObject.toInt(userMap['wallet']);
   print('user walletBalance: $walletBalance');
-
-  // Example of using list converter & extensions.
-  final codes = userMap.getList<int>('codes');
-  print('First Code: ${codes.firstOrNull}');
-  print('Random Code: ${codes.getRandom()}');
 
   // Example of using string extensions
   final userMail = toString1(userMap['email']);
@@ -157,6 +157,20 @@ Future<void> main() async {
     timeout: const Duration(seconds: 1),
   );
   print('Result: $result');
+
+  final doublyLinkedList = DoublyLinkedList([1, 2, 3, 4])
+    ..add(5)
+    ..removeAt(3);
+
+  print(doublyLinkedList);
+  print(doublyLinkedList ^ 1); // ^index returns a node at specific index
+  print(doublyLinkedList[1]); // [index] returns an element at specific index
+  print(doublyLinkedList.toSet());
+  print(doublyLinkedList.length);
+  print(doublyLinkedList.head?.next);
+  for (final node in doublyLinkedList.nodes) {
+    print('Prev: ${node.prev}, Current: ${node.data}, Next: ${node.next}');
+  }
 }
 
 // Example enum used in the map

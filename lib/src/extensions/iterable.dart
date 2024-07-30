@@ -54,7 +54,9 @@ extension DHUNullableListExtensions<E> on List<E>? {
   /// same behavior as [removeAt] but it is null safe which means
   /// it do nothing when [List] return [isEmptyOrNull] to true.
   void tryRemoveAt(int index) {
-    if (isNotEmptyOrNull) this!.removeAt(index);
+    try {
+      if (isNotEmptyOrNull) this!.removeAt(index);
+    } catch (_) {}
   }
 
   /// same behavior as [indexOf] but it is null safe which means
@@ -81,6 +83,8 @@ extension DHUNullableListExtensions<E> on List<E>? {
 }
 
 extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
+  DoublyLinkedList<E> toDoublyLinkedList() => DoublyLinkedList(this);
+
   /// similar to list[index] but it is null safe.
   E? of(int index) {
     if (isNotEmptyOrNull && index >= 0 && this!.length > index) {

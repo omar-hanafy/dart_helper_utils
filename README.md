@@ -8,6 +8,7 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
 
 ## Table of Contents
 - [Featured](#featured)
+  - [DoublyLinkedList](#doublylinkedlist)
   - [Converting Objects](#converting-objects)
     - [Sample Usage](#sample-usage)
     - [Available Conversions](#available-conversions)
@@ -52,6 +53,48 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
   - [Objects Extension](#objects-extension)
     
 # Featured
+## DoublyLinkedList
+The `DoublyLinkedList` class offers a way to manage ordered collections of data in Dart. Unlike traditional lists (which are based on arrays), a doubly linked list stores elements in individual nodes, each linked to both its preceding and succeeding nodes. This structure excels in scenarios where you need efficient insertion and deletion operations at arbitrary positions.
+
+**Key Advantages:**
+* **Efficient Insertion/Deletion:** Adding or removing elements at the beginning, middle, or end of the list takes constant time (O(1)).
+* **Bidirectional Traversal:**  Easily navigate through the list in either direction using the `next` and `prev` references on each node.
+* **Memory Flexibility:** The list dynamically grows or shrinks as needed, making it memory-efficient for managing collections of varying sizes.
+
+**Core Features:**
+* **List-Like Interface:**  You can use `DoublyLinkedList` just like a standard Dart `List`, with familiar methods like `add`, `insert`, `remove`, `clear`, etc.
+* **Node Iteration:** The `nodes` property provides a convenient way to iterate over the individual nodes of the list, giving you access to `data`, `prev`, and `next` fields.
+* **Factory Constructors:** Easily create lists with specific characteristics:
+  - `filled(length, fill)`: Creates a list of a given length filled with a specified value.
+  - `generate(length, generator)`: Creates a list by applying a function to generate elements.
+  - `from(Iterable)`: Creates a list from an existing iterable.
+
+**Example Usage:**
+```dart
+final myList = DoublyLinkedList<int>([1,2,3,4]);
+
+// Basic Operations
+myList.append(5);
+myList.append(6);
+myList.append(7);
+myList.prepend(0);
+
+myList.insert(1, 15); // Inserts 15 at index 1
+
+print(myList); // Output: [0,15,2,3,4,5,6,7]
+
+// Node Iteration
+for (final node in myList.nodes) {
+  print('Node value: ${node}, Previous: ${node.prev}, Next: ${node.next}');
+}
+
+final secondNode = myList^1;
+print('Node value: ${secondNode.data}, Previous: ${secondNode.prev}, Next: ${secondNode.next}');
+
+final secondElement = myList[1];
+print(secondElement);
+```
+
 ## Converting Objects
 Convert objects to various types, such as `int`, `double`, `bool`, `String`, `List`, `Set`, and `Map`. These methods are
 useful when dealing with dynamic data from APIs, offering simple and flexible type conversions.

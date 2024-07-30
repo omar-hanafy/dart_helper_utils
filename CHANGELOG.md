@@ -1,6 +1,13 @@
 # CHANGELOG
-## [2.1.0]
+## [2.2.1]
+- Introduced `DoublyLinkedList` a doubly-linked list implementation for dart.
+    - Supports standard list operations (append, prepend, insert, remove, etc.)
+    - Includes convenient constructors (`filled`, `generate`, `from`)
+    - Offers bidirectional traversal with `next` and `prev` node references
+    - Provides `nodes` iterable for easy access to nodes in for-loops
+    - Fully compatible with standard Dart `for...in` loops and other collection methods
 
+## [2.1.0]
 - Added `tryDecode` on any `String` which tries decodes the JSON string into a dynamic data structure, similar to the `'jsonData'.decode()` but this returns null upon failure.
 - Enhanced all the `ConvertObject` methods.
 - **`distinctBy` on Iterable<E>**: Resolved an issue where the `distinctBy` method did not correctly identify distinct elements. The method now accepts a `keySelector` function for more flexible uniqueness determination.

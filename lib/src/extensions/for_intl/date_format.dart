@@ -242,7 +242,7 @@ extension DHUDateFormatStringExtension on String {
       } catch (_) {}
     }
 
-    throw FormatException('Invalid date format', this);
+    throw FormatException('Invalid or unsupported date format', this);
   }
 
   /// Parses the string to [DateTime] using the provided format, locale, and UTC option.
