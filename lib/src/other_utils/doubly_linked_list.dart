@@ -279,6 +279,158 @@ class DoublyLinkedList<E> extends ListBase<E> {
     return current!;
   }
 
+  /// Returns the first node that satisfies the given test.
+  Node<E> firstNodeWhere(bool Function(Node<E>) test) {
+    for (final node in nodes) {
+      if (test(node)) return node;
+    }
+    throw StateError('No node found matching the predicate');
+  }
+
+  /// Returns the first node that satisfies the given test, or null if none found.
+  Node<E>? firstNodeWhereOrNull(bool Function(Node<E>) test) {
+    for (final node in nodes) {
+      if (test(node)) return node;
+    }
+    return null;
+  }
+
+  /// Returns the last node that satisfies the given test.
+  Node<E> lastNodeWhere(bool Function(Node<E>) test) {
+    for (var node = _tail; node != null; node = node.prev) {
+      if (test(node)) return node;
+    }
+    throw StateError('No node found matching the predicate');
+  }
+
+  /// Returns the last node that satisfies the given test, or null if none found.
+  Node<E>? lastNodeWhereOrNull(bool Function(Node<E>) test) {
+    for (var node = _tail; node != null; node = node.prev) {
+      if (test(node)) return node;
+    }
+    return null;
+  }
+
+  /// Returns a single node that satisfies the given test.
+  Node<E> singleNodeWhere(bool Function(Node<E>) test) {
+    Node<E>? foundNode;
+    for (final node in nodes) {
+      if (test(node)) {
+        if (foundNode != null) {
+          throw StateError('More than one node found matching the predicate');
+        }
+        foundNode = node;
+      }
+    }
+    if (foundNode == null) {
+      throw StateError('No node found matching the predicate');
+    }
+    return foundNode;
+  }
+
+  /// same as [singleNodeWhere] but returns null when not found.
+  E? singleNodeWhereOrNull(bool Function(E) test) {
+    E? foundElement;
+    for (final node in nodes) {
+      if (test(node.data)) {
+        if (foundElement != null) return null;
+        foundElement = node.data;
+      }
+    }
+    return foundElement;
+  }
+
+  /// Replaces the data of the specified node with newData.
+  void replaceNode(Node<E> node, E newData) {
+    node.data = newData;
+  }
+
+  /// Removes all nodes whose data satisfies the test function.
+  void removeNodesWhere(bool Function(E) test) {
+    var current = _head;
+    while (current != null) {
+      final next = current.next;
+      if (test(current.data)) removeNode(current);
+      current = next;
+    }
+  }
+
+// Swapping and Reversing
+  /// Swaps the positions of two nodes in the list.
+  void swapNodes(Node<E> node1, Node<E> node2) {
+    assert(node1 != node2, 'Cannot swap the same node');
+
+    // Handle special case where nodes are adjacent
+    if (node1.next == node2) {
+      _swapAdjacentNodes(node1, node2);
+      return;
+    } else if (node2.next == node1) {
+      _swapAdjacentNodes(node2, node1);
+      return;
+    }
+
+    // General case: Nodes are not adjacent
+    _swapNonAdjacentNodes(node1, node2);
+
+    // Update head and tail if necessary
+    if (_head == node1) {
+      _head = node2;
+    } else if (_head == node2) {
+      _head = node1;
+    }
+    if (_tail == node1) {
+      _tail = node2;
+    } else if (_tail == node2) {
+      _tail = node1;
+    }
+  }
+
+  void _swapAdjacentNodes(Node<E> first, Node<E> second) {
+    final prev = first.prev;
+    final next = second.next;
+
+    if (prev != null) prev.next = second;
+    if (next != null) next.prev = first;
+
+    first
+      ..next = next
+      ..prev = second;
+    second
+      ..next = first
+      ..prev = prev;
+  }
+
+  void _swapNonAdjacentNodes(Node<E> node1, Node<E> node2) {
+    final tempPrev = node1.prev;
+    final tempNext = node1.next;
+
+    node1
+      ..prev = node2.prev
+      ..next = node2.next;
+    node2
+      ..prev = tempPrev
+      ..next = tempNext;
+
+    if (node1.prev != null) node1.prev!.next = node1;
+    if (node1.next != null) node1.next!.prev = node1;
+    if (node2.prev != null) node2.prev!.next = node2;
+    if (node2.next != null) node2.next!.prev = node2;
+  }
+
+  /// Reverses the order of the nodes in the list.
+  void reverse() {
+    var current = _head;
+    while (current != null) {
+      final temp = current.next;
+      current
+        ..next = current.prev
+        ..prev = temp;
+      _tail = _head;
+      _head = current;
+      current = temp;
+    }
+  }
+
   /// Appends a new node with the given data to the end of the list.
   @override
   void add(E element) => append(element);

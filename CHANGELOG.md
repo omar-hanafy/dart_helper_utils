@@ -1,4 +1,10 @@
 # CHANGELOG
+## [2.3.0]
+
+- Added `firstNodeWhere`, `firstNodeWhereOrNull`, `lastNodeWhere`, `lastNodeWhereOrNull`, `singleNodeWhere`,
+  `singleNodeWhereOrNull`, `replaceNode`, `removeNodesWhere`, `swapNodes`, and `reverse`
+  to the `DoublyLinkedList` class.
+
 ## [2.2.1]
 - Introduced `DoublyLinkedList` a doubly-linked list implementation for dart.
     - Supports standard list operations (append, prepend, insert, remove, etc.)

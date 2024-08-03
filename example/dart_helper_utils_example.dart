@@ -1,10 +1,12 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
+  // parsing raw Json array of doubles to List<int>
   final intList = tryToList<int>('[1.5, 2.3, 3.4]');
-  print(intList);
+  print(intList); // [1, 2, 3]
 
   // parsing raw Json to Map<String, dynamic>
+  // note: you can also use the ConvertObject.toMap to avoid ambiguity.
   final userMap = toMap<String, dynamic>('''
 {
     "name": "John",
@@ -14,7 +16,7 @@ Future<void> main() async {
     "email": "john@example.com",
     "birthday": "12/12/1997"
 }
-'''); // you can also use the ConvertObject.toMap(...) to avoid ambiguity.
+''');
 
   // Example of using list converter & extensions.
   final codes = userMap.getList<int>('codes');
@@ -158,16 +160,28 @@ Future<void> main() async {
   );
   print('Result: $result');
 
-  final doublyLinkedList = DoublyLinkedList([1, 2, 3, 4])
+  final doublyLinkedList = [1, 2, 3, 4].toDoublyLinkedList()
     ..add(5)
     ..removeAt(3);
 
   print(doublyLinkedList);
-  print(doublyLinkedList ^ 1); // ^index returns a node at specific index
+
+  final node = doublyLinkedList.findNode(1);
+  print(node.data);
+
+  print(doublyLinkedList.findNode(1));
   print(doublyLinkedList[1]); // [index] returns an element at specific index
+
   print(doublyLinkedList.toSet());
   print(doublyLinkedList.length);
   print(doublyLinkedList.head?.next);
+
+  // loop over elements
+  for (final e in doublyLinkedList) {
+    print('e: $e');
+  }
+
+  // loop over nodes
   for (final node in doublyLinkedList.nodes) {
     print('Prev: ${node.prev}, Current: ${node.data}, Next: ${node.next}');
   }
