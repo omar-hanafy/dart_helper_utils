@@ -12,11 +12,10 @@ extension DHUDurationExt on Duration {
   /// Utility to delay some callback (or code execution).
   ///
   /// Sample:
-  /// ```
+  /// ```dart
   ///   await 3.seconds.delay(() {
   ///           ....
   ///   }
-  ///
   ///```
   Future<T> delayed<T>([FutureOr<T> Function()? computation]) async =>
       Future<T>.delayed(this, computation);

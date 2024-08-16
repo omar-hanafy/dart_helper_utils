@@ -1,4 +1,15 @@
 # CHANGELOG
+## [2.4.0]
+### New Features
+**`totalBy` Getter:** The `totalBy` getter as an extension on any `Iterable`. It allows you to calculate the total of a specific numeric property within the objects of the iterable by providing a selector function.
+**`total` Getter:** Now, any `Iterable` containing numeric types (`int?`, `double?`, `num?`) has access to a `total` getter. This getter computes the sum of all numeric elements within the iterable, with null values being treated as zeros
+**`nodesWhere` in `DoublyLinkedList`** The `DoublyLinkedList` now includes a `nodesWhere` method, which returns all nodes that satisfy a given condition specified by the test function `bool Function(Node<E>)`.
+
+```dart
+num totalPrice = productList.totalBy((product) => product?.price);
+int total = [1, 2, 3].total; // 6
+```
+
 ## [2.3.0]
 
 - Added `firstNodeWhere`, `firstNodeWhereOrNull`, `lastNodeWhere`, `lastNodeWhereOrNull`, `singleNodeWhere`,
@@ -6,7 +17,7 @@
   to the `DoublyLinkedList` class.
 
 ## [2.2.1]
-- Introduced `DoublyLinkedList` a doubly-linked list implementation for dart.
+- Introduced `DoublyLinkedList` a doubly linked list implementation for dart.
     - Supports standard list operations (append, prepend, insert, remove, etc.)
     - Includes convenient constructors (`filled`, `generate`, `from`)
     - Offers bidirectional traversal with `next` and `prev` node references

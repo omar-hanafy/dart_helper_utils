@@ -152,7 +152,7 @@ extension DHUNumExtensions on num {
   // TODO(Omar): Add a separated implementation of delay() with the ability to stop it.
   ///
   /// Sample:
-  /// ```
+  /// ```dart
   /// void main() async {
   ///   print('+ wait for 2 seconds');
   ///   await 2.delay();
@@ -181,7 +181,7 @@ extension DHUNumExtensions on num {
   /// Easy way to make Durations from numbers.
   ///
   /// Sample:
-  /// ```
+  /// ```dart
   /// print(1.seconds + 200.asMilliseconds);
   /// print(1.hours + 30.asMinutes);
   /// print(1.5.asHours);

@@ -159,6 +159,19 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     return true;
   }
 
+  /// Returns the sum of values calculated by [valueSelector] function for each element.
+  ///
+  /// The [valueSelector] function is applied to each non-null element in the list.
+  /// If the list is null or empty, returns `0`.
+  num totalBy(num? Function(E) valueSelector) {
+    if (isEmptyOrNull) return 0;
+    num sum = 0;
+    for (final element in this!) {
+      sum += valueSelector(element) ?? 0;
+    }
+    return sum;
+  }
+
   /// uses the [tryToString] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [String] or return null.
   String? tryGetString(
@@ -833,4 +846,37 @@ class _IndexedWhereIterator<E> implements Iterator<E> {
 
   @override
   E get current => _iterator.current;
+}
+
+extension DHUIterableNumExtensionsNS on Iterable<num?>? {
+  num get total {
+    if (isEmptyOrNull) return 0;
+    num sum = 0;
+    for (final current in this!) {
+      sum += current ?? 0;
+    }
+    return sum;
+  }
+}
+
+extension DHUIterableIntExtensionsNS on Iterable<int?>? {
+  int get total {
+    if (isEmptyOrNull) return 0;
+    var sum = 0;
+    for (final current in this!) {
+      sum += current ?? 0;
+    }
+    return sum;
+  }
+}
+
+extension DHUIterableDoubleExtensionsNS on Iterable<double?>? {
+  double get total {
+    if (isEmptyOrNull) return 0;
+    var sum = 0.0;
+    for (final current in this!) {
+      sum += current ?? 0.0;
+    }
+    return sum;
+  }
 }

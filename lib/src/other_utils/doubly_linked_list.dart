@@ -279,6 +279,15 @@ class DoublyLinkedList<E> extends ListBase<E> {
     return current!;
   }
 
+  /// Returns all nodes that satisfy the given test.
+  Iterable<Node<E>> nodesWhere(bool Function(Node<E>) test) {
+    final result = <Node<E>>[];
+    for (final node in nodes) {
+      if (test(node)) result.add(node);
+    }
+    return result;
+  }
+
   /// Returns the first node that satisfies the given test.
   Node<E> firstNodeWhere(bool Function(Node<E>) test) {
     for (final node in nodes) {
