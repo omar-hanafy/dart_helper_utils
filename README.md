@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/dart_helper_utils)](https://pub.dev/packages/dart_helper_utils)
 
-The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extension.
+The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with an extension.
 
 **Note:** This package is tailored for Dart projects. For Flutter projects, use [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), which includes all `dart_helper_utils` features plus additional utilities and extension for Flutter, such as `Widget`, `Color`, and `BuildContext` extension.
 
@@ -58,16 +58,16 @@ The `DoublyLinkedList` class offers a way to manage ordered collections of data 
 
 **Key Advantages:**
 * **Efficient Insertion/Deletion:** Adding or removing elements at the beginning, middle, or end of the list takes constant time (O(1)).
-* **Bidirectional Traversal:**  Easily navigate through the list in either direction using the `next` and `prev` references on each node.
+* **Bidirectional Traversal:** Easily navigate through the list in either direction using the `next` and `prev` references on each node.
 * **Memory Flexibility:** The list dynamically grows or shrinks as needed, making it memory-efficient for managing collections of varying sizes.
 
 **Core Features:**
-* **List-Like Interface:**  You can use `DoublyLinkedList` just like a standard Dart `List`, with familiar methods like `add`, `insert`, `remove`, `clear`, etc.
+* **List-Like Interface:** You can use `DoublyLinkedList` just like a standard Dart `List`, with familiar methods like `add`, `insert`, `remove`, `clear`, etc.
 * **Node Iteration:** The `nodes` property provides a convenient way to iterate over the individual nodes of the list, giving you access to `data`, `prev`, and `next` fields.
 * **Factory Constructors:** Easily create lists with specific characteristics:
   - `filled(length, fill)`: Creates a list of a given length filled with a specified value.
   - `generate(length, generator)`: Creates a list by applying a function to generate elements.
-  - `from(Iterable)`: Creates a list from an existing iterable.
+  - `from(Iterable)`: Creates a list from existing iterable.
 
 **Example Usage:**
 ```dart

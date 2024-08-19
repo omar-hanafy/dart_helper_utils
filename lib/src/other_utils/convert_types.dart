@@ -14,6 +14,9 @@ abstract class ConvertObject {
   }) {
     if (object == null) return null;
     if (object is T) return object;
+    try {
+      return object as T;
+    } catch (_) {}
     if (decodeInput && object is String) {
       return _convertObject(
         object.tryDecode(),
@@ -263,6 +266,7 @@ abstract class ConvertObject {
       listIndex: listIndex,
       converter: (object) {
         if (format.isNotBlank) return '$object'.toIntFormatted(format, locale);
+        if (object is num) return object.toInt();
         return '$object'.toInt;
       },
     );
@@ -318,6 +322,7 @@ abstract class ConvertObject {
         if (format.isNotBlank) {
           return '$object'.tryToIntFormatted(format, locale);
         }
+        if (object is num) return object.toInt();
         return '$object'.tryToInt;
       },
     );
@@ -458,6 +463,7 @@ abstract class ConvertObject {
         if (format.isNotBlank) {
           return '$object'.toDoubleFormatted(format, locale);
         }
+        if (object is num) return object.toDouble();
         return '$object'.toDouble;
       },
     );
@@ -513,6 +519,7 @@ abstract class ConvertObject {
         if (format.isNotBlank) {
           return '$object'.tryToDoubleFormatted(format, locale);
         }
+        if (object is num) return object.toDouble();
         return '$object'.tryToDouble;
       },
     );

@@ -1,9 +1,29 @@
 # CHANGELOG
+## [2.5.0]
+- Added `castTo<R>()` to the List and Set extensions and `toListCasted<R>()` & `toSetCasted<R>()` to the Iterable extension.
+- Enhanced numeric extensions with additional date-related helpers:
+  - Added helpers to check if the number matches the current year, month, day of the month, or day of the week: `isCurrentYear`, `isCurrentMonth`, `isCurrentDay`, and `isCurrentDayOfWeek`.
+  - `isBetweenMonths`: Checks if a number (representing a month) falls within a specified range, handling year boundaries gracefully.
+- Added `isInThisMonth` in the date extension, it checks if a month of this date matches the month of now.
+- Updated some docs.
+
+```dart
+void main()  {
+  final list = [1, 2, '3', '3.1', 22.3];
+  
+  // Parsing a dynamic numeric list to num, int, and double.
+  print(list.castTo<num>()); // [1, 2, 3, 3.1, 22.3]
+  print(list.castTo<int>()); // [1, 2, 3, 3, 22]
+  print(list.castTo<double>()); // [1.0, 2.0, 3.0, 3.1, 22.3]
+}
+```
 ## [2.4.0]
 ### New Features
-**`totalBy` Getter:** The `totalBy` getter as an extension on any `Iterable`. It allows you to calculate the total of a specific numeric property within the objects of the iterable by providing a selector function.
-**`total` Getter:** Now, any `Iterable` containing numeric types (`int?`, `double?`, `num?`) has access to a `total` getter. This getter computes the sum of all numeric elements within the iterable, with null values being treated as zeros
-**`nodesWhere` in `DoublyLinkedList`** The `DoublyLinkedList` now includes a `nodesWhere` method, which returns all nodes that satisfy a given condition specified by the test function `bool Function(Node<E>)`.
+**`total` on `Iterable<num>`:** This getter computes the sum of all numeric elements within the iterable, with null values being treated as zeros
+
+**`totalBy` on `Iterable<E>`:** Allows you to calculate the total of a specific numeric property within the objects of the iterable by providing a selector function.
+
+**`nodesWhere` on `DoublyLinkedList`** The `DoublyLinkedList` now includes a `nodesWhere` method, which returns all nodes that satisfy a given condition specified by the test function `bool Function(Node<E>)`.
 
 ```dart
 num totalPrice = productList.totalBy((product) => product?.price);

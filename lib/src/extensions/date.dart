@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
+int get millisecondsSinceEpochNow => DateTime.now().millisecondsSinceEpoch;
+
 extension DHUDateString on String {
   /// Parse string to [DateTime] using null Safety
   DateTime get toDateTime => DateTime.parse(this);
@@ -27,8 +29,15 @@ extension DHUDateNullString on String? {
   }
 }
 
-extension NumberToDateNames on num {
+extension NumberToDateUtils on num {
   /// Gets the full month name (e.g., "January") corresponding to this number (1-12).
+  ///
+  /// Example:
+  /// ```dart
+  /// 1.toFullMonthName; // Returns "January"
+  /// 12.toFullMonthName; // Returns "December"
+  /// ```
+  /// If the number is outside the range 1-12, it will be clamped within this range.
   String get toFullMonthName {
     final monthIndex = this.toInt().clamp(1, 12) - 1;
     return [
@@ -48,6 +57,15 @@ extension NumberToDateNames on num {
   }
 
   /// Gets the full day name (e.g., "Monday") corresponding to this number (1-7).
+  ///
+  /// This method follows ISO 8601, where the week starts on Monday (1) and ends on Sunday (7).
+  ///
+  /// Example:
+  /// ```dart
+  /// 1.toFullDayName; // Returns "Monday"
+  /// 7.toFullDayName; // Returns "Sunday"
+  /// ```
+  /// If the number is outside the range 1-7, it will be normalized within this range using modulo arithmetic.
   String get toFullDayName {
     final dayIndex = (this.toInt() - 1) % 7; // Ensure value is within 0-6
     return [
@@ -62,14 +80,99 @@ extension NumberToDateNames on num {
   }
 
   /// Gets the short day name (e.g., "Mon") corresponding to this number (1-7).
+  ///
+  /// Example:
+  /// ```dart
+  /// 1.toSmallDayName; // Returns "Mon"
+  /// 7.toSmallDayName; // Returns "Sun"
+  /// ```
+  /// If the number is outside the range 1-7, it will be normalized within this range using modulo arithmetic.
   String get toSmallDayName => toFullDayName.substring(0, 3);
 
   /// Gets the short month name (e.g., "Jan") corresponding to this number (1-12).
+  ///
+  /// Example:
+  /// ```dart
+  /// 1.toSmallMonthName; // Returns "Jan"
+  /// 12.toSmallMonthName; // Returns "Dec"
+  /// ```
+  /// If the number is outside the range 1-12, it will be clamped within this range.
   String get toSmallMonthName => toFullMonthName.substring(0, 3);
 
-  // convert all to int and if the number is too large for month def is 12 if too small def is 1 and so on
+  /// Converts a numeric timestamp (in milliseconds since epoch) to a DateTime object.
+  ///
+  /// Example:
+  /// ```dart
+  /// 1609459200000.timestampToDate; // Returns DateTime for 2021-01-01 00:00:00.000
+  /// ```
   DateTime get timestampToDate =>
       DateTime.fromMillisecondsSinceEpoch(this.toInt());
+
+  /// Checks if the number (assumed to represent a month, 1-based) is within the specified range of months.
+  ///
+  /// This method handles ranges that cross the year boundary (e.g., December to February).
+  ///
+  /// Example:
+  /// ```dart
+  /// 3.isBetweenMonths(12, 2); // Returns true, March is within December-February
+  /// 6.isBetweenMonths(3, 8);  // Returns true, June is within March-August
+  /// ```
+  bool isBetweenMonths(int startMonth, int endMonth) {
+    final month = this.toInt();
+    // Handle cases where the range crosses over the year boundary (e.g., December to February)
+    if (startMonth > endMonth) {
+      return month >= startMonth || month <= endMonth;
+    } else {
+      return month >= startMonth && month <= endMonth;
+    }
+  }
+
+  /// Checks if the number (assumed to represent a day of the week, 1-based) corresponds to the current day of the week.
+  ///
+  /// This method follows ISO 8601, where the week starts on Monday (1) and ends on Sunday (7).
+  ///
+  /// Example:
+  /// ```dart
+  /// 1.isCurrentDayOfWeek; // Returns true if today is Monday
+  /// 7.isCurrentDayOfWeek; // Returns true if today is Sunday
+  /// ```
+  bool get isCurrentDayOfWeek {
+    final now = DateTime.now();
+    return this.toInt() == now.weekday;
+  }
+
+  /// Checks if the number (assumed to represent a year) corresponds to the current year.
+  ///
+  /// Example:
+  /// ```dart
+  /// 2024.isCurrentYear; // Returns true if the current year is 2024
+  /// ```
+  bool get isCurrentYear {
+    final now = DateTime.now();
+    return this.toInt() == now.year;
+  }
+
+  /// Checks if the number (assumed to represent a month, 1-based) corresponds to the current month.
+  ///
+  /// Example:
+  /// ```dart
+  /// 8.isCurrentMonth; // Returns true if the current month is August
+  /// ```
+  bool get isCurrentMonth {
+    final now = DateTime.now();
+    return this.toInt() == now.month;
+  }
+
+  /// Checks if the number (assumed to represent a day, 1-based) corresponds to the current day of the month.
+  ///
+  /// Example:
+  /// ```dart
+  /// 15.isCurrentDay; // Returns true if today is the 15th of the month
+  /// ```
+  bool get isCurrentDay {
+    final now = DateTime.now();
+    return this.toInt() == now.day;
+  }
 }
 
 extension DHUNullableDateExtensions on DateTime? {
@@ -77,12 +180,42 @@ extension DHUNullableDateExtensions on DateTime? {
 
   String? get toUtcIso => this?.toUtc().toIso8601String();
 
-  bool get isTomorrow => remainingDays == 1;
+  bool get isTomorrow {
+    if (this == null) return false;
+    final now = DateTime.now();
+
+    // Quick check to rule out dates that are far away
+    if (this!.year != now.year || this!.month != now.month) {
+      return false;
+    }
+
+    return remainingDays == 1;
+  }
 
   /// return true if the date is today
-  bool get isToday => remainingDays == 0;
+  bool get isToday {
+    if (this == null) return false;
+    final now = DateTime.now();
 
-  bool get isYesterday => passedDays == 1;
+    // Quick check to rule out dates that are far away
+    if (this!.year != now.year || this!.month != now.month) {
+      return false;
+    }
+
+    return remainingDays == 0;
+  }
+
+  bool get isYesterday {
+    if (this == null) return false;
+    final now = DateTime.now();
+
+    // Quick check to rule out dates that are far away
+    if (this!.year != now.year || this!.month != now.month) {
+      return false;
+    }
+
+    return passedDays == 1;
+  }
 
   bool get isPresent => isNotNull && this!.isAfter(DateTime.now());
 
@@ -95,6 +228,12 @@ extension DHUNullableDateExtensions on DateTime? {
   }
 
   bool get isInThisYear => isNotNull && this!.year == DateTime.now().year;
+
+  bool get isInThisMonth {
+    if (isNull) return false;
+    final now = DateTime.now();
+    return this!.month == now.month && this!.year == now.year;
+  }
 
   bool get isLeapYear {
     if (isNull) return false;
@@ -447,3 +586,12 @@ abstract class DatesHelper {
   static Iterable<DateTime> daysInRange(DateTime start, DateTime end) =>
       start.daysUpTo(end);
 }
+
+/*
+**Areas for Improvement**
+
+* **Error Handling:** Consider adding more robust error handling, especially in the parsing extensions, to provide informative messages to the user or log errors appropriately.
+* **Documentation:** While the code is generally well-organized, adding more detailed comments or docstrings, especially for complex functions, would improve its understandability and maintainability.
+* **Naming Conventions:** Some function names (e.g., `addOrRemoveYears`) could be more concise or descriptive.
+* **Testing:** Writing unit tests to cover various scenarios and edge cases would ensure the correctness and reliability of the code.
+*/

@@ -1,6 +1,12 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
+  // parsing dynamic numeric list to num, int, and double.
+  final list = [1, 2, '3', '3.1', 22.3];
+  print(list.castTo<num>()); // [1, 2, 3, 3.1, 22.3]
+  print(list.castTo<int>()); // [1, 2, 3, 3, 22]
+  print(list.castTo<double>()); // [1.0, 2.0, 3.0, 3.1, 22.3]
+
   // parsing raw Json array of doubles to List<int>
   final intList = tryToList<int>('[1.5, 2.3, 3.4]');
   print(intList); // [1, 2, 3]

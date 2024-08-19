@@ -941,6 +941,9 @@ T toType<T>(dynamic object) {
       stackTrace: s,
     );
   }
+  try {
+    return object as T;
+  } catch (_) {}
   throw ParsingException(
     parsingInfo: 'toType',
     error:
@@ -990,6 +993,9 @@ T? tryToType<T>(dynamic object) {
       stackTrace: s,
     );
   }
+  try {
+    return object as T;
+  } catch (_) {}
   throw ParsingException(
     error: 'Unsupported type: $T',
     parsingInfo: 'tryToType',
