@@ -1,4 +1,9 @@
 # CHANGELOG
+## [2.5.1]
+- Renamed `castTo<R>()` to `convertTo<R>()` in List and Set extensions.
+- Renamed `toListCasted<R>()` & `toSetCasted<R>()` to `toListConverted<R>()` & `toSetConverted<R>()` in the Iterable extension.
+  - Reason: The methods perform type conversion rather than casting, which is more accurately reflected in the new names.
+
 ## [2.5.0]
 - Added `castTo<R>()` to the List and Set extensions and `toListCasted<R>()` & `toSetCasted<R>()` to the Iterable extension.
 - Enhanced numeric extensions with additional date-related helpers:

@@ -51,22 +51,21 @@ typedef IndexedPredicate<T> = bool Function(int index, T);
 typedef Predicate<T> = bool Function(T);
 
 extension DHUNullableSetExtensions<E> on Set<E>? {
-  /// Converts the set to a different type [R], similar to the original [cast] method,
-  /// but with additional flexibility and error handling.
+  /// Converts the set to a different type [R], providing flexible and safe type conversion.
   ///
-  /// Unlike the standard [Set.cast], which can throw a [CastError] if an element cannot
-  /// be cast to the specified type [R], [castTo] leverages a custom conversion logic
-  /// which tries various strategies to convert elements.
+  /// [convertTo] attempts to convert each element in the set to the specified type [R]. It employs
+  /// a custom conversion logic that handles various scenarios, including cases where a direct cast
+  /// is not possible.
   ///
-  /// If a direct cast is not feasible, it attempts element-wise conversion using `toType`.
-  /// This ensures that the conversion happens smoothly without risking a crash.
+  /// If a direct conversion fails, it attempts element-wise conversion using `toType`, ensuring
+  /// a smooth conversion process without the risk of runtime errors.
   ///
   /// Example usage:
   /// ```dart
   /// Set<dynamic> set = {1, 2, '3'};
-  /// List<int> intList = set.castTo<int>(); // Tries to convert all elements to int.
+  /// Set<int> intSet = set.convertTo<int>(); // Tries to convert all elements to int.
   /// ```
-  Set<R> castTo<R>() => ConvertObject.toSet<R>(this);
+  Set<R> convertTo<R>() => ConvertObject.toSet<R>(this);
 }
 
 extension DHUNullableListExtensions<E> on List<E>? {
@@ -100,22 +99,21 @@ extension DHUNullableListExtensions<E> on List<E>? {
   void tryRemoveWhere(int element) =>
       isEmptyOrNull ? null : this!.removeWhere((element) => false);
 
-  /// Converts the list to a different type [R], similar to the original [cast] method,
-  /// but with additional flexibility and error handling.
+  /// Converts the list to a different type [R], providing flexible and safe type conversion.
   ///
-  /// Unlike the standard [List.cast], which can throw a [CastError] if an element cannot
-  /// be cast to the specified type [R], [castTo] leverages a custom conversion logic
-  /// which tries various strategies to convert elements.
+  /// [convertTo] attempts to convert each element in the list to the specified type [R]. It employs
+  /// a custom conversion logic that handles various scenarios, including cases where a direct cast
+  /// is not possible.
   ///
-  /// If a direct cast is not feasible, it attempts element-wise conversion using `toType`.
-  /// This ensures that the conversion happens smoothly without risking a crash.
+  /// If a direct conversion fails, it attempts element-wise conversion using `toType`, ensuring
+  /// a smooth conversion process without the risk of runtime errors.
   ///
   /// Example usage:
   /// ```dart
   /// List<dynamic> list = [1, 2, '3'];
-  /// List<int> intList = list.castTo<int>(); // Tries to convert all elements to int.
+  /// List<int> intList = list.convertTo<int>(); // Tries to convert all elements to int.
   /// ```
-  List<R> castTo<R>() => ConvertObject.toList<R>(this);
+  List<R> convertTo<R>() => ConvertObject.toList<R>(this);
 }
 
 extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
@@ -397,31 +395,31 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
 }
 
 extension DHUCollectionsExtensions<E> on Iterable<E> {
-  /// Converts the iterable to a [List] of type [R] using the [castTo] method.
+  /// Converts the iterable to a [List] of type [R] using the [convertTo] method.
   ///
-  /// This method first converts the iterable to a list, then casts it to the desired
-  /// type [R] using custom conversion logic provided by [castTo]. This ensures flexibility
-  /// and handles potential casting errors gracefully.
+  /// This method first converts the iterable to a list, then converts it to the desired
+  /// type [R] using custom conversion logic provided by [convertTo]. This ensures flexibility
+  /// and handles potential conversion errors gracefully.
   ///
   /// Example usage:
   /// ```dart
   /// Iterable<dynamic> iterable = [1, '2', 3.0];
-  /// List<int> intList = iterable.toListCasted<int>(); // Tries to convert all elements to int.
+  /// List<int> intList = iterable.toListConverted<int>(); // Tries to convert all elements to int.
   /// ```
-  List<R> toListCasted<R>() => this.toList().castTo<R>();
+  List<R> toListConverted<R>() => this.toList().convertTo<R>();
 
-  /// Converts the iterable to a [Set] of type [R] using the [castTo] method.
+  /// Converts the iterable to a [Set] of type [R] using the [convertTo] method.
   ///
-  /// This method first converts the iterable to a set, then casts it to the desired
-  /// type [R] using custom conversion logic provided by [castTo]. This ensures flexibility
-  /// and handles potential casting errors gracefully.
+  /// This method first converts the iterable to a set, then converts it to the desired
+  /// type [R] using custom conversion logic provided by [convertTo]. This ensures flexibility
+  /// and handles potential conversion errors gracefully.
   ///
   /// Example usage:
   /// ```dart
   /// Iterable<dynamic> iterable = [1, '2', 3.0];
-  /// Set<int> intSet = iterable.toSetCasted<int>(); // Tries to convert all elements to int.
+  /// Set<int> intSet = iterable.toSetConverted<int>(); // Tries to convert all elements to int.
   /// ```
-  Set<R> toSetCasted<R>() => this.toSet().castTo<R>();
+  Set<R> toSetConverted<R>() => this.toSet().convertTo<R>();
 
   /// Returns this Iterable if it's not `null` and the empty list otherwise.
   Iterable<E> orEmpty() => this;
