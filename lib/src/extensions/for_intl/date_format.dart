@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 extension DHUNDateFormatExtension on DateTime? {
@@ -121,6 +119,43 @@ extension DHUDateFormatExtension on DateTime {
 }
 
 extension DHUDateFormatStringExtension on String {
+  /// Parses a date string in either of the formats RFC-1123, RFC-850, or ANSI C's asctime().
+  ///
+  /// - **RFC-1123**: Commonly used in HTTP headers. Example: `Thu, 30 Aug 2024 12:00:00 GMT`.
+  /// - **RFC-850**: An older format, less commonly used today. Example: `Thursday, 30-Aug-24 12:00:00 GMT`.
+  /// - **ANSI C's `asctime()`**: A format used by the C programming language's standard library. Example: `Thu Aug 30 12:00:00 2024`.
+  ///
+  ///  Usage:
+  /// ```dart
+  /// String rfc1123Date = "Thu, 30 Aug 2024 12:00:00 GMT";
+  /// DateTime? parsedDate = rfc1123Date.parseHttpDate();
+  /// print(parsedDate?.toIso8601String()); // Outputs: 2024-08-30T12:00:00.000Z
+  ///
+  /// String asctimeDate = "Thu Aug 30 12:00:00 2024";
+  /// DateTime? parsedDate2 = asctimeDate.parseHttpDate();
+  /// print(parsedDate2?.toIso8601String()); // Outputs: 2024-08-30T12:00:00.000Z or null if parsing fails
+  /// ```
+  ///
+  /// This method tries to parse the date string using the appropriate format. If parsing fails,
+  /// it returns `null` instead of throwing an exception.
+  DateTime? parseHttpDate([bool utc = false]) {
+    final formats = [
+      DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", 'en_US'), // RFC-1123
+      DateFormat("EEEE, dd-MMM-yy HH:mm:ss 'GMT'", 'en_US'), // RFC-850
+      DateFormat('EEE MMM d HH:mm:ss yyyy', 'en_US'), // ANSI C's asctime()
+    ];
+
+    for (final format in formats) {
+      try {
+        return utc ? format.parseUtc(this) : format.parse(this);
+      } catch (_) {
+        // Continue to the next format if parsing fails.
+      }
+    }
+
+    return null;
+  }
+
   /// Parses a date-time string into a `DateTime` object, automatically trying
   /// various formats to handle diverse inputs.
   ///
@@ -179,10 +214,8 @@ extension DHUDateFormatStringExtension on String {
       return utc ? parsedDate.toUtc() : parsedDate;
     } catch (_) {}
 
-    try {
-      final parsedDate = HttpDate.parse(this); // Requires 'dart:io' import
-      return utc ? parsedDate.toUtc() : parsedDate;
-    } catch (_) {}
+    final httpDate = parseHttpDate(utc);
+    if (httpDate != null) return httpDate;
 
     final formats = {
       // ISO 8601-like (most standard, unambiguous)

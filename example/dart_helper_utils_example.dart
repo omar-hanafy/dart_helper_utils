@@ -193,6 +193,30 @@ Future<void> main() async {
   for (final node in doublyLinkedList.nodes) {
     print('Prev: ${node.prev}, Current: ${node.data}, Next: ${node.next}');
   }
+
+  final httpDateTypeTestCases = {
+    'Thu, 30 Aug 2024 12:00:00 GMT': 'RFC-1123',
+    'Thursday, 30-Aug-24 12:00:00 GMT': 'RFC-850',
+    'Thu Aug 30 12:00:00 2024': 'ANSI C asctime()',
+    'Invalid date string': 'Invalid',
+    'Wed, 31 Feb 2024 12:00:00 GMT': 'Invalid date',
+    'Sun, 29 Feb 2024 12:00:00 GMT': 'RFC-1123 (Leap year)',
+  };
+
+  for (final entry in httpDateTypeTestCases.entries) {
+    final dateStr = entry.key;
+    final formatDescription = entry.value;
+    final parsedDate = dateStr.parseHttpDate();
+
+    if (parsedDate != null) {
+      print('Date string: "$dateStr" ($formatDescription)');
+      print('Parsed DateTime: ${parsedDate.toIso8601String()}');
+    } else {
+      print('Date string: "$dateStr" ($formatDescription)');
+      print('Parsing failed (DateTime is null)');
+    }
+    print('---');
+  }
 }
 
 // Example enum used in the map

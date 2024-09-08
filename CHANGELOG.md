@@ -1,4 +1,13 @@
 # CHANGELOG
+## [2.5.3]
+- `remainingDays` now returns negative values for dates in the past to correctly reflect the number of days remaining.
+- `passedDays` now returns 0 for dates in the future, to correctly indicate that no days have passed yet.
+- **Note:** For the previous behavior of always returning absolute day differences, use the `daysDifferenceTo` method.
+
+## [2.5.2]
+- Added support for WASM.
+- Added topics to pubspec.yaml.
+
 ## [2.5.1]
 - Renamed `castTo<R>()` to `convertTo<R>()` in List and Set extensions.
 - Renamed `toListCasted<R>()` & `toSetCasted<R>()` to `toListConverted<R>()` & `toSetConverted<R>()` in the Iterable extension.
