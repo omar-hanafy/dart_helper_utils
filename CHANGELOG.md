@@ -1,4 +1,10 @@
 # CHANGELOG
+## [2.6.0]
+- The following methods in the DoublyLinkedList class now accept an optional `orElse`function to handle cases where no matching node is found:
+  - `firstNodeWhere`, `lastNodeWhere`, and `singleNodeWhere`
+  - `firstNodeWhereOrNull`, `lastNodeWhereOrNull`, and `singleNodeWhereOrNull`
+  - `findNodeByElement`
+
 ## [2.5.3]
 - `remainingDays` now returns negative values for dates in the past to correctly reflect the number of days remaining.
 - `passedDays` now returns 0 for dates in the future, to correctly indicate that no days have passed yet.

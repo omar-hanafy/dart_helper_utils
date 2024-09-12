@@ -181,7 +181,7 @@ class DoublyLinkedList<E> extends ListBase<E> {
   /// final node = list.findNodeByElement(2);
   /// print(node?.data); // Output: 2
   /// ```
-  Node<E>? findNodeByElement(E data) {
+  Node<E>? findNodeByElement(E data, {Node<E> Function()? orElse}) {
     var current = _head;
     while (current != null) {
       if (current.data == data) {
@@ -189,7 +189,7 @@ class DoublyLinkedList<E> extends ListBase<E> {
       }
       current = current.next;
     }
-    return null;
+    return orElse?.call();
   }
 
   /// Inserts a new node after the specified node.
@@ -289,39 +289,58 @@ class DoublyLinkedList<E> extends ListBase<E> {
   }
 
   /// Returns the first node that satisfies the given test.
-  Node<E> firstNodeWhere(bool Function(Node<E>) test) {
+  Node<E> firstNodeWhere(
+    bool Function(Node<E>) test, {
+    Node<E> Function()? orElse,
+  }) {
     for (final node in nodes) {
       if (test(node)) return node;
     }
+    final orElseData = orElse?.call();
+    if (orElseData != null) return orElseData;
     throw StateError('No node found matching the predicate');
   }
 
   /// Returns the first node that satisfies the given test, or null if none found.
-  Node<E>? firstNodeWhereOrNull(bool Function(Node<E>) test) {
+  Node<E>? firstNodeWhereOrNull(
+    bool Function(Node<E>) test, {
+    Node<E> Function()? orElse,
+  }) {
     for (final node in nodes) {
       if (test(node)) return node;
     }
-    return null;
+    return orElse?.call();
   }
 
   /// Returns the last node that satisfies the given test.
-  Node<E> lastNodeWhere(bool Function(Node<E>) test) {
+  Node<E> lastNodeWhere(
+    bool Function(Node<E>) test, {
+    Node<E> Function()? orElse,
+  }) {
     for (var node = _tail; node != null; node = node.prev) {
       if (test(node)) return node;
     }
+    final orElseData = orElse?.call();
+    if (orElseData != null) return orElseData;
     throw StateError('No node found matching the predicate');
   }
 
   /// Returns the last node that satisfies the given test, or null if none found.
-  Node<E>? lastNodeWhereOrNull(bool Function(Node<E>) test) {
+  Node<E>? lastNodeWhereOrNull(
+    bool Function(Node<E>) test, {
+    Node<E> Function()? orElse,
+  }) {
     for (var node = _tail; node != null; node = node.prev) {
       if (test(node)) return node;
     }
-    return null;
+    return orElse?.call();
   }
 
   /// Returns a single node that satisfies the given test.
-  Node<E> singleNodeWhere(bool Function(Node<E>) test) {
+  Node<E> singleNodeWhere(
+    bool Function(Node<E>) test, {
+    Node<E> Function()? orElse,
+  }) {
     Node<E>? foundNode;
     for (final node in nodes) {
       if (test(node)) {
@@ -332,21 +351,27 @@ class DoublyLinkedList<E> extends ListBase<E> {
       }
     }
     if (foundNode == null) {
+      final orElseData = orElse?.call();
+      if (orElseData != null) return orElseData;
       throw StateError('No node found matching the predicate');
     }
     return foundNode;
   }
 
   /// same as [singleNodeWhere] but returns null when not found.
-  E? singleNodeWhereOrNull(bool Function(E) test) {
-    E? foundElement;
+  Node<E>? singleNodeWhereOrNull(
+    bool Function(Node<E>) test, {
+    Node<E> Function()? orElse,
+  }) {
+    Node<E>? foundElement;
     for (final node in nodes) {
-      if (test(node.data)) {
+      if (test(node)) {
         if (foundElement != null) return null;
-        foundElement = node.data;
+        foundElement = node;
       }
     }
-    return foundElement;
+    if (foundElement != null) return foundElement;
+    return orElse?.call();
   }
 
   /// Replaces the data of the specified node with newData.

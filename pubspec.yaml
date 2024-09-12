@@ -1,13 +1,13 @@
 name: dart_helper_utils
 description: This package offers a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extensions.
 repository: https://github.com/omar-hanafy/dart_helper_utils
-version: 2.5.3
+version: 2.6.0
 topics:
-  - extensions
-  - type-conversion
   - utilities
   - helpers
-  - doubly-linked-list
+  - extensions
+  - conversion
+  - case-conversion
 
 environment:
   sdk: ^3.0.0
