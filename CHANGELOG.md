@@ -1,4 +1,9 @@
 # CHANGELOG
+## [2.7.0]
+- **Added the `toDecimalString` method on numbers**:
+  similar to `toStringAsFixed` which allows formatting numbers to a specified
+  number of decimal places, but this one includes optional control over trailing zeros.
+
 ## [2.6.0]
 - The following methods in the DoublyLinkedList class now accept an optional `orElse`function to handle cases where no matching node is found:
   - `firstNodeWhere`, `lastNodeWhere`, and `singleNodeWhere`

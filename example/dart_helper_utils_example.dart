@@ -1,6 +1,7 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
+  print(0 / 0);
   // parsing dynamic numeric list to num, int, and double.
   final list = <dynamic>[1, 2, '3', '3.1', 22.3];
 
@@ -217,6 +218,10 @@ Future<void> main() async {
     }
     print('---');
   }
+  print(12.toDecimalString(2)); // Output: 12
+  print(12.10.toDecimalString(2)); // Output: 12.1
+  print(12.1.toDecimalString(2, keepTrailingZeros: true)); // 12.10
+  print(12.123.toDecimalString(2)); // 12.12
 }
 
 // Example enum used in the map
