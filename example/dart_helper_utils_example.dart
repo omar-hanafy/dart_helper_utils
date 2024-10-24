@@ -1,7 +1,6 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
-  print(0 / 0);
   // parsing dynamic numeric list to num, int, and double.
   final list = <dynamic>[1, 2, '3', '3.1', 22.3];
 
@@ -43,11 +42,11 @@ Future<void> main() async {
   final userMail = toString1(userMap['email']);
   print('Is Valid Email: ${userMail.isValidEmail}');
 
-  // Example of using HttpResStatus
-  final status = 200.toHttpResStatus;
-  print('Status: ${status.code} - ${status.desc}');
-  print('Is Success: ${status.isSuccess}');
-  print('Is Client Error: ${status.isClientError}');
+  // Example of using the global [httpStatusMessages]
+  const httpStatusCode = 200;
+  print('Status: $httpStatusCode - ${httpStatusMessages[httpStatusCode]}');
+  print('Is Success: ${httpStatusCode.isSuccessCode}');
+  print('Is Client Error: ${httpStatusCode.isClientErrorCode}');
 
   // quickly use normal date parsing.
   print('1997-08-12 00:00:00.000'.toDateTime);
@@ -222,6 +221,19 @@ Future<void> main() async {
   print(12.10.toDecimalString(2)); // Output: 12.1
   print(12.1.toDecimalString(2, keepTrailingZeros: true)); // 12.10
   print(12.123.toDecimalString(2)); // 12.12
+
+  final age = DateTime(1997, 8, 12).calculateAge();
+  print('I am ${age.years} old!');
+
+  print(DHUTimezone.generate());
+  final palestine = DHUCountry.getByCode('ps');
+  print(palestine?.flagEmoji); // 🇵🇸
+  print(palestine?.nativeNames);
+  print(palestine?.timezones);
+
+  final timeZone = DHUTimezone.byIdentifier('Africa/Cairo');
+  print(timeZone!.abbreviation);
+  timeZone.getCountries().forEach((e) => print(e.flagEmoji));
 }
 
 // Example enum used in the map

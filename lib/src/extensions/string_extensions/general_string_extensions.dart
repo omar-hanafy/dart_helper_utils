@@ -20,6 +20,15 @@ extension DHUStringExtensions on String {
   /// Removes all whitespace characters and collapses the string into a single line.
   /// Example: "Line 1\n Line 2" => "Line1Line2"
   String get clean => toOneLine.removeWhiteSpaces;
+
+  int get asRomanNumeralToInt => NumbersHelper.fromRomanNumeral(this);
+
+  // Base64 Encode for this String
+  String base64Encode() => base64.encode(utf8.encode(this));
+
+  // Base64 Decode
+  String base64Decode({bool? allowMalformed}) =>
+      utf8.decode(base64.decode(this), allowMalformed: allowMalformed);
 }
 
 extension DHUNullSafeStringExtensions on String? {
@@ -72,73 +81,72 @@ extension DHUNullSafeStringExtensions on String? {
   }
 
   /// Checks if the string contains only letters and numbers.
-  bool get isAlphanumeric => hasMatch(r'^[a-zA-Z0-9]+$');
+  bool get isAlphanumeric => hasMatch(regexAlphanumeric);
 
   /// Checks if the string contains any characters that are not letters, numbers, or spaces (i.e., special characters).
-  bool get hasSpecialChars => hasMatch('[^a-zA-Z0-9 ]');
+  bool get hasSpecialChars => hasMatch(regexSpecialChars);
 
   /// Checks if the string does NOT contain any characters that are not letters, numbers, or spaces (i.e., special characters).
   bool get hasNoSpecialChars => !hasSpecialChars;
 
   /// Checks if the string starts with a number (digit).
-  bool get startsWithNumber => hasMatch(r'^\d');
+  bool get startsWithNumber => hasMatch(regexStartsWithNumber);
 
   /// Checks if the string contains any digits.
-  /// Example: "f1rstDate" => true, "firstDate" => false
-  bool get containsDigits => hasMatch(r'\d');
+  bool get containsDigits => hasMatch(regexContainsDigits);
 
   /// Checks if the string is a valid username.
-  bool get isValidUsername =>
-      hasMatch(r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$');
+  bool get isValidUsername => hasMatch(regexValidUsername);
 
   /// Checks if the string is a valid currency format.
-  bool get isValidCurrency => hasMatch(
-        r'^(S?\$|\₩|Rp|\¥|\€|\₹|\₽|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$',
-      );
+  bool get isValidCurrency => hasMatch(regexValidCurrency);
 
   /// Checks if the string is a valid phone number.
   bool get isValidPhoneNumber {
     if (isEmptyOrNull || this!.length > 16 || this!.length < 9) return false;
-    return hasMatch(
-        r'(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?');
+    return hasMatch(regexValidPhoneNumber);
   }
 
   /// Checks if the string is a valid email address.
-  bool get isValidEmail => hasMatch(
-        r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$',
-      );
+  bool get isValidEmail => hasMatch(regexValidEmail);
 
   /// Checks if the string is an HTML file or URL.
   bool get isValidHTML => (this ?? ' ').toLowerCase().endsWith('.html');
 
   /// Checks if the string is a valid IPv4 address.
-  bool get isValidIp4 => hasMatch(
-        r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$',
-      );
+  bool get isValidIp4 => hasMatch(regexValidIp4);
 
   /// Checks if the string is a valid IPv6 address.
-  bool get isValidIp6 => hasMatch(
-        r'/(?<protocol>(?:http|ftp|irc)s?:\/\/)?(?:(?<user>[^:\n\r]+):(?<pass>[^@\n\r]+)@)?(?<host>(?:www\.)?(?:[^:\/\n\r]+)(?::(?<port>\d+))?)\/?(?<request>[^?#\n\r]+)?\??(?<query>[^#\n\r]*)?\#?(?<anchor>[^\n\r]*)?/',
-      );
+  bool get isValidIp6 => hasMatch(regexValidIp6);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl => tryToLowerCase.clean.hasMatch(
-        r'''^((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))+$''',
-        caseSensitive: false,
-      );
-
-  bool hasMatch(String pattern, {bool caseSensitive = true}) => (this != null)
-      ? RegExp(pattern, caseSensitive: caseSensitive).hasMatch(this!)
-      : this != null;
+  bool get isValidUrl => tryToLowerCase.clean.hasMatch(regexValidUrl);
 
   /// Checks if the string consists only of numbers (no whitespace).
-  bool get isNumeric => hasMatch(r'^\d+$');
+  bool get isNumeric => hasMatch(regexNumeric);
 
   /// Checks if the string consists only of letters (no whitespace).
-  bool get isAlphabet => hasMatch(r'^[a-zA-Z]+$');
+  bool get isAlphabet => hasMatch(regexAlphabet);
 
   /// Checks if the string contains at least one capital letter.
-  bool get hasCapitalLetter => hasMatch('[A-Z]');
+  bool get hasCapitalLetter => hasMatch(regexHasCapitalLetter);
+
+  /// Helper function to check for pattern matches.
+  bool hasMatch(
+    String pattern, {
+    bool multiLine = false,
+    bool caseSensitive = true,
+    bool unicode = false,
+    bool dotAll = false,
+  }) =>
+      this != null &&
+      RegExp(
+        pattern,
+        caseSensitive: caseSensitive,
+        multiLine: multiLine,
+        unicode: unicode,
+        dotAll: dotAll,
+      ).hasMatch(this!);
 
   /// Checks if the string represents a boolean value.
   bool get isBool => this == 'true' || this == 'false';
@@ -317,4 +325,7 @@ extension DHUNullSafeStringExtensions on String? {
     } catch (_) {}
     return null;
   }
+
+  int? get asRomanNumeralToInt =>
+      this == null ? null : NumbersHelper.fromRomanNumeral(this!);
 }

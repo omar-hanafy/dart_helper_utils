@@ -1,57 +1,5 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-int get millisecondsSinceEpochNow => DateTime.now().millisecondsSinceEpoch;
-
-const smallWeekdays = {
-  1: 'Mon',
-  2: 'Tue',
-  3: 'Wed',
-  4: 'Thu',
-  5: 'Fri',
-  6: 'Sat',
-  7: 'Sun',
-};
-
-const fullWeekdays = {
-  1: 'Monday',
-  2: 'Tuesday',
-  3: 'Wednesday',
-  4: 'Thursday',
-  5: 'Friday',
-  6: 'Saturday',
-  7: 'Sunday',
-};
-
-const smallMonthsNames = {
-  1: 'Jan',
-  2: 'Feb',
-  3: 'Mar',
-  4: 'Apr',
-  5: 'May',
-  6: 'Jun',
-  7: 'Jul',
-  8: 'Aug',
-  9: 'Sep',
-  10: 'Oct',
-  11: 'Nov',
-  12: 'Dec',
-};
-
-const fullMonthsNames = {
-  1: 'January',
-  2: 'February',
-  3: 'March',
-  4: 'April',
-  5: 'May',
-  6: 'June',
-  7: 'July',
-  8: 'August',
-  9: 'September',
-  10: 'October',
-  11: 'November',
-  12: 'December',
-};
-
 extension DHUDateString on String {
   /// Parse string to [DateTime] using null Safety
   DateTime get toDateTime => DateTime.parse(this);
@@ -623,6 +571,41 @@ extension DHUDateExtensions on DateTime {
       }
     }
   }
+
+  ({int years, int months, int days}) calculateAge() {
+    // Helper function to determine the number of days in a month
+    int daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
+
+    final birthDate = toLocal();
+    final today = DateTime.now();
+
+    // Check if birth date is Feb 29
+    final isLeapDayBirthday = birthDate.month == 2 && birthDate.day == 29;
+
+    // Adjust the birth day for non-leap years
+    var birthDay = birthDate.day;
+    if (isLeapDayBirthday && !today.isLeapYear) {
+      birthDay = 28;
+    }
+
+    var years = today.year - birthDate.year;
+    var months = today.month - birthDate.month;
+    var days = today.day - birthDay;
+
+    // Adjust days and months if necessary
+    if (days < 0) {
+      months -= 1;
+      final prevMonth = (today.month - 1 == 0) ? 12 : today.month - 1;
+      days += daysInMonth(today.year, prevMonth);
+    }
+
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+
+    return (years: years, months: months, days: days);
+  }
 }
 
 abstract class DatesHelper {
@@ -649,12 +632,3 @@ abstract class DatesHelper {
   static Iterable<DateTime> daysInRange(DateTime start, DateTime end) =>
       start.daysUpTo(end);
 }
-
-/*
-**Areas for Improvement**
-
-* **Error Handling:** Consider adding more robust error handling, especially in the parsing extensions, to provide informative messages to the user or log errors appropriately.
-* **Documentation:** While the code is generally well-organized, adding more detailed comments or docstrings, especially for complex functions, would improve its understandability and maintainability.
-* **Naming Conventions:** Some function names (e.g., `addOrRemoveYears`) could be more concise or descriptive.
-* **Testing:** Writing unit tests to cover various scenarios and edge cases would ensure the correctness and reliability of the code.
-*/

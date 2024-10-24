@@ -1038,3 +1038,6 @@ bool isEqual(dynamic a, dynamic b) {
   if (a is Iterable && b is Iterable) return a.isEqual(b);
   return a == b;
 }
+
+/// Returns the current time in milliseconds since the Unix epoch.
+int get currentMillisecondsSinceEpoch => DateTime.now().millisecondsSinceEpoch;
