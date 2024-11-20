@@ -1,46 +1,59 @@
 # CHANGELOG
-## [3.0.0-dev.2]
+## [3.0.0]
+### Added
 
-#### Added
+- **New Pagination Classes**:
+  - `Paginator`: For synchronous pagination.
+  - `AsyncPaginator`: Supports asynchronous pagination.
+  - `InfinitePaginator`: Enables infinite scrolling pagination.
 
-- Introduced **`Paginator`**, **`AsyncPaginator`**, and **`InfinitePaginator`** for synchronous, asynchronous, and
-  infinite scrolling pagination support.
+- **New Constants**:
+  - **Greek Number Suffixes**:
+    - `greekNumberSuffixes`: Suffixes for large numbers, such as `K`, `M`, `B`, representing thousands, millions, billions, etc.
+  - **Roman Numerals**:
+    - `romanNumerals`: Maps integers to Roman numerals, including `I`, `V`, `X`, `L`, `C`, `D`, `M`.
+  - **Weekdays**:
+    - `smallWeekdays` and `fullWeekdays`: Maps integers to abbreviated (`Mon`, `Tue`, etc.) and full weekday names (`Monday`, `Tuesday`, etc.).
+  - **Months**:
+    - `smallMonthsNames` and `fullMonthsNames`: Maps integers to abbreviated (`Jan`, `Feb`, etc.) and full month names (`January`, `February`, etc.).
+  - **Time Durations**:
+    - `oneSecond`, `oneMinute`, `oneHour`, `oneDay`: Constants for handling standard time durations.
+  - **Milliseconds Constants for precise time calculations**:
+    - `millisecondsPerSecond`, `millisecondsPerMinute`, `millisecondsPerHour`, `millisecondsPerDay`.
+  - **Regular Expressions**:
+    - Patterns for alphanumeric validation, special characters, usernames, currency, phone numbers, emails, IPv4, IPv6, URLs, and numeric/alphabet-only entries.
+  - **HTTP Status Messages**:
+    - `httpStatusMessages`: A map of HTTP status codes to their corresponding messages, from `100` (Continue) to `599` (Network Connect Timeout Error).
 
-- **New `calculateAge()` method** in `DateTime` extensions to compute age from a date with a leap year check.
+- **New DateTime Extension Method**:
+  - `calculateAge()`: Calculates age from a date, with leap year consideration.
 
-- **Numerals:**
-
-    - `safeDivide`: Safely divides two numbers with custom handling for division by zero and zero values.
-    - `roundToNearestMultiple`, `roundUpToMultiple`, `roundDownToMultiple`: Rounds numbers to the nearest, up, or down
-      to specified multiples.
-    - `isBetween`: Checks if a number is within a specified range with optional inclusivity.
-    - `toCurrency`, `toPercent`, `toFractionString`: Converts numbers to currency, percentage, or fraction string
-      formats.
-    - `isApproximatelyEqual`, `isCloseTo`: Compares numbers within specified tolerance or delta.
+- **New Numerical Utilities**:
+  - **Number Checks and Conversions**:
+    - `safeDivide`: Safely divides two numbers with custom handling for division by zero.
+    - `roundToNearestMultiple`, `roundUpToMultiple`, `roundDownToMultiple`: Rounds numbers to specified multiples.
+    - `isBetween`: Checks if a number is within a specified range.
+    - `toCurrency`, `toPercent`, `toFractionString`: Converts numbers to currency, percentage, or fraction formats.
+    - `isApproximatelyEqual`, `isCloseTo`: Compares numbers with tolerance.
     - `scaleBetween`: Normalizes a number between specified minimum and maximum values.
     - `isInteger`: Checks if a number is an integer.
     - `factorial`, `gcd`, `lcm`: Calculates factorial, greatest common divisor, and least common multiple.
     - `isPrime`, `primeFactors`: Checks for primality and calculates prime factors.
     - `toRomanNumeral`, `toOrdinal`: Converts integers to Roman numerals or ordinal representation.
-    - `isPerfectSquare`, `isPerfectCube`, `isFibonacci`: Checks if an integer is a perfect square, cube, or Fibonacci
-      number.
-    - `isPowerOf`: Checks if an integer is a power of another number.
+    - `isPerfectSquare`, `isPerfectCube`, `isFibonacci`: Checks if a number is a perfect square, cube, or Fibonacci number.
+    - `isPowerOf`: Checks if a number is a power of another number.
     - `toBinaryString`, `toHexString`, `bitCount`: Converts integers to binary, hexadecimal, and counts set bits.
     - `isDivisibleBy`: Checks if an integer is divisible by another number.
+  - **New `NumbersHelper` Class**:
+    - Provides static utilities for safe division, mean, median, mode, variance, standard deviation, and percentiles.
+    - Includes methods for GCD, perfect square checks, and Roman numeral to integer conversion.
 
-    - **New NumbersHelper class with static methods:**
-        - Added utilities for safe division, mean, median, mode, variance, standard deviation, and percentiles.
-        - Introduced methods for GCD, checking perfect squares, and converting Roman numerals to integers.
+### Changed
+- **Enhanced `tryGetX` Methods** in `Iterable` and `Map` extensions to allow alternative key lookups using `altKeys` in methods like `getString()`, `getInt()`, etc.
 
-#### Changed
-
-- **Improved `tryGetX` methods in `Iterable` and `Map` extensions:** Added alternative key lookups using `altKeys` in
-  various getter methods like `getString()`, `getInt()`, etc.
-
-#### Removed
-
-- **`HttpResStatus` enum** and associated extensions were removed, replaced by new lightweight HTTP status
-  code handling methods like `toHttpStatusMessage`.
+### Removed (Breaking Change)
+- **`HttpResStatus` Enum**:
+  - Removed `HttpResStatus` enum and associated extensions, replaced by lightweight HTTP status code handling with methods like `toHttpStatusMessage`.
 
 ## [2.7.0]
 - **Added the `toDecimalString` method on numbers**:

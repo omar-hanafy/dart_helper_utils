@@ -1,17 +1,16 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
-  // parsing dynamic numeric list to num, int, and double.
+  const rawJsonList = '[1.5, 2.3, 3.4]';
+  final intList = tryToList<int>(rawJsonList);
+  print(intList); // [1, 2, 3]
+
   final list = <dynamic>[1, 2, '3', '3.1', 22.3];
 
   print(list.convertTo<num>()); // [1, 2, 3, 3.1, 22.3]
   print(list.convertTo<int>()); // [1, 2, 3, 3, 22]
   print(list.convertTo<double>()); // [1.0, 2.0, 3.0, 3.1, 22.3]
   print(list.convertTo<String>()); // ['1', '2', '3', '3.1', '22.3']
-
-  // parsing raw Json array of doubles to List<int>
-  final intList = tryToList<int>('[1.5, 2.3, 3.4]');
-  print(intList); // [1, 2, 3]
 
   // parsing raw Json to Map<String, dynamic>
   // note: you can also use the ConvertObject.toMap to avoid ambiguity.
@@ -223,9 +222,8 @@ Future<void> main() async {
   print(12.123.toDecimalString(2)); // 12.12
 
   final age = DateTime(1997, 8, 12).calculateAge();
-  print('I am ${age.years} old!');
+  print('I am ${age.years} years old!');
 
-  print(DHUTimezone.generate());
   final palestine = DHUCountry.getByCode('ps');
   print(palestine?.flagEmoji); // 🇵🇸
   print(palestine?.nativeNames);
