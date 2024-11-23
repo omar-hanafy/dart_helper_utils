@@ -44,6 +44,9 @@ extension DHUNullSafeStringExtensions on String? {
   /// Returns true if the string is null, empty, or, after cleaning (collapsing into a single line, removing all whitespaces), is empty.
   bool get isEmptyOrNull => this == null || this!.clean.isEmpty;
 
+  /// Returns the string if it is not blank; otherwise, returns `null`.
+  String? get nullIfBlank => isNotBlank ? this : null;
+
   /// Returns true if the string is null, empty, or solely made of whitespace characters.
   /// Alias for [isEmptyOrNull].
   bool get isBlank => isEmptyOrNull;

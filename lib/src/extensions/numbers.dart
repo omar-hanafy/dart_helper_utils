@@ -224,7 +224,13 @@ extension DHUNumExtensions on num {
     num whenDivByZero = double.infinity,
     bool returnNaNOnDivByZero = false,
   }) =>
-      NumbersHelper.safeDivide(this, b);
+      NumbersHelper.safeDivide(
+        this,
+        b,
+        whenDivByZero: whenDivByZero,
+        whenBothZero: whenBothZero,
+        returnNaNOnDivByZero: returnNaNOnDivByZero,
+      );
 
   /// Rounds this number to the nearest multiple of [multiple].
   num roundToNearestMultiple(num multiple) =>
