@@ -43,9 +43,23 @@ void main() {
       expect(testDate.remainingDuration.inDays, duration.inDays);
     });
 
-    test('remainingDays', () {
-      final days = DateTime.now().daysDifferenceTo(testDate);
-      expect(testDate.remainingDays, days);
+    group('remainingDays', () {
+      test('should return positive difference for future date', () {
+        final now = DateTime.now();
+        final futureDate = now.add(const Duration(days: 5));
+        expect(futureDate.remainingDays, 5);
+      });
+
+      test('should return 0 for today', () {
+        final now = DateTime.now();
+        expect(now.remainingDays, 0);
+      });
+
+      test('should return negative difference for past date', () {
+        final now = DateTime.now();
+        final pastDate = now.subtract(const Duration(days: 3));
+        expect(pastDate.remainingDays, -3);
+      });
     });
 
     test('isAtSameYearAs', () {

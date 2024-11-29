@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [3.2.0]
+
+- Introduced `formatAsReadableNumber` on `num` for customizable number formatting.
+    - Supports locale-based formatting.
+    - Allows custom grouping and decimal separators.
+    - Includes options for trimming trailing zeros and setting decimal precision.
+
+- Fixed `toFullDayName` on num.
+
 ## [3.1.1]
 
 - Fixed a bug in the `num` extension's `safeDivide` function where optional parameters were not being passed to the

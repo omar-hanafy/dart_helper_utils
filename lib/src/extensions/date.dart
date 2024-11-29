@@ -50,7 +50,7 @@ extension NumberToDateUtils on num {
   /// ```
   /// If the number is outside the range 1-7, it will be normalized within this range using modulo arithmetic.
   String get toFullDayName {
-    final dayIndex = (this.toInt()) % 7; // Ensure value is within 0-6
+    final dayIndex = this.toInt().clamp(1, 7);
     return fullWeekdays[dayIndex]!;
   }
 
