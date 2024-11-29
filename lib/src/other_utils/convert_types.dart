@@ -775,8 +775,8 @@ abstract class ConvertObject {
       listIndex: listIndex,
       converter: (object) {
         final ob = object.toString();
-        if (ob.isValidPhoneNumber) return ob.toPhoneUri;
-        return ob.toUri;
+        if (ob.isValidPhoneNumber) return ob.toPhoneUri();
+        return ob.toUri();
       },
     );
     if (data == null) {
@@ -822,8 +822,8 @@ abstract class ConvertObject {
       listIndex: listIndex,
       converter: (object) {
         final ob = object.toString();
-        if (ob.isValidPhoneNumber) return ob.toPhoneUri;
-        return ob.toUri;
+        if (ob.isValidPhoneNumber) return ob.toPhoneUri();
+        return ob.toUri();
       },
     );
   }
