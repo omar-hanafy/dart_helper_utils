@@ -106,3 +106,315 @@ extension DHUObjectNullableExtensions on Object? {
   /// ```
   bool get isNum => num.tryParse(toString()) != null;
 }
+
+extension DHUObjectConvert on Object {
+  /// Converting this string into a String using the ConvertObject class.
+  String convertToString({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toString1(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a num using the ConvertObject class.
+  num convertToNum({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+  }) {
+    return ConvertObject.toNum(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
+  }
+
+  /// Attempting to convert this object into an int using the ConvertObject class.
+  int convertToInt({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+  }) {
+    return ConvertObject.toInt(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
+  }
+
+  /// Attempting to convert this object into a BigInt using the ConvertObject class.
+  BigInt convertToBigInt({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toBigInt(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a double using the ConvertObject class.
+  double convertToDouble({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+  }) {
+    return ConvertObject.toDouble(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
+  }
+
+  /// Attempting to convert this object into a bool using the ConvertObject class.
+  bool convertToBool({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toBool(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a DateTime using the ConvertObject class.
+  DateTime convertToDateTime({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
+  }) {
+    return ConvertObject.toDateTime(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      autoDetectFormat: autoDetectFormat,
+      useCurrentLocale: useCurrentLocale,
+      utc: utc,
+    );
+  }
+
+  /// Attempting to convert this object into a Uri using the ConvertObject class.
+  Uri convertToUri({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toUri(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a Map<K, V> using the ConvertObject class.
+  Map<K, V> convertToMap<K, V>({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toMap<K, V>(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a Set<T> using the ConvertObject class.
+  Set<T> convertToSet<T>({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toSet<T>(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a List<T> using the ConvertObject class.
+  List<T> convertToList<T>({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.toList<T>(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+}
+
+extension DHUObjectTryConvert on Object? {
+  /// Converting this string into a nullable String using the ConvertObject class.
+  String? tryConvertToString({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToString(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable num using the ConvertObject class.
+  num? tryConvertToNum({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+  }) {
+    return ConvertObject.tryToNum(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable int using the ConvertObject class.
+  int? tryConvertToInt({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+  }) {
+    return ConvertObject.tryToInt(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable BigInt using the ConvertObject class.
+  BigInt? tryConvertToBigInt({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToBigInt(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable double using the ConvertObject class.
+  double? tryConvertToDouble({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+  }) {
+    return ConvertObject.tryToDouble(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable bool using the ConvertObject class.
+  bool? tryConvertToBool({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToBool(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable DateTime using the ConvertObject class.
+  DateTime? tryConvertToDateTime({
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
+  }) {
+    return ConvertObject.tryToDateTime(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      autoDetectFormat: autoDetectFormat,
+      useCurrentLocale: useCurrentLocale,
+      utc: utc,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable Uri using the ConvertObject class.
+  Uri? tryConvertToUri({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToUri(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable Map<K, V> using the ConvertObject class.
+  Map<K, V>? tryConvertToMap<K, V>({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToMap<K, V>(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable Set<T> using the ConvertObject class.
+  Set<T>? tryConvertToSet<T>({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToSet<T>(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+
+  /// Attempting to convert this object into a nullable List<T> using the ConvertObject class.
+  List<T>? tryConvertToList<T>({
+    dynamic mapKey,
+    int? listIndex,
+  }) {
+    return ConvertObject.tryToList<T>(
+      this,
+      mapKey: mapKey,
+      listIndex: listIndex,
+    );
+  }
+}

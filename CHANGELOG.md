@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [3.3.0]
+
+- Introduced a new `Object` extension for converting objects into all supported types provided by the `ConvertObject`
+  class.
+
 ## [3.2.0]
 
 - Introduced `formatAsReadableNumber` on `num` for customizable number formatting.
