@@ -508,7 +508,8 @@ class DoublyLinkedList<E> extends ListBase<E> {
     } else {
       // Grow the list (not supported for null elements)
       throw UnsupportedError(
-          'Cannot increase length of DoublyLinkedList with null elements.');
+        'Cannot increase length of DoublyLinkedList with null elements.',
+      );
     }
 
     _length = newLength;

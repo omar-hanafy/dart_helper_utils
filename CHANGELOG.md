@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 4.0.0
+### Added
+- **New Pagination Features**:
+  - **Added `BasePaginator<T>`** to centralize common logic for both sync and async paginators.
+  - **Refined Transformations and Caching**: We introduced a consistent `_CacheEntry` class to store either `Paginator<T>` or `List<T>` with expiration checks.
+  - **Enhanced `AsyncPaginator`**: Now leverages `CancelableOperation` to optionally cancel in-flight requests and avoid race conditions if `autoCancelFetches` is true.
+  - **Introduced `PaginationAnalytics`** mixin: Helps track page loads, errors, and cache hits with minimal extra code.
+  - **Unified Infinite Paginator**: A single `InfinitePaginator` supports both page-based and cursor-based scrolling through factory constructors.
+- **String Similarity**:
+    - New `StringSimilarity` utility class supporting algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`, `jaroWinkler`, and `cosine`.
+    - Added `compareWith` method to `String` extensions for quick string similarity comparison.
+- **Math Enhancements**:
+    - Added `sqrt()` method to numeric extensions for square root calculations.
+
+### Migration Guide
+- A [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) is available for upgrading.
+- Deprecated APIs (e.g., `LegacyPaginator`) are still accessible but should be replaced with new implementations.
+
 ## [3.3.0]
 
 - Introduced a new `Object` extension for converting objects into all supported types provided by the `ConvertObject`
@@ -334,7 +352,7 @@ conversions.
 - You can see the migration guide for this version
   from [here](https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides/mg_2.0.0.md).
 - You can see all the migration guides in the GitHub repo
-  from [here](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides).
+  from [here](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md).
 
 ## [1.2.0]
 

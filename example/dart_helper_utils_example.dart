@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
@@ -110,7 +111,7 @@ Future<void> main() async {
       'key1': 'value1',
       'key2': 123,
       'key3': DateTime.now() - 1.asDays,
-    }
+    },
   };
 
   // Convert the map to a formatted JSON string
@@ -143,7 +144,8 @@ Future<void> main() async {
     }
   });
   print(
-      '1 Million list generated in: ${executionDuration.inMilliseconds} milliseconds');
+    '1 Million list generated in: ${executionDuration.inMilliseconds} milliseconds',
+  );
 
   // Example of comparing two tasks execution time using the TimeUtils class.
   final durations = await TimeUtils.compareExecutionTimes(

@@ -1,31 +1,43 @@
 import 'dart:async';
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 import 'package:dart_helper_utils/src/src.dart';
 
+/// DHUHttpEx
 extension DHUHttpEx on num? {
+  /// Returns `true` if the number is a successful HTTP status code (200 or 201).
   bool get isSuccessCode => this == 200 || this == 201;
 
+  /// Returns `true` if the number is a client error HTTP status code (400-499).
   bool get isClientErrorCode => this != null && this! >= 400 && this! < 500;
 
+  /// Returns `true` if the number is a server error HTTP status code (500-599).
   bool get isServerErrorCode => this != null && this! >= 500 && this! < 600;
 
+  /// Returns `true` if the number is a redirection HTTP status code (300-399).
   bool get isRedirectionCode => this != null && this! >= 300 && this! < 400;
 
+  /// Returns `true` if the string representation of this number is a valid phone number.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 
+  /// Returns the HTTP status message associated with the number.
+  /// If not found, it returns "Not Found".
   String get toHttpStatusMessage => httpStatusMessages[this] ?? 'Not Found';
 }
 
+/// DHUNullSafeNumExtensions
 extension DHUNullSafeNumExtensions on num? {
+  /// Returns the integer value of the number, or `null` if the number is `null`.
   int? get tryToInt => this?.toInt();
 
+  /// Returns the double value of the number, or `null` if the number is `null`.
   double? get tryToDouble => this?.toDouble();
 
+  /// Returns the percentage of `this` value relative to [total], optionally allowing decimals.
   num percentage(num total, {bool allowDecimals = true}) {
     if (this != null) {
-      final result = this! >= total ? 100 : max((this! / total) * 100, 0);
+      final result = this! >= total ? 100 : math.max((this! / total) * 100, 0);
       if (allowDecimals) {
         return double.parse(result.toStringAsFixed(2));
       } else {
@@ -35,21 +47,21 @@ extension DHUNullSafeNumExtensions on num? {
     return 0;
   }
 
+  /// Returns `true` if the number is negative.
   bool get isNegative => isNotNull && this! > 0;
 
+  /// Returns `true` if the number is positive.
   bool get isPositive => isNotNull && this! > 0;
 
+  /// Returns `true` if the number is either `null` or zero.
   bool get isZeroOrNull => isNull || this! == 0;
 
-  /// Returns `true` if this integer is greater than *0*.
+  /// Returns `true` if the number is greater than 0.
   bool get asBool => (this ?? 0) > 0;
 
-  /// Returns a string representation of the number with a given number of
-  /// decimal places.
+  /// Returns a string representation of the number with a given number of decimal places.
   ///
-  /// If [keepTrailingZeros] is `true`, trailing zeros will be kept in the
-  /// result, otherwise, they will be removed along with any unnecessary
-  /// decimal points.
+  /// If [keepTrailingZeros] is `true`, trailing zeros will be kept in the result, otherwise, they will be removed.
   String toDecimalString(int decimalPlaces, {bool keepTrailingZeros = false}) {
     var formatted = this?.toStringAsFixed(decimalPlaces) ?? '';
 
@@ -64,61 +76,58 @@ extension DHUNullSafeNumExtensions on num? {
   }
 }
 
+/// DHUNumExtensions
 extension DHUNumExtensions on num {
-  /// Returns if the number is positive
+  /// Returns `true` if the number is positive.
   bool get isPositive => this > 0;
 
-  /// Returns if the number is negative
+  /// Returns `true` if the number is negative.
   bool get isNegative => this < 0;
 
-  /// Returns if the number is zer0
+  /// Returns `true` if the number is zero.
   bool get isZero => this == 0;
 
+  /// Returns `true` if the string representation of this number is a valid phone number.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 
-  /// Returns number of digits in this number
+  /// Returns the number of digits in this number.
   int get numberOfDigits => toString().length;
 
+  /// Removes trailing zeros from the string representation of the number.
   String get removeTrailingZero =>
       toString().replaceAll(RegExp(r'([.]*0)(?!.*\d)'), '');
 
+  /// Rounds the number to the nearest multiple of 50 or 100.
   double get roundToFiftyOrHundred =>
       this + (50 - ((this % 50) > 0 ? this % 50 : 50));
 
+  /// Rounds the number to the nearest multiple of 10.
   double get roundToTenth => (this / 10).ceil() * 10;
 
-  /// Returns tenth of the number
+  /// Returns one-tenth of the number.
   double get tenth => this / 10;
 
-  /// Returns fourth of the number
+  /// Returns one-fourth of the number.
   double get fourth => this / 4;
 
-  /// Returns third of the number
+  /// Returns one-third of the number.
   double get third => this / 3;
 
-  /// Returns half of the number
+  /// Returns half of the number.
   double get half => this / 2;
 
-  int get getRandom => Random().nextInt(this.toInt());
+  /// Generates a random number between 0 and this number.
+  int get getRandom => math.Random().nextInt(this.toInt());
 
-  int random([int? seed]) => Random(seed).nextInt(this.toInt());
+  /// Generates a random number between 0 and this number, with an optional seed for randomization.
+  int random([int? seed]) => math.Random(seed).nextInt(this.toInt());
 
-  /// Converts a number to a format that includes Greek symbols for thousands, millions, and beyond.
+  /// Converts a number to a string with Greek symbols for thousands, millions, etc.
   ///
   /// Example usage:
   ///   print(1000.asGreeks); // Output: 1.0K
   ///   print(1500000.asGreeks); // Output: 1.5M
   ///   print(2500000000.asGreeks); // Output: 2.5B
-  ///
-  /// Here is a list of all symbols along with their corresponding names and values.
-  /// k: Kilo, 10^3
-  /// M: Mega, 10^6
-  /// G: Giga, 10^9
-  /// T: Tera, 10^12
-  /// P: Peta, 10^15
-  /// E: Exa, 10^18
-  /// Z: Zetta, 10^21
-  /// Y: Yotta, 10^24
   String asGreeks([int zerosFractionDigits = 0, int fractionDigits = 1]) {
     if (this < 1000) {
       return zerosFractionDigits <= 0
@@ -140,61 +149,57 @@ extension DHUNumExtensions on num {
         : '${reducedNum.toStringAsFixed(fractionDigits)}$symbol';
   }
 
-  /// Utility to delay some callback (or code execution).
-// TODO(Omar): Add a separated implementation of delay() with the ability to stop it.
+  /// Delays the execution of a callback for the specified number of seconds.
   ///
-  /// Sample:
+  /// Sample usage:
   /// ```dart
-  /// void main() async {
-  ///   print('+ wait for 2 seconds');
-  ///   await 2.delay();
-  ///   print('- 2 seconds completed');
-  ///   print('+ callback in 1.2sec');
-  ///   1.delay(() => print('- 1.2sec callback called'));
-  ///   print('currently running callback 1.2sec');
-  /// }
-  ///```
-  Future<void> delay([FutureOr<dynamic> Function()? callback]) async =>
+  /// await 2.delay();  // Delays for 2 seconds
+  /// ```
+  Future<void> delay([FutureOr<dynamic> Function()? computation]) async =>
       Future.delayed(
         Duration(milliseconds: (this * 1000).round()),
-        callback,
+        computation,
       );
 
+  /// Delay equivalent to the number of days.
   Future<void> get daysDelay => Future.delayed(asDays);
 
+  /// Delay equivalent to the number of hours.
   Future<void> get hoursDelay => Future.delayed(asHours);
 
+  /// Delay equivalent to the number of minutes.
   Future<void> get minDelay => Future.delayed(asMinutes);
 
+  /// Delay equivalent to the number of seconds.
   Future<void> get secDelay => Future.delayed(asSeconds);
 
+  /// Delay equivalent to the number of milliseconds.
   Future<void> get millisecondsDelay => Future.delayed(asMilliseconds);
 
-  /// Easy way to make Durations from numbers.
-  ///
-  /// Sample:
-  /// ```dart
-  /// print(1.seconds + 200.asMilliseconds);
-  /// print(1.hours + 30.asMinutes);
-  /// print(1.5.asHours);
-  ///```
+  /// Converts the number to a Duration in milliseconds.
   Duration get asMilliseconds => Duration(microseconds: (this * 1000).round());
 
+  /// Converts the number to a Duration in seconds.
   Duration get asSeconds => Duration(milliseconds: (this * 1000).round());
 
+  /// Converts the number to a Duration in minutes.
   Duration get asMinutes =>
       Duration(seconds: (this * Duration.secondsPerMinute).round());
 
+  /// Converts the number to a Duration in hours.
   Duration get asHours =>
       Duration(minutes: (this * Duration.minutesPerHour).round());
 
+  /// Converts the number to a Duration in days.
   Duration get asDays => Duration(hours: (this * Duration.hoursPerDay).round());
 
-  /// Returns a sequence of integer, starting from [this],
-  /// increments by [step] and ends at [end]
+  /// Returns the square root of the number.
+  double sqrt() => (this > 0) ? math.sqrt(this.toDouble()) : 0.0;
+
+  /// Returns a sequence of integers starting from [this],
+  /// incrementing by [step] and ending at [end].
   Iterable<num> until(int end, {int step = 1}) sync* {
     if (step == 0) {
-// ignore: only_throw_errors
       throw RException.steps();
     }
 
@@ -507,6 +512,7 @@ extension DHUNumExtensions on num {
   }
 }
 
+/// DHUIntExtensions
 extension DHUIntExtensions on int {
   /// Return the min if this number is smaller then minimum
   /// Return the max if this number is bigger the the maximum
@@ -554,7 +560,7 @@ extension DHUIntExtensions on int {
   /// Checks if this integer is a prime number.
   bool isPrime() {
     if (this <= 1) return false;
-    for (var i = 2; i <= sqrt(this).toInt(); i++) {
+    for (var i = 2; i <= math.sqrt(this).toInt(); i++) {
       if (this % i == 0) return false;
     }
     return true;
@@ -564,7 +570,7 @@ extension DHUIntExtensions on int {
   List<int> primeFactors() {
     var n = this;
     final factors = <int>[];
-    for (var i = 2; i <= sqrt(n).toInt(); i++) {
+    for (var i = 2; i <= math.sqrt(n).toInt(); i++) {
       while (n % i == 0) {
         factors.add(i);
         n ~/= i;
@@ -592,7 +598,7 @@ extension DHUIntExtensions on int {
       9: 'IX',
       5: 'V',
       4: 'IV',
-      1: 'I'
+      1: 'I',
     };
     var num = this;
     final result = StringBuffer();
@@ -608,7 +614,7 @@ extension DHUIntExtensions on int {
   /// Checks if this integer is a perfect square.
   bool isPerfectSquare() {
     if (this < 0) return false;
-    final root = sqrt(this).toInt();
+    final root = math.sqrt(this).toInt();
     return root * root == this;
   }
 
@@ -653,6 +659,7 @@ extension DHUIntExtensions on int {
   bool isDivisibleBy(int divisor) => this % divisor == 0;
 }
 
+/// DHUDoubleExtensions
 extension DHUDoubleExtensions on double {
   /// Return the min if this number is smaller then minimum
   /// Return the max if this number is bigger the the maximum
@@ -763,7 +770,7 @@ abstract class NumbersHelper {
     for (final value in values) {
       frequencyMap[value] = (frequencyMap[value] ?? 0) + 1;
     }
-    final maxFrequency = frequencyMap.values.reduce(max);
+    final maxFrequency = frequencyMap.values.reduce(math.max);
     return frequencyMap.entries
         .where((entry) => entry.value == maxFrequency)
         .map((entry) => entry.key)
@@ -774,11 +781,11 @@ abstract class NumbersHelper {
   static num variance(List<num> values) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
     final m = mean(values);
-    return mean(values.map((value) => pow(value - m, 2)).toList());
+    return mean(values.map((value) => math.pow(value - m, 2)).toList());
   }
 
   /// Calculates the standard deviation of a list of [values].
-  static num standardDeviation(List<num> values) => sqrt(variance(values));
+  static num standardDeviation(List<num> values) => math.sqrt(variance(values));
 
   /// Calculates the specified [percentile] of a list of [values].
   static num percentile(List<num> values, double percentile) {
@@ -793,7 +800,7 @@ abstract class NumbersHelper {
 
   /// Checks if a number [n] is a perfect square.
   static bool isPerfectSquare(int n) {
-    final sqrtN = sqrt(n).toInt();
+    final sqrtN = math.sqrt(n).toInt();
     return sqrtN * sqrtN == n;
   }
 

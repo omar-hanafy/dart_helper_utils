@@ -95,7 +95,9 @@ void main() {
     test('should throw RangeError for invalid insert index', () {
       expect(() => list.insert(-1, 1), throwsA(isA<RangeError>()));
       expect(
-          () => list.insert(1, 1), throwsA(isA<RangeError>())); // List is empty
+        () => list.insert(1, 1),
+        throwsA(isA<RangeError>()),
+      ); // List is empty
     });
 
     test('should remove elements by value', () {

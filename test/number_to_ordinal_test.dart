@@ -82,20 +82,28 @@ void main() {
     // Very Large Number with 'and'
     test('Very Large Number with "and"', () {
       expectOrdinal(
-          1234567890,
-          'one billion two hundred thirty-four million five hundred sixty-seven thousand eight hundred and ninetieth',
-          '1234567890th',
-          includeAnd: true);
+        1234567890,
+        'one billion two hundred thirty-four million five hundred sixty-seven thousand eight hundred and ninetieth',
+        '1234567890th',
+        includeAnd: true,
+      );
     });
   });
 }
 
-void expectOrdinal(num number, String expectedWord, String expectedSuffix,
-    {bool includeAnd = false}) {
+void expectOrdinal(
+  num number,
+  String expectedWord,
+  String expectedSuffix, {
+  bool includeAnd = false,
+}) {
   final actualWord = number.toOrdinal(asWord: true, includeAnd: includeAnd);
   final actualSuffix = number.toOrdinal();
 
   expect(actualWord, expectedWord, reason: 'Expected ordinal word for $number');
-  expect(actualSuffix, expectedSuffix,
-      reason: 'Expected ordinal suffix for $number');
+  expect(
+    actualSuffix,
+    expectedSuffix,
+    reason: 'Expected ordinal suffix for $number',
+  );
 }

@@ -1,4 +1,5 @@
 // ignore_for_file: depend_on_referenced_packages
+
 /// This file contains a collection of globally accessible constants and utility
 /// functions that can be used throughout your Dart project.
 library;
@@ -22,6 +23,8 @@ typedef Coordinates = ({double latitude, double longitude});
 /// For example, (code: "en", name: "English").
 typedef Language = ({String code, String name});
 
+/// A type for country search algorithms that takes a list of countries and a query string,
+/// and returns a filtered list of countries.
 typedef CountrySearchAlgorithm = List<DHUCountry> Function(
   List<DHUCountry> countries,
   String query,
@@ -31,6 +34,8 @@ typedef CountrySearchAlgorithm = List<DHUCountry> Function(
 @immutable
 class DHUCountry {
   /// Creates a [DHUCountry] object with the given data.
+  ///
+  /// This constructor is used to initialize a country with various attributes such as names, codes, currencies, languages, etc.
   const DHUCountry({
     required this.commonName,
     required this.officialName,
@@ -52,6 +57,8 @@ class DHUCountry {
   });
 
   /// Creates a [DHUCountry] object from a [Map] of key-value pairs.
+  ///
+  /// The map should include various country attributes like `commonName`, `iso2`, `region`, etc.
   factory DHUCountry.fromMap(Map<String, dynamic> map) {
     final nativeNames = toMap<String, dynamic>(map['nativeNames']);
     final currencies = toMap<String, dynamic>(map['currencies']);
@@ -164,6 +171,7 @@ class DHUCountry {
   /// For example, ["Africa/Cairo"].
   final List<String> timezones;
 
+  /// Returns a list of detailed timezone information for the country.
   List<DHUTimezone> getTimezonesDetails() {
     final tz = getTimezonesRawData();
     final list = <DHUTimezone>[];
@@ -174,11 +182,19 @@ class DHUCountry {
     return list;
   }
 
-  static List<DHUCountry> generate([List<Map<String, dynamic>>? rawData]) =>
+  /// Generates a list of [DHUCountry] objects from raw data.
+  static List<DHUCountry> generate([
+    List<Map<String, dynamic>>? rawData,
+  ]) =>
       (rawData ?? getRawCountriesData()).map(DHUCountry.fromMap).toList();
 
-  static DHUCountry? getByName(String name,
-      [List<Map<String, dynamic>>? rawData]) {
+  /// Fetches a country by its name.
+  ///
+  /// Returns the first matching country based on common name, official name, or native names.
+  static DHUCountry? getByName(
+    String name, [
+    List<Map<String, dynamic>>? rawData,
+  ]) {
     final countries = rawData ?? getRawCountriesData();
     final cName = name.toLowerCase();
 
@@ -204,8 +220,11 @@ class DHUCountry {
     return map == null ? null : DHUCountry.fromMap(map);
   }
 
-  static DHUCountry? getByCode(String iso,
-      [List<Map<String, dynamic>>? rawData]) {
+  /// Fetches a country by its ISO code (either ISO2 or ISO3).
+  static DHUCountry? getByCode(
+    String iso, [
+    List<Map<String, dynamic>>? rawData,
+  ]) {
     final countries = rawData ?? getRawCountriesData();
     final isoCode = iso.toUpperCase();
 
@@ -276,6 +295,7 @@ class DHUTimezone {
   /// For example, 0 if DST is not observed.
   final int dstOffset;
 
+  /// Returns a list of countries that use this timezone.
   List<DHUCountry> getCountries() {
     final countriesMap = getRawCountriesData();
     final matchingCountries = <DHUCountry>[];
@@ -290,6 +310,7 @@ class DHUTimezone {
     return matchingCountries;
   }
 
+  /// generates a list of [DHUTimezone] objects from raw data.
   static List<DHUTimezone> generate([
     Map<String, Map<String, dynamic>>? rawData,
   ]) =>
@@ -298,7 +319,7 @@ class DHUTimezone {
           .map(DHUTimezone.fromMap)
           .toList();
 
-  /// gets timezone by Identifier e.g. 'Africa/Cairo'
+  /// Gets timezone by identifier, e.g., 'Africa/Cairo'.
   static DHUTimezone? byIdentifier(
     String timezone, [
     Map<String, Map<String, dynamic>>? rawData,
@@ -319,53 +340,24 @@ class DHUTimezone {
   int get hashCode => timezone.hashCode;
 }
 
-double _compareTwoStrings(String first, String second) {
-  // Normalize strings: remove whitespace and convert to lowercase
-  final fst = first.replaceAll(RegExp(r'\s+'), '').toLowerCase();
-  final snd = second.replaceAll(RegExp(r'\s+'), '').toLowerCase();
-
-  // Handle empty strings
-  if (fst.isEmpty && snd.isEmpty) return 1;
-  if (fst.isEmpty || snd.isEmpty) return 0;
-
-  // If strings are equal
-  if (fst == snd) return 1;
-
-  // If either string is too short for bigrams
-  if (fst.length < 2 || snd.length < 2) return 0;
-
-  // Build bigram maps
-  final firstBigrams = <String, int>{};
-  for (var i = 0; i < fst.length - 1; i++) {
-    final bigram = fst.substring(i, i + 2);
-    firstBigrams[bigram] = (firstBigrams[bigram] ?? 0) + 1;
-  }
-
-  var intersectionSize = 0;
-  for (var i = 0; i < snd.length - 1; i++) {
-    final bigram = snd.substring(i, i + 2);
-    final count = firstBigrams[bigram] ?? 0;
-
-    if (count > 0) {
-      firstBigrams[bigram] = count - 1;
-      intersectionSize++;
-    }
-  }
-
-  // Calculate Dice coefficient
-  final totalBigrams = fst.length + snd.length - 2;
-  return (2.0 * intersectionSize) / totalBigrams;
-}
-
+/// A service class that performs country searches based on a query string.
 class CountrySearchService {
+  /// Creates a [CountrySearchService] with a list of countries and an optional similarity function.
   const CountrySearchService(
     this.countries, {
     this.similarityFunction,
   });
 
+  /// The list of countries to search through.
   final List<DHUCountry> countries;
+
+  /// An optional similarity function for comparing strings.
+  /// Defaults to a Dice Coefficient-based similarity function.
   final double Function(String, String)? similarityFunction;
 
+  /// Performs a search based on the given query string.
+  ///
+  /// Returns a list of countries that match the query, sorted by relevance.
   List<DHUCountry> search(String query) {
     final scoredCountries = countries.map((country) {
       var score = 0;
@@ -411,26 +403,42 @@ class CountrySearchService {
       }
 
       // Use the provided similarity function or the default one
-      final simFunction = similarityFunction ?? _compareTwoStrings;
+      final simFunction =
+          similarityFunction ?? StringSimilarity.diceCoefficient;
 
       // Calculate scores for each field
       score += calculateFieldScore(
-          country.commonName, fields['commonName']!, simFunction);
+        country.commonName,
+        fields['commonName']!,
+        simFunction,
+      );
       score += calculateFieldScore(
-          country.officialName, fields['officialName']!, simFunction);
+        country.officialName,
+        fields['officialName']!,
+        simFunction,
+      );
 
       // Native names
       for (final native in country.nativeNames) {
         score += calculateFieldScore(
-            native.common, fields['nativeNames']!, simFunction);
+          native.common,
+          fields['nativeNames']!,
+          simFunction,
+        );
         score += calculateFieldScore(
-            native.official, fields['nativeNames']!, simFunction);
+          native.official,
+          fields['nativeNames']!,
+          simFunction,
+        );
       }
 
       // Capital
       if (country.capital != null) {
         score += calculateFieldScore(
-            country.capital!, fields['capital']!, simFunction);
+          country.capital!,
+          fields['capital']!,
+          simFunction,
+        );
       }
 
       // ISO codes
@@ -439,30 +447,51 @@ class CountrySearchService {
 
       // Phone code
       score += calculateFieldScore(
-          country.phoneCode, fields['phoneCode']!, simFunction);
+        country.phoneCode,
+        fields['phoneCode']!,
+        simFunction,
+      );
 
       // Region and subregion
       score +=
           calculateFieldScore(country.region, fields['region']!, simFunction);
       score += calculateFieldScore(
-          country.subregion, fields['subregion']!, simFunction);
+        country.subregion,
+        fields['subregion']!,
+        simFunction,
+      );
 
       // Currencies
       for (final currency in country.currencies) {
         score += calculateFieldScore(
-            currency.name, fields['currencies']!, simFunction);
+          currency.name,
+          fields['currencies']!,
+          simFunction,
+        );
         score += calculateFieldScore(
-            currency.code, fields['currencies']!, simFunction);
+          currency.code,
+          fields['currencies']!,
+          simFunction,
+        );
         score += calculateFieldScore(
-            currency.symbol, fields['currencies']!, simFunction);
+          currency.symbol,
+          fields['currencies']!,
+          simFunction,
+        );
       }
 
       // Languages
       for (final language in country.languages) {
         score += calculateFieldScore(
-            language.name, fields['languages']!, simFunction);
+          language.name,
+          fields['languages']!,
+          simFunction,
+        );
         score += calculateFieldScore(
-            language.code, fields['languages']!, simFunction);
+          language.code,
+          fields['languages']!,
+          simFunction,
+        );
       }
 
       // Timezones
@@ -483,9 +512,14 @@ class CountrySearchService {
   }
 }
 
+/// A class used to store a country and its search score for sorting purposes.
 class _ScoredCountry {
+  /// Creates a [_ScoredCountry] with the given [country] and [score].
   const _ScoredCountry(this.country, this.score);
 
+  /// The country object.
   final DHUCountry country;
+
+  /// The score assigned to this country based on the search query.
   final int score;
 }

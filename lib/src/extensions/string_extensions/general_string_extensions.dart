@@ -23,12 +23,29 @@ extension DHUStringExtensions on String {
 
   int get asRomanNumeralToInt => NumbersHelper.fromRomanNumeral(this);
 
-  // Base64 Encode for this String
+  /// Base64 Encode for this String
   String base64Encode() => base64.encode(utf8.encode(this));
 
-  // Base64 Decode
+  /// Base64 Decode
   String base64Decode({bool? allowMalformed}) =>
       utf8.decode(base64.decode(this), allowMalformed: allowMalformed);
+
+  /// Measures how similar this string is to another string using the specified algorithm.
+  /// it uses the public [StringSimilarity] class which offers different methods
+  /// for measuring how similar two strings are.
+  double compareWith(
+    String other,
+    SimilarityAlgorithm algorithm, {
+    double prefixScale = 0.1,
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  }) =>
+      StringSimilarity.compare(
+        this,
+        other,
+        algorithm,
+        prefixScale: prefixScale,
+        config: config,
+      );
 }
 
 extension DHUNullSafeStringExtensions on String? {

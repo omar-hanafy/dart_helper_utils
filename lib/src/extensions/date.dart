@@ -1,13 +1,18 @@
-import 'package:dart_helper_utils/dart_helper_utils.dart';
+import 'package:d'
+    'art_helper_utils/dart_helper_utils.dart';
 
+/// DHUDateString
 extension DHUDateString on String {
   /// Parse string to [DateTime] using null Safety
   DateTime get toDateTime => DateTime.parse(this);
 
+  /// Parse string to [DateTime] using null Safety
   DateTime get timestampToDate => this.toInt.timestampToDate;
 }
 
+/// DHUDateNullString
 extension DHUDateNullString on String? {
+  /// Parse string to [DateTime] using null Safety
   DateTime? get tryToDateTime {
     if (isBlank) return null;
     try {
@@ -16,6 +21,9 @@ extension DHUDateNullString on String? {
     return null;
   }
 
+  /// Attempts to parse the nullable string as a timestamp and convert it to a [DateTime].
+  ///
+  /// Returns `null` if the string is blank or if parsing fails.
   DateTime? get tryTimestampToDate {
     if (isBlank) return null;
     try {
@@ -25,6 +33,7 @@ extension DHUDateNullString on String? {
   }
 }
 
+/// NumberToDateUtils
 extension NumberToDateUtils on num {
   /// Gets the full month name (e.g., "January") corresponding to this number (1-12).
   ///
@@ -150,11 +159,15 @@ extension NumberToDateUtils on num {
   }
 }
 
+/// DHUNullableDateExtensions
 extension DHUNullableDateExtensions on DateTime? {
+  /// checks local
   DateTime? get local => this?.toLocal();
 
+  /// checks toUtcIso
   String? get toUtcIso => this?.toUtc().toIso8601String();
 
+  /// checks isTomorrow
   bool get isTomorrow {
     if (this == null) return false;
     final now = DateTime.now();
@@ -180,6 +193,7 @@ extension DHUNullableDateExtensions on DateTime? {
     return remainingDays == 0;
   }
 
+  /// checks isYesterday
   bool get isYesterday {
     if (this == null) return false;
     final now = DateTime.now();
@@ -192,42 +206,52 @@ extension DHUNullableDateExtensions on DateTime? {
     return passedDays == -1;
   }
 
+  /// checks isPresent
   bool get isPresent => isNotNull && this!.isAfter(DateTime.now());
 
+  /// checks isPast
   bool get isPast => isNotNull && this!.isBefore(DateTime.now());
 
+  /// checks isInPastWeek
   bool get isInPastWeek {
     if (isNull) return false;
     final now = DateTime.now();
     return now.dateOnly.previousWeek.isBefore(this!) && now.isAfter(this!);
   }
 
+  /// checks isInThisYear
   bool get isInThisYear => isNotNull && this!.year == DateTime.now().year;
 
+  /// checks isInThisMonth
   bool get isInThisMonth {
     if (isNull) return false;
     final now = DateTime.now();
     return this!.month == now.month && this!.year == now.year;
   }
 
+  /// checks isLeapYear
   bool get isLeapYear {
     if (isNull) return false;
     return (this!.year % 4 == 0) &&
         ((this!.year % 100 != 0) || (this!.year % 400 == 0));
   }
 
+  /// checks passedDuration
   Duration? get passedDuration =>
       isNull ? null : DateTime.now().difference(this!);
 
+  /// checks remainingDuration
   Duration? get remainingDuration =>
       isNull ? null : this!.difference(DateTime.now());
 
   /// Returns the number of days remaining until this DateTime.
   int? get remainingDays => isNull ? null : this!.remainingDays;
 
+  /// checks passedDays
   int? get passedDays => isNull ? null : this!.passedDays;
 }
 
+/// DHUDateExtensions
 extension DHUDateExtensions on DateTime {
   /// Converts this DateTime to local time.
   DateTime get local => toLocal();
@@ -298,6 +322,7 @@ extension DHUDateExtensions on DateTime {
   /// Returns the duration that has passed since this DateTime.
   Duration get passedDuration => DateTime.now().difference(this);
 
+  /// Returns the number of days that have passed since this DateTime.
   int get passedDays {
     final today = DateTime.now();
     // If the date is after today, return 0 as no days have passed yet
@@ -609,12 +634,13 @@ extension DHUDateExtensions on DateTime {
 }
 
 abstract class DatesHelper {
-// Whether or not two times are on the same hour.
+  /// Whether or not two times are on the same hour.
   static bool isSameHour(DateTime a, DateTime b) => a.isSameHourAs(b);
 
-// Whether or not two times are on the same day.
+  /// Whether or not two times are on the same day.
   static bool isSameDay(DateTime a, DateTime b) => a.isSameDayAs(b);
 
+  /// Whether or not two times are on the same week.
   static bool isSameWeek(DateTime a, DateTime b) => a.isSameWeekAs(b);
 
   /// Returns the absolute value of the difference in days between two dates.

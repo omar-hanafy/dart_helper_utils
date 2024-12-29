@@ -70,11 +70,12 @@ extension DHUNumberFormatStringExtensions on String {
 
 extension DHUNumberFormatExtensions on num {
   /// Formats the number as currency with the given [locale], [symbol], and [decimalDigits].
-  String formatAsCurrency(
-      {String? locale,
-      String symbol = r'$',
-      int decimalDigits = 2,
-      String? customPattern}) {
+  String formatAsCurrency({
+    String? locale,
+    String symbol = r'$',
+    int decimalDigits = 2,
+    String? customPattern,
+  }) {
     return NumberFormat.currency(
       locale: locale,
       symbol: symbol,
@@ -84,8 +85,11 @@ extension DHUNumberFormatExtensions on num {
   }
 
   /// Formats the number as simple currency with the given [locale] and [name].
-  String formatAsSimpleCurrency(
-      {String? locale, String? name, int? decimalDigits}) {
+  String formatAsSimpleCurrency({
+    String? locale,
+    String? name,
+    int? decimalDigits,
+  }) {
     return NumberFormat.simpleCurrency(
       locale: locale,
       name: name,
@@ -134,8 +138,9 @@ extension DHUNumberFormatExtensions on num {
   /// Formats the number as a decimal percentage with the given [locale] and [decimalDigits].
   String formatAsDecimalPercent({String? locale, int? decimalDigits}) {
     return NumberFormat.decimalPercentPattern(
-            locale: locale, decimalDigits: decimalDigits)
-        .format(this);
+      locale: locale,
+      decimalDigits: decimalDigits,
+    ).format(this);
   }
 
   /// Formats the number as a scientific value with the given [locale].

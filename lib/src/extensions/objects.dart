@@ -226,7 +226,7 @@ extension DHUObjectConvert on Object {
     );
   }
 
-  /// Attempting to convert this object into a Map<K, V> using the ConvertObject class.
+  /// Attempting to convert this object into a Map using the ConvertObject class.
   Map<K, V> convertToMap<K, V>({
     dynamic mapKey,
     int? listIndex,
@@ -238,7 +238,7 @@ extension DHUObjectConvert on Object {
     );
   }
 
-  /// Attempting to convert this object into a Set<T> using the ConvertObject class.
+  /// Attempting to convert this object into a Set using the ConvertObject class.
   Set<T> convertToSet<T>({
     dynamic mapKey,
     int? listIndex,
@@ -250,7 +250,7 @@ extension DHUObjectConvert on Object {
     );
   }
 
-  /// Attempting to convert this object into a List<T> using the ConvertObject class.
+  /// Attempting to convert this object into a List using the ConvertObject class.
   List<T> convertToList<T>({
     dynamic mapKey,
     int? listIndex,
@@ -382,7 +382,7 @@ extension DHUObjectTryConvert on Object? {
     );
   }
 
-  /// Attempting to convert this object into a nullable Map<K, V> using the ConvertObject class.
+  /// Attempting to convert this object into a nullable Map using the ConvertObject class.
   Map<K, V>? tryConvertToMap<K, V>({
     dynamic mapKey,
     int? listIndex,
@@ -394,7 +394,7 @@ extension DHUObjectTryConvert on Object? {
     );
   }
 
-  /// Attempting to convert this object into a nullable Set<T> using the ConvertObject class.
+  /// Attempting to convert this object into a nullable Set using the ConvertObject class.
   Set<T>? tryConvertToSet<T>({
     dynamic mapKey,
     int? listIndex,
@@ -406,7 +406,7 @@ extension DHUObjectTryConvert on Object? {
     );
   }
 
-  /// Attempting to convert this object into a nullable List<T> using the ConvertObject class.
+  /// Attempting to convert this object into a nullable List using the ConvertObject class.
   List<T>? tryConvertToList<T>({
     dynamic mapKey,
     int? listIndex,

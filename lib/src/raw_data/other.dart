@@ -106,37 +106,78 @@ const fullMonthsNames = <int, String>{
 };
 
 /// Common time-related durations defined as constants.
+/// oneSecond
 const Duration oneSecond = Duration(seconds: 1);
+
+/// oneMinute
 const Duration oneMinute = Duration(minutes: 1);
+
+/// oneHour
 const Duration oneHour = Duration(hours: 1);
+
+/// oneDay
 const Duration oneDay = Duration(days: 1);
 
 /// Milliseconds constants for different time units.
+/// millisecondsPerSecond
 const millisecondsPerSecond = 1000;
+
+/// millisecondsPerMinute
 const millisecondsPerMinute = 60 * millisecondsPerSecond;
+
+/// millisecondsPerHour
 const millisecondsPerHour = 60 * millisecondsPerMinute;
+
+/// millisecondsPerDay
 const millisecondsPerDay = 24 * millisecondsPerHour;
 
 /// Common regex patterns used for validation and parsing.
+/// regexAlphanumeric
 const String regexAlphanumeric = r'^[a-zA-Z0-9]+$';
+
+/// regexSpecialChars
 const String regexSpecialChars = '[^a-zA-Z0-9 ]';
+
+/// regexStartsWithNumber
 const String regexStartsWithNumber = r'^\d';
+
+/// regexContainsDigits
 const String regexContainsDigits = r'\d';
+
+/// regexValidUsername
 const String regexValidUsername = r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$';
+
+/// regexValidCurrency
 const String regexValidCurrency =
     r'^(S?\$|\₩|Rp|\¥|\€|\₹|\₽|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$';
+
+/// regexValidPhoneNumber
 const String regexValidPhoneNumber =
     r'(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?';
+
+/// regexValidEmail
 const String regexValidEmail =
     r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+
+/// regexValidIp4
 const String regexValidIp4 =
     r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$';
+
+/// regexValidIp6
 const String regexValidIp6 =
     r'/(?<protocol>(?:http|ftp|irc)s?:\/\/)?(?:(?<user>[^:\n\r]+):(?<pass>[^@\n\r]+)@)?(?<host>(?:www\.)?(?:[^:\/\n\r]+)(?::(?<port>\d+))?)\/?(?<request>[^?#\n\r]+)?\??(?<query>[^#\n\r]*)?\#?(?<anchor>[^\n\r]*)?/';
+
+/// regexValidUrl
 const String regexValidUrl =
     r'''^((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))+$''';
+
+/// regexNumeric
 const String regexNumeric = r'^\d+$';
+
+/// regexAlphabet
 const String regexAlphabet = r'^[a-zA-Z]+$';
+
+/// regexHasCapitalLetter
 const String regexHasCapitalLetter = '[A-Z]';
 
 /// A map of HTTP status codes to their corresponding messages.

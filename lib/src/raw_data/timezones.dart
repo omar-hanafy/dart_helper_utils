@@ -1,3 +1,4 @@
+/// List of timezones
 List<String> getTimezonesList() => const [
       'Africa/Abidjan',
       'Africa/Algiers',

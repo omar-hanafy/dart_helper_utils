@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 /// Provides extensions for [Map<Object, T>] to support internationalization (i18n) message formatting.
+/// IntlMapExtension
 extension IntlMapExtension<T> on Map<Object, T> {
   /// Internal: Implements the logic for `select` - use [intlSelect] for
   /// normal messages.
@@ -14,6 +15,7 @@ extension IntlMapExtension<T> on Map<Object, T> {
 }
 
 /// Provides extensions for [Map<Object, String>] to support internationalization (i18n) message formatting.
+/// IntlMapStringExtension
 extension IntlMapStringExtension on Map<Object, String> {
   /// Format a message differently depending on [choice].
   ///
@@ -83,6 +85,7 @@ extension IntlMapStringExtension on Map<Object, String> {
   }
 }
 
+/// on
 extension DHUIntlNumExtensions on num {
   /// Returns a localized string based on the plural category of this number.
   ///
@@ -169,6 +172,7 @@ extension DHUIntlNumExtensions on num {
       );
 }
 
+/// DHUIntlNumExtensions
 extension DHUIntlExtensions on String {
   /// Sets this string as the default locale for subsequent `Intl` operations.
   ///

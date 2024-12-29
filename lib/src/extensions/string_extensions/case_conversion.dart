@@ -22,9 +22,11 @@ extension DHUCaseConversionExtensions on String {
   /// Converts the string to Title Case.
   /// Example: "hello_world" => "Hello World"
   String get toTitleCase => toWords
-      .map((word) => word.shouldIgnoreCapitalization
-          ? word.toLowerCase()
-          : word.capitalizeFirstLowerRest)
+      .map(
+        (word) => word.shouldIgnoreCapitalization
+            ? word.toLowerCase()
+            : word.capitalizeFirstLowerRest,
+      )
       .join(' ');
 
   /// Converts the string to camelCase (dromedaryCase).

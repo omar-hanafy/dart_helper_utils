@@ -210,7 +210,8 @@ extension DHUDateFormatStringExtension on String {
     // 2. Common Format Parsing (without explicit format)
     try {
       final parsedDate = DateTime.parse(
-          this); // ISO 8601 (with or without time, 'Z' or offset)
+        this,
+      ); // ISO 8601 (with or without time, 'Z' or offset)
       return utc ? parsedDate.toUtc() : parsedDate;
     } catch (_) {}
 

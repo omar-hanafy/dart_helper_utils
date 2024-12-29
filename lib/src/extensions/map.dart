@@ -82,7 +82,8 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// included in the resulting map.
   Map<K, V> filter(bool Function(K key, V value) predicate) {
     return Map.fromEntries(
-        entries.where((entry) => predicate(entry.key, entry.value)));
+      entries.where((entry) => predicate(entry.key, entry.value)),
+    );
   }
 
   /// Returns a list containing all the values in the map.

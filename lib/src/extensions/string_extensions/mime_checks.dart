@@ -1,10 +1,13 @@
 import 'package:mime/mime.dart';
 
+/// DHUMimeChecksExtensions
 extension DHUMimeChecksExtensions on String? {
+  /// Returns the MIME type of a file path or URL.
   String? mimeType({List<int>? headerBytes}) =>
       lookupMimeType(this ?? '', headerBytes: headerBytes);
 }
 
+/// DHUVideoMimeChecksExtensions
 extension DHUVideoMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a video file.
   bool get isVideo {
@@ -55,6 +58,7 @@ extension DHUVideoMimeChecksExtensions on String? {
   }
 }
 
+/// DHUImageMimeChecksExtensions
 extension DHUImageMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an image file.
   bool get isImage {
@@ -134,6 +138,7 @@ extension DHUImageMimeChecksExtensions on String? {
   }
 }
 
+/// DHUDocumentMimeChecksExtensions
 extension DHUDocumentMimeChecksExtensions on String? {
   /// Checks if the file path or URL represents a PDF document.
   ///
@@ -225,6 +230,7 @@ extension DHUDocumentMimeChecksExtensions on String? {
   }
 }
 
+/// DHUAudioMimeChecksExtensions
 extension DHUAudioMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an audio file.
   bool get isAudio {
@@ -269,6 +275,7 @@ extension DHUAudioMimeChecksExtensions on String? {
   }
 }
 
+/// DHUArchiveMimeChecksExtensions
 extension DHUArchiveMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an archive file.
   bool get isArchive {
@@ -314,6 +321,7 @@ extension DHUArchiveMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a GZIP compressed file.
   bool get isGZIP => isGZ; // alias for GZ
 
+  /// Checks if a file path or URL represents a GZIP compressed file.
   bool get isGZ {
     final mt = mimeType();
     return mt == 'application/gzip';
@@ -326,6 +334,7 @@ extension DHUArchiveMimeChecksExtensions on String? {
   }
 }
 
+/// DHUProgrammingMimeChecksExtensions
 extension DHUProgrammingMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an HTML file.
   bool get isHTML {
@@ -424,6 +433,7 @@ extension DHUProgrammingMimeChecksExtensions on String? {
   }
 }
 
+/// DHUContactMimeChecksExtensions
 extension DHUContactMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a contact file.
   bool get isContact {
@@ -432,6 +442,7 @@ extension DHUContactMimeChecksExtensions on String? {
   }
 }
 
+/// DHUFontMimeChecksExtensions
 extension DHUFontMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a font file.
   bool get isFont {
@@ -459,6 +470,7 @@ extension DHUFontMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a Web Open Font Format file.
   bool get isWOFF => mimeType() == 'application/x-font-woff';
 
+  /// Checks if a file path or URL represents a Web Open Font Format 2 file.
   bool get isWOFF2 => mimeType() == 'font/woff2';
 
   /// Checks if a file path or URL represents an Embedded OpenType file.

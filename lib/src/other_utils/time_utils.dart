@@ -1,5 +1,6 @@
 import 'dart:async';
 
+/// A utility class that provides helper methods for working with time.
 abstract class TimeUtils {
   /// Calculates the execution duration of a task, accommodating both synchronous
   /// and asynchronous operations.
@@ -26,7 +27,8 @@ abstract class TimeUtils {
   /// print('Asynchronous task took $asyncDuration');
   /// ```
   static Future<Duration> executionDuration(
-      FutureOr<void> Function() task) async {
+    FutureOr<void> Function() task,
+  ) async {
     final stopwatch = Stopwatch()..start();
     await task(); // Await if the task is a future
     stopwatch.stop();
@@ -35,7 +37,8 @@ abstract class TimeUtils {
 
   /// Measures the execution time for a list of tasks, whether synchronous or asynchronous.
   static Future<List<Duration>> executionDurations(
-      List<FutureOr<void> Function()> tasks) async {
+    List<FutureOr<void> Function()> tasks,
+  ) async {
     final durations = <Duration>[];
 
     for (final task in tasks) {

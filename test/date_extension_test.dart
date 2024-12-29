@@ -161,24 +161,32 @@ void main() {
     });
 
     test('firstDayOfWeek', () {
-      expect(testDate.firstDayOfWeek(),
-          DateTime(2022, 5, 9, testDate.hour, testDate.minute));
+      expect(
+        testDate.firstDayOfWeek(),
+        DateTime(2022, 5, 9, testDate.hour, testDate.minute),
+      );
     });
 
     test('lastDayOfWeek', () {
-      expect(testDate.lastDayOfWeek(),
-          DateTime(2022, 5, 15, testDate.hour, testDate.minute));
+      expect(
+        testDate.lastDayOfWeek(),
+        DateTime(2022, 5, 15, testDate.hour, testDate.minute),
+      );
     });
 
     // Optionally, test with Sunday as the start of the week
     test('firstDayOfWeek (Sunday start)', () {
-      expect(testDate.firstDayOfWeek(startOfWeek: DateTime.sunday),
-          DateTime(2022, 5, 8, testDate.hour, testDate.minute));
+      expect(
+        testDate.firstDayOfWeek(startOfWeek: DateTime.sunday),
+        DateTime(2022, 5, 8, testDate.hour, testDate.minute),
+      );
     });
 
     test('lastDayOfWeek (Sunday start)', () {
-      expect(testDate.lastDayOfWeek(startOfWeek: DateTime.sunday),
-          DateTime(2022, 5, 14, testDate.hour, testDate.minute));
+      expect(
+        testDate.lastDayOfWeek(startOfWeek: DateTime.sunday),
+        DateTime(2022, 5, 14, testDate.hour, testDate.minute),
+      );
     });
 
     test('previousMonth', () {
@@ -296,8 +304,10 @@ void main() {
       });
 
       test('timestampToDate', () {
-        expect('1652188800000'.timestampToDate,
-            DateTime.fromMillisecondsSinceEpoch(1652188800000));
+        expect(
+          '1652188800000'.timestampToDate,
+          DateTime.fromMillisecondsSinceEpoch(1652188800000),
+        );
       });
     });
 
@@ -328,12 +338,16 @@ void main() {
       });
 
       test('timestampToDate', () {
-        expect(1652188800000.timestampToDate,
-            DateTime.fromMillisecondsSinceEpoch(1652188800000));
+        expect(
+          1652188800000.timestampToDate,
+          DateTime.fromMillisecondsSinceEpoch(1652188800000),
+        );
       });
       test('timestampToDate', () {
-        expect(1652188800000.timestampToDate,
-            DateTime.fromMillisecondsSinceEpoch(1652188800000));
+        expect(
+          1652188800000.timestampToDate,
+          DateTime.fromMillisecondsSinceEpoch(1652188800000),
+        );
       });
     });
   });
