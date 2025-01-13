@@ -6,24 +6,89 @@ import 'package:dart_helper_utils/src/src.dart';
 
 /// DHUHttpEx
 extension DHUHttpEx on num? {
-  /// Returns `true` if the number is a successful HTTP status code (200 or 201).
-  bool get isSuccessCode => this == 200 || this == 201;
+  /// Checks if the status code represents a successful response (2xx)
+  bool get isSuccessCode => this != null && this! >= 200 && this! < 300;
 
-  /// Returns `true` if the number is a client error HTTP status code (400-499).
+  /// Checks if the status code specifically represents OK (200)
+  bool get isOkCode => this == 200;
+
+  /// Checks if the status code specifically represents Created (201)
+  bool get isCreatedCode => this == 201;
+
+  /// Checks if the status code specifically represents Accepted (202)
+  bool get isAcceptedCode => this == 202;
+
+  /// Checks if the status code specifically represents No Content (204)
+  bool get isNoContentCode => this == 204;
+
+  /// Checks if the status code represents a client error (4xx)
   bool get isClientErrorCode => this != null && this! >= 400 && this! < 500;
 
-  /// Returns `true` if the number is a server error HTTP status code (500-599).
+  /// Checks if the status code represents a server error (5xx)
   bool get isServerErrorCode => this != null && this! >= 500 && this! < 600;
 
-  /// Returns `true` if the number is a redirection HTTP status code (300-399).
+  /// Checks if the status code represents a redirection (3xx)
   bool get isRedirectionCode => this != null && this! >= 300 && this! < 400;
+
+  /// Checks if the status code represents a temporary redirection
+  bool get isTemporaryRedirect => this == 302 || this == 307;
+
+  /// Checks if the status code represents a permanent redirection
+  bool get isPermanentRedirect => this == 301 || this == 308;
+
+  /// Checks if the status code represents an authentication error
+  bool get isAuthenticationError => this == 401 || this == 403;
+
+  /// Checks if the status code represents a validation error
+  bool get isValidationError => this == 422;
+
+  /// Checks if the status code represents a rate limit error
+  bool get isRateLimitError => this == 429;
+
+  /// Checks if the status code represents a timeout error
+  bool get isTimeoutError => this == 408 || this == 504;
+
+  /// Checks if the status code represents a conflict
+  bool get isConflictError => this == 409;
+
+  /// Checks if the status code represents a not found error
+  bool get isNotFoundError => this == 404;
+
+  /// Checks if the request should be retried based on the status code
+  bool get isRetryableError =>
+      this == 408 || // Request Timeout
+      this == 429 || // Too Many Requests
+      this == 503 || // Service Unavailable
+      this == 504; // Gateway Timeout
+
+  /// Gets suggested retry delay as a Duration based on status code
+  Duration get statusCodeRetryDelay {
+    if (!isRetryableError) return Duration.zero;
+    return switch (this!.toInt()) {
+      408 => const Duration(seconds: 5), // Request Timeout: 5 seconds
+      429 => const Duration(minutes: 1), // Rate Limit: 1 minute
+      503 => const Duration(minutes: 5), // Service Unavailable: 5 minutes
+      504 => const Duration(seconds: 10), // Gateway Timeout: 10 seconds
+      _ => const Duration(seconds: 30) // Default: 30 seconds
+    };
+  }
+
+  /// Returns the HTTP status message associated with the number.
+  /// If the status code is not found, it returns "Not Found".
+  String get toHttpStatusMessage => httpStatusMessages[this] ?? 'Not Found';
+
+  /// Returns the user-friendly HTTP status message associated with the number.
+  /// If the status code is not found, it returns "Not Found".
+  String get toHttpStatusUserMessage =>
+      httpStatusUserMessage[this] ?? 'Not Found';
+
+  /// Returns the developer-friendly HTTP status message associated with the number.
+  /// If the status code is not found, it returns "Not Found".
+  String get toHttpStatusDevMessage =>
+      httpStatusDevMessage[this] ?? 'Not Found';
 
   /// Returns `true` if the string representation of this number is a valid phone number.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
-
-  /// Returns the HTTP status message associated with the number.
-  /// If not found, it returns "Not Found".
-  String get toHttpStatusMessage => httpStatusMessages[this] ?? 'Not Found';
 }
 
 /// DHUNullSafeNumExtensions

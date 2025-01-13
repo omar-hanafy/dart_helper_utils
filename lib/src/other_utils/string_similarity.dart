@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math';
 
 /// Algorithms you can use for comparing string similarity.
@@ -26,6 +27,21 @@ enum SimilarityAlgorithm {
   ///
   /// Measures the cosine of the angle between two vectors of word frequencies, treating the strings as bags of words.
   cosine,
+
+  /// Hamming Distance algorithm.
+  ///
+  /// Measures the number of positions at which the corresponding symbols are different.
+  hammingDistance,
+
+  /// Smith-Waterman algorithm.
+  ///
+  /// Performs local sequence alignment; it compares segments of all possible lengths and optimizes the similarity measure.
+  smithWaterman,
+
+  /// Soundex algorithm.
+  ///
+  /// Encodes words into a phonetic representation to compare how they sound.
+  soundex,
 }
 
 /// Configuration for string normalization and processing
@@ -38,6 +54,9 @@ class StringSimilarityConfig {
     this.normalize = true,
     this.removeSpaces = true,
     this.toLowerCase = true,
+    this.removeSpecialChars = false,
+    this.removeAccents = false,
+    this.trimWhitespace = true,
   });
 
   /// Whether to normalize the strings before comparison.
@@ -48,6 +67,15 @@ class StringSimilarityConfig {
 
   /// Whether to lowercase the strings.
   final bool toLowerCase;
+
+  /// Whether to remove special characters from the strings.
+  final bool removeSpecialChars;
+
+  /// Whether to remove accents from the strings.
+  final bool removeAccents;
+
+  /// Whether to trim whitespace from the strings.
+  final bool trimWhitespace;
 }
 
 /// A utility class that offers methods for measuring how similar two strings are.
@@ -55,34 +83,79 @@ class StringSimilarity {
   // Private constructor to prevent instantiation.
   const StringSimilarity._();
 
-  /// Normalizes the input string according to the provided configuration.
-  /// By default, it removes all spaces and lowercases the string.
+  static final _cache = HashMap<String, Map<String, int>>();
+
+  static const _accentMap = {
+    'à': 'a',
+    'á': 'a',
+    'â': 'a',
+    'ã': 'a',
+    'ä': 'a',
+    'ç': 'c',
+    'è': 'e',
+    'é': 'e',
+    'ê': 'e',
+    'ë': 'e',
+    'ì': 'i',
+    'í': 'i',
+    'î': 'i',
+    'ï': 'i',
+    'ñ': 'n',
+    'ò': 'o',
+    'ó': 'o',
+    'ô': 'o',
+    'õ': 'o',
+    'ö': 'o',
+    'ù': 'u',
+    'ú': 'u',
+    'û': 'u',
+    'ü': 'u',
+    'ý': 'y',
+    'ÿ': 'y'
+  };
+
   static String _normalizeString(String input, StringSimilarityConfig config) {
     if (!config.normalize) return input;
 
     var result = input;
+    if (config.trimWhitespace) {
+      result = result.trim();
+    }
     if (config.removeSpaces) {
       result = result.replaceAll(RegExp(r'\s+'), '');
     }
     if (config.toLowerCase) {
       result = result.toLowerCase();
     }
+    if (config.removeSpecialChars) {
+      result = result.replaceAll(RegExp(r'[^\w\s]'), '');
+    }
+    if (config.removeAccents) {
+      result = result.replaceAllMapped(
+        RegExp('[àáâãäçèéêëìíîïñòóôõöùúûüýÿ]'),
+        (Match m) => _accentMap[m[0]] ?? m[0]!,
+      );
+    }
     return result;
   }
 
-  /// Creates a map of bigrams (pairs of consecutive characters) from a string.
-  /// Each entry in the map tracks how many times that particular bigram appears.
   static Map<String, int> _createBigrams(String input) {
+    // Check cache first
+    if (_cache.containsKey(input)) {
+      return Map.from(_cache[input]!);
+    }
+
     if (input.length < 2) return {};
 
-    final bigramCounts = List.generate(input.length - 1, (i) {
-      return input.substring(i, i + 2);
-    }).fold<Map<String, int>>({}, (map, bigram) {
-      map[bigram] = (map[bigram] ?? 0) + 1;
-      return map;
-    });
+    final bigramCounts = <String, int>{};
+    for (var i = 0; i < input.length - 1; i++) {
+      final bigram = input.substring(i, i + 2);
+      bigramCounts[bigram] = (bigramCounts[bigram] ?? 0) + 1;
+    }
 
-    return Map.fromEntries(bigramCounts.entries);
+    // Cache the result
+    _cache[input] = Map.from(bigramCounts);
+    return bigramCounts;
   }
 
   /// Computes the Dice Coefficient for two strings.
@@ -90,11 +163,8 @@ class StringSimilarity {
   ///
   /// This version normalizes both strings (by default) and uses bigrams for each,
   /// then counts the overlap.
-  static double diceCoefficient(
-    String first,
-    String second, [
-    StringSimilarityConfig config = const StringSimilarityConfig(),
-  ]) {
+  static double diceCoefficient(String first, String second,
+      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
     final s1 = _normalizeString(first, config);
     final s2 = _normalizeString(second, config);
 
@@ -114,6 +184,119 @@ class StringSimilarity {
 
     final totalBigrams = (s1.length - 1) + (s2.length - 1);
     return (2.0 * intersectionSize) / totalBigrams;
+  }
+
+  /// Computes the Hamming Distance between two strings.
+  /// Returns the number of positions at which the corresponding symbols are different.
+  /// Throws an [ArgumentError] if the strings are of different lengths.
+  static int hammingDistance(String s1, String s2,
+      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+    final str1 = _normalizeString(s1, config);
+    final str2 = _normalizeString(s2, config);
+
+    if (str1.length != str2.length) {
+      throw ArgumentError('Strings must be of equal length');
+    }
+
+    var distance = 0;
+    for (var i = 0; i < str1.length; i++) {
+      if (str1[i] != str2[i]) distance++;
+    }
+    return distance;
+  }
+
+  /// Smith-Waterman Algorithm for local sequence alignment
+  static double smithWaterman(String s1, String s2,
+      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+    final str1 = _normalizeString(s1, config);
+    final str2 = _normalizeString(s2, config);
+
+    if (str1.isEmpty || str2.isEmpty) return 0;
+
+    const matchScore = 2;
+    const mismatchScore = -1;
+    const gapScore = -1;
+
+    final matrix = List.generate(
+      str1.length + 1,
+      (i) => List.filled(str2.length + 1, 0),
+    );
+
+    var maxScore = 0;
+
+    for (var i = 1; i <= str1.length; i++) {
+      for (var j = 1; j <= str2.length; j++) {
+        final match = matrix[i - 1][j - 1] +
+            (str1[i - 1] == str2[j - 1] ? matchScore : mismatchScore);
+        final delete = matrix[i - 1][j] + gapScore;
+        final insert = matrix[i][j - 1] + gapScore;
+
+        matrix[i][j] = max(0, max(match, max(delete, insert)));
+        maxScore = max(maxScore, matrix[i][j]);
+      }
+    }
+
+    // Normalize the score
+    final maxPossible = matchScore * min(str1.length, str2.length);
+    return maxPossible == 0 ? 0 : maxScore / maxPossible;
+  }
+
+  /// Computes the Soundex encoding for a given string.
+  /// Returns a four-character code representing the phonetic sound of the string.
+  ///
+  /// This version normalizes the string (by default) and then applies the Soundex algorithm.
+  /// The resulting code consists of the first letter of the string followed by three digits.
+  /// If the string is too short, it is padded with zeros.
+  ///
+  /// Example:
+  /// ```dart
+  /// final soundexCode = StringSimilarity.soundex('example');
+  /// print(soundexCode); // E251
+  /// ```
+  static String soundex(String input,
+      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+    final str = _normalizeString(input, config);
+    if (str.isEmpty) return '';
+
+    final soundexMap = {
+      'b': '1',
+      'f': '1',
+      'p': '1',
+      'v': '1',
+      'c': '2',
+      'g': '2',
+      'j': '2',
+      'k': '2',
+      'q': '2',
+      's': '2',
+      'x': '2',
+      'z': '2',
+      'd': '3',
+      't': '3',
+      'l': '4',
+      'm': '5',
+      'n': '5',
+      'r': '6'
+    };
+
+    final result = StringBuffer(str[0].toUpperCase());
+    var previousCode = soundexMap[str[0].toLowerCase()];
+
+    for (var i = 1; i < str.length && result.length < 4; i++) {
+      final currentChar = str[i].toLowerCase();
+      final currentCode = soundexMap[currentChar];
+
+      if (currentCode != null && currentCode != previousCode) {
+        result.write(currentCode);
+        previousCode = currentCode;
+      }
+    }
+
+    while (result.length < 4) {
+      result.write('0');
+    }
+
+    return result.toString();
   }
 
   /// Computes the Levenshtein distance between two strings,
@@ -316,19 +499,25 @@ class StringSimilarity {
       case SimilarityAlgorithm.levenshteinDistance:
         final distance = levenshteinDistance(first, second, config);
         final maxLength = max(first.length, second.length);
-        // Convert distance to a similarity score, 0 means different, 1 identical.
         return 1 - (distance / maxLength);
       case SimilarityAlgorithm.jaro:
         return jaro(first, second, config);
       case SimilarityAlgorithm.jaroWinkler:
-        return jaroWinkler(
-          first,
-          second,
-          prefixScale: prefixScale,
-          config: config,
-        );
+        return jaroWinkler(first, second,
+            prefixScale: prefixScale, config: config);
       case SimilarityAlgorithm.cosine:
         return cosine(first, second, config);
+      case SimilarityAlgorithm.hammingDistance:
+        try {
+          final distance = hammingDistance(first, second, config);
+          return 1 - (distance / first.length);
+        } catch (e) {
+          return 0; // Return 0 if strings are of different lengths
+        }
+      case SimilarityAlgorithm.smithWaterman:
+        return smithWaterman(first, second, config);
+      case SimilarityAlgorithm.soundex:
+        return soundex(first, config) == soundex(second, config) ? 1.0 : 0.0;
     }
   }
 }

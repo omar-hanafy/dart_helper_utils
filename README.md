@@ -6,611 +6,724 @@ The `dart_helper_utils` package provides a collection of Dart utilities, tools f
 
 **Note:** This package is tailored for Dart projects. For Flutter projects, use [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), which includes all `dart_helper_utils` features plus additional utilities and extension for Flutter, such as `Widget`, `Color`, and `BuildContext` extension.
 
-## Table of Contents
-- [Featured](#featured)
-  - [DoublyLinkedList](#doublylinkedlist)
-  - [Converting Objects](#converting-objects)
-    - [Sample Usage](#sample-usage)
-    - [Available Conversions](#available-conversions)
-    - [Optional Parameters](#optional-parameters)
-    - [Extract and Convert](#extract-and-convert)
-  - [TimeUtils](#timeutils)
-- [Extensions](#extensions)
-  - [Date Extensions](#date-extensions)
-    - [Parsing](#parsing)
-    - [Formatting](#formatting)
-    - [Comparison](#comparison)
-    - [Duration Calculation](#duration-calculation)
-    - [Manipulation](#manipulation)
-  - [Extensions For Intl](#extensions-for-intl)
-    - [DateFormat](#dateformat)
-    - [NumberFormat](#numberformat)
-    - [General](#general)
-    - [TextDirection](#textdirection)
-    - [Bidi](#bidi)
-  - [String Extension](#string-extension)
-    - [Case Conversion](#case-conversion)
-    - [Text Formatting](#text-formatting)
-    - [String Replacement](#string-replacement)
-    - [String Comparison](#string-comparison)
-    - [String Limiting](#string-limiting)
-    - [Character Checks](#character-checks)
-    - [Validation](#validation)
-    - [Utility](#utility)
-    - [Parsing](#parsing)
-  - [Collection Extension](#collection-extension)
-    - [Iterable Extension](#iterable-extension)
-    - [List Extension](#list-extension)
-    - [Set Extension](#set-extension)
-    - [Map Extension](#map-extension)
-  - [Number Extension](#number-extension)
-      - [For All](#for-all-num)
-      - [For Int](#for-int)
-      - [For Double](#for-double)
-  - [Duration Extension](#duration-extension)
-  - [Uri Extension](#uri-extension)
-  - [Bool Extension](#bool-extension)
-  - [Objects Extension](#objects-extension)
-    
 # Featured
+
+## Pagination
+
+Three powerful pagination implementations for different use cases:
+
+```dart
+// Synchronous pagination for in-memory lists
+final paginator = Paginator(
+  items: myItems,
+  pageSize: 10,
+);
+
+// Asynchronous pagination with automatic retries and caching
+final asyncPaginator = AsyncPaginator<User>(
+  fetchPage: (pageNumber, pageSize) => api.fetchUsers(pageNumber, pageSize),
+  pageSize: 20,
+);
+
+// Infinite scrolling with cursor-based pagination
+final infinitePaginator = InfinitePaginator.cursorBased(
+  fetchItems: (pageSize, cursor) => api.fetchItems(pageSize, cursor),
+  getNextCursor: (items) => PaginationCursor(items.last.id),
+);
+
+// Add analytics tracking to any paginator
+paginator with PaginationAnalytics<Item>
+```
+
+Key Features:
+- Built-in caching and error handling
+- Customizable retry logic
+- Race condition prevention for async operations
+- Support for both page-based and cursor-based pagination
+- Analytics tracking for page loads, errors, and cache performance
+- Transformations (map, filter) with automatic cache management
+
 ## DoublyLinkedList
-The `DoublyLinkedList` class offers a way to manage ordered collections of data in Dart. Unlike traditional lists (which are based on arrays), a doubly linked list stores elements in individual nodes, each linked to both its preceding and succeeding nodes. This structure excels in scenarios where you need efficient insertion and deletion operations at arbitrary positions.
+A powerful implementation of doubly linked list that offers:
 
-**Key Advantages:**
-* **Efficient Insertion/Deletion:** Adding or removing elements at the beginning, middle, or end of the list takes constant time (O(1)).
-* **Bidirectional Traversal:** Easily navigate through the list in either direction using the `next` and `prev` references on each node.
-* **Memory Flexibility:** The list dynamically grows or shrinks as needed, making it memory-efficient for managing collections of varying sizes.
-
-**Core Features:**
-* **List-Like Interface:** You can use `DoublyLinkedList` just like a standard Dart `List`, with familiar methods like `add`, `insert`, `remove`, `clear`, etc.
-* **Node Iteration:** The `nodes` property provides a convenient way to iterate over the individual nodes of the list, giving you access to `data`, `prev`, and `next` fields.
-* **Factory Constructors:** Easily create lists with specific characteristics:
-  - `filled(length, fill)`: Creates a list of a given length filled with a specified value.
-  - `generate(length, generator)`: Creates a list by applying a function to generate elements.
-  - `from(Iterable)`: Creates a list from existing iterable.
-
-**Example Usage:**
 ```dart
 final myList = DoublyLinkedList<int>([1,2,3,4]);
 
 // Basic Operations
 myList.append(5);
-myList.append(6);
-myList.append(7);
 myList.prepend(0);
+myList.insert(1, 15);
 
-myList.insert(1, 15); // Inserts 15 at index 1
-
-print(myList); // Output: [0,15,2,3,4,5,6,7]
-
-// Node Iteration
+// Node Operations
 for (final node in myList.nodes) {
-  print('Node value: ${node}, Previous: ${node.prev}, Next: ${node.next}');
+  print('Value: ${node.data}, Previous: ${node.prev?.data}, Next: ${node.next?.data}');
 }
 
-final secondNode = myList^1;
-print('Node value: ${secondNode.data}, Previous: ${secondNode.prev}, Next: ${secondNode.next}');
-
-final secondElement = myList[1];
-print(secondElement);
+// Factory Constructors
+final filledList = DoublyLinkedList.filled(3, 0);  // [0, 0, 0]
+final generatedList = DoublyLinkedList.generate(3, (i) => i * 2);  // [0, 2, 4]
 ```
 
 ## Converting Objects
-Convert objects to various types, such as `int`, `double`, `bool`, `String`, `List`, `Set`, and `Map`. These methods are
-useful when dealing with dynamic data from APIs, offering simple and flexible type conversions.
-
-### Sample Usage:
-Given an API response:
+Type-safe conversion utilities with enhanced error handling and format support:
 
 ```dart
+// Simple conversions with global methods.
+int number = toInt('123');  // 123
+double price = toDouble('19.99');  // 19.99
+bool isActive = toBool('true');  // true
 
-Map<String, dynamic> apiResponse = {'score': '12.4'};
+// U can use the ConvertObject class to avoid ambiguty
+// for example the toMap works here well but sometimes u might have already method named toMap.
+final map = toMap<String, dynamic>(data);
+// to resolve this use the static method instead
+final map = ConvertObject.toMap<String, dynamic>(data);
 
-// Using parse
-int score = double.parse(apiResponse['score']).toInt();
+// Complex conversions with format support
+DateTime date = toDateTime('2024-01-13', format: 'yyyy-MM-dd');
+num amount = toNum('1,234.56', format: '#,##0.00');
 
-// Using the package:
-int score = toInt(apiResponse['score']);
+// Collection conversions with type safety
+List<int> numbers = toList<int>('[1, 2, 3]');  // Accepts JSON strings
+Map<String, dynamic> data = toMap('{"name": "John", "age": 30}');
+
+// Safe extraction from collections
+final map = {'user': {'age': '25'}};
+int age = map.getInt('user', innerKey: 'age');  // 25
+
+final list = ['John', '25', true];
+String name = list.getString(0);  // "John"
+
+// conversion on any object
+final id = '123';
+final idNumber = id.convertToInt();
 ```
 
-### Available Conversions:
-
-#### Methods:
-
-- `toNum()` / `tryToNum()`
-- `toInt()` / `tryToInt()`
-- `toDouble()` / `tryToDouble()`
-- `toBool()` / `tryToBool()`
-- `toString1()` / `tryToString()`
-- `toList<T>()` / `tryToList<T>()`
-- `toSet<T>()` / `tryToSet<T>()`
-- `toMap<K, V>()` / `tryToMap<K, V>()`
-
-### Static Methods:
-
-The methods above call the original static methods from the `ConvertObject` class. For instance:
+## TimeUtils
+Comprehensive time measurement and execution control utilities:
 
 ```dart
-int score = toInt(map['key']); // global method
-// same as
-int score = ConvertObject.toInt(map['key']); // static method
-```
-
-**Note:** To avoid conflicts with method names (e.g., `toList`), use the static method directly:
-
-```dart
-List myList = ConvertObject.toList(dynamicObject);
-```
-
-### Optional Parameters:
-- Each method accepts two optional parameters: `listIndex` and `mapKey`. These parameters allow specific value extraction and conversion within a `List` or `Map`.
-- All dates and number conversion methods accepts extra format, and local for better localization and formatting.
-
-
-#### Example with `listIndex`:
-```dart
-dynamic dynamicList = ['10', '20', '30'];
-final int number = toInt(dynamicList, listIndex: 1); // 20
-```
-
-#### Example with `mapKey`:
-```dart
-final dynamicMap = <dynamic, dynamic>{
-  'name': 'John',
-  'age': '30',
-  'bools': {
-    'isHuman': 'yes',
-  }
-};
-final bool isHuman = toBool(dynamicMap['bools'], mapKey: 'isHuman'); // true
-```
-
-#### Auto Decoding of JSON Strings for Collections
-
-The `ConvertObject` class now simplifies working with JSON data by automatically decoding raw JSON strings when converting to `List`, `Set`, or `Map` types. This eliminates the need for manual parsing before conversion.
-
-**Example Usage:**
-
-```dart
-final myList = tryToList<int>("[1, 2, 3]"); // List<int>
-final mySet = tryToSet<String>('["hello", "world"]'); // Set<String>
-final myMap = tryToMap<String, dynamic>('{"name": "Alice", "age": 30}'); // Map<String, dynamic>
-```
-
-### Extract And Convert
-
-Starting from version 2.0.0 and above, we added a new methods to easily extract values from `Map<K, V>` and `List<E>`, and, safely convert it to a specific type!
-- `getString`, `getNum`, `getInt`, `getBigInt`, `getDouble`, `getBool`, `getDateTime`, `getUri`, `getMap`, `getSet`, and `getList`.
-- For Map, it requires the key e.g. `map.getNum('key')` 
-- For List, it requires the index e.g. `list.getNum(1)`
-- They also supports nullable converters such as  `tryGetString`, `tryGetNum`, `tryGetInt`, etc.
-- all supported types and optionals in the `ConvertObject` class are also included.
-
-Sample:
-
-```dart
-final map = <dynamic, dynamic>{
-  'name': 'John',
-  'age': '30',
-  'bools': {
-    'isHuman': 'yes',
-  }
-};
-
-final age = map.getInt('age'); // 30
-final score = map.tryGetInt('score'); // null
-final isHuman = map.getBool('bools', innerKey: 'isHuman'); // true
-```
-
-or with List:
-
-```dart
-final dynamicList = <dynamic>['John', 30, true];
-final age = dynamicList.getInt(1); // 30
-```
-
-## TimeUtils:
-
-The TimeUtils class provides utilities for measuring and comparing execution times, creating throttled functions, running tasks periodically, and handling tasks with timeouts. Here is a sample with the **executionDuration** method:
-
-```dart
-final excutionTime = await TimeUtils.executionDuration(() {
-  for (var i = 0; i < 1000000; i++) {}
+// Measure execution time
+final duration = await TimeUtils.executionDuration(() async {
+  await someAsyncTask();
 });
-print('Synchronous task took $syncDuration');
-// NOTE: works also with asynchronous task
-```
 
-Another example with **runWithTimeout**:
-
-```dart
+// Run with timeout
 try {
   final result = await TimeUtils.runWithTimeout(
-    task: () async {
-      await 5.secDelay;
-      return 'Completed';
-    },
-    timeout: const Duration(seconds: 3),
+    task: () => longRunningTask(),
+    timeout: Duration(seconds: 5),
   );
-  print('Result: $result');
 } catch (e) {
-  print('Error: $e');
+  print('Task timed out');
 }
+
+// Periodic execution
+final subscription = TimeUtils.runPeriodically(
+  interval: Duration(minutes: 1),
+  task: () => checkForUpdates(),
+);
 ```
 
 # Extensions
+
 ## Date Extensions
+
+The Date Extensions provide comprehensive functionality for DateTime manipulation and formatting:
+
 ### Parsing
-- `timestampToDate`: Converts a timestamp (milliseconds since epoch) to a `DateTime` object.
-- `try/toDateTime`: Converts a string to a `DateTime` object.
+```dart
+// Convert timestamp to DateTime
+final date = 1643673600000.timestampToDate;
+
+// Convert string to DateTime with various formats
+final date = "2024-01-13".tryToDateTime();
+final date = "13/01/2024".toDateTime(format: "dd/MM/yyyy");
+```
 
 ### Formatting
-- `local`: Converts a potentially null `DateTime` to local time.
-- `toUtcIso`: Converts a potentially null `DateTime` to ISO 8601 format in UTC.
-- `format`: Formats a `DateTime` object into a string according to the given format.
+```dart
+DateTime now = DateTime.now();
+
+// Convert to local time
+final localTime = now.local;
+
+// Convert to UTC ISO format
+final utcIso = now.toUtcIso;
+
+// Custom format
+final formatted = now.format("dd-MM-yyyy");
+```
 
 ### Comparison
-- Relative to Current Time:
-  - `isTomorrow`
-  - `isToday`
-  - `isYesterday`
-  - `isInFuture`
-  - `isInPast`
-  - `isInPastWeek`
-  - `isInThisYear`
-- Within the Month/Year:
-  - `isFirstDayOfMonth`
-  - `isLastDayOfMonth`
-  - `isLeapYear`
-- Component-Level: (Compare two `DateTime` objects)
-  - `isAtSameYearAs(other: DateTime)`
-  - `isAtSameMonthAs(other: DateTime)`
-  - `isAtSameDayAs(other: DateTime)`
-  - ... (and so on for hour, minute, etc.)
+```dart
+final date = DateTime.now();
+
+// Relative time checks
+print(date.isTomorrow);
+print(date.isToday);
+print(date.isYesterday);
+print(date.isInFuture);
+print(date.isInPast);
+
+// Component level comparison
+final otherDate = DateTime(2024, 1, 1);
+print(date.isAtSameYearAs(otherDate));
+print(date.isAtSameMonthAs(otherDate));
+print(date.isAtSameDayAs(otherDate));
+```
 
 ### Duration Calculation
-- `passedDuration`: Gets the duration that has passed since the given (potentially null) `DateTime`.
-- `remainingDuration`: Gets the duration remaining until the given (potentially null) `DateTime`.
-- `passedDays`: Gets the number of days that have passed since the given (potentially null) `DateTime`.
-- `remainingDays`: Gets the number of days remaining until the given (potentially null) `DateTime`.
+```dart
+final date = DateTime.now().add(Duration(days: 5));
+
+// Get passed or remaining duration
+final passed = date.passedDuration;
+final remaining = date.remainingDuration;
+
+// Get passed or remaining days
+final passedDays = date.passedDays;
+final remainingDays = date.remainingDays;
+```
 
 ### Manipulation
-- Start Points:
-  - `startOfDay`: Gets the start of the day (midnight) for the given `DateTime`.
-  - `startOfMonth`: Gets the start of the month for the given `DateTime`.
-  - `startOfYear`: Gets the start of the year for the given `DateTime`.
-- Extraction:
-  - `dateOnly`: Extracts only the date portion (midnight time) from the `DateTime`.
-- Lists:
-  - `daysInMonth`: Gets a list of all the `DateTime` objects representing the days in the month of the given `DateTime`.
-- Navigation:
-  - `previousDay`, `nextDay`: Gets the `DateTime` for the previous/next day.
-  - `previousWeek`, `nextWeek`: Gets the `DateTime` for the previous/next week.
-  - `firstDayOfWeek`, `lastDayOfWeek`: Gets the `DateTime` for the first/last day of the week.
-  - `previousMonth`, `nextMonth`: Gets the `DateTime` for the previous/next month.
-  - `firstDayOfMonth`, `lastDayOfMonth`: Gets the `DateTime` for the first/last day of the month.
+```dart
+final date = DateTime.now();
 
-## Extensions For Intl
+// Get start points
+final startOfDay = date.startOfDay;
+final startOfMonth = date.startOfMonth;
+final startOfYear = date.startOfYear;
+
+// Navigation
+final nextDay = date.nextDay;
+final previousWeek = date.previousWeek;
+final lastDayOfMonth = date.lastDayOfMonth;
+```
+
+## Intl Extensions
+
 ### DateFormat
-#### on String
-- `dateFormat`: Returns a `DateFormat` object based on the string pattern.
-- `try/toDateAutoFormat`: Parses the string to `DateTime` and autodetect the format, with the provided locale, useCurrentLocale, and UTC option.
-- `try/toDateFormatted`: Parses the string to `DateTime` with the provided format, locale, and UTC option.
-- `try/toDateFormattedLoose`: Parses the string to `DateTime` using loose parsing.
-- `try/toDateFormattedStrict`: Parses the string to `DateTime` using strict parsing.
-- `try/toDateFormattedUtc`: Parses the string to `DateTime` in UTC using the provided format and locale.
-- `localeExists`: Checks if the locale exists in `DateFormat`.
 
-#### on DateTime
-- `tryFormat` and `format`: Formats the DateTime object using the provided pattern and optional locale.
-- A variety of methods to format `DateTime` objects in different styles:
-  - **Basic:** `yMMMMdFormat`, `formatAsd`
-  - **Weekday:** `formatAsEEEE`, `formatAsEEEEE`
-  - **Month:** `formatAsLLL`, `formatAsLLLL`, `formatAsMMMMEEEEd`, etc.
-  - **Quarter:** `formatAsQQQ`, `formatAsQQQQ`
-  - **Year:** `formatAsyMMM`, `formatAsyQQQQ`, etc.
-  - **Time:** `formatAsH`, `formatAsHm`, etc.
-    All methods support an optional `locale` parameter.
+#### String Extensions
+```dart
+// Create DateFormat from pattern
+final formatter = "yyyy-MM-dd".dateFormat();
 
-## NumberFormat
-#### on String
-- `numberFormat`: Returns a `NumberFormat` object based on the string pattern.
-- `try/toNumFormatted`: Parses the string to a number with the given pattern and locale.
-- `try/toIntFormatted`: Parses the string to an integer with the given pattern and locale.
-- `try/toDoubleFormatted`: Parses the string to a double with the given pattern and locale.
-- `numberFormat`: Creates a `NumberFormat` object using the string as the pattern, along with the given locale.
-- `symbolCurrencyFormat`: Creates a `NumberFormat` object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
-- `simpleCurrencyFormat`: Creates a `NumberFormat` object as simple currency using the string as the currency name, along with the given locale.
-- `compactCurrencyFormat`: Creates a `NumberFormat` object as compact simple currency using the string as the currency name, along with the given locale.
+// Parse string to DateTime with auto format detection
+final date = "2024-01-13".tryToDateAutoFormat();
 
-#### on Num
-- `formatAsCurrency`: Formats the number as currency with the given locale, symbol, and decimal digits.
-- `formatAsSimpleCurrency`: Formats the number as simple currency with the given locale and name.
-- `formatAsCompact`: Formats the number in a compact form with the given locale.
-- `formatAsCompactLong`: Formats the number in a long compact form with the given locale.
-- `formatAsCompactCurrency`: Formats the number as compact simple currency with the given locale and name.
-- `formatAsDecimal`: Formats the number as a decimal with the given locale and decimal digits.
-- `formatAsPercentage`: Formats the number as a percentage with the given locale.
-- `formatAsDecimalPercent`: Formats the number as a decimal percentage with the given locale and decimal digits.
-- `formatAsScientific`: Formats the number as a scientific value with the given locale.
-- `formatWithCustomPattern`: Formats the number using a custom pattern with the given locale.
+// Parse with specific format
+final date = "13/01/2024".toDateFormatted("dd/MM/yyyy");
 
-### General
-#### on Map
-- `intlSelectLogic`: Selects a value from the map based on a choice.
-- `intlSelect`: Formats a message based on the choice and returns the formatted message.
+// Parse with locale
+final date = "13 janvier 2024".toDateFormatted("dd MMMM yyyy", locale: "fr");
+```
 
-#### on Num
-- `pluralize`: Returns a localized string based on the plural category of the number.
-- `getPluralCategory`: Determines the plural category of the number based on the current locale.
+#### DateTime Extensions
+```dart
+final date = DateTime.now();
 
-#### on String
-- `setAsDefaultLocale`: Sets the string as the default locale for subsequent `Intl` operations.
-- `setAsSystemLocale`: Sets the string as the system locale.
-- `translate`: Translates the string using `Intl.message`.
-- `genderSelect`: Selects a localized string based on the gender associated with the string.
-- `getGenderCategory`: Determines the gender category of the string based on the current locale.
+// Basic formatting
+print(date.yMMMMdFormat); // "January 13, 2024"
+print(date.formatAsd); // "01/13/2024"
 
-### TextDirection
-These constants eliminate the need to import and use the `TextDirection` class from the `intl` package, which could be confused with Flutter's `TextDirection` enum.
-- `textDirectionLTR`: Represents left-to-right text direction (e.g., English, French).
-- `textDirectionRTL`: Represents right-to-left text direction (e.g., Arabic, Hebrew).
-- `textDirectionUNKNOWN`: Represents unknown or neutral text direction.
+// Weekday formatting
+print(date.formatAsEEEE); // "Saturday"
+print(date.formatAsEEEEE); // "S"
 
-### Bidi
-#### on TextDirection
-- `toBidiFormatter`: Creates a BidiFormatter object based on the directionality.
+// Month formatting
+print(date.formatAsLLL); // "Jan"
+print(date.formatAsLLLL); // "January"
 
-#### on String
-- `stripHtmlIfNeeded`: Strips HTML tags from the string if needed, preserving bidirectional text direction.
-- `startsWithLtr`: Checks if the string starts with left-to-right (LTR) text, optionally considering HTML markup.
-- `startsWithRtl`: Checks if the string starts with right-to-left (RTL) text, optionally considering HTML markup.
-- `endsWithLtr`: Checks if the string ends with left-to-right (LTR) text, optionally considering HTML markup.
-- `endsWithRtl`: Checks if the string ends with right-to-left (RTL) text, optionally considering HTML markup.
-- `hasAnyLtr`: Checks if the string contains any left-to-right (LTR) characters, optionally considering HTML markup.
-- `hasAnyRtl`: Checks if the string contains any right-to-left (RTL) characters, optionally considering HTML markup.
-- `isRtlLanguage`: Checks if the string represents a right-to-left (RTL) language text.
-- `enforceRtlInHtml`: Enforces right-to-left (RTL) directionality in HTML markup.
-- `enforceRtlIn`: Enforces right-to-left (RTL) directionality in plain text.
-- `enforceLtrInHtml`: Enforces left-to-right (LTR) directionality in HTML markup.
-- `enforceLtr`: Enforces left-to-right (LTR) directionality in plain text.
-- `guardBracketInHtml`: Guards brackets in HTML markup to maintain bidirectional text support.
-- `guardBracket`: Guards brackets in plain text to maintain bidirectional text support.
-- `guessDirection`: Guesses the text directionality based on its content, optionally considering HTML markup.
-- `detectRtlDirectionality`: Detects the predominant text directionality in the string, optionally considering HTML markup.
-- `wrapWithSpan`: Wraps the text with a `span` tag and sets the direction attribute (dir) based on the provided or estimated direction.
-- `wrapWithUnicode`: Wraps the text with unicode BiDi formatting characters based on the provided or estimated direction.
+// With locale
+print(date.formatAsLLLL(locale: 'fr')); // "janvier"
+```
+
+### NumberFormat
+
+#### String Extensions
+```dart
+// Parse string to number with formatting
+final num = "1,234.56".toNumFormatted("#,##0.00");
+final int = "1,234".toIntFormatted("#,##0");
+final double = "1,234.56".toDoubleFormatted("#,##0.00");
+```
+
+#### Number Extensions
+```dart
+final number = 1234567.89;
+
+// Currency formatting
+print(number.formatAsCurrency(symbol: "$")); // "$1,234,567.89"
+print(number.formatAsSimpleCurrency(name: "USD")); // "USD 1,234,567.89"
+
+// Compact formatting
+print(number.formatAsCompact()); // "1.2M"
+print(number.formatAsCompactLong()); // "1.2 million"
+
+// Percentage and decimal
+print(number.formatAsPercentage()); // "123,456,789%"
+print(number.formatAsDecimal(decimalDigits: 2)); // "1,234,567.89"
+```
+
+### Bidi Support
+
+Comprehensive support for bidirectional text handling:
+
+```dart
+final text = "Hello عالم";
+
+// Direction detection
+print(text.startsWithLtr()); // true
+print(text.endsWithRtl()); // true
+print(text.hasAnyRtl()); // true
+
+// Enforcing direction
+print(text.enforceLtr()); // Forces LTR direction
+print(text.enforceRtl()); // Forces RTL direction
+
+// Wrapping with direction markers
+print(text.wrapWithSpan()); // Wraps with span and direction
+print(text.wrapWithUnicode()); // Wraps with unicode markers
+```
+
+Each Bidi method provides optional parameters for HTML handling and direction estimation, making it perfect for multilingual applications.
 
 ## String Extension
+
+String extensions provide powerful text manipulation and validation capabilities:
+
 ### Case Conversion
-- `toPascalCase`: PascalCase aka (UpperCamelCase).
-- `toTitleCase`: Title Case
-- `toCamelCase`: camelCase aka (dromedaryCase)
-- `toSnakeCase`: snake_case aka (snail_case, pothole_case).
-- `toKebabCase`: kebab-case aka (dash-case, lisp-case, spinal-case).
-- `toScreamingSnakeCase`: SCREAMING_SNAKE_CASE aka (MACRO_CASE, CONSTANT_CASE, ALL_CAPS).
-- `toScreamingKebabCase`: SCREAMING-KEBAB-CASE aka (COBOL-CASE).
-- `toPascalSnakeCase`: Pascal_Snake_Case.
-- `toPascalKebabCase`: Pascal-Kebab-Case.
-- `toTrainCase`: Train-Case aka (HTTP-Header-Case).
-- `toCamelSnakeCase`: camel_Snake_Case.
-- `toCamelKebabCase`: camel-Kebab-Case.
-- `toDotCase`: dot.case.
-- `toFlatCase`: flatcase.
-- `toScreamingCase`: SCREAMINGCASE.
-- `toTitle`: Capitalizes the first letter of each word in the string while retaining `-`, `_`, and space characters.
-- `toWords`: Converts any `String` to a `List<String>`, handling complex cases more effectively than the native `split()` method.
+```dart
+final text = "helloWorld_example-TEXT";
 
-### Text Formatting
-- `lowercaseFirstLetter`: Lowercases only the first letter of the string, preserving the rest of the case.
-- `capitalizeFirstLetter`: Converts the first letter to uppercase and preserves the rest of the case.
-- `capitalizeFirstLowerRest`: Converts the first letter to uppercase and the rest to lowercase.
-- `tryToLowerCase`: Converts the string to lowercase if it's not null.
-- `tryToUpperCase`: Converts the string to uppercase if it's not null.
-- `removeEmptyLines`: Removes consecutive empty lines, replacing them with single newlines.
-- `toOneLine`: Converts to a single line by replacing all newline characters with spaces.
-- `removeWhiteSpaces`: Removes all whitespace characters.
-- `clean`: Combines `removeWhiteSpaces` and `toOneLine` to collapse into a single line.
-- `wrapString`: Wraps text based on the specified word count, wrapping behavior, and custom delimiter.
+print(text.toPascalCase());     // "HelloWorldExampleText"
+print(text.toCamelCase());      // "helloWorldExampleText"
+print(text.toSnakeCase());      // "hello_world_example_text"
+print(text.toKebabCase());      // "hello-world-example-text"
+print(text.toScreamingCase());  // "HELLOWORLDEXAMPLETEXT"
+print(text.toTitleCase());      // "Hello World Example Text"
 
-### String Replacement
-- `replaceAfter`: Replaces part of the string after the first occurrence of the given delimiter with a specified string.
-- `replaceBefore`: Replaces part of the string before the first occurrence of the given delimiter with a specified string.
-- `removeSurrounding`: Removes the surrounding delimiter if it exists at both ends.
+// Smart capitalization
+print("helloWORLD".capitalizeFirstLetter());     // "HelloWORLD"
+print("helloWORLD".capitalizeFirstLowerRest());  // "Helloworld"
+```
 
-### String Comparison
-- `equalsIgnoreCase`: Compares with another string for equality, ignoring case differences.
+### Text Manipulation
+```dart
+// Clean and format
+print("multi\nline text".toOneLine());          // "multi line text"
+print("  hello  world  ".removeWhiteSpaces());  // "helloworld"
+print("long text".wrapString(5));               // "long\ntext"
 
-### String Limiting
-- `limitFromEnd`: Shrinks the string to no more than a specified length, starting from the end.
-- `limitFromStart`: Shrinks the string to no more than a specified length, starting from the start.
-
-### Character Checks
-- `isAlphanumeric`: Checks if the string contains only letters and numbers.
-- `hasSpecialChars`: Checks if the string contains any characters that are not letters, numbers, or spaces.
-- `hasNoSpecialChars`: Checks if the string does not contain any special characters.
-- `startsWithNumber`: Checks if the string starts with a number.
-- `containsDigits`: Checks if the string contains any digits.
-- `hasCapitalLetter`: Checks if the string contains at least one capital letter.
-- `isNumeric`: Checks if the string consists only of numbers.
-- `isAlphabet`: Checks if the string consists only of alphabetic characters.
-- `isBool`: Checks if the string is a boolean value (true or false).
+// String operations
+print("Hello World".replaceAfter("o", "!")));   // "Hello!"
+print("Hello World".removeSurrounding("H", "d")); // "ello Worl"
+```
 
 ### Validation
-- `isValidUsername`: Checks if the string is a valid username.
-- `isValidCurrency`: Checks if the string is a valid currency format.
-- `isValidPhoneNumber`: Checks if the string is a valid phone number.
-- `isValidEmail`: Checks if the string is a valid email address.
-- `isValidHTML`: Checks if the string is a valid HTML file or URL.
-- `isValidIp4`: Checks if the string is a valid IPv4 address.
-- `isValidIp6`: Checks if the string is a valid IPv6 address.
-- `isValidUrl`: Checks if the string is a valid URL.
-- `isEmptyOrNull` || `isBlank`: Checks if the string is null or empty.
-- `isNotEmptyOrNull` || `isNotBlank`: Checks if the string is not null and not empty.
-- `isPalindrome`: Checks if the string is a palindrome.
+```dart
+// Common validations
+print("test@email.com".isValidEmail);        // true
+print("192.168.1.1".isValidIp4);            // true
+print("https://dart.dev".isValidUrl);        // true
+print("Hello123".isAlphanumeric);           // true
+print("12345".isNumeric);                   // true
+print("level".isPalindrome);                // false
 
-### Utility
-- `orEmpty`: Returns the string if it is not null, or an empty string otherwise.
-- `ifEmpty`: Performs an action if the string is empty.
-- `lastIndex`: Gets the last character of the string.
-- `isNotBlank`: Returns true if the string is neither null, empty, nor solely made of whitespace characters.
-- `toCharArray`: Returns a list of characters.
-- `insert`: Inserts a specified string at a specified index position.
-- `isNullOrWhiteSpace`: Indicates whether the string is null, empty, or consists only of white-space characters.
-- `asBool`: Converts the string to a boolean.
-- `decode/tryDecode`: Decodes the JSON string into a dynamic data structure (`tryDecode` returns null upon failure).
+// Type checking
+print("true".isBool);                       // true
+print("123".containsDigits);                // true
+print("Test123!".hasSpecialChars);          // true
+```
 
-### Parsing
-- `try/toNum`: Parses the string as a number.
-- `try/toDouble`: Parses the string as a double.
-- `try/toInt`: Parses the string as an integer.
+### Utility Functions
+```dart
+// Safe operations
+final nullableText = null;
+print(nullableText.orEmpty);                // ""
+print("".ifEmpty(() => "default"));         // "default"
 
-## Collection Extension
+// JSON handling
+print('{"key": "value"}'.decode());         // Map<String, dynamic>
+print('{"key": "value"}'.tryDecode());      // Returns null if invalid JSON
+```
+
+## Collection Extensions
+
 ### Iterable Extension
--  Type-safe extract and convert methods like `getInt(index)`, `getDateTime(index)`, `getMap(index)` etc.
-- `isEmptyOrNull`: Returns true if the iterable is either null or empty.
-- `isNotEmptyOrNull`: Returns false if the iterable is either null or empty.
-- `of`: Retrieves the element at the specified index in a null-safe manner.
-- `firstOrNull`: Retrieves the first element or returns null.
-- `lastOrNull`: Retrieves the last element or returns null.
-- `firstWhereOrNull`: Retrieves the first element that matches the specified predicate or returns null.
-- `firstOrDefault`: Retrieves the first element or returns a default value.
-- `lastOrDefault`: Retrieves the last element or returns a default value.
-- `tryGetRandom`: Retrieves a random element from the iterable or returns null.
-- `orEmpty`: Returns the iterable if it's not null and the empty list otherwise.
-- `any`: Returns true if at least one element matches the given predicate.
-- `concatWithSingleList`: Concatenates the current iterable with another iterable.
-- `concatWithMultipleList`: Concatenates the current iterable with multiple iterables.
-- `toMutableSet`: Converts the iterable to a set.
-- `intersect`: Returns a set containing all elements that are contained by both this set and the specified collection.
-- `groupBy`: Groups the elements by the value returned by the specified key function.
-- `filter`: Returns a list containing only elements matching the given predicate.
-- `filterNot`: Returns a list containing all elements not matching the given predicate.
-- `mapList`: Returns the result of applying a function to each element in the iterable as a list.
-- `whereIndexed`: Returns an iterable with all elements that satisfy the predicate.
-- `forEachIndexed`: Performs the given action on each element in the iterable, providing the sequential index with the element.
-- `sortedDescending`: Returns a new list with all elements sorted in descending order.
-- `containsAll`: Returns true if all elements in the specified collection are contained in this collection.
-- `count`: Returns the number of elements that match the given predicate.
-- `all`: Returns true if all elements match the given predicate.
-- `distinctBy`: Returns a new list containing the first occurrence of each element with a unique key, as determined by the provided key selector function.
-- `subtract`: Returns a set containing all elements that are contained by this collection and not contained by the specified collection.
-- `find`: Returns the first element matching the given predicate, or null if not found.
-- `encodedJson`: Encodes the iterable as a JSON string.
+
+General purpose extensions for all collection types:
+
+```dart
+final numbers = [1, 2, 3, 4, 5, null, 6];
+
+// Safe operations
+print(numbers.isEmptyOrNull);                // false
+print(numbers.firstOrNull);                  // 1
+print(numbers.lastOrDefault(0));             // 6
+print(numbers.tryGetRandom());               // Random element or null
+
+// Type-safe conversions
+print(numbers.getInt(1));                    // 2
+print(numbers.tryGetDouble(5));              // null
+
+// Collection operations
+print(numbers.filter((e) => e.isOdd));       // [1, 3, 5]
+print(numbers.whereIndexed((i, e) => i < 3)); // [1, 2, 3]
+
+// Aggregation
+print(numbers.total);                        // Sum of all numbers
+final products = [Product(price: 10), Product(price: 20)];
+print(products.totalBy((p) => p.price));     // 30
+
+// Grouping and distinct
+final grouped = numbers.groupBy((e) => e.isEven);
+final unique = ["a", "a", "b"].distinctBy((e) => e.toLowerCase());
+```
 
 ### List Extension
-- `tryRemoveAt`: Removes the element at the specified index in a null-safe manner.
-- `indexOfOrNull`: Retrieves the index of the specified element in a null-safe manner.
-- `indexWhereOrNull`: Retrieves the index of the first element that matches the specified predicate in a null-safe manner.
-- `tryRemoveWhere`: Removes elements that match the specified condition in a null-safe manner.
-- `halfLength`: Returns half the size of the list.
-- `takeOnly`: Returns a list containing the first `n` elements.
-- `drop`: Returns a list containing all elements except the first `n` elements.
-- `firstHalf`: Returns the first half of the list.
-- `secondHalf`: Returns the second half of the list.
-- `swap`: Returns a list with two items swapped.
-- `getRandom`: Retrieves a random element from the list.
+
+Specialized operations for Lists:
+
+```dart
+final list = [1, 2, 3, 4, 5];
+
+// Safe operations
+list.tryRemoveAt(1);                     // Safely removes element at index
+print(list.indexOfOrNull(3));            // Returns index or null if not found
+
+// List manipulation
+print(list.halfLength);                  // 2
+print(list.takeOnly(3));                 // [1, 2, 3]
+print(list.firstHalf);                   // [1, 2]
+print(list.secondHalf);                  // [3, 4, 5]
+
+// Element operations
+final swapped = list.swap(0, 1);         // [2, 1, 3, 4, 5]
+print(list.getRandom());                 // Random element
+```
 
 ### Set Extension
-- `isEmptyOrNull`: Checks if the set is empty or null.
-- `isNotEmptyOrNull`: Checks if the set is not empty or null.
-- `addIfNotNull(T? value)`: Adds a value to the set if it's not null.
-- `toMutableSet()`: Converts the set to a mutable set.
-- `intersect(Iterable<T> other)`: Returns the intersection of two sets.
+
+Extensions specific to Sets:
+
+```dart
+final set = <int>{1, 2, 3};
+
+// Safe operations
+set.addIfNotNull(4);                    // Adds only if not null
+print(set.isEmptyOrNull);               // false
+
+// Set operations
+final other = <int>{3, 4, 5};
+print(set.intersect(other));            // {3}
+
+// Conversions
+final mutableSet = set.toMutableSet();  // Creates mutable copy
+```
 
 ### Map Extension
--  Type-safe extract and convert methods like `getInt(key)`, `getDateTime(key)`, `getMap(key)` etc.
-- `makeEncodable`: Converts a map to an encodable format.
-- `safelyEncodedJson`: Returns a safely encoded JSON string.
-- `flatMap` Flatten nested maps into single-level structures.
-- `isEmptyOrNull`: Checks if the map is empty or null.
-- `isNotEmptyOrNull`: Checks if the map is not empty or null.
-- `setIfMissing` Add entries conditionally.
-- `update` Update values based on a condition.
-- `filter` Filter entries using predicates.
-- `keysList`, `valuesList`, `keysSet`, `valuesSet` Get lists or sets of keys and values.
 
-## Number Extension
-### For all `num`
-- `isSuccessHttpResCode`: Checks if the HTTP response code is 200 or 201.
-- `isValidPhoneNumber`: Checks if the number is a valid phone number.
-- `toHttpResStatus`: Converts the number to an `HttpResStatus` enum.
-- `tryToInt`: Parses the number as an integer or returns null if it is not a number.
-- `tryToDouble`: Parses the number as a double or returns null if it is not a number.
-- `percentage`: Calculates the percentage of the number with respect to a total value, with an option to allow decimals.
-- `asBool`: Returns true if the number is greater than zero.
-- `isPositive`: Returns true if the number is positive.
-- `isNegative`: Returns true if the number is negative.
-- `isZeroOrNull`: Returns true if the number is zero or null.
-- `isZero`: Returns true if the number is zero.
-- `isValidPhoneNumber`: Checks if the number is a valid phone number.
-- `numberOfDigits`: Returns the number of digits in the number.
-- `removeTrailingZero`: Removes trailing zeros from the number's string representation.
-- `roundToFiftyOrHundred`: Rounds the number to the nearest fifty or hundred.
-- `roundToTenth`: Rounds the number to the nearest tenth.
-- `tenth`: Returns a tenth of the number.
-- `fourth`: Returns a fourth of the number.
-- `third`: Returns a third of the number.
-- `half`: Returns half of the number.
-- `getRandom`: Returns a random integer between 0 and the number.
-- `asGreeks`: Converts the number to a format that includes Greek symbols for thousands, millions, and beyond.
-- `delay`: Delays code execution by the number of seconds.
-- `daysDelay`: Delays code execution by the number of days.
-- `hoursDelay`: Delays code execution by the number of hours.
-- `minDelay`: Delays code execution by the number of minutes.
-- `secDelay`: Delays code execution by the number of seconds.
-- `millisecondsDelay`: Delays code execution by the number of milliseconds.
-- `asMilliseconds`: Converts the number to a `Duration` in milliseconds.
-- `asSeconds`: Converts the number to a `Duration` in seconds.
-- `asMinutes`: Converts the number to a `Duration` in minutes.
-- `asHours`: Converts the number to a `Duration` in hours.
-- `asDays`: Converts the number to a `Duration` in days.
-- `until`: Generates a sequence of numbers starting from the current number up to the specified end value, with the specified step size.
+Powerful extensions for working with Maps:
 
-### For `int`
-- `inRangeOf`: Returns the number if it is within the specified range, otherwise returns the min or max value.
-- `absolute`: Returns the absolute value of the number.
-- `doubled`: Returns the number multiplied by two.
-- `tripled`: Returns the number multiplied by three.
-- `quadrupled`: Returns the number multiplied by four.
-- `squared`: Returns the square of the number.
+```dart
+final map = {'name': 'John', 'age': '25', 'scores': ['90', '85', '95']};
 
-### For `double`
-- `inRangeOf`: Returns the number if it is within the specified range, otherwise returns the min or max value.
-- `absolute`: Returns the absolute value of the number.
-- `doubled`: Returns the number multiplied by two.
-- `tripled`: Returns the number multiplied by three.
-- `quadrupled`: Returns the number multiplied by four.
-- `squared`: Returns the square of the number.
+// Type-safe extraction
+print(map.getString('name'));           // "John"
+print(map.getInt('age'));              // 25
+print(map.getList<String>('scores'));   // ["90", "85", "95"]
+
+// Safe operations
+map.setIfMissing('email', 'john@example.com');  // Only if key doesn't exist
+
+// Map manipulation
+final filtered = map.filter((k, v) => k != 'age');
+final flattened = map.flatMap();        // Flattens nested maps
+
+// Collection views
+print(map.keysList);                    // List of keys
+print(map.valuesSet);                   // Set of values
+
+// JSON operations
+print(map.encodedJsonString);           // Safe JSON encoding
+```
+
+Each extension method is designed to be null-safe and provides convenient ways to handle common operations while maintaining clean, readable code.
+
+## Number Extensions
+
+Extensions for both `num`, `int`, and `double` types:
+
+### Common Operations (num)
+```dart
+final number = 123.456;
+
+// HTTP Status Checks
+print(200.isSuccessHttpResCode);      // true
+print(404.isNotFoundError);           // true
+print(429.isRateLimitError);          // true
+
+// Number Properties
+print(number.isPositive);             // true
+print(number.numberOfDigits);         // 3
+print(number.removeTrailingZero);     // "123.456"
+
+// Formatting
+print(number.asGreeks);               // "123.46"
+print(1500000.asGreeks);             // "1.5M"
+
+// Calculations
+print(number.tenth);                  // 12.3456
+print(number.half);                   // 61.728
+print(100.getRandom);                 // Random number between 0-100
+```
+
+### Integer Specific (int)
+```dart
+final number = 100;
+
+// Range Operations
+print(number.inRangeOf(0, 200));      // 100
+print(number.absolute);               // 100
+print(number.squared);                // 10000
+
+// Time Delays
+await 5.secDelay;                     // Delays 5 seconds
+await 2.minDelay;                     // Delays 2 minutes
+await 1.hoursDelay;                   // Delays 1 hour
+
+// Duration Conversions
+print(5.asSeconds);                   // Duration(seconds: 5)
+print(2.asMinutes);                   // Duration(minutes: 2)
+print(1.asDays);                      // Duration(days: 1)
+```
+
+### Double Specific (double)
+```dart
+final number = 123.456;
+
+// Formatting
+print(number.inRangeOf(0, 200));      // 123.456
+print(number.roundToTenth);           // 120.0
+
+// Math Operations
+print(number.doubled);                // 246.912
+print(number.squared);                // 15241.383936
+```
 
 ## Duration Extension
-- `delayed(FutureOr<T> Function()? computation)`: Delays execution by the duration.
-- `fromNow`: Adds the Duration to the current DateTime and gives a future time.
-- `ago`: Subtracts the Duration from the current DateTime and gives a pastime.
+
+Powerful extensions for working with durations:
+
+```dart
+final duration = Duration(hours: 2, minutes: 30);
+
+// Future Time Operations
+await duration.delayed(() => print('Delayed!'));  // Executes after duration
+print(duration.fromNow);                          // DateTime 2.5 hours from now
+print(duration.ago);                              // DateTime 2.5 hours ago
+
+// Chaining
+final newDuration = Duration(minutes: 30)
+    .fromNow
+    .add(Duration(hours: 1));                     // 1.5 hours from now
+```
 
 ## Uri Extension
-- `isValidUri`: Checks if the string is a valid URI.
-- `toUri`: Converts the string to a URI object.
-- `isHttp`: Checks if the URI uses the HTTP scheme.
-- `isHttps`: Checks if the URI uses the HTTPS scheme.
-- `host`: Returns the host part of the URI.
-- `path`: Returns the path part of the URI.
+
+Extensions for URI handling and validation:
+
+```dart
+// String to URI conversion
+final uriString = "https://pub.dev";
+print(uriString.isValidUri);                // true
+final uri = uriString.toUri;                // Uri object
+
+// URI Properties
+print(uri.isHttp);                          // false
+print(uri.isHttps);                         // true
+print(uri.host);                            // "pub.dev"
+print(uri.path);                            // "/"
+
+// Validation
+print("not-a-url".isValidUri);              // false
+```
 
 ## Bool Extension
-- `toggled`: returns a new bool which is toggled from the current one.
-- `val` & `isTrue`: (nullable boolean): Returns `true` if the value is not null and true
-- `isFalse`: (nullable boolean): Returns `true` if the value is not null and false
-- `binary`: Returns `1` if the value is non-null and true, otherwise returns `0`.
 
-## Objects Extension
-- `encode({Object? Function(dynamic object)? toEncodable})`: Encodes an object to JSON.
-- `isNull`: Checks if the object is null.
-- `isNotNull`: Checks if the object is not null.
-- `asBool`: Converts an object to a boolean value.
+Useful extensions for boolean values:
 
-## Exceptions
-The `ConvertObject` class throws a `ParsingException` if there is an error while converting an object. This exception
-provides information about the type of the object and the method used for conversion.
+```dart
+bool value = true;
+
+// Toggle Operations
+print(value.toggled);                       // false
+
+// Nullable Boolean Handling
+bool? nullableBool;
+print(nullableBool.val);                    // false
+print(nullableBool.isTrue);                 // false
+print(nullableBool.isFalse);               // false
+
+// Binary Conversion
+print(true.binary);                         // 1
+print(false.binary);                        // 0
+```
+
+## Object Extension
+
+General purpose extensions for all objects:
+
+```dart
+dynamic object = {"name": "John", "age": 30};
+
+// Type Conversions
+print(object.toInt());                      // null (not convertible)
+print(object.toString1());                  // "{name: John, age: 30}"
+print(object.tryToMap<String, dynamic>());  // {"name": "John", "age": 30}
+
+// Null Checking
+print(object.isNull);                       // false
+print(object.isNotNull);                    // true
+
+// JSON Operations
+print(object.encode());                     // '{"name":"John","age":30}'
+
+// Boolean Conversion
+print(object.asBool);                      // true (non-null)
+print(null.asBool);                        // false
+```
+
+Each extension is designed to provide convenient, null-safe operations while maintaining clean, readable code. The extensions are particularly useful for data manipulation, time calculations, and type conversions in Dart applications.
+
+# HTTP Utilities
+
+## Status Codes
+
+The package provides comprehensive HTTP status code handling with user-friendly and developer-oriented messages:
+
+```dart
+// Status Code Checks
+print(200.isOkCode);              // true
+print(201.isCreatedCode);         // true
+print(401.isAuthenticationError); // true
+print(404.isNotFoundError);       // true
+print(429.isRateLimitError);      // true
+print(503.isRetryableError);      // true
+
+// Retry Handling
+final retryDelay = 429.statusCodeRetryDelay; // Returns suggested retry duration
+```
+
+## Status Messages
+
+Access both user-friendly and technical status messages:
+
+```dart
+// User-Friendly Messages
+print(404.toHttpStatusUserMessage);
+// "The requested resource could not be found. Please check the URL and try again."
+
+// Developer Messages
+print(404.toHttpStatusDevMessage);
+// "Resource not found. Verify the path and parameters. Check if resource exists and access permissions."
+
+// Complete Status Messages Map
+final userMessages = httpStatusUserMessage;
+final devMessages = httpStatusDevMessage;
+```
+
+# Constants
+
+## Time Constants
+
+Predefined duration constants for common time intervals:
+
+```dart
+// Basic Time Units
+print(oneSecond);       // Duration(seconds: 1)
+print(oneMinute);       // Duration(minutes: 1)
+print(oneHour);         // Duration(hours: 1)
+print(oneDay);          // Duration(days: 1)
+
+// Milliseconds Constants
+print(millisecondsPerSecond);  // 1000
+print(millisecondsPerMinute);  // 60000
+print(millisecondsPerHour);    // 3600000
+print(millisecondsPerDay);     // 86400000
+
+// Usage Example
+final delay = oneMinute * 5;   // 5 minutes duration
+```
+
+## Number Formats
+
+Constants for number formatting and conversion:
+
+```dart
+// Greek Number Suffixes for large numbers
+print(greekNumberSuffixes);
+// {
+//   'K': 1000,
+//   'M': 1000000,
+//   'B': 1000000000,
+//   'T': 1000000000000,
+// }
+
+// Roman Numerals
+print(romanNumerals);
+// {
+//   1: 'I',
+//   5: 'V',
+//   10: 'X',
+//   50: 'L',
+//   100: 'C',
+//   500: 'D',
+//   1000: 'M',
+// }
+
+// Calendar Constants
+print(smallWeekdays);
+// {1: 'Mon', 2: 'Tue', ...}
+
+print(fullWeekdays);
+// {1: 'Monday', 2: 'Tuesday', ...}
+
+print(smallMonthsNames);
+// {1: 'Jan', 2: 'Feb', ...}
+
+print(fullMonthsNames);
+// {1: 'January', 2: 'February', ...}
+```
+
+## Regular Expressions
+
+Pre-defined RegExp patterns for common validation scenarios:
+
+```dart
+// Validation Patterns
+print(RegExp(alphanumericPattern).hasMatch('Test123'));     // true
+print(RegExp(specialCharsPattern).hasMatch('Test@123'));    // true
+print(RegExp(usernamePattern).hasMatch('user_123'));        // true
+print(RegExp(currencyPattern).hasMatch('$123.45'));         // true
+print(RegExp(phoneNumberPattern).hasMatch('+1234567890'));  // true
+print(RegExp(emailPattern).hasMatch('test@example.com'));   // true
+print(RegExp(ip4Pattern).hasMatch('192.168.1.1'));         // true
+print(RegExp(ip6Pattern).hasMatch('2001:0db8:85a3:0000:0000:8a2e:0370:7334')); // true
+print(RegExp(urlPattern).hasMatch('https://dart.dev'));     // true
+print(RegExp(numericPattern).hasMatch('12345'));           // true
+print(RegExp(alphabetPattern).hasMatch('abcDEF'));         // true
+
+// Usage Example with String Extension
+print('test@example.com'.isValidEmail);    // true
+print('192.168.1.1'.isValidIp4);          // true
+print('https://dart.dev'.isValidUrl);      // true
+```
+
+These utilities and constants provide a robust foundation for handling HTTP responses, formatting numbers, validating input, and working with common time-based operations in your Dart applications.
 
 ## Contributions
 Contributions to this package are welcome. If you have any suggestions, issues, or feature requests, please create a

@@ -1,21 +1,41 @@
 # CHANGELOG
 
 ## 4.0.0
+
 ### Added
+
 - **New Pagination Features**:
-  - **Added `BasePaginator<T>`** to centralize common logic for both sync and async paginators.
-  - **Refined Transformations and Caching**: We introduced a consistent `_CacheEntry` class to store either `Paginator<T>` or `List<T>` with expiration checks.
-  - **Enhanced `AsyncPaginator`**: Now leverages `CancelableOperation` to optionally cancel in-flight requests and avoid race conditions if `autoCancelFetches` is true.
-  - **Introduced `PaginationAnalytics`** mixin: Helps track page loads, errors, and cache hits with minimal extra code.
-  - **Unified Infinite Paginator**: A single `InfinitePaginator` supports both page-based and cursor-based scrolling through factory constructors.
+    - **Added `BasePaginator<T>`** to centralize common logic for both sync and async paginators.
+    - **Refined Transformations and Caching**: We introduced a consistent `_CacheEntry` class to store either
+      `Paginator<T>` or `List<T>` with expiration checks.
+    - **Enhanced `AsyncPaginator`**: Now leverages `CancelableOperation` to optionally cancel in-flight requests and
+      avoid race conditions if `autoCancelFetches` is true.
+    - **Introduced `PaginationAnalytics`** mixin: Helps track page loads, errors, and cache hits with minimal extra
+      code.
+    - **Unified Infinite Paginator**: A single `InfinitePaginator` supports both page-based and cursor-based scrolling
+      through factory constructors.
 - **String Similarity**:
-    - New `StringSimilarity` utility class supporting algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`, `jaroWinkler`, and `cosine`.
+    - New `StringSimilarity` utility class supporting algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`,
+      `jaroWinkler`, and `cosine`.
     - Added `compareWith` method to `String` extensions for quick string similarity comparison.
 - **Math Enhancements**:
     - Added `sqrt()` method to numeric extensions for square root calculations.
+- **New Raw Data**
+  - Added detailed HTTP status message maps:
+      - `httpStatusUserMessage`: User-friendly explanations for each HTTP status code.
+      - `httpStatusDevMessage`: Technical descriptions and troubleshooting hints for developers.
+- **New Number Extension Helpers**:
+    - Added more HTTP status code checks: `isOkCode`, `isCreatedCode`, `isAcceptedCode`, `isNoContentCode`,
+      `isTemporaryRedirect`, `isPermanentRedirect`, `isAuthenticationError`, `isValidationError`, `isRateLimitError`,
+      `isTimeoutError`, `isConflictError`, `isNotFoundError`, and `isRetryableError`.
+    - Added `statusCodeRetryDelay` for suggested retry durations based on status code
+    - Added new status message variants: `toHttpStatusUserMessage` and `toHttpStatusDevMessage`
+    - Enhanced `isSuccessCode` to check for all 2xx status codes (previously only 200 and 201)
 
 ### Migration Guide
-- A [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) is available for upgrading.
+
+- A [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) is available for
+  upgrading.
 - Deprecated APIs (e.g., `LegacyPaginator`) are still accessible but should be replaced with new implementations.
 
 ## [3.3.0]
