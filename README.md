@@ -161,7 +161,7 @@ Start using the extensions and utilities:
 ```dart
 // String operations
 final text = "hello_world_example";
-print(text.toCamelCase());  // "helloWorldExample"
+print(text.toCamelCase);  // "helloWorldExample"
 
 // Safe number conversion
 final value = "123.45".tryToDouble() ?? 0.0;
@@ -185,10 +185,10 @@ Powerful text manipulation tools including case conversion and similarity checks
 ```dart
 // Case conversions
 final text = "helloWorld_example-TEXT";
-print(text.toPascalCase());           // HelloWorldExampleText
-print(text.toSnakeCase());            // hello_world_example_text
-print(text.toKebabCase());            // hello-world-example-text
-print(text.toScreamingSnakeCase());   // HELLO_WORLD_EXAMPLE_TEXT
+print(text.toPascalCase);           // HelloWorldExampleText
+print(text.toSnakeCase);            // hello_world_example_text
+print(text.toKebabCase);            // hello-world-example-text
+print(text.toScreamingSnakeCase);   // HELLO_WORLD_EXAMPLE_TEXT
 
 // String similarity checks
 final str1 = "hello";
@@ -449,9 +449,9 @@ Rich text manipulation and validation:
 ```dart
 // Smart Case Conversions
 final text = "helloWorld_example-TEXT";
-print(text.toPascalCase());             // HelloWorldExampleText
-print(text.toSnakeCase());              // hello_world_example_text
-print(text.toDotCase());                // hello.world.example.text
+print(text.toPascalCase);             // HelloWorldExampleText
+print(text.toSnakeCase);              // hello_world_example_text
+print(text.toDotCase);                // hello.world.example.text
 
 // Validation
 print("test@email.com".isValidEmail);   // true
