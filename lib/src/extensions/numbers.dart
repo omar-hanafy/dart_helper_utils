@@ -214,32 +214,50 @@ extension DHUNumExtensions on num {
         : '${reducedNum.toStringAsFixed(fractionDigits)}$symbol';
   }
 
-  /// Delays the execution of a callback for the specified number of seconds.
-  ///
-  /// Sample usage:
-  /// ```dart
-  /// await 2.delay();  // Delays for 2 seconds
-  /// ```
-  Future<void> delay([FutureOr<dynamic> Function()? computation]) async =>
+  /// Delay equivalent to the number of days.
+  Future<T> daysDelay<T extends Object?>([
+    FutureOr<T> Function()? computation,
+  ]) =>
       Future.delayed(
-        Duration(milliseconds: (this * 1000).round()),
+        asDays,
         computation,
       );
 
-  /// Delay equivalent to the number of days.
-  Future<void> get daysDelay => Future.delayed(asDays);
-
   /// Delay equivalent to the number of hours.
-  Future<void> get hoursDelay => Future.delayed(asHours);
+  Future<T> hoursDelay<T extends Object?>([
+    FutureOr<T> Function()? computation,
+  ]) =>
+      Future.delayed(
+        asHours,
+        computation,
+      );
 
   /// Delay equivalent to the number of minutes.
-  Future<void> get minDelay => Future.delayed(asMinutes);
+  Future<T> minutesDelay<T extends Object?>([
+    FutureOr<T> Function()? computation,
+  ]) =>
+      Future.delayed(
+        asMinutes,
+        computation,
+      );
 
   /// Delay equivalent to the number of seconds.
-  Future<void> get secDelay => Future.delayed(asSeconds);
+  Future<T> secondsDelay<T extends Object?>([
+    FutureOr<T> Function()? computation,
+  ]) =>
+      Future.delayed(
+        asSeconds,
+        computation,
+      );
 
   /// Delay equivalent to the number of milliseconds.
-  Future<void> get millisecondsDelay => Future.delayed(asMilliseconds);
+  Future<T> millisecondsDelay<T extends Object?>([
+    FutureOr<T> Function()? computation,
+  ]) =>
+      Future.delayed(
+        asMilliseconds,
+        computation,
+      );
 
   /// Converts the number to a Duration in milliseconds.
   Duration get asMilliseconds => Duration(microseconds: (this * 1000).round());

@@ -885,3 +885,16 @@ extension PaginatorTesting<T> on IPaginator<T> {
     // Additional validations can be added here as needed.
   }
 }
+
+/*
+**Areas for Potential Improvement or Consideration:**
+
+*   **Transform Cache in `AsyncPaginator`:** While the `Paginator` class has a transform cache, the `AsyncPaginator` doesn't. For consistency and potential performance gains in scenarios where transformations are applied to `AsyncPaginator`, adding a similar caching mechanism could be beneficial.
+*   **Limited Filtering in `AsyncPaginatorTransform`:** The `where` method fetches double the `pageSize` and applies the filter, which may not be optimal. A more robust approach could involve fetching additional pages until a full page of valid items is obtained or possibly offloading filtering to server-side when possible, as mentioned in the code's comment.
+*   **Server-Side Filtering/Sorting Suggestion:** The documentation could more strongly emphasize the benefits of performing filtering and sorting on the server-side when dealing with large datasets.
+*   **Testing:** While the `PaginatorTesting` extension hints at testing, providing a more comprehensive test suite alongside the library would enhance its reliability and maintainability.
+*   **Total Items Fetching:** `totalItemsFetcher` in `AsyncPaginator` is a good feature, but there could be scenarios where the total number changes after the initial fetch. A way to refresh the total count could be useful.
+*   **Naming Consistency:** While generally consistent, `totalItemsFetcher` in `AsyncPaginator` uses "Items" while the `Paginator`'s `pageInfo` uses "totalItems". Using consistent terminology across classes would be slightly clearer.
+*   **Cursor-Based Total Items:** In cursor-based pagination, knowing the total number of items might not be feasible. The documentation could clarify how or if `hasNextPage` behaves in such scenarios.
+*   **Potential for `notifyListeners()` for non-stream users** If user's don't want to use streams, then implementing `ChangeNotifier` might provide more value.
+*/

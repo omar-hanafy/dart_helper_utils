@@ -1,31 +1,31 @@
-## Migration Guide (v4)
+# Migration Guide (v4)
 
 ### 1. Update Imports and Class Names
 
 - In older versions, you may have imported a single file containing `Paginator` or `AsyncPaginator`. Now, these classes
   might be organized differently, possibly split across multiple files or using new package imports.
-- If you see errors referencing `IPaginator` or `BasePaginator`, ensure you’ve updated import paths to point to the new,
+- If you see errors referencing `IPaginator` or `BasePaginator`, ensure you've updated import paths to point to the new,
   refactored code.
 
 ### 2. Adjust for New `BasePaginator` and Lifecycle Events
 
 - Version 4 introduces a `BasePaginator<T>` class that centralizes shared logic. If you subclassed an old `Paginator`
-  directly, you’ll now likely extend `BasePaginator<T>` or `Paginator<T>` instead.
+  directly, you'll now likely extend `BasePaginator<T>` or `Paginator<T>` instead.
 - If you relied on custom page-change logic, override `onPageChanged` in your subclass. This replaces older patterns
-  where you might have had your own “goToPage” hooking mechanism.
+  where you might have had your own "goToPage" hooking mechanism.
 
 ### 3. Handle Casting and Transformations
 
 - In prior versions, transformations like `filter()` or `sorted()` might have returned raw lists or used a different
   caching approach. Now, we store and retrieve fully instantiated `Paginator<T>` objects in an internal
   `_transformCache` with time-based expiration.
-- If your code was accessing transform results directly, you’ll need to rely on the newly returned `Paginator<T>` from
+- If your code was accessing transform results directly, you'll need to rely on the newly returned `Paginator<T>` from
   methods like `where(...)` or `sort(...)`.
 
 ### 4. Use `CancelableOperation` in `AsyncPaginator` (Optional)
 
 - If you want to avoid overlapping fetch requests, ensure `autoCancelFetches` is set to `true` in your
-  `PaginationConfig`. If you’re upgrading and want to preserve old behavior (which might allow multiple fetches at
+  `PaginationConfig`. If you're upgrading and want to preserve old behavior (which might allow multiple fetches at
   once), you can set it to `false`.
 
 ### 5. Infinite Paginator Changes
@@ -36,12 +36,37 @@
 - Check your existing code for any references to legacy infinite scroll classes or direct calls that now require passing
   a `paginationKey`. Adapt them to match the new factory constructor signature.
 
-### 6. Analytics (Optional)
+### 6. Number Extensions Delay Methods
+
+- The `delay()` method has been removed in favor of more specific duration-based delays.
+- Replace `n.delay()` calls with the appropriate specific delay method:
+  ```dart
+  // Old
+  await 2.delay();
+  await 2.secDelay;
+  await 5.minDelay;
+  await 1.daysDelay;
+  
+  // New
+  await 2.secondsDelay();
+  await 5.minutesDelay();
+  await 1.daysDelay();
+  ```
+- All delay methods now support generic return types for computations:
+  ```dart
+  // Old
+  await 2.delay(() => someFunction());
+  
+  // New
+  final result = await 2.secondsDelay(() => someFunction());
+  ```
+
+### 7. Analytics (Optional)
 
 - If you want to track usage metrics, add the `PaginationAnalytics` mixin to your custom paginator class. This is
   optional but can be handy if you want to log the number of page loads, errors, etc.
 
-### 7. Testing
+### 8. Testing
 
 - Lastly, confirm your existing tests still pass or update them to reflect any structural changes in version 4 (like new
   method names, new overrides, or changed class hierarchies).

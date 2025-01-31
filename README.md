@@ -2,111 +2,236 @@
 
 [![pub package](https://img.shields.io/pub/v/dart_helper_utils)](https://pub.dev/packages/dart_helper_utils)
 
-The `dart_helper_utils` package provides a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with an extension.
+**`dart_helper_utils`** is a toolkit designed to make coding in Dart more convenient by offering utilities for pagination, type conversions, data manipulation, time measurements, HTTP status handling, and much more. We’ve bundled a wide range of extension methods and helper classes that let you write less code and focus on your app's core logic.
 
-**Note:** This package is tailored for Dart projects. For Flutter projects, use [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils), which includes all `dart_helper_utils` features plus additional utilities and extension for Flutter, such as `Widget`, `Color`, and `BuildContext` extension.
+> **Note:** If you’re working on a Flutter project, we recommend using [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils). It includes everything you’ll find here, plus Flutter-specific extensions like widgets and color utilities.
 
-# Featured
+---
 
-## Pagination
+## Why Use dart_helper_utils?
 
-Three powerful pagination implementations for different use cases:
+We initially created `dart_helper_utils` to gather all those tiny, repetitive tasks that pop up in Dart projects—think date parsing, JSON decoding, or pagination. Over time, we introduced more powerful features like infinite scrolling, advanced string transformations, numeric calculations, and user-friendly HTTP status messages. The result is a collection of robust, well-tested utilities that you can easily slot into your own Dart applications.
 
-```dart
-// Synchronous pagination for in-memory lists
-final paginator = Paginator(
-  items: myItems,
-  pageSize: 10,
-);
+### 1. Parsing Dynamic JSON Data
 
-// Asynchronous pagination with automatic retries and caching
-final asyncPaginator = AsyncPaginator<User>(
-  fetchPage: (pageNumber, pageSize) => api.fetchUsers(pageNumber, pageSize),
-  pageSize: 20,
-);
-
-// Infinite scrolling with cursor-based pagination
-final infinitePaginator = InfinitePaginator.cursorBased(
-  fetchItems: (pageSize, cursor) => api.fetchItems(pageSize, cursor),
-  getNextCursor: (items) => PaginationCursor(items.last.id),
-);
-
-// Add analytics tracking to any paginator
-paginator with PaginationAnalytics<Item>
-```
-
-Key Features:
-- Built-in caching and error handling
-- Customizable retry logic
-- Race condition prevention for async operations
-- Support for both page-based and cursor-based pagination
-- Analytics tracking for page loads, errors, and cache performance
-- Transformations (map, filter) with automatic cache management
-
-## DoublyLinkedList
-A powerful implementation of doubly linked list that offers:
+**Before**:
 
 ```dart
-final myList = DoublyLinkedList<int>([1,2,3,4]);
-
-// Basic Operations
-myList.append(5);
-myList.prepend(0);
-myList.insert(1, 15);
-
-// Node Operations
-for (final node in myList.nodes) {
-  print('Value: ${node.data}, Previous: ${node.prev?.data}, Next: ${node.next?.data}');
+Map<String, dynamic> parseUser(Map<String, dynamic> json) {
+  final result = <String, dynamic>{};
+  
+  // Manually checking and converting each field
+  if (json['name'] != null && json['name'] is String) {
+    result['name'] = json['name'];
+  }
+  
+  if (json['age'] != null) {
+    final age = int.tryParse(json['age'].toString());
+    if (age != null) {
+      result['age'] = age;
+    }
+  }
+  
+  return result;
 }
-
-// Factory Constructors
-final filledList = DoublyLinkedList.filled(3, 0);  // [0, 0, 0]
-final generatedList = DoublyLinkedList.generate(3, (i) => i * 2);  // [0, 2, 4]
 ```
 
-## Converting Objects
-Type-safe conversion utilities with enhanced error handling and format support:
-
+**After**:
 ```dart
-// Simple conversions with global methods.
-int number = toInt('123');  // 123
-double price = toDouble('19.99');  // 19.99
-bool isActive = toBool('true');  // true
+Map<String, dynamic> parseUser(Map<String, dynamic> json) {
+	// json.getString('key')
+  return {
+    'name': json.getString('name'),
+    'age': json.getInt('age'),
+  };
+}
+```
+---
 
-// U can use the ConvertObject class to avoid ambiguty
-// for example the toMap works here well but sometimes u might have already method named toMap.
-final map = toMap<String, dynamic>(data);
-// to resolve this use the static method instead
-final map = ConvertObject.toMap<String, dynamic>(data);
+### 2. Date Handling
 
-// Complex conversions with format support
-DateTime date = toDateTime('2024-01-13', format: 'yyyy-MM-dd');
-num amount = toNum('1,234.56', format: '#,##0.00');
-
-// Collection conversions with type safety
-List<int> numbers = toList<int>('[1, 2, 3]');  // Accepts JSON strings
-Map<String, dynamic> data = toMap('{"name": "John", "age": 30}');
-
-// Safe extraction from collections
-final map = {'user': {'age': '25'}};
-int age = map.getInt('user', innerKey: 'age');  // 25
-
-final list = ['John', '25', true];
-String name = list.getString(0);  // "John"
-
-// conversion on any object
-final id = '123';
-final idNumber = id.convertToInt();
+**Before**:
+```dart
+bool isDateValid(DateTime? date) {
+  if (date == null) return false;
+  final now = DateTime.now();
+  return date.year == now.year && 
+         date.month == now.month && 
+         date.day == now.day;
+}
 ```
 
-## TimeUtils
-Comprehensive time measurement and execution control utilities:
+**After**:
+```dart
+bool isDateValid(DateTime? date) {
+  return date?.isToday ?? false;
+}
+```
+---
+
+### 3. Duration Delays
+
+**Before**:
+```dart
+await Future<void>.delayed(const Duration(seconds: 3));
+```
+
+**After**:
+```dart
+await 3.secondsDelay();
+```
+---
+
+### 4. HTTP Status Handling
+
+**Before**:
 
 ```dart
-// Measure execution time
+String getErrorMessage(int statusCode) {
+  switch (statusCode) {
+    case 429:
+      return 'Too many requests. Please wait before trying again.';
+    case 404:
+      return 'Resource not found. Please check the URL.';
+    case 500:
+      return 'Server error. Please try again later.';
+    default:
+      return 'An error occurred.';
+  }
+}
+```
+
+**After**:
+```dart
+String getErrorMessage(int statusCode) {
+  return statusCode.toHttpStatusUserMessage;
+}
+```
+---
+
+## Getting Started
+
+### Installation
+
+Add this to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  dart_helper_utils: ^4.0.0
+```
+
+Then run:
+```bash
+dart pub get   # For Dart projects
+# or
+flutter pub get # For Flutter projects
+```
+
+### Basic Usage
+
+Import the package:
+
+```dart
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+```
+
+Start using the extensions and utilities:
+
+```dart
+// String operations
+final text = "hello_world_example";
+print(text.toCamelCase());  // "helloWorldExample"
+
+// Safe number conversion
+final value = "123.45".tryToDouble() ?? 0.0;
+
+// Date handling
+final date = DateTime.now();
+print(date.isToday);  // true
+print(date.format("dd/MM/yyyy"));  // "16/01/2025"
+
+// Collection utilities
+final list = [1, 2, null, 3, null, 4];
+print(list.whereNotNull());  // [1, 2, 3, 4]
+```
+---
+
+## Core Features
+### String Similarity & Text Operations
+
+Powerful text manipulation tools including case conversion and similarity checks:
+
+```dart
+// Case conversions
+final text = "helloWorld_example-TEXT";
+print(text.toPascalCase());           // HelloWorldExampleText
+print(text.toSnakeCase());            // hello_world_example_text
+print(text.toKebabCase());            // hello-world-example-text
+print(text.toScreamingSnakeCase());   // HELLO_WORLD_EXAMPLE_TEXT
+
+// String similarity checks
+final str1 = "hello";
+final str2 = "hallo";
+
+// Different algorithms available
+final similarity = str1.compareWith(
+  str2, 
+  algorithm: StringSimilarityAlgorithm.levenshtein
+);
+print(similarity); // 0.8
+
+// Words extraction (smarter than simple split)
+print("FlutterAndDart_are-AWESOME".toWords);
+// [Flutter, And, Dart, are, AWESOME]
+```
+---
+
+### Type-Safe Conversions
+
+Safe extraction and conversion of values from dynamic data:
+
+```dart
+// Safe JSON parsing
+final jsonStr = '{"name":"John","age":"25","scores":[90,85,95]}';
+final map = jsonStr.decode();
+
+// Type-safe extractions
+final name = map.getString('name');      // "John"
+final age = map.getInt('age');           // 25
+final scores = map.getList<int>('scores');  // [90, 85, 95]
+
+// Nested extractions
+final userData = {
+  'user': {
+    'details': {
+      'address': {'zipcode': '12345'}
+    }
+  }
+};
+
+// Safe nested access with fallback
+final zipcode = userData.getInt(
+  'user', 
+  innerKey: 'details.address.zipcode',
+  defaultValue: 0
+); // 12345
+
+// Complex conversions
+final date = "2024-01-16".toDateTime(format: "yyyy-MM-dd");
+final number = "1,234.56".toNum(format: "#,##0.00");
+```
+---
+
+### Time & Execution Utils
+
+Comprehensive utilities for measuring and controlling execution time:
+
+```dart
+// Measure execution duration
 final duration = await TimeUtils.executionDuration(() async {
-  await someAsyncTask();
+  await someExpensiveOperation();
 });
+print("Operation took ${duration.inMilliseconds}ms");
 
 // Run with timeout
 try {
@@ -118,536 +243,308 @@ try {
   print('Task timed out');
 }
 
-// Periodic execution
+// Throttle function calls
+final throttled = TimeUtils.throttle(
+  duration: Duration(seconds: 1),
+  function: () => print('Throttled function called'),
+);
+
+// Run periodic tasks
 final subscription = TimeUtils.runPeriodically(
   interval: Duration(minutes: 1),
   task: () => checkForUpdates(),
 );
+
+// Clean up when done
+subscription.cancel();
 ```
 
-# Extensions
+---
 
-## Date Extensions
+### Pagination
 
-The Date Extensions provide comprehensive functionality for DateTime manipulation and formatting:
+A powerful and flexible pagination utilities to efficiently handle data loading from any source, whether it's an in-memory list, a remote API, or a database.
 
-### Parsing
+#### 1. In-Memory List (Synchronous)
+
 ```dart
-// Convert timestamp to DateTime
-final date = 1643673600000.timestampToDate;
+final paginator = Paginator<MyItem>(items: myItems, pageSize: 10);
 
-// Convert string to DateTime with various formats
-final date = "2024-01-13".tryToDateTime();
-final date = "13/01/2024".toDateTime(format: "dd/MM/yyyy");
+// Access current page items
+final List<MyItem> currentPageItems = paginator.currentPageItems;
 ```
 
-### Formatting
+#### 2. API/Database (Asynchronous) 
+
 ```dart
-DateTime now = DateTime.now();
+final asyncPaginator = AsyncPaginator<User>(
+  fetchPage: (page, size) async => await api.fetchUsers(page: page, size: size),
+  pageSize: 20,
+  config: PaginationConfig(
+    retryAttempts: 3,
+    autoCancelFetches: true, // Highly recommended!
+  ),
+);
 
-// Convert to local time
-final localTime = now.local;
-
-// Convert to UTC ISO format
-final utcIso = now.toUtcIso;
-
-// Custom format
-final formatted = now.format("dd-MM-yyyy");
+// Access current page items (fetches if needed)
+final List<User> currentPageUsers = await asyncPaginator.currentPageItems;
 ```
 
-### Comparison
+#### 3. Infinite Scrolling (Cursor-Based)
+
+```dart
+final infinitePaginator = InfinitePaginator<Item, String>.cursorBased(
+  fetchItems: (size, cursor) async => await api.fetchItems(size: size, fromCursor: cursor.value),
+  getNextCursor: (items) => PaginationCursor(items.last.id),
+  pageSize: 20,
+  initialCursor: PaginationCursor(""),
+);
+
+// Load more items
+await infinitePaginator.loadMoreItems();
+```
+
+#### Add Analytics
+
+```dart
+final trackedPaginator = paginator with PaginationAnalytics;
+print(trackedPaginator.metrics); // Example: {pageLoads: 5, errors: 0, cacheHits: 3}
+```
+
+---
+
+## Extensions Deep Dive
+
+### Date & Time Extensions
+
+Simplify date operations and comparisons:
+
 ```dart
 final date = DateTime.now();
 
-// Relative time checks
-print(date.isTomorrow);
-print(date.isToday);
-print(date.isYesterday);
-print(date.isInFuture);
-print(date.isInPast);
-
-// Component level comparison
-final otherDate = DateTime(2024, 1, 1);
-print(date.isAtSameYearAs(otherDate));
-print(date.isAtSameMonthAs(otherDate));
-print(date.isAtSameDayAs(otherDate));
-```
-
-### Duration Calculation
-```dart
-final date = DateTime.now().add(Duration(days: 5));
-
-// Get passed or remaining duration
-final passed = date.passedDuration;
-final remaining = date.remainingDuration;
-
-// Get passed or remaining days
-final passedDays = date.passedDays;
-final remainingDays = date.remainingDays;
-```
-
-### Manipulation
-```dart
-final date = DateTime.now();
-
-// Get start points
-final startOfDay = date.startOfDay;
-final startOfMonth = date.startOfMonth;
-final startOfYear = date.startOfYear;
+// Quick comparisons
+print(date.isToday);         // true
+print(date.isTomorrow);      // false
+print(date.isYesterday);     // false
+print(date.isWeekend);       // depends on the date
 
 // Navigation
-final nextDay = date.nextDay;
-final previousWeek = date.previousWeek;
-final lastDayOfMonth = date.lastDayOfMonth;
+final nextWeek = date.nextWeek;
+final prevMonth = date.previousMonth;
+final startOfDay = date.startOfDay;
+final endOfMonth = date.endOfMonth;
+
+// Duration calculations
+final otherDate = DateTime(2025, 12, 31);
+print(date.remainingDays(otherDate));    // days until otherDate
+print(date.passedDays(otherDate));       // days since otherDate
+
+// Formatting
+print(date.format('dd/MM/yyyy'));        // "16/01/2025"
+print(date.httpFormat);                  // "Thu, 16 Jan 2025 00:00:00 GMT"
+
+// Age calculation
+final birthDate = DateTime(1990, 1, 1);
+print(birthDate.calculateAge());         // 35 (as of 2025)
 ```
 
-## Intl Extensions
+---
 
-### DateFormat
+### Collections Extensions
 
-#### String Extensions
+Powerful extensions for Lists, Maps, and Sets:
+
 ```dart
-// Create DateFormat from pattern
-final formatter = "yyyy-MM-dd".dateFormat();
+// List Extensions
+final list = [1, 2, null, 3, null, 4];
+print(list.whereNotNull());              // [1, 2, 3, 4]
+print(list.firstOrDefault(0));           // 1
+print(list.distinctBy((e) => e));        // [1, 2, null, 3, 4]
 
-// Parse string to DateTime with auto format detection
-final date = "2024-01-13".tryToDateAutoFormat();
+// Splitting lists
+print(list.firstHalf);                   // [1, 2, null]
+print(list.secondHalf);                  // [3, null, 4]
 
-// Parse with specific format
-final date = "13/01/2024".toDateFormatted("dd/MM/yyyy");
+// Map Extensions
+final map = {'name': 'John', 'scores': [85, 90, 95]};
 
-// Parse with locale
-final date = "13 janvier 2024".toDateFormatted("dd MMMM yyyy", locale: "fr");
+// Safe extractions with defaults
+final name = map.getString('name', defaultValue: 'Unknown');
+final scores = map.getList<int>('scores', defaultValue: []);
+
+// Manipulation
+map.setIfMissing('email', 'default@email.com');
+final filtered = map.filter((key, value) => value != null);
+
+// Set Extensions
+final set = {1, 2, 3};
+set.addIfNotNull(4);                     // Adds only if not null
+set.removeWhere((e) => e.isEven);        // Removes even numbers
+
+// Common Iterable Extensions
+final items = [1, 2, 3, 4, 5];
+print(items.total);                      // Sum: 15
+print(items.tryGetRandom());             // Random element or null
+```
+---
+
+### Numbers & Math Extensions
+
+Enhanced numeric operations and conversions:
+
+```dart
+// Basic Operations
+final num = 123.456;
+print(num.roundToNearest(5));           // 125
+print(num.isBetween(100, 200));         // true
+
+// Numeric Checks
+print(42.isPrime);                      // false
+print(16.isPerfectSquare);              // true
+print(8.isPerfectCube);                 // true
+
+// Currency and Formatting
+final price = 1234567.89;
+print(price.formatAsCurrency());        // "$1,234,567.89"
+print(price.formatAsCompact());         // "1.2M"
+print(price.asGreeks);                  // "1.23M"
+
+// Time Conversions
+await 5.secondsDelay();                   // Delays for 5 seconds
+final duration = 30.asMinutes;            // Duration of 30 minutes
+
+// HTTP Status Helpers
+print(200.isSuccessCode);              // true
+print(404.isNotFoundError);            // true
+print(429.statusCodeRetryDelay);       // Suggested retry duration
 ```
 
-#### DateTime Extensions
-```dart
-final date = DateTime.now();
+---
 
-// Basic formatting
-print(date.yMMMMdFormat); // "January 13, 2024"
-print(date.formatAsd); // "01/13/2024"
+### String Extensions
 
-// Weekday formatting
-print(date.formatAsEEEE); // "Saturday"
-print(date.formatAsEEEEE); // "S"
-
-// Month formatting
-print(date.formatAsLLL); // "Jan"
-print(date.formatAsLLLL); // "January"
-
-// With locale
-print(date.formatAsLLLL(locale: 'fr')); // "janvier"
-```
-
-### NumberFormat
-
-#### String Extensions
-```dart
-// Parse string to number with formatting
-final num = "1,234.56".toNumFormatted("#,##0.00");
-final int = "1,234".toIntFormatted("#,##0");
-final double = "1,234.56".toDoubleFormatted("#,##0.00");
-```
-
-#### Number Extensions
-```dart
-final number = 1234567.89;
-
-// Currency formatting
-print(number.formatAsCurrency(symbol: "$")); // "$1,234,567.89"
-print(number.formatAsSimpleCurrency(name: "USD")); // "USD 1,234,567.89"
-
-// Compact formatting
-print(number.formatAsCompact()); // "1.2M"
-print(number.formatAsCompactLong()); // "1.2 million"
-
-// Percentage and decimal
-print(number.formatAsPercentage()); // "123,456,789%"
-print(number.formatAsDecimal(decimalDigits: 2)); // "1,234,567.89"
-```
-
-### Bidi Support
-
-Comprehensive support for bidirectional text handling:
+Rich text manipulation and validation:
 
 ```dart
-final text = "Hello عالم";
-
-// Direction detection
-print(text.startsWithLtr()); // true
-print(text.endsWithRtl()); // true
-print(text.hasAnyRtl()); // true
-
-// Enforcing direction
-print(text.enforceLtr()); // Forces LTR direction
-print(text.enforceRtl()); // Forces RTL direction
-
-// Wrapping with direction markers
-print(text.wrapWithSpan()); // Wraps with span and direction
-print(text.wrapWithUnicode()); // Wraps with unicode markers
-```
-
-Each Bidi method provides optional parameters for HTML handling and direction estimation, making it perfect for multilingual applications.
-
-## String Extension
-
-String extensions provide powerful text manipulation and validation capabilities:
-
-### Case Conversion
-```dart
+// Smart Case Conversions
 final text = "helloWorld_example-TEXT";
-
-print(text.toPascalCase());     // "HelloWorldExampleText"
-print(text.toCamelCase());      // "helloWorldExampleText"
-print(text.toSnakeCase());      // "hello_world_example_text"
-print(text.toKebabCase());      // "hello-world-example-text"
-print(text.toScreamingCase());  // "HELLOWORLDEXAMPLETEXT"
-print(text.toTitleCase());      // "Hello World Example Text"
-
-// Smart capitalization
-print("helloWORLD".capitalizeFirstLetter());     // "HelloWORLD"
-print("helloWORLD".capitalizeFirstLowerRest());  // "Helloworld"
-```
-
-### Text Manipulation
-```dart
-// Clean and format
-print("multi\nline text".toOneLine());          // "multi line text"
-print("  hello  world  ".removeWhiteSpaces());  // "helloworld"
-print("long text".wrapString(5));               // "long\ntext"
-
-// String operations
-print("Hello World".replaceAfter("o", "!")));   // "Hello!"
-print("Hello World".removeSurrounding("H", "d")); // "ello Worl"
-```
-
-### Validation
-```dart
-// Common validations
-print("test@email.com".isValidEmail);        // true
-print("192.168.1.1".isValidIp4);            // true
-print("https://dart.dev".isValidUrl);        // true
-print("Hello123".isAlphanumeric);           // true
-print("12345".isNumeric);                   // true
-print("level".isPalindrome);                // false
-
-// Type checking
-print("true".isBool);                       // true
-print("123".containsDigits);                // true
-print("Test123!".hasSpecialChars);          // true
-```
-
-### Utility Functions
-```dart
-// Safe operations
-final nullableText = null;
-print(nullableText.orEmpty);                // ""
-print("".ifEmpty(() => "default"));         // "default"
-
-// JSON handling
-print('{"key": "value"}'.decode());         // Map<String, dynamic>
-print('{"key": "value"}'.tryDecode());      // Returns null if invalid JSON
-```
-
-## Collection Extensions
-
-### Iterable Extension
-
-General purpose extensions for all collection types:
-
-```dart
-final numbers = [1, 2, 3, 4, 5, null, 6];
-
-// Safe operations
-print(numbers.isEmptyOrNull);                // false
-print(numbers.firstOrNull);                  // 1
-print(numbers.lastOrDefault(0));             // 6
-print(numbers.tryGetRandom());               // Random element or null
-
-// Type-safe conversions
-print(numbers.getInt(1));                    // 2
-print(numbers.tryGetDouble(5));              // null
-
-// Collection operations
-print(numbers.filter((e) => e.isOdd));       // [1, 3, 5]
-print(numbers.whereIndexed((i, e) => i < 3)); // [1, 2, 3]
-
-// Aggregation
-print(numbers.total);                        // Sum of all numbers
-final products = [Product(price: 10), Product(price: 20)];
-print(products.totalBy((p) => p.price));     // 30
-
-// Grouping and distinct
-final grouped = numbers.groupBy((e) => e.isEven);
-final unique = ["a", "a", "b"].distinctBy((e) => e.toLowerCase());
-```
-
-### List Extension
-
-Specialized operations for Lists:
-
-```dart
-final list = [1, 2, 3, 4, 5];
-
-// Safe operations
-list.tryRemoveAt(1);                     // Safely removes element at index
-print(list.indexOfOrNull(3));            // Returns index or null if not found
-
-// List manipulation
-print(list.halfLength);                  // 2
-print(list.takeOnly(3));                 // [1, 2, 3]
-print(list.firstHalf);                   // [1, 2]
-print(list.secondHalf);                  // [3, 4, 5]
-
-// Element operations
-final swapped = list.swap(0, 1);         // [2, 1, 3, 4, 5]
-print(list.getRandom());                 // Random element
-```
-
-### Set Extension
-
-Extensions specific to Sets:
-
-```dart
-final set = <int>{1, 2, 3};
-
-// Safe operations
-set.addIfNotNull(4);                    // Adds only if not null
-print(set.isEmptyOrNull);               // false
-
-// Set operations
-final other = <int>{3, 4, 5};
-print(set.intersect(other));            // {3}
-
-// Conversions
-final mutableSet = set.toMutableSet();  // Creates mutable copy
-```
-
-### Map Extension
-
-Powerful extensions for working with Maps:
-
-```dart
-final map = {'name': 'John', 'age': '25', 'scores': ['90', '85', '95']};
-
-// Type-safe extraction
-print(map.getString('name'));           // "John"
-print(map.getInt('age'));              // 25
-print(map.getList<String>('scores'));   // ["90", "85", "95"]
-
-// Safe operations
-map.setIfMissing('email', 'john@example.com');  // Only if key doesn't exist
-
-// Map manipulation
-final filtered = map.filter((k, v) => k != 'age');
-final flattened = map.flatMap();        // Flattens nested maps
-
-// Collection views
-print(map.keysList);                    // List of keys
-print(map.valuesSet);                   // Set of values
-
-// JSON operations
-print(map.encodedJsonString);           // Safe JSON encoding
-```
-
-Each extension method is designed to be null-safe and provides convenient ways to handle common operations while maintaining clean, readable code.
-
-## Number Extensions
-
-Extensions for both `num`, `int`, and `double` types:
-
-### Common Operations (num)
-```dart
-final number = 123.456;
-
-// HTTP Status Checks
-print(200.isSuccessHttpResCode);      // true
-print(404.isNotFoundError);           // true
-print(429.isRateLimitError);          // true
-
-// Number Properties
-print(number.isPositive);             // true
-print(number.numberOfDigits);         // 3
-print(number.removeTrailingZero);     // "123.456"
-
-// Formatting
-print(number.asGreeks);               // "123.46"
-print(1500000.asGreeks);             // "1.5M"
-
-// Calculations
-print(number.tenth);                  // 12.3456
-print(number.half);                   // 61.728
-print(100.getRandom);                 // Random number between 0-100
-```
-
-### Integer Specific (int)
-```dart
-final number = 100;
-
-// Range Operations
-print(number.inRangeOf(0, 200));      // 100
-print(number.absolute);               // 100
-print(number.squared);                // 10000
-
-// Time Delays
-await 5.secDelay;                     // Delays 5 seconds
-await 2.minDelay;                     // Delays 2 minutes
-await 1.hoursDelay;                   // Delays 1 hour
-
-// Duration Conversions
-print(5.asSeconds);                   // Duration(seconds: 5)
-print(2.asMinutes);                   // Duration(minutes: 2)
-print(1.asDays);                      // Duration(days: 1)
-```
-
-### Double Specific (double)
-```dart
-final number = 123.456;
-
-// Formatting
-print(number.inRangeOf(0, 200));      // 123.456
-print(number.roundToTenth);           // 120.0
-
-// Math Operations
-print(number.doubled);                // 246.912
-print(number.squared);                // 15241.383936
-```
-
-## Duration Extension
-
-Powerful extensions for working with durations:
-
-```dart
-final duration = Duration(hours: 2, minutes: 30);
-
-// Future Time Operations
-await duration.delayed(() => print('Delayed!'));  // Executes after duration
-print(duration.fromNow);                          // DateTime 2.5 hours from now
-print(duration.ago);                              // DateTime 2.5 hours ago
-
-// Chaining
-final newDuration = Duration(minutes: 30)
-    .fromNow
-    .add(Duration(hours: 1));                     // 1.5 hours from now
-```
-
-## Uri Extension
-
-Extensions for URI handling and validation:
-
-```dart
-// String to URI conversion
-final uriString = "https://pub.dev";
-print(uriString.isValidUri);                // true
-final uri = uriString.toUri;                // Uri object
-
-// URI Properties
-print(uri.isHttp);                          // false
-print(uri.isHttps);                         // true
-print(uri.host);                            // "pub.dev"
-print(uri.path);                            // "/"
+print(text.toPascalCase());             // HelloWorldExampleText
+print(text.toSnakeCase());              // hello_world_example_text
+print(text.toDotCase());                // hello.world.example.text
 
 // Validation
-print("not-a-url".isValidUri);              // false
+print("test@email.com".isValidEmail);   // true
+print("192.168.1.1".isValidIp4);        // true
+print("https://dart.dev".isValidUrl);   // true
+
+// Text Manipulation
+print("  hello  world  ".removeWhiteSpaces());  // "helloworld"
+print("hello".padCenter(10, '*'));      // "**hello***"
+
+// Safe Operations
+final nullableText = null;
+print(nullableText.orEmpty);            // ""
+print("".ifEmpty(() => "default"));     // "default"
+
+// JSON Handling
+final jsonStr = '{"key": "value"}';
+print(jsonStr.decode());                // Map<String, dynamic>
+print(jsonStr.tryDecode());             // Returns null if invalid
 ```
+---
 
-## Bool Extension
+### HTTP Status Extensions
 
-Useful extensions for boolean values:
+Clean and informative HTTP status handling:
 
 ```dart
-bool value = true;
+final statusCode = 404;
 
-// Toggle Operations
-print(value.toggled);                       // false
+// Status Checks
+print(statusCode.isSuccessCode);        // false
+print(statusCode.isNotFoundError);      // true
+print(statusCode.isRetryableError);     // false
 
-// Nullable Boolean Handling
-bool? nullableBool;
-print(nullableBool.val);                    // false
-print(nullableBool.isTrue);                 // false
-print(nullableBool.isFalse);               // false
-
-// Binary Conversion
-print(true.binary);                         // 1
-print(false.binary);                        // 0
-```
-
-## Object Extension
-
-General purpose extensions for all objects:
-
-```dart
-dynamic object = {"name": "John", "age": 30};
-
-// Type Conversions
-print(object.toInt());                      // null (not convertible)
-print(object.toString1());                  // "{name: John, age: 30}"
-print(object.tryToMap<String, dynamic>());  // {"name": "John", "age": 30}
-
-// Null Checking
-print(object.isNull);                       // false
-print(object.isNotNull);                    // true
-
-// JSON Operations
-print(object.encode());                     // '{"name":"John","age":30}'
-
-// Boolean Conversion
-print(object.asBool);                      // true (non-null)
-print(null.asBool);                        // false
-```
-
-Each extension is designed to provide convenient, null-safe operations while maintaining clean, readable code. The extensions are particularly useful for data manipulation, time calculations, and type conversions in Dart applications.
-
-# HTTP Utilities
-
-## Status Codes
-
-The package provides comprehensive HTTP status code handling with user-friendly and developer-oriented messages:
-
-```dart
-// Status Code Checks
-print(200.isOkCode);              // true
-print(201.isCreatedCode);         // true
-print(401.isAuthenticationError); // true
-print(404.isNotFoundError);       // true
-print(429.isRateLimitError);      // true
-print(503.isRetryableError);      // true
-
-// Retry Handling
-final retryDelay = 429.statusCodeRetryDelay; // Returns suggested retry duration
-```
-
-## Status Messages
-
-Access both user-friendly and technical status messages:
-
-```dart
-// User-Friendly Messages
-print(404.toHttpStatusUserMessage);
+// User Messages
+print(statusCode.toHttpStatusUserMessage);
 // "The requested resource could not be found. Please check the URL and try again."
 
 // Developer Messages
-print(404.toHttpStatusDevMessage);
-// "Resource not found. Verify the path and parameters. Check if resource exists and access permissions."
+print(statusCode.toHttpStatusDevMessage);
+// "Resource not found. Verify the path and parameters. Check if resource exists..."
 
-// Complete Status Messages Map
-final userMessages = httpStatusUserMessage;
-final devMessages = httpStatusDevMessage;
+// Retry Handling
+if (statusCode.isRateLimitError) {
+  final delay = statusCode.statusCodeRetryDelay;
+  print("Retry after: ${delay.inSeconds} seconds");
+}
 ```
 
-# Constants
+---
 
-## Time Constants
+## Additional Utilities
 
-Predefined duration constants for common time intervals:
+### DoublyLinkedList
+
+A full-featured doubly linked list implementation with extensive operations:
 
 ```dart
-// Basic Time Units
-print(oneSecond);       // Duration(seconds: 1)
-print(oneMinute);       // Duration(minutes: 1)
-print(oneHour);         // Duration(hours: 1)
-print(oneDay);          // Duration(days: 1)
+// Create a list
+final list = DoublyLinkedList<int>([1, 2, 3, 4]);
+
+// Basic operations
+list.append(5);         // Add to end
+list.prepend(0);       // Add to start
+list.insert(1, 15);    // Insert at position
+
+// Node operations
+for (final node in list.nodes) {
+  print('Value: ${node.data}, '
+        'Previous: ${node.prev?.data}, '
+        'Next: ${node.next?.data}');
+}
+
+// Factory constructors
+final filled = DoublyLinkedList.filled(3, 0);           // [0, 0, 0]
+final generated = DoublyLinkedList.generate(3, (i) => i * 2);  // [0, 2, 4]
+
+// Advanced operations
+list.reverse();
+list.removeNodesWhere((node) => node.data.isEven);
+list.swapNodes(list.firstNode!, list.lastNode!);
+```
+---
+
+### Regular Expressions
+
+Pre-defined RegExp patterns for common validation scenarios:
+
+```dart
+// Common patterns
+print(RegExp(alphanumericPattern).hasMatch('Test123'));    // true
+print(RegExp(specialCharsPattern).hasMatch('Test@123'));   // true
+print(RegExp(usernamePattern).hasMatch('user_123'));       // true
+print(RegExp(phoneNumberPattern).hasMatch('+1234567890')); // true
+
+// Validation using String extensions
+print("test@email.com".isValidEmail);   // true
+print("192.168.1.1".isValidIp4);        // true
+print("https://dart.dev".isValidUrl);   // true
+print("12345".isNumeric);               // true
+print("abcDEF".isAlpha);                // true
+```
+---
+
+### Constants & Formats
+
+Built-in constants for common operations:
+
+```dart
+// Time Constants
+print(oneSecond);              // Duration(seconds: 1)
+print(oneMinute);              // Duration(minutes: 1)
+print(oneHour);                // Duration(hours: 1)
+print(oneDay);                 // Duration(days: 1)
 
 // Milliseconds Constants
 print(millisecondsPerSecond);  // 1000
@@ -655,16 +552,7 @@ print(millisecondsPerMinute);  // 60000
 print(millisecondsPerHour);    // 3600000
 print(millisecondsPerDay);     // 86400000
 
-// Usage Example
-final delay = oneMinute * 5;   // 5 minutes duration
-```
-
-## Number Formats
-
-Constants for number formatting and conversion:
-
-```dart
-// Greek Number Suffixes for large numbers
+// Number Formats
 print(greekNumberSuffixes);
 // {
 //   'K': 1000,
@@ -673,68 +561,36 @@ print(greekNumberSuffixes);
 //   'T': 1000000000000,
 // }
 
+// Calendar Constants
+print(smallWeekdays);     // {1: 'Mon', 2: 'Tue', ...}
+print(fullWeekdays);      // {1: 'Monday', 2: 'Tuesday', ...}
+print(smallMonthsNames);  // {1: 'Jan', 2: 'Feb', ...}
+print(fullMonthsNames);   // {1: 'January', 2: 'February', ...}
+
 // Roman Numerals
 print(romanNumerals);
-// {
-//   1: 'I',
-//   5: 'V',
-//   10: 'X',
-//   50: 'L',
-//   100: 'C',
-//   500: 'D',
-//   1000: 'M',
-// }
-
-// Calendar Constants
-print(smallWeekdays);
-// {1: 'Mon', 2: 'Tue', ...}
-
-print(fullWeekdays);
-// {1: 'Monday', 2: 'Tuesday', ...}
-
-print(smallMonthsNames);
-// {1: 'Jan', 2: 'Feb', ...}
-
-print(fullMonthsNames);
-// {1: 'January', 2: 'February', ...}
+// {1: 'I', 5: 'V', 10: 'X', 50: 'L', 100: 'C', 500: 'D', 1000: 'M'}
 ```
+---
 
-## Regular Expressions
+## Contributing
 
-Pre-defined RegExp patterns for common validation scenarios:
+We love contributions! If you’d like to add a feature, report a bug, or suggest an improvement, open an issue or submit a pull request in the [GitHub repository](https://github.com/omar-hanafy/dart_helper_utils). We appreciate every piece of feedback and aim to make things smoother for everyone.
 
-```dart
-// Validation Patterns
-print(RegExp(alphanumericPattern).hasMatch('Test123'));     // true
-print(RegExp(specialCharsPattern).hasMatch('Test@123'));    // true
-print(RegExp(usernamePattern).hasMatch('user_123'));        // true
-print(RegExp(currencyPattern).hasMatch('$123.45'));         // true
-print(RegExp(phoneNumberPattern).hasMatch('+1234567890'));  // true
-print(RegExp(emailPattern).hasMatch('test@example.com'));   // true
-print(RegExp(ip4Pattern).hasMatch('192.168.1.1'));         // true
-print(RegExp(ip6Pattern).hasMatch('2001:0db8:85a3:0000:0000:8a2e:0370:7334')); // true
-print(RegExp(urlPattern).hasMatch('https://dart.dev'));     // true
-print(RegExp(numericPattern).hasMatch('12345'));           // true
-print(RegExp(alphabetPattern).hasMatch('abcDEF'));         // true
-
-// Usage Example with String Extension
-print('test@example.com'.isValidEmail);    // true
-print('192.168.1.1'.isValidIp4);          // true
-print('https://dart.dev'.isValidUrl);      // true
-```
-
-These utilities and constants provide a robust foundation for handling HTTP responses, formatting numbers, validating input, and working with common time-based operations in your Dart applications.
-
-## Contributions
-Contributions to this package are welcome. If you have any suggestions, issues, or feature requests, please create a
-pull request in the [repository](https://github.com/omar-hanafy/dart_helper_utils).
+---
 
 ## License
-`dart_helper_utils` is available under the [BSD 3-Clause License.](https://opensource.org/license/bsd-3-clause/)
+
+`dart_helper_utils` is released under the [BSD 3-Clause License](https://opensource.org/license/bsd-3-clause/). You’re free to use, modify, and distribute it as long as you comply with the license terms.
+
+If this package saves you time or helps you ship faster, consider buying me a coffee. It goes a long way in helping maintain and improve these tools.
 
 <a href="https://www.buymeacoffee.com/omar.hanafy" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-**KEYWORDS:**
-extension pack, helpers, utilities, string manipulation, conversions, time utils, date extension, datetime helper,
-DateFormat, intl, extensions, iterable, map, number, object, set, URI, and boolean extension, JSON encoding/decoding,
-parsing, safe parsing, object conversion, cast, list casting.
+---
+
+Thank you for choosing **`dart_helper_utils`**. We hope it makes your next Dart project more enjoyable and efficient! If you run into any issues or have suggestions, don’t hesitate to reach out.
+
+---
+
+**Keywords**: extension pack, helpers, utilities, string manipulation, conversions, time utils, date extension, datetime helper, DateFormat, intl, extensions, iterable, map, number, object, set, URI, boolean extension, JSON encoding/decoding, parsing, safe parsing, object conversion, cast, list casting.

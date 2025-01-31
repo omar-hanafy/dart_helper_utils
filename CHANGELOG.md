@@ -2,41 +2,44 @@
 
 ## 4.0.0
 
-### Added
+### Pagination
 
-- **New Pagination Features**:
-    - **Added `BasePaginator<T>`** to centralize common logic for both sync and async paginators.
-    - **Refined Transformations and Caching**: We introduced a consistent `_CacheEntry` class to store either
-      `Paginator<T>` or `List<T>` with expiration checks.
-    - **Enhanced `AsyncPaginator`**: Now leverages `CancelableOperation` to optionally cancel in-flight requests and
-      avoid race conditions if `autoCancelFetches` is true.
-    - **Introduced `PaginationAnalytics`** mixin: Helps track page loads, errors, and cache hits with minimal extra
-      code.
-    - **Unified Infinite Paginator**: A single `InfinitePaginator` supports both page-based and cursor-based scrolling
-      through factory constructors.
-- **String Similarity**:
-    - New `StringSimilarity` utility class supporting algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`,
-      `jaroWinkler`, and `cosine`.
-    - Added `compareWith` method to `String` extensions for quick string similarity comparison.
-- **Math Enhancements**:
-    - Added `sqrt()` method to numeric extensions for square root calculations.
-- **New Raw Data**
-  - Added detailed HTTP status message maps:
-      - `httpStatusUserMessage`: User-friendly explanations for each HTTP status code.
-      - `httpStatusDevMessage`: Technical descriptions and troubleshooting hints for developers.
-- **New Number Extension Helpers**:
-    - Added more HTTP status code checks: `isOkCode`, `isCreatedCode`, `isAcceptedCode`, `isNoContentCode`,
-      `isTemporaryRedirect`, `isPermanentRedirect`, `isAuthenticationError`, `isValidationError`, `isRateLimitError`,
-      `isTimeoutError`, `isConflictError`, `isNotFoundError`, and `isRetryableError`.
-    - Added `statusCodeRetryDelay` for suggested retry durations based on status code
-    - Added new status message variants: `toHttpStatusUserMessage` and `toHttpStatusDevMessage`
-    - Enhanced `isSuccessCode` to check for all 2xx status codes (previously only 200 and 201)
+-   **Unified Paginator:** Introduced `BasePaginator<T>` for shared logic and a single `InfinitePaginator` to handle both page-based and cursor-based infinite scrolling through factory constructors.
+-   **Improved `AsyncPaginator`:** Now uses `CancelableOperation` to optionally cancel in-flight requests when `autoCancelFetches` is true, preventing race conditions.
+-   **Enhanced Caching:** A consistent `_CacheEntry` class now stores either `Paginator<T>` or `List<T>` with expiration checks for both sync and async paginators.
+-   **Analytics:** Added `PaginationAnalytics` mixin to track page loads, errors, and cache hits.
 
-### Migration Guide
+### String Similarity
 
-- A [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) is available for
-  upgrading.
-- Deprecated APIs (e.g., `LegacyPaginator`) are still accessible but should be replaced with new implementations.
+-   **New `StringSimilarity` Utility:** Added with algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`, `jaroWinkler`, and `cosine`.
+-   **`String` Extension:**  `compareWith` method for quick similarity comparisons.
+
+### Math
+
+-   **`sqrt()`:** Added to numeric extensions for square root calculations.
+
+### Number Extensions
+
+-   **HTTP Status Code Helpers:**
+    -   Added `isOkCode`, `isCreatedCode`, `isAcceptedCode`, `isNoContentCode`, `isTemporaryRedirect`, `isPermanentRedirect`, `isAuthenticationError`, `isValidationError`, `isRateLimitError`, `isTimeoutError`, `isConflictError`, `isNotFoundError`, and `isRetryableError`.
+    -   Added `statusCodeRetryDelay` for suggested retry durations.
+    -   Added `toHttpStatusUserMessage` and `toHttpStatusDevMessage` for user-friendly and developer-specific messages.
+    -   `isSuccessCode` now checks for all 2xx codes (not just 200 and 201).
+
+### Delay Extensions
+
+-   **Refactored for Consistency:**
+    -   Removed generic `delay()` on numbers. Use specific duration methods instead (e.g., `1.secondsDelay()`, `5.minutesDelay()`).
+    -   All delay methods now support typed computations.
+    -   Converted getter delays to methods and used more descriptive names.
+
+### HTTP Status Messages
+
+-   **Detailed Maps:** Added `httpStatusUserMessage` (user-friendly) and `httpStatusDevMessage` (technical) for explanations and troubleshooting hints.
+
+### Migration
+
+-   See the [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) for upgrading instructions.
 
 ## [3.3.0]
 
@@ -236,7 +239,7 @@ int total = [1, 2, 3].total; // 6
     Person('Bob', 30),
     Person('Alice', 28), // Duplicate name
   ];
-
+  
   final uniquePeople = people.distinctBy((p) => p.name);
   // Result: [Person('Alice', 25), Person('Bob', 30)]
   ```

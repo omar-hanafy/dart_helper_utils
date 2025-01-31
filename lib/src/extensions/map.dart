@@ -23,6 +23,7 @@ dynamic _makeValueEncodable(dynamic value) {
   }
 }
 
+///  DHUMapExtension
 extension DHUMapExtension<K, V> on Map<K, V> {
   /// Swaps the keys with values in the map.
   /// Note: If there are duplicate values, the last key-value pair will be kept.
@@ -275,6 +276,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
       );
 }
 
+/// DHUMapNullableExtension
 extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// Retrieves a value from the map using the provided primary key or alternative keys.
   ///
@@ -522,11 +524,14 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
         (isTypePrimitive<V>() || this!.values.every(isValuePrimitive));
   }
 
+  ///
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
+  ///
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 }
 
+/// DHUMapExt
 extension DHUMapExt<K extends String, V> on Map<K, V> {
   /// Flattens a nested map into a single-level map.
   ///
