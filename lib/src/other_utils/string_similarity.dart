@@ -111,7 +111,7 @@ class StringSimilarity {
     'û': 'u',
     'ü': 'u',
     'ý': 'y',
-    'ÿ': 'y'
+    'ÿ': 'y',
   };
 
   static String _normalizeString(String input, StringSimilarityConfig config) {
@@ -163,8 +163,11 @@ class StringSimilarity {
   ///
   /// This version normalizes both strings (by default) and uses bigrams for each,
   /// then counts the overlap.
-  static double diceCoefficient(String first, String second,
-      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+  static double diceCoefficient(
+    String first,
+    String second, [
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  ]) {
     final s1 = _normalizeString(first, config);
     final s2 = _normalizeString(second, config);
 
@@ -189,8 +192,11 @@ class StringSimilarity {
   /// Computes the Hamming Distance between two strings.
   /// Returns the number of positions at which the corresponding symbols are different.
   /// Throws an [ArgumentError] if the strings are of different lengths.
-  static int hammingDistance(String s1, String s2,
-      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+  static int hammingDistance(
+    String s1,
+    String s2, [
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  ]) {
     final str1 = _normalizeString(s1, config);
     final str2 = _normalizeString(s2, config);
 
@@ -206,8 +212,11 @@ class StringSimilarity {
   }
 
   /// Smith-Waterman Algorithm for local sequence alignment
-  static double smithWaterman(String s1, String s2,
-      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+  static double smithWaterman(
+    String s1,
+    String s2, [
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  ]) {
     final str1 = _normalizeString(s1, config);
     final str2 = _normalizeString(s2, config);
 
@@ -253,8 +262,10 @@ class StringSimilarity {
   /// final soundexCode = StringSimilarity.soundex('example');
   /// print(soundexCode); // E251
   /// ```
-  static String soundex(String input,
-      [StringSimilarityConfig config = const StringSimilarityConfig()]) {
+  static String soundex(
+    String input, [
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  ]) {
     final str = _normalizeString(input, config);
     if (str.isEmpty) return '';
 
@@ -276,7 +287,7 @@ class StringSimilarity {
       'l': '4',
       'm': '5',
       'n': '5',
-      'r': '6'
+      'r': '6',
     };
 
     final result = StringBuffer(str[0].toUpperCase());
@@ -503,8 +514,12 @@ class StringSimilarity {
       case SimilarityAlgorithm.jaro:
         return jaro(first, second, config);
       case SimilarityAlgorithm.jaroWinkler:
-        return jaroWinkler(first, second,
-            prefixScale: prefixScale, config: config);
+        return jaroWinkler(
+          first,
+          second,
+          prefixScale: prefixScale,
+          config: config,
+        );
       case SimilarityAlgorithm.cosine:
         return cosine(first, second, config);
       case SimilarityAlgorithm.hammingDistance:

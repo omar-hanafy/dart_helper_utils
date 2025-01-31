@@ -4,7 +4,7 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 Future<void> main() async {
   print(20.formatAsReadableNumber(trimTrailingZeros: true));
   const rawJsonList = '[1.5, 2.3, 3.4]';
-  final intList = tryToList<int>(rawJsonList);
+  final intList = tryToList<int>(rawJsonList, defaultValue: []);
   print(intList); // [1, 2, 3]
 
   final list = <dynamic>[1, 2, '3', '3.1', 22.3];

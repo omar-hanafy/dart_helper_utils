@@ -216,7 +216,7 @@ List<Map<String, dynamic>> getRawCountriesData() => const [
           'grn': {'official': 'Argentine Republic', 'common': 'Argentina'},
           'spa': {
             'official': 'Rep\u00fablica Argentina',
-            'common': 'Argentina'
+            'common': 'Argentina',
           },
         },
         'iso2': 'AR',
@@ -519,7 +519,7 @@ List<Map<String, dynamic>> getRawCountriesData() => const [
           'fra': {'official': 'Royaume de Belgique', 'common': 'Belgique'},
           'nld': {
             'official': 'Koninkrijk Belgi\u00eb',
-            'common': 'Belgi\u00eb'
+            'common': 'Belgi\u00eb',
           },
         },
         'iso2': 'BE',
@@ -1947,7 +1947,7 @@ List<Map<String, dynamic>> getRawCountriesData() => const [
         'nativeNames': {
           'spa': {
             'official': 'Rep\u00fablica del Ecuador',
-            'common': 'Ecuador'
+            'common': 'Ecuador',
           },
         },
         'iso2': 'EC',
@@ -5889,7 +5889,7 @@ List<Map<String, dynamic>> getRawCountriesData() => const [
         'nativeNames': {
           'slk': {
             'official': 'Slovensk\u00e1 republika',
-            'common': 'Slovensko'
+            'common': 'Slovensko',
           },
         },
         'iso2': 'SK',
@@ -6737,7 +6737,7 @@ List<Map<String, dynamic>> getRawCountriesData() => const [
         'currencies': {
           'VES': {
             'name': 'Venezuelan bol\u00edvar soberano',
-            'symbol': 'Bs.S.'
+            'symbol': 'Bs.S.',
           },
         },
         'languages': {'spa': 'Spanish'},
@@ -6834,7 +6834,7 @@ List<Map<String, dynamic>> getRawCountriesData() => const [
           'eng': {'official': 'Republic of Vanuatu', 'common': 'Vanuatu'},
           'fra': {
             'official': 'R\u00e9publique de Vanuatu',
-            'common': 'Vanuatu'
+            'common': 'Vanuatu',
           },
         },
         'iso2': 'VU',

@@ -33,8 +33,14 @@ String toString1(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? defaultValue,
 }) =>
-    ConvertObject.toString1(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toString1(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Converts any object to a string, or returns `null` if the object is `null`.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -66,8 +72,14 @@ String? tryToString(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  String? defaultValue,
 }) =>
-    ConvertObject.tryToString(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToString(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Converts an object to a [num].
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -106,6 +118,7 @@ num toNum(
   int? listIndex,
   String? format,
   String? locale,
+  num? defaultValue,
 }) =>
     ConvertObject.toNum(
       object,
@@ -113,6 +126,7 @@ num toNum(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      defaultValue: defaultValue,
     );
 
 /// Attempts to convert an object to a [num], or returns `null` if the object is `null` or conversion fails.
@@ -150,6 +164,7 @@ num? tryToNum(
   int? listIndex,
   String? format,
   String? locale,
+  num? defaultValue,
 }) =>
     ConvertObject.tryToNum(
       object,
@@ -157,6 +172,7 @@ num? tryToNum(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      defaultValue: defaultValue,
     );
 
 /// Converts an object to an [int].
@@ -192,6 +208,7 @@ int toInt(
   int? listIndex,
   String? format,
   String? locale,
+  int? defaultValue,
 }) =>
     ConvertObject.toInt(
       object,
@@ -199,6 +216,7 @@ int toInt(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      defaultValue: defaultValue,
     );
 
 /// Attempts to convert an object to an [int], or returns `null` if the object is `null` or conversion fails.
@@ -236,6 +254,7 @@ int? tryToInt(
   int? listIndex,
   String? format,
   String? locale,
+  int? defaultValue,
 }) =>
     ConvertObject.tryToInt(
       object,
@@ -243,6 +262,7 @@ int? tryToInt(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      defaultValue: defaultValue,
     );
 
 /// Converts an object to a [BigInt].
@@ -278,8 +298,14 @@ BigInt toBigInt(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  BigInt? defaultValue,
 }) =>
-    ConvertObject.toBigInt(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toBigInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Attempts to convert an object to a [BigInt], or returns `null` if the object is `null` or conversion fails.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -313,8 +339,14 @@ BigInt? tryToBigInt(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  BigInt? defaultValue,
 }) =>
-    ConvertObject.tryToBigInt(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToBigInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Converts an object to a [double].
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -349,6 +381,7 @@ double toDouble(
   int? listIndex,
   String? format,
   String? locale,
+  double? defaultValue,
 }) =>
     ConvertObject.toDouble(
       object,
@@ -356,6 +389,7 @@ double toDouble(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      defaultValue: defaultValue,
     );
 
 /// Attempts to convert an object to a [double], or returns `null` if the object is `null` or conversion fails.
@@ -393,6 +427,7 @@ double? tryToDouble(
   int? listIndex,
   String? format,
   String? locale,
+  double? defaultValue,
 }) =>
     ConvertObject.tryToDouble(
       object,
@@ -400,6 +435,7 @@ double? tryToDouble(
       listIndex: listIndex,
       format: format,
       locale: locale,
+      defaultValue: defaultValue,
     );
 
 /// Converts an object to a `bool`.
@@ -440,8 +476,14 @@ bool toBool(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  bool? defaultValue,
 }) =>
-    ConvertObject.toBool(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toBool(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Attempts to convert an object to a `bool`, or returns `null` if the object is `null` or conversion is not applicable.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -480,8 +522,14 @@ bool? tryToBool(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  bool? defaultValue,
 }) =>
-    ConvertObject.tryToBool(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToBool(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Attempts to convert an object to a `bool`, or returns `null` if the object is `null` or conversion is not applicable.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -525,6 +573,7 @@ DateTime toDateTime(
   bool autoDetectFormat = false,
   bool useCurrentLocale = false,
   bool utc = false,
+  DateTime? defaultValue,
 }) =>
     ConvertObject.toDateTime(
       object,
@@ -535,6 +584,7 @@ DateTime toDateTime(
       autoDetectFormat: autoDetectFormat,
       useCurrentLocale: useCurrentLocale,
       utc: utc,
+      defaultValue: defaultValue,
     );
 
 /// Attempts to convert an object to a [DateTime], or returns `null` if the object is `null` or conversion fails.
@@ -574,6 +624,7 @@ DateTime? tryToDateTime(
   bool autoDetectFormat = false,
   bool useCurrentLocale = false,
   bool utc = false,
+  DateTime? defaultValue,
 }) =>
     ConvertObject.tryToDateTime(
       object,
@@ -584,6 +635,7 @@ DateTime? tryToDateTime(
       autoDetectFormat: autoDetectFormat,
       useCurrentLocale: useCurrentLocale,
       utc: utc,
+      defaultValue: defaultValue,
     );
 
 /// Converts an object to a [Uri].
@@ -615,11 +667,13 @@ Uri toUri(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  Uri? defaultValue,
 }) =>
     ConvertObject.toUri(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
+      defaultValue: defaultValue,
     );
 
 /// Attempts to convert an object to a [Uri], or returns `null` if the object is `null` or conversion fails.
@@ -650,11 +704,13 @@ Uri? tryToUri(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  Uri? defaultValue,
 }) =>
     ConvertObject.tryToUri(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
+      defaultValue: defaultValue,
     );
 
 /// Converts an object to a [Map] with keys of type `K` and values of type `V`.
@@ -690,8 +746,14 @@ Map<K, V> toMap<K, V>(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  Map<K, V>? defaultValue,
 }) =>
-    ConvertObject.toMap(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toMap(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Attempts to convert an object to a [Map] with keys of type `K` and values of type `V`.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -725,8 +787,14 @@ Map<K, V>? tryToMap<K, V>(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  Map<K, V>? defaultValue,
 }) =>
-    ConvertObject.tryToMap(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToMap(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Converts an object to a [Set] of type `T`.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -761,8 +829,14 @@ Set<T> toSet<T>(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  Set<T>? defaultValue,
 }) =>
-    ConvertObject.toSet(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toSet(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Attempts to convert an object to a [Set] of type `T`, or returns null if conversion is not possible.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -796,8 +870,14 @@ Set<T>? tryToSet<T>(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  Set<T>? defaultValue,
 }) =>
-    ConvertObject.tryToSet(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToSet(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Converts an object to a [List] of type `T`.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -840,8 +920,14 @@ List<T> toList<T>(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  List<T>? defaultValue,
 }) =>
-    ConvertObject.toList(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.toList(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Attempts to convert an object to a [List] of type `T`, or returns `null` if conversion is not possible.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
@@ -886,8 +972,14 @@ List<T>? tryToList<T>(
   dynamic object, {
   Object? mapKey,
   int? listIndex,
+  List<T>? defaultValue,
 }) =>
-    ConvertObject.tryToList(object, mapKey: mapKey, listIndex: listIndex);
+    ConvertObject.tryToList(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+    );
 
 /// Global function that allow Convert an object to a specified type.
 ///
@@ -1021,6 +1113,7 @@ T? tryToType<T>(dynamic object) {
 /// ```
 bool isValuePrimitive(dynamic value) => value is Object && value.isPrimitive();
 
+///
 bool isTypePrimitive<T>() => switch (T) {
       const (num) ||
       const (int) ||
@@ -1033,6 +1126,7 @@ bool isTypePrimitive<T>() => switch (T) {
       _ => false,
     };
 
+///
 bool isEqual(dynamic a, dynamic b) {
   if (a is Map && b is Map) return a.isEqual(b);
   if (a is Iterable && b is Iterable) return a.isEqual(b);

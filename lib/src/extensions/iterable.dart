@@ -47,9 +47,13 @@ Remember that when adding new functionality, it’s essential to ensure that it 
 Would you like any specific implementation details or examples for any of these suggestions?
 */
 
+///
 typedef IndexedPredicate<T> = bool Function(int index, T);
+
+///
 typedef Predicate<T> = bool Function(T);
 
+///
 extension DHUNullableSetExtensions<E> on Set<E>? {
   /// Converts the set to a different type [R], providing flexible and safe type conversion.
   ///
@@ -67,11 +71,14 @@ extension DHUNullableSetExtensions<E> on Set<E>? {
   /// ```
   Set<R> convertTo<R>() => ConvertObject.toSet<R>(this);
 
+  ///
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
+  ///
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 }
 
+///
 extension DHUNullableListExtensions<E> on List<E>? {
   /// same behavior as [removeAt] but it is null safe which means
   /// it do nothing when [List] return [isEmptyOrNull] to true.
@@ -120,7 +127,9 @@ extension DHUNullableListExtensions<E> on List<E>? {
   List<R> convertTo<R>() => ConvertObject.toList<R>(this);
 }
 
+///
 extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
+  ///
   DoublyLinkedList<E> toDoublyLinkedList() => DoublyLinkedList(this);
 
   /// similar to list[index] but it is null safe.
@@ -143,6 +152,7 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   /// get the last element if the list is not empty or return null
   E? get lastOrNull => isNotEmptyOrNull ? this!.last : null;
 
+  ///
   E? firstWhereOrNull(Predicate<E> predicate) {
     if (isEmptyOrNull) return null;
     for (final element in this!) {
@@ -239,14 +249,14 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    String? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToString(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToString(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 
   /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [num] or return null.
@@ -257,16 +267,16 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     int? innerIndex,
     String? format,
     String? locale,
+    num? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToNum(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-              format: format,
-              locale: locale,
-            );
+      ConvertObject.tryToNum(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+      );
 
   /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [int] or return null.
@@ -277,16 +287,16 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     int? innerIndex,
     String? format,
     String? locale,
+    int? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToInt(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-              format: format,
-              locale: locale,
-            );
+      ConvertObject.tryToInt(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+      );
 
   /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [BigInt] or return null.
@@ -295,14 +305,14 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    BigInt? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToBigInt(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToBigInt(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 
   /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [double] or return null.
@@ -313,16 +323,16 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     int? innerIndex,
     String? format,
     String? locale,
+    double? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToDouble(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-              format: format,
-              locale: locale,
-            );
+      ConvertObject.tryToDouble(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+      );
 
   /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [bool] or return null.
@@ -331,14 +341,14 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    bool? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToBool(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToBool(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 
   /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [DateTime] or return null.
@@ -352,19 +362,19 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     bool autoDetectFormat = false,
     bool useCurrentLocale = false,
     bool utc = false,
+    DateTime? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToDateTime(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-              format: format,
-              locale: locale,
-              autoDetectFormat: autoDetectFormat,
-              useCurrentLocale: useCurrentLocale,
-              utc: utc,
-            );
+      ConvertObject.tryToDateTime(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
 
   /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [Uri] or return null.
@@ -373,14 +383,14 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    Uri? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToUri(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToUri(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 
   /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [Map] or return null.
@@ -389,14 +399,14 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    Map<K2, V2>? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToMap(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToMap(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 
   /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [Set] or return null.
@@ -405,14 +415,14 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    Set<T>? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToSet(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToSet(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 
   /// uses the [tryToList] defined in the [ConvertObject] class to convert a
   /// specific element by [index] in that Iterable to [List] or return null.
@@ -421,16 +431,17 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     List<int>? altIndexes,
     dynamic innerMapKey,
     int? innerIndex,
+    List<T>? defaultValue,
   }) =>
-      isEmptyOrNull
-          ? null
-          : ConvertObject.tryToList(
-              _getElementAtIndex(index, altIndexes: altIndexes),
-              mapKey: innerMapKey,
-              listIndex: innerIndex,
-            );
+      ConvertObject.tryToList(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+      );
 }
 
+///
 extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Converts the iterable to a [List] of type [R] using the [convertTo] method.
   ///
@@ -527,7 +538,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return result;
   }
 
-// return the half size of a list
+  /// return the half size of a list
   int get halfLength => (length / 2).floor();
 
   /// Returns a list containing first [n] elements.
@@ -564,13 +575,13 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return list;
   }
 
-  // Returns map operation as a List
+  /// Returns map operation as a List
   List<E2> mapList<E2>(E2 Function(E e) f) => map(f).toList();
 
-  // Takes the first half of a list
+  /// Takes the first half of a list
   List<E> firstHalf() => take(halfLength).toList();
 
-  // Takes the second half of a list
+  /// Takes the second half of a list
   List<E> secondHalf() => drop(halfLength).toList();
 
   /// returns a list with two swapped items
@@ -584,6 +595,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return list;
   }
 
+  ///
   E getRandom([int? seed]) {
     final generator = Random(seed);
     final index = generator.nextInt(length);
@@ -744,6 +756,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return null;
   }
 
+  ///
   String get encodedJson => json.encode(this);
 
   /// uses the [toString] defined in the [ConvertObject] class to convert a
@@ -752,9 +765,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    String? defaultValue,
   }) =>
       ConvertObject.toString1(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );
@@ -767,9 +782,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int? innerIndex,
     String? format,
     String? locale,
+    num? defaultValue,
   }) =>
       ConvertObject.toNum(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
         format: format,
@@ -784,9 +801,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int? innerIndex,
     String? format,
     String? locale,
+    int? defaultValue,
   }) =>
       ConvertObject.toInt(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
         format: format,
@@ -799,9 +818,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    BigInt? defaultValue,
   }) =>
       ConvertObject.toBigInt(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );
@@ -814,9 +835,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int? innerIndex,
     String? format,
     String? locale,
+    double? defaultValue,
   }) =>
       ConvertObject.toDouble(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
         format: format,
@@ -829,9 +852,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    bool? defaultValue,
   }) =>
       ConvertObject.toBool(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );
@@ -847,9 +872,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     bool autoDetectFormat = false,
     bool useCurrentLocale = false,
     bool utc = false,
+    DateTime? defaultValue,
   }) =>
       ConvertObject.toDateTime(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
         format: format,
@@ -865,9 +892,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    Uri? defaultValue,
   }) =>
       ConvertObject.toUri(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );
@@ -878,9 +907,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    Map<K2, V2>? defaultValue,
   }) =>
       ConvertObject.toMap(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );
@@ -891,9 +922,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    Set<T>? defaultValue,
   }) =>
       ConvertObject.toSet(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );
@@ -904,9 +937,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     int index, {
     dynamic innerMapKey,
     int? innerIndex,
+    List<T>? defaultValue,
   }) =>
       ConvertObject.toList(
         elementAt(index),
+        defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
       );

@@ -14,37 +14,28 @@ We initially created `dart_helper_utils` to gather all those tiny, repetitive ta
 
 ### 1. Parsing Dynamic JSON Data
 
-**Before**:
-
+**Before** (typical Dart approach):
 ```dart
-Map<String, dynamic> parseUser(Map<String, dynamic> json) {
-  final result = <String, dynamic>{};
-  
-  // Manually checking and converting each field
-  if (json['name'] != null && json['name'] is String) {
-    result['name'] = json['name'];
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      name: json['name']?.toString() ?? 'Unknown',
+      age: int.tryParse(json['age']?.toString() ?? '') ?? 0,
+      scores: (json['scores'] as List?)
+              ?.map((e) => double.parse(e.toString()))
+              .toList() ?? [],
+    );
   }
-  
-  if (json['age'] != null) {
-    final age = int.tryParse(json['age'].toString());
-    if (age != null) {
-      result['age'] = age;
-    }
-  }
-  
-  return result;
-}
 ```
 
 **After**:
 ```dart
-Map<String, dynamic> parseUser(Map<String, dynamic> json) {
-	// json.getString('key')
-  return {
-    'name': json.getString('name'),
-    'age': json.getInt('age'),
-  };
-}
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      name: json.getString('name', defaultValue: 'Unknown'),
+      age: json.getInt('age'),
+      scores: json.getList<double>('scores'),
+    );
+  }
 ```
 ---
 
@@ -67,6 +58,7 @@ bool isDateValid(DateTime? date) {
   return date?.isToday ?? false;
 }
 ```
+
 ---
 
 ### 3. Duration Delays
@@ -80,6 +72,7 @@ await Future<void>.delayed(const Duration(seconds: 3));
 ```dart
 await 3.secondsDelay();
 ```
+
 ---
 
 ### 4. HTTP Status Handling
@@ -107,6 +100,34 @@ String getErrorMessage(int statusCode) {
   return statusCode.toHttpStatusUserMessage;
 }
 ```
+
+---
+
+### 5. Collection Transformations
+
+**Before**
+
+```dart
+List<String> processItems(List<dynamic>? items) {
+  if (items == null) return [];
+  
+  final result = <String>[];
+  for (var i = 0; i < items.length; i++) {
+    final item = items[i];
+    if (item != null) {
+      result.add(item.toString());
+    }
+  }
+  return result;
+}
+```
+
+**After**:
+
+```dart
+final processed = items?.convertTo<String>() ?? [];
+```
+
 ---
 
 ## Getting Started
