@@ -1,6 +1,7 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/extensions/extensions.dart';
 
+///
 extension DHUNullSafeCaseConversionExtensions on String? {
   /// Converts the string to lowercase if it's not null.
   String? get tryToLowerCase => this?.toLowerCase();
@@ -9,6 +10,7 @@ extension DHUNullSafeCaseConversionExtensions on String? {
   String? get tryToUpperCase => this?.toUpperCase();
 }
 
+///
 extension DHUCaseConversionExtensions on String {
   /// Splits the string into a list of words based on camel case, underscores, hyphens, and spaces.
   List<String> get toWords =>

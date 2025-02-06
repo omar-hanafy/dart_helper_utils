@@ -10,12 +10,21 @@
 -   **Analytics:** Added `PaginationAnalytics` mixin to track page loads, errors, and cache hits.
 
 ### String Similarity
-
 -   **New `StringSimilarity` Utility:** Added with algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`, `jaroWinkler`, and `cosine`.
 -   **`String` Extension:**  `compareWith` method for quick similarity comparisons.
 
-### Math
+### Debouncer
+Added new `Debouncer` class for function execution control:
+- Configurable delay and max wait times
+- Support for sync/async functions
+- Real-time state monitoring via stream
+- Optional execution history tracking
+- Error handling with customizable callbacks
+- Debug logging capabilities
+- Methods: run(), flush(), cancel(), runIfNotPending()
+- State inspection: remainingTime, executionCount, etc.
 
+### Math
 -   **`sqrt()`:** Added to numeric extensions for square root calculations.
 
 ### Number Extensions

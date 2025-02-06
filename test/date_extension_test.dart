@@ -351,4 +351,233 @@ void main() {
       });
     });
   });
+  group('DateTimeBetween', () {
+    final startDate = DateTime(2024, 1, 1, 10); // 2024-01-01 10:00:00
+    final endDate = DateTime(2024, 1, 5, 20); // 2024-01-05 20:00:00
+    final midDate = DateTime(2024, 1, 3, 12); // 2024-01-03 12:00:00
+
+    group('Basic range validations', () {
+      test('mid date is between start and end', () {
+        expect(midDate.isBetween(startDate, endDate), isTrue);
+      });
+
+      test('dates before start date are not in range', () {
+        final beforeStart = startDate.subtract(const Duration(seconds: 1));
+        expect(beforeStart.isBetween(startDate, endDate), isFalse);
+      });
+
+      test('dates after end date are not in range', () {
+        final afterEnd = endDate.add(const Duration(seconds: 1));
+        expect(afterEnd.isBetween(startDate, endDate), isFalse);
+      });
+    });
+
+    group('Boundary behaviors', () {
+      test('default behavior (inclusive start, exclusive end)', () {
+        expect(startDate.isBetween(startDate, endDate), isTrue);
+        expect(endDate.isBetween(startDate, endDate), isFalse);
+      });
+
+      test('fully inclusive boundaries', () {
+        expect(
+          startDate.isBetween(
+            startDate,
+            endDate,
+            inclusiveEnd: true,
+          ),
+          isTrue,
+        );
+        expect(
+          endDate.isBetween(
+            startDate,
+            endDate,
+            inclusiveEnd: true,
+          ),
+          isTrue,
+        );
+      });
+
+      test('fully exclusive boundaries', () {
+        expect(
+          startDate.isBetween(
+            startDate,
+            endDate,
+            inclusiveStart: false,
+          ),
+          isFalse,
+        );
+        expect(
+          endDate.isBetween(
+            startDate,
+            endDate,
+            inclusiveStart: false,
+          ),
+          isFalse,
+        );
+        expect(
+          midDate.isBetween(
+            startDate,
+            endDate,
+            inclusiveStart: false,
+          ),
+          isTrue,
+        );
+      });
+    });
+
+    group('Time handling', () {
+      test('ignoreTime parameter properly ignores time components', () {
+        final sameDay = DateTime(2024);
+        final sameDayDifferentTime = DateTime(2024, 1, 1, 23, 59, 59);
+
+        expect(
+          sameDay.isBetween(
+            sameDayDifferentTime,
+            endDate,
+            ignoreTime: true,
+          ),
+          isTrue,
+        );
+        expect(
+          sameDay.isBetween(
+            sameDayDifferentTime,
+            endDate,
+          ),
+          isFalse,
+        );
+      });
+
+      test('milliseconds and microseconds are considered', () {
+        final preciseDateStart = DateTime(2024, 1, 1, 10, 0, 0, 0, 1);
+        final preciseDateEnd = DateTime(2024, 1, 1, 10, 0, 0, 0, 3);
+        final preciseDateMid = DateTime(2024, 1, 1, 10, 0, 0, 0, 2);
+
+        expect(
+            preciseDateMid.isBetween(preciseDateStart, preciseDateEnd), isTrue);
+      });
+    });
+
+    group('Timezone handling', () {
+      test('normalize parameter converts all dates to UTC', () {
+        // Create a sequence of dates in local time
+        final localStart = DateTime(2024, 1, 1, 10);
+        final localMid = DateTime(2024, 1, 1, 11);
+        final localEnd = DateTime(2024, 1, 1, 12);
+
+        // This should be true because the relative time differences are preserved
+        expect(
+          localMid.isBetween(
+            localStart,
+            localEnd,
+            normalize: true,
+          ),
+          isTrue,
+        );
+
+        // Create equivalent UTC dates
+        final utcStart = localStart.toUtc();
+        final utcMid = localMid.toUtc();
+        final utcEnd = localEnd.toUtc();
+
+        // This should also be true as they represent the same moments in time
+        expect(
+          utcMid.isBetween(
+            utcStart,
+            utcEnd,
+            normalize: true,
+          ),
+          isTrue,
+        );
+
+        // Cross-timezone comparison should work
+        expect(
+          localMid.isBetween(
+            utcStart,
+            utcEnd,
+            normalize: true,
+          ),
+          isTrue,
+        );
+      });
+
+      test('timezone differences are handled correctly', () {
+        // Create two dates 2 hours apart in local time
+        final start = DateTime(2024, 1, 1, 10);
+        final end = DateTime(2024, 1, 1, 12);
+
+        // Create a date in UTC that would fall between them
+        final utcMid = start.toUtc().add(const Duration(hours: 1));
+
+        expect(
+          utcMid.isBetween(
+            start,
+            end,
+            normalize: true,
+          ),
+          isTrue,
+        );
+      });
+    });
+    group('Edge cases and error handling', () {
+      test('throws ArgumentError for invalid date range', () {
+        expect(
+          () => midDate.isBetween(endDate, startDate),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('must be before or equal'),
+            ),
+          ),
+        );
+      });
+
+      test('handles equal start and end dates', () {
+        final date = DateTime(2024);
+
+        expect(
+          date.isBetween(
+            date,
+            date,
+            inclusiveEnd: true,
+          ),
+          isTrue,
+        );
+        expect(
+          date.isBetween(
+            date,
+            date,
+            inclusiveStart: false,
+          ),
+          isFalse,
+        );
+      });
+
+      test('handles null for nullable extension', () {
+        DateTime? nullDate;
+        expect(
+          nullDate.isBetween(startDate, endDate),
+          isFalse,
+        );
+      });
+    });
+
+    group('DST transitions', () {
+      test('handles dates across daylight savings transitions', () {
+        // Create dates around DST transition (example for US DST)
+        final beforeDST = DateTime(2024, 3, 10, 1, 59);
+        final afterDST = DateTime(2024, 3, 10, 3, 1);
+        final duringTransition = DateTime(2024, 3, 10, 2, 30);
+
+        expect(
+          duringTransition.isBetween(
+            beforeDST,
+            afterDST,
+            normalize: true,
+          ),
+          isTrue,
+        );
+      });
+    });
+  });
 }

@@ -3,7 +3,16 @@ import 'dart:convert';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
+///
 extension DHUStringExtensions on String {
+  /// If the string is empty, return null. Otherwise, return the string.
+  String? get nullIfEmpty => isEmpty ? null : this;
+
+  /// If the string is blank (null, empty, or consists only of whitespace),
+  /// return null. Otherwise, return the string.
+  /// Alias for [isEmptyOrNull].
+  String? get nullIfBlank => isBlank ? null : this;
+
   /// Removes consecutive empty lines, replacing them with single newlines.
   /// Example: "Line1\n\n\nLine2" => "Line1\nLine2"
   String get removeEmptyLines =>
@@ -60,9 +69,6 @@ extension DHUNullSafeStringExtensions on String? {
 
   /// Returns true if the string is null, empty, or, after cleaning (collapsing into a single line, removing all whitespaces), is empty.
   bool get isEmptyOrNull => this == null || this!.clean.isEmpty;
-
-  /// Returns the string if it is not blank; otherwise, returns `null`.
-  String? get nullIfBlank => isNotBlank ? this : null;
 
   /// Returns true if the string is null, empty, or solely made of whitespace characters.
   /// Alias for [isEmptyOrNull].
