@@ -33,9 +33,13 @@
     -   All delay methods now support typed computations.
     -   Converted getter delays to methods and used more descriptive names.
 
-### HTTP Status Messages
+### DateTime Extensions
+- Added `isBetween` for date range checks.
 
--   **Detailed Maps:** Added `httpStatusUserMessage` (user-friendly) and `httpStatusDevMessage` (technical) for explanations and troubleshooting hints.
+### New Raw Data
+
+-   **HTTP Status Messages:** Added `httpStatusUserMessage` (user-friendly) and `httpStatusDevMessage` (technical) for explanations and troubleshooting hints.
+-   **cssColorNamesToArgb**: Maps CSS color names to their corresponding ARGB values. e.g. `cssColorNamesToArgb['red']` returns `0xFFFF0000`.
 
 ### Migration
 

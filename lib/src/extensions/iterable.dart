@@ -6,61 +6,39 @@ import 'dart:math';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
 
-/* SUGGESTIONS:
-When designing utility extensions for a language like Dart, which is used extensively in Flutter development, it’s crucial to consider both the common use cases and the pain points that developers might encounter. Here are some suggestions to consider adding to your `ListExtensions` class, which might provide additional value to users of your `dart_helper_utils` package:
-
-1. **Safe Element Replacement:**
-   - A null-safe version of the `replaceRange` method could be beneficial. It could replace a range of elements with other elements without throwing an exception if the range is out of bounds.
-
-2. **Batching:**
-   - A method to divide the list into batches of a specified size could be very useful when dealing with pagination or processing large datasets in chunks.
-
-3. **Null-Safe Concatenation:**
-   - Extending the idea of `concatWithSingleList` and `concatWithMultipleList`, you could provide a null-safe concatenation that ignores null lists instead of considering them empty lists.
-
-4. **Shuffling:**
-   - A null-safe `shuffle` method that shuffles the list in place, but only if the list is not null or empty.
-
-5. **Mapping with Index:**
-   - A version of `map` that provides the index along with the element could be useful for operations that require the element's position within the list.
-
-6. **Null-Safe Sort:**
-   - Null-safe `sort` and `sortBy` extensions that sort the list based on a comparator or by a specific key. It won't perform the operation if the list is null or contains null values that can't be compared.
-
-7. **Deep Equality Check:**
-   - A method to check if two lists are deeply equal, i.e., they contain the same elements in the same order.
-
-8. **Finding Sublists:**
-   - Methods for finding sublists within a list, either by matching a sequence of elements or by a specific condition.
-
-9. **Null-Safe Accumulate/Reduce:**
-   - Accumulate or reduce the list to a single value in a null-safe way, with an option to specify a default value if the list is null or empty.
-
-10. **Partition:**
-    - A `partition` function that divides the list into two lists based on a predicate: one list for items that match the predicate and another for items that don't.
-
-11. **Folding with Index:**
-    - A version of the `fold` method that includes the index of the element along with the accumulator and the element itself.
-
-Remember that when adding new functionality, it’s essential to ensure that it doesn’t clash with existing methods and that it adheres to the idiomatic practices of the language and the framework it’s used with. Also, consider the performance implications of adding more complex operations, especially for large lists.
-
-Would you like any specific implementation details or examples for any of these suggestions?
-*/
-
+/// A type alias representing a predicate function that takes an index and a value of type [T]
+/// and returns a boolean value.
 ///
+/// Used for filtering and testing conditions on elements with their indices.
+///
+/// Example:
+/// ```dart
+/// IndexedPredicate<int> isEvenIndex = (int index, int n) => index % 2 == 0 && n % 2 == 0;
+/// ```
 typedef IndexedPredicate<T> = bool Function(int index, T);
 
+/// A type alias representing a predicate function that takes a value of type [T]
+/// and returns a boolean value.
 ///
+/// Used for filtering and testing conditions on elements.
+///
+/// Example:
+/// ```dart
+/// Predicate<int> isEven = (int n) => n % 2 == 0;
+/// ```
 typedef Predicate<T> = bool Function(T);
 
+/// Extension methods for nullable [Set] collections.
 ///
+/// Provides utility methods that can be used on [Set] objects that may be null.
+/// These extensions help handle null cases gracefully while working with sets.
+///
+/// Example usage:
+/// ```dart
+/// Set<int>? nullableSet = {1, 2, 3};
+/// nullableSet.someUtilityMethod();
+/// ```
 extension DHUNullableSetExtensions<E> on Set<E>? {
-  /// Converts the set to a different type [R], providing flexible and safe type conversion.
-  ///
-  /// [convertTo] attempts to convert each element in the set to the specified type [R]. It employs
-  /// a custom conversion logic that handles various scenarios, including cases where a direct cast
-  /// is not possible.
-  ///
   /// If a direct conversion fails, it attempts element-wise conversion using `toType`, ensuring
   /// a smooth conversion process without the risk of runtime errors.
   ///
@@ -71,30 +49,59 @@ extension DHUNullableSetExtensions<E> on Set<E>? {
   /// ```
   Set<R> convertTo<R>() => ConvertObject.toSet<R>(this);
 
+  /// Checks if the iterable is either `null` or empty.
   ///
+  /// Returns `true` if the iterable is `null` or empty, otherwise `false`.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<int>? list = null;
+  /// print(list.isEmptyOrNull); // true
+  ///
+  /// list = [];
+  /// print(list.isEmptyOrNull); // true
+  ///
+  /// list = [1, 2, 3];
+  /// print(list.isEmptyOrNull); // false
+  /// ```
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
+  /// Checks if the iterable is neither `null` nor empty.
   ///
+  /// Returns `true` if the iterable is not `null` and not empty, otherwise `false`.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<int>? list = null;
+  /// print(list.isNotEmptyOrNull); // false
+  ///
+  /// list = [];
+  /// print(list.isNotEmptyOrNull); // false
+  ///
+  /// list = [1, 2, 3];
+  /// print(list.isNotEmptyOrNull); // true
+  /// ```
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 }
 
-///
+/// Enhanced documentation for nullable List extensions.
 extension DHUNullableListExtensions<E> on List<E>? {
-  /// same behavior as [removeAt] but it is null safe which means
-  /// it do nothing when [List] return [isEmptyOrNull] to true.
+  /// Safely removes the element at the specified [index] if the list is non-null and non-empty.
+  ///
+  /// Parameter:
+  /// • [index]: The position of the element to remove.
   void tryRemoveAt(int index) {
     try {
       if (isNotEmptyOrNull) this!.removeAt(index);
     } catch (_) {}
   }
 
-  /// same behavior as [indexOf] but it is null safe which means
-  /// it do nothing when [List] return [isEmptyOrNull] to true.
+  /// Returns the index of [element] or null if the list is null/empty or [element] is null.
   int? indexOfOrNull(E? element) =>
       isEmptyOrNull || element == null ? null : this!.indexOf(element);
 
-  /// same behavior as [indexWhere] but it is null safe which means
-  /// it do nothing when [List] return [isEmptyOrNull] to true.
+  /// Searches for an element that satisfies the [test] predicate, starting at [start], and returns
+  /// its index. Returns null if no such element is found or if the list is null/empty.
   int? indexWhereOrNull(Predicate<E> test, [int start = 0]) {
     if (isEmptyOrNull) return null;
     try {
@@ -105,31 +112,24 @@ extension DHUNullableListExtensions<E> on List<E>? {
     }
   }
 
-  /// same behavior as [removeWhere] but it is null safe which means
-  /// it do nothing when [List] return [isEmptyOrNull] to true.
+  /// Safely attempts to remove elements (currently a placeholder) when called.
+  /// Note: The parameter [element] is used only to match the method signature.
   void tryRemoveWhere(int element) =>
       isEmptyOrNull ? null : this!.removeWhere((element) => false);
 
-  /// Converts the list to a different type [R], providing flexible and safe type conversion.
+  /// Converts the list to a different type [R] using custom conversion logic.
   ///
-  /// [convertTo] attempts to convert each element in the list to the specified type [R]. It employs
-  /// a custom conversion logic that handles various scenarios, including cases where a direct cast
-  /// is not possible.
-  ///
-  /// If a direct conversion fails, it attempts element-wise conversion using `toType`, ensuring
-  /// a smooth conversion process without the risk of runtime errors.
-  ///
-  /// Example usage:
+  /// Example:
   /// ```dart
-  /// List<dynamic> list = [1, 2, '3'];
-  /// List<int> intList = list.convertTo<int>(); // Tries to convert all elements to int.
+  /// List <dynamic> list = [1, 2, '3'];
+  /// List <int> intList = list.convertTo<int>();
   /// ```
   List<R> convertTo<R>() => ConvertObject.toList<R>(this);
 }
 
-///
+/// Enhanced documentation for nullable Iterable extensions.
 extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
-  ///
+  /// Creates a [DoublyLinkedList] from this iterable if it's non-null; otherwise returns an empty one.
   DoublyLinkedList<E> toDoublyLinkedList() => DoublyLinkedList(this);
 
   /// similar to list[index] but it is null safe.
@@ -146,10 +146,10 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   ///Returns [false] if this nullable iterable is either null or empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 
-  /// get the first element return null
+  /// Returns the first element if available; otherwise, returns null.
   E? get firstOrNull => of(0);
 
-  /// get the last element if the list is not empty or return null
+  /// Returns the last element if the iterable is not empty; otherwise, returns null.
   E? get lastOrNull => isNotEmptyOrNull ? this!.last : null;
 
   ///
@@ -161,19 +161,16 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     return null;
   }
 
-  /// get the last element or provider default
-  /// example:
-  /// var name = [danny, ronny, james].lastOrDefault["jack"]; // james
-  /// var name = [].lastOrDefault["jack"]; // jack
+  /// Returns the last element or provides [defaultValue] if the iterable is empty or null.
   E? lastOrDefault(E defaultValue) => lastOrNull ?? defaultValue;
 
-  /// get the first element or provider default
-  /// example:
-  /// var name = [danny, ronny, james].firstOrDefault["jack"]; // danny
-  /// var name = [].firstOrDefault["jack"]; // jack
+  /// Returns the first element or provides [defaultValue] if no element exists.
   E firstOrDefault(E defaultValue) => firstOrNull ?? defaultValue;
 
-  /// gets random element from the list or return null. uses the
+  /// Retrieves a random element or null if the iterable is null.
+  ///
+  /// Optional:
+  /// • [seed]: Seed for reproducible randomness.
   E? tryGetRandom([int? seed]) {
     final iterable = this;
     if (iterable == null) return null;
@@ -441,35 +438,15 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
       );
 }
 
-///
+/// Enhanced documentation for non-nullable Iterable extensions.
 extension DHUCollectionsExtensions<E> on Iterable<E> {
-  /// Converts the iterable to a [List] of type [R] using the [convertTo] method.
-  ///
-  /// This method first converts the iterable to a list, then converts it to the desired
-  /// type [R] using custom conversion logic provided by [convertTo]. This ensures flexibility
-  /// and handles potential conversion errors gracefully.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// Iterable<dynamic> iterable = [1, '2', 3.0];
-  /// List<int> intList = iterable.toListConverted<int>(); // Tries to convert all elements to int.
-  /// ```
+  /// Converts this iterable to a list of type [R] using custom conversion logic.
   List<R> toListConverted<R>() => this.toList().convertTo<R>();
 
-  /// Converts the iterable to a [Set] of type [R] using the [convertTo] method.
-  ///
-  /// This method first converts the iterable to a set, then converts it to the desired
-  /// type [R] using custom conversion logic provided by [convertTo]. This ensures flexibility
-  /// and handles potential conversion errors gracefully.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// Iterable<dynamic> iterable = [1, '2', 3.0];
-  /// Set<int> intSet = iterable.toSetConverted<int>(); // Tries to convert all elements to int.
-  /// ```
+  /// Converts this iterable to a set of type [R] using custom conversion logic.
   Set<R> toSetConverted<R>() => this.toSet().convertTo<R>();
 
-  /// Returns this Iterable if it's not `null` and the empty list otherwise.
+  /// Returns this iterable (as is) if it is non-null; otherwise, returns an empty iterable.
   Iterable<E> orEmpty() => this;
 
   /// Returns `true` if at least one element matches the given [predicate].

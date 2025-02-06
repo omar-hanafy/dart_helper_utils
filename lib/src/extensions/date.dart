@@ -236,6 +236,33 @@ extension DHUNullableDateExtensions on DateTime? {
         ((this!.year % 100 != 0) || (this!.year % 400 == 0));
   }
 
+  /// Checks if this nullable [DateTime] falls between two other [DateTime]
+  /// objects.
+  ///
+  /// See [DHUDateExtensions.isBetween] for full parameter documentation.
+  ///
+  /// Returns `false` if this nullable DateTime is null.
+  ///
+  bool isBetween(
+    DateTime start,
+    DateTime end, {
+    bool inclusiveStart = true,
+    bool inclusiveEnd = false,
+    bool ignoreTime = false,
+    bool normalize = false,
+  }) {
+    if (this == null) return false;
+
+    return this!.isBetween(
+      start,
+      end,
+      inclusiveStart: inclusiveStart,
+      inclusiveEnd: inclusiveEnd,
+      ignoreTime: ignoreTime,
+      normalize: normalize,
+    );
+  }
+
   /// checks passedDuration
   Duration? get passedDuration =>
       isNull ? null : DateTime.now().difference(this!);
@@ -559,6 +586,74 @@ extension DHUDateExtensions on DateTime {
     return startOfWeekThis.isAtSameMomentAs(startOfWeekOther);
   }
 
+  /// Checks if this [DateTime] falls between two other [DateTime] objects,
+  /// with options for inclusive or exclusive boundaries and timezone handling.
+  ///
+  /// [start] and [end] are the boundary [DateTime] objects.
+  ///
+  /// [inclusiveStart] determines if the [start] date is included in the
+  /// range (defaults to `true`).
+  ///
+  /// [inclusiveEnd] determines if the [end] date is included in the range
+  /// (defaults to `false`).
+  ///
+  /// [ignoreTime] if true, only compares the date part, ignoring time
+  /// components (defaults to `false`).
+  ///
+  /// [normalize] if true, converts all dates to UTC before comparison
+  /// (defaults to `false`).
+  ///
+  /// Throws [ArgumentError] if:
+  /// - Either [start] or [end] is null
+  /// - [start] date is after [end] date
+  ///
+  bool isBetween(
+    DateTime start,
+    DateTime end, {
+    bool inclusiveStart = true,
+    bool inclusiveEnd = false,
+    bool ignoreTime = false,
+    bool normalize = false,
+  }) {
+    // Validate inputs
+    ArgumentError.checkNotNull(start, 'start');
+    ArgumentError.checkNotNull(end, 'end');
+
+    // Prepare dates for comparison
+    var compareStart = start;
+    var compareEnd = end;
+
+    // Normalize to UTC if requested
+    if (normalize) {
+      compareStart = start.toUtc();
+      compareEnd = end.toUtc();
+      // Directly use 'this' and convert it.
+      if (normalize) {
+        toUtc();
+      }
+    }
+
+    // Strip time components if requested
+    if (ignoreTime) {
+      compareStart = DateTime(start.year, start.month, start.day);
+      compareEnd = DateTime(end.year, end.month, end.day);
+      // Directly use 'this'
+      if (ignoreTime) {
+        DateTime(year, month, day);
+      }
+    }
+
+    // Validate range
+    if (compareStart.isAfter(compareEnd)) {
+      throw ArgumentError(
+          'Start date ($start) must be before or equal to end date ($end)');
+    }
+
+    // Perform comparison
+    return (inclusiveStart ? !isBefore(compareStart) : isAfter(compareStart)) &&
+        (inclusiveEnd ? !isAfter(compareEnd) : isBefore(compareEnd));
+  }
+
   /// Calculates the absolute difference in whole days between this DateTime
   /// and another DateTime (or the current time if none is provided).
   /// Ignores hours, minutes, seconds, and milliseconds.
@@ -597,6 +692,7 @@ extension DHUDateExtensions on DateTime {
     }
   }
 
+  /// calculates the age of a person based on the current date
   ({int years, int months, int days}) calculateAge() {
     // Helper function to determine the number of days in a month
     int daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
@@ -633,6 +729,7 @@ extension DHUDateExtensions on DateTime {
   }
 }
 
+///
 abstract class DatesHelper {
   /// Whether or not two times are on the same hour.
   static bool isSameHour(DateTime a, DateTime b) => a.isSameHourAs(b);
