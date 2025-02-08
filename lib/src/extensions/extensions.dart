@@ -6,5 +6,6 @@ export 'iterable.dart';
 export 'map.dart';
 export 'numbers.dart';
 export 'objects.dart';
+export 'stream_controller.dart';
 export 'string_extensions/string_extensions.dart';
 export 'uri_extension.dart';

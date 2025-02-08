@@ -1,12 +1,15 @@
+// ignore_for_file: avoid_redundant_argument_values
 import 'dart:async';
 import 'dart:developer';
 
-/// A simple typedef for injecting any logging solution you like.
+import 'package:dart_helper_utils/src/extensions/stream_controller.dart';
+
+/// A function signature for logging messages.
 typedef LoggerFunction = void Function(String message);
 
-/// A read‐only snapshot of the Debouncer’s current state.
+/// An immutable snapshot of a debouncer's state.
 class DebouncerState {
-  /// Main construction DebouncerState.
+  /// Constructs a new [DebouncerState].
   const DebouncerState({
     required this.isRunning,
     required this.isDisposed,
@@ -16,50 +19,56 @@ class DebouncerState {
     this.remainingMaxWait,
   });
 
-  /// True if there's a pending delayed call that hasn't fired yet.
+  /// Whether a debounced action is currently scheduled.
   final bool isRunning;
 
-  /// True if [dispose] was already called on this debouncer.
+  /// Whether the debouncer has been disposed.
   final bool isDisposed;
 
-  /// Number of times the debounced action has successfully executed.
+  /// Total number of times the debounced action has executed.
   final int executionCount;
 
-  /// The time at which the last execution completed.
+  /// The timestamp of the last execution.
   final DateTime? lastExecutionTime;
 
-  /// How much longer until the next scheduled execution fires.
+  /// Time remaining until the next scheduled execution.
   final Duration? remainingTime;
 
-  /// How much longer until the max wait threshold forces an execution.
+  /// Time remaining until the maximum wait threshold forces execution.
   final Duration? remainingMaxWait;
 
   @override
   String toString() {
     return 'DebouncerState('
-        'running: $isRunning, '
-        'disposed: $isDisposed, '
-        'count: $executionCount, '
-        'lastExecution: $lastExecutionTime, '
+        'isRunning: $isRunning, '
+        'isDisposed: $isDisposed, '
+        'executionCount: $executionCount, '
+        'lastExecutionTime: $lastExecutionTime, '
         'remainingTime: $remainingTime, '
         'remainingMaxWait: $remainingMaxWait'
         ')';
   }
 }
 
-/// An enhanced debouncer offering sophisticated control over delayed function
-/// execution, including asynchronous support, logging, and real‐time state
-/// monitoring via a broadcast stream.
+/// A versatile debouncer that helps consolidate rapid events
+/// by scheduling actions to run after a delay, with optional immediate
+/// execution and a maximum wait threshold.
+///
+/// This class supports synchronous and asynchronous actions, error handling,
+/// and real‐time state monitoring via a stream.
 class Debouncer {
-  /// Creates an enhanced [Debouncer] with various configuration options.
+  /// Creates a new [Debouncer] instance.
   ///
-  /// * [delay]: The time to wait before firing the debounced action.
-  /// * [maxWait]: The maximum time to wait before forcing an execution.
-  /// * [immediate]: Whether to execute on the leading edge instead of trailing.
-  /// * [onError]: Optional callback for handling errors during the action.
-  /// * [debugLabel]: A label that can be printed with debug logs.
-  /// * [maxHistorySize]: How many past execution records to keep (0 = no history).
-  /// * [logger]: An injectable logging function. If not set, uses `print` if [debugLabel] is provided.
+  /// - [delay] specifies how long to wait after the last call before executing
+  ///   the action. It must be greater than zero.
+  /// - [maxWait] sets an upper limit on how long to wait before forcing execution.
+  ///   If provided, it must be greater than [delay].
+  /// - When [immediate] is true, the first call in a burst executes immediately,
+  ///   and later calls during that burst are debounced.
+  /// - [onError] is an optional callback to handle errors thrown during the action.
+  /// - [debugLabel] helps tag log messages.
+  /// - [maxHistorySize] defines how many past execution records to store (0 disables history).
+  /// - [logger] can be provided to inject a custom logging function.
   Debouncer({
     required Duration delay,
     Duration? maxWait,
@@ -86,7 +95,7 @@ class Debouncer {
     }
   }
 
-  // Core configuration fields.
+  // --------------------- Configuration ---------------------
   final Duration _delay;
   final Duration? _maxWait;
   final bool _immediate;
@@ -95,46 +104,42 @@ class Debouncer {
   final int _maxHistorySize;
   final LoggerFunction? _logger;
 
-  // Timers for the debouncing and max-wait logic.
+  // --------------------- Timer Management ---------------------
   Timer? _timer;
   Timer? _maxWaitTimer;
 
-  // Keeps track of when the last call and last execution happened.
+  // --------------------- Timestamps ---------------------
+  DateTime? _firstCallTime;
   DateTime? _lastCallTime;
   DateTime? _lastExecutionTime;
 
-  // Counts how many times the debounced action has executed.
+  // --------------------- Execution Tracking ---------------------
   int _executionCount = 0;
-
-  // The action to eventually run (can be sync or async).
   FutureOr<void> Function()? _lastAction;
-
-  // Execution history (kept if maxHistorySize > 0).
   final List<_ExecutionRecord> _executionHistory = [];
 
-  // Tracks whether dispose() has been called.
+  // --------------------- Disposal ---------------------
   bool _isDisposed = false;
-
-  // Broadcast controller for observing state changes in real time.
   final _stateController = StreamController<DebouncerState>.broadcast();
 
-  /// A stream of [DebouncerState] updates. You can subscribe to this to
-  /// monitor running/disposed status, pending times, etc.
+  // --------------------- Public API ---------------------
+
+  /// A stream that emits updates of the debouncer's state.
   Stream<DebouncerState> get stateStream => _stateController.stream;
 
-  /// Current number of times the debounced action has executed.
+  /// Total number of times the debounced action has executed.
   int get executionCount => _executionCount;
 
-  /// The time at which the last execution finished, or null if none yet.
+  /// The timestamp of the last executed action.
   DateTime? get lastExecutionTime => _lastExecutionTime;
 
-  /// True if there's a scheduled execution that hasn't fired yet.
+  /// Whether there is a scheduled action pending.
   bool get isRunning => _timer?.isActive ?? false;
 
-  /// True if this debouncer has been disposed and is no longer usable.
+  /// Whether the debouncer has been disposed.
   bool get isDisposed => _isDisposed;
 
-  /// How much longer until the next scheduled execution fires, if any.
+  /// Time remaining until the next scheduled execution fires.
   Duration? get remainingTime {
     if (_timer == null || _lastCallTime == null) return null;
     final elapsed = DateTime.now().difference(_lastCallTime!);
@@ -142,29 +147,27 @@ class Debouncer {
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
-  /// How long until the max wait threshold forces an execution (if defined).
+  /// Time remaining until the maxWait timer forces execution.
   Duration? get remainingMaxWait {
-    if (_maxWaitTimer == null || _lastCallTime == null || _maxWait == null) {
+    if (_maxWaitTimer == null || _firstCallTime == null || _maxWait == null) {
       return null;
     }
-    final elapsed = DateTime.now().difference(_lastCallTime!);
+    final elapsed = DateTime.now().difference(_firstCallTime!);
     final remaining = _maxWait! - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
-  /// How long it's been since the last actual execution completed, or null if no execution yet.
+  /// Duration since the last execution occurred, or null if none has.
   Duration? get timeSinceLastExecution {
     if (_lastExecutionTime == null) return null;
     return DateTime.now().difference(_lastExecutionTime!);
   }
 
-  /// Returns a list of past executions (if [maxHistorySize] > 0).
-  /// Each record includes startTime, endTime, duration (in seconds), success, and error if any.
-  List<Map<String, dynamic>> get executionHistory {
-    return _executionHistory.map((r) => r.toMap()).toList();
-  }
+  /// A list of past execution records represented as maps.
+  List<Map<String, dynamic>> get executionHistory =>
+      _executionHistory.map((record) => record.toMap()).toList();
 
-  /// Provides a snapshot of the debouncer's current state.
+  /// Returns a snapshot of the current debouncer state.
   DebouncerState get currentState => DebouncerState(
         isRunning: isRunning,
         isDisposed: isDisposed,
@@ -174,102 +177,92 @@ class Debouncer {
         remainingMaxWait: remainingMaxWait,
       );
 
-  /// Schedules [action] to run after [delay], resetting the timer if called again
-  /// before [delay] elapses. If [immediate] is true and this is the first call,
-  /// [action] is executed immediately, and then further calls are debounced.
+  /// Schedules [action] to run after [delay]. In immediate mode, the first call
+  /// executes right away while subsequent calls are debounced.
   ///
-  /// [action] can be a sync or async function. If it's async, we'll await it.
-  /// Throws a [StateError] if this debouncer is already disposed.
+  /// Throws a [StateError] if the debouncer has been disposed.
   void run(FutureOr<void> Function() action) {
     _ensureNotDisposed();
     _lastAction = action;
-    _lastCallTime = DateTime.now();
+    final now = DateTime.now();
+    _lastCallTime = now;
+    _firstCallTime ??= now;
 
-    // If immediate mode is enabled and no timer is active, run now.
+    // In immediate mode, execute the first action right away.
     if (_immediate && _timer == null) {
       _executeAction(action);
     }
 
-    // Reset the main timer for the trailing edge.
-    _timer?.cancel();
+    // Cancel any existing timers and schedule a new trailing edge timer.
+    _cancelTimers();
     _timer = Timer(_delay, () {
       if (!_immediate && _lastAction != null) {
         _executeAction(_lastAction!);
       }
-      _resetTimers();
+      _cancelTimers();
     });
 
-    // If maxWait is set, start its timer only if not already started this cycle.
+    // Set up a maxWait timer if specified.
     if (_maxWait != null && _maxWaitTimer == null) {
       _maxWaitTimer = Timer(_maxWait!, () {
         if (_lastAction != null) {
           _executeAction(_lastAction!);
-          _resetTimers();
+          _cancelTimers();
         }
       });
     }
 
-    _logDebug('Action scheduled');
+    _logDebug('Scheduled action.');
     _publishState();
   }
 
-  /// Forces the pending action to execute right away (if any). Resets the timers.
+  /// Immediately executes any pending action and cancels timers.
   ///
-  /// If the action is async, returns a future that completes when the action finishes.
-  /// Throws a [StateError] if this debouncer is already disposed.
+  /// Returns a [Future] that completes when the action finishes.
+  /// Throws a [StateError] if the debouncer has been disposed.
   Future<void> flush() async {
     _ensureNotDisposed();
     if (_lastAction != null) {
       await _executeAction(_lastAction!);
-      _resetTimers();
-      _logDebug('Action flushed');
+      _cancelTimers();
+      _logDebug('Flushed action.');
       _publishState();
     }
   }
 
-  /// Returns true if there's a pending action that hasn't executed yet.
-  bool get hasPendingAction => _lastAction != null;
-
-  /// Returns the total pending duration including maxWait if applicable.
-  Duration? get totalPendingDuration {
-    final normal = remainingTime;
-    final maxWait = remainingMaxWait;
-
-    if (normal == null) return maxWait;
-    if (maxWait == null) return normal;
-
-    return normal < maxWait ? normal : maxWait;
-  }
-
-  /// Executes the action and returns true if it was executed, false if no action was pending.
+  /// Attempts to flush the pending action if one exists.
+  ///
+  /// Returns true if an action was flushed, false otherwise.
   Future<bool> tryFlush() async {
-    if (!hasPendingAction) return false;
+    if (_lastAction == null) return false;
     await flush();
     return true;
   }
 
-  /// Sugar for running an action only if no action is currently pending.
-  /// Returns true if the action was scheduled, false if skipped due to pending action.
+  /// Schedules [action] only if no action is already pending.
+  ///
+  /// Returns true if the action was scheduled, false if skipped.
   bool runIfNotPending(FutureOr<void> Function() action) {
-    if (hasPendingAction) return false;
+    if (_lastAction != null) return false;
     run(action);
     return true;
   }
 
-  /// Cancels any pending action, clearing timers and discarding the last scheduled action.
+  /// Cancels any pending action and resets timers.
   ///
-  /// Throws a [StateError] if this debouncer is already disposed.
+  /// Throws a [StateError] if the debouncer has been disposed.
   void cancel() {
     _ensureNotDisposed();
-    _resetTimers();
+    _cancelTimers();
     _lastAction = null;
-    _logDebug('Cancelled');
+    _logDebug('Cancelled scheduled action.');
     _publishState();
   }
 
-  /// Permanently disposes of this debouncer. Cancels any pending actions,
-  /// clears state, and closes the [stateStream]. Once disposed, the debouncer
-  /// can no longer be used.
+  /// Disposes the debouncer, cancelling any pending actions,
+  /// clearing all state, and closing the state stream.
+  ///
+  /// After calling [dispose], the debouncer must not be used.
   void dispose() {
     if (_isDisposed) return;
     cancel();
@@ -278,110 +271,124 @@ class Debouncer {
     _lastExecutionTime = null;
     _executionCount = 0;
     _executionHistory.clear();
-    _stateController.close();
-    _logDebug('Disposed');
-    _publishState();
+
+    // Publish final state before closing the stream.
+    const finalState = DebouncerState(
+      isRunning: false,
+      isDisposed: true,
+      executionCount: 0,
+      lastExecutionTime: null,
+      remainingTime: null,
+      remainingMaxWait: null,
+    );
+
+    _stateController
+      ..safeAdd(finalState)
+      ..close();
+    _logDebug('Debouncer disposed.');
   }
 
-  /// Actually runs [action], tracking success/failure and updating counters.
-  /// Catches errors and passes them to [onError] if defined, otherwise rethrows.
+  // --------------------- Private Helpers ---------------------
+
+  /// Executes the provided [action] while handling errors and tracking execution.
   Future<void> _executeAction(FutureOr<void> Function() action) async {
     final startTime = DateTime.now();
     try {
-      // If the function is sync, this runs immediately. If async, we wait.
       await Future.sync(action);
-
       _executionCount++;
       _lastExecutionTime = DateTime.now();
 
-      // Record success if we’re tracking history.
       if (_maxHistorySize > 0) {
-        _recordExecution(
-          startTime: startTime,
-          endTime: _lastExecutionTime!,
-          success: true,
-        );
+        _recordExecution(startTime, _lastExecutionTime!, true);
       }
       _lastAction = null;
-      _logDebug('Action executed successfully');
+      _logDebug('Action executed successfully.');
     } catch (error, stackTrace) {
-      // If an error occurs, record it if we keep history.
       if (_maxHistorySize > 0) {
-        _recordExecution(
-          startTime: startTime,
-          endTime: DateTime.now(),
-          success: false,
-          error: error,
-        );
+        _recordExecution(startTime, DateTime.now(), false, error: error);
       }
-      _logDebug('Action failed: $error');
-
+      _logDebug('Action execution failed: $error');
       if (_onError != null) {
         _onError!(error, stackTrace);
       } else {
-        rethrow; // If no handler, rethrow the error to the caller.
+        rethrow;
       }
     } finally {
-      // Always update the state after the action completes/fails.
       _publishState();
     }
   }
 
-  /// Cancels any active timers for this cycle.
-  void _resetTimers() {
-    _timer?.cancel();
+  /// Cancels any active timers and resets the burst state.
+  void _cancelTimers() {
+    if (_timer?.isActive ?? false) {
+      _logDebug('Cancelling main timer.');
+      _timer?.cancel();
+    }
     _timer = null;
-    _maxWaitTimer?.cancel();
+
+    if (_maxWaitTimer?.isActive ?? false) {
+      _logDebug('Cancelling maxWait timer.');
+      _maxWaitTimer?.cancel();
+    }
     _maxWaitTimer = null;
+    _firstCallTime = null;
   }
 
-  /// Logs debug info, either via the injected logger or via [print] if [debugLabel] is set.
+  /// Publishes the current state via the state stream.
+  void _publishState() {
+    if (!_isDisposed && !_stateController.isClosed) {
+      try {
+        _stateController.add(currentState);
+      } catch (error, stackTrace) {
+        _logDebug('Error publishing state: $error');
+        if (_onError != null) {
+          _onError!(error, stackTrace);
+        } else {
+          rethrow;
+        }
+      }
+    }
+  }
+
+  /// Logs a debug message using the provided logger or the default log function.
   void _logDebug(String message) {
     if (_logger != null) {
-      _logger!('Debouncer($_debugLabel): $message');
+      _logger!(
+        'Debouncer${_debugLabel != null ? '($_debugLabel)' : ''}: $message',
+      );
     } else if (_debugLabel != null) {
       log('Debouncer($_debugLabel): $message');
     }
   }
 
-  /// Ensures the debouncer isn't used after being disposed.
+  /// Throws a [StateError] if the debouncer has been disposed.
   void _ensureNotDisposed() {
     if (_isDisposed) {
-      throw StateError('Cannot use Debouncer after it has been disposed.');
+      throw StateError('Debouncer has been disposed and cannot be used.');
     }
   }
 
-  /// Publishes the current debouncer state to the stateStream.
-  void _publishState() {
-    if (!_isDisposed) {
-      _stateController.add(currentState);
-    }
-  }
-
-  /// Records an action’s execution details to the debouncer’s history.
-  void _recordExecution({
-    required DateTime startTime,
-    required DateTime endTime,
-    required bool success,
+  /// Records an execution event in the history.
+  void _recordExecution(
+    DateTime start,
+    DateTime end,
+    bool success, {
     Object? error,
   }) {
-    _executionHistory.add(
-      _ExecutionRecord(
-        startTime: startTime,
-        endTime: endTime,
-        success: success,
-        error: error,
-      ),
-    );
-
-    // If we exceed the max history, remove the oldest entries.
+    _executionHistory.add(_ExecutionRecord(
+      startTime: start,
+      endTime: end,
+      success: success,
+      error: error,
+    ));
+    // Remove oldest entries if history exceeds [maxHistorySize].
     while (_executionHistory.length > _maxHistorySize) {
       _executionHistory.removeAt(0);
     }
   }
 }
 
-/// Internal class storing details of a single execution instance.
+/// Internal class for recording details about a single action execution.
 class _ExecutionRecord {
   _ExecutionRecord({
     required this.startTime,
@@ -395,10 +402,10 @@ class _ExecutionRecord {
   final bool success;
   final Object? error;
 
-  /// Duration of the action in [endTime - startTime].
+  /// The duration of the execution.
   Duration get duration => endTime.difference(startTime);
 
-  /// Converts the record into a map. Useful for logging or debugging.
+  /// Converts this record to a map for logging or debugging.
   Map<String, dynamic> toMap() => {
         'startTime': startTime.toIso8601String(),
         'endTime': endTime.toIso8601String(),

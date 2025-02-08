@@ -73,8 +73,10 @@ class DoublyLinkedList<E> extends ListBase<E> {
 
   int _length = 0;
 
+  /// The last node in the list.
   Node<E>? get tail => _tail;
 
+  /// The first node in the list.
   Node<E>? get head => _head;
 
   /// Appends a new node with the given data to the end of the list.

@@ -1,9 +1,11 @@
+/// A set of extensions on the `bool` type to provide more functionality.
 extension DHUBoolEx on bool {
   /// returns a new bool which is toggled from the current one.
   /// itn does NOT change the current bool.
   bool get toggled => !this;
 }
 
+/// A set of extensions on the nullable `bool` type to provide more functionality.
 extension DHUBoolNullablelEx on bool? {
   /// Gets a boolean value indicating whether the nullable boolean is true.
   ///

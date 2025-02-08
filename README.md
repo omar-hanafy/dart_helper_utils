@@ -243,6 +243,34 @@ final number = "1,234.56".toNum(format: "#,##0.00");
 ```
 ---
 
+### Debouncer
+
+Utility for managing rapid event sequences by delaying action execution until after a quiet period. Perfect for search inputs, form validation, API calls, and other scenarios where you want to limit the frequency of operations.
+
+```dart
+// Create a debouncer with 300ms delay
+final debouncer = Debouncer(delay: Duration(milliseconds: 300));
+
+// Use in a search field
+TextField(
+  onChanged: (value) {
+    debouncer.run(() async {
+      // This will only execute 300ms after the last keystroke
+      await searchApi(value);
+    });
+  },
+)
+
+// Don't forget to dispose
+@override
+void dispose() {
+  debouncer.dispose();
+  super.dispose();
+}
+```
+
+---
+
 ### Time & Execution Utils
 
 Comprehensive utilities for measuring and controlling execution time:

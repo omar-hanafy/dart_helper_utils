@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
+///
 extension DHUObjectNullableExtensions on Object? {
   /// Encodes the object into a JSON string.
   ///
