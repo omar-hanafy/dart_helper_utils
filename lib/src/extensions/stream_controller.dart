@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
+// TODO(OMAR): see merge throttle logic in stream transformer package form bloc, into this one.
 
 /// ---------------------------------------------------------------------------
 /// StreamController Safety Extensions
