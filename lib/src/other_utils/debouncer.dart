@@ -1,14 +1,73 @@
-// ignore_for_file: avoid_redundant_argument_values
+/// A versatile debouncer library for Dart.
+///
+/// This debouncer consolidates rapid events by scheduling actions to run
+/// after a configurable delay, with options for immediate execution and
+/// a maximum wait threshold. It supports synchronous and asynchronous actions,
+/// error handling, real‐time state monitoring via a stream, pause/resume functionality,
+/// and state resets without disposal.
+///
+/// ## Example Usage in Isolates / Background Processing
+///
+/// ```dart
+/// // Create a debouncer in a background isolate:
+/// final debouncer = Debouncer(
+///   delay: Duration(milliseconds: 300),
+///   maxWait: Duration(seconds: 2),
+///   immediate: false,
+///   debugLabel: 'BackgroundTask',
+/// );
+///
+/// // Listen to state updates:
+/// debouncer.stateStream.listen((state) {
+///   print('Debouncer state: $state');
+/// });
+///
+/// // Schedule an action:
+/// debouncer.run(() {
+///   print('Action executed in isolate');
+/// });
+///
+/// // Pause and later resume the debouncer:
+/// debouncer.pause();
+/// // ... some time later
+/// debouncer.resume();
+/// ```
+///
+/// ## Threading Considerations
+///
+/// This debouncer is designed for use within a single isolate. If you plan to
+/// share it across isolates, manage state and messaging carefully.
+///
+/// ## Performance Considerations
+///
+/// The debouncer is optimized for minimal overhead. If scheduling actions at
+/// very high frequency, consider fine-tuning the delay and maxWait parameters.
+///
+/// ## Custom Timing Strategies
+///
+/// You may supply a custom [timerFactory] to override the default [Timer] creation,
+/// which is useful for testing or implementing specialized timing logic.
+library;
+
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:dart_helper_utils/src/extensions/stream_controller.dart';
+import 'package:equatable/equatable.dart';
 
 /// A function signature for logging messages.
 typedef LoggerFunction = void Function(String message);
 
+/// A function signature for creating timers.
+/// [timerFactory] allows customizing timer creation, useful for testing or
+/// specialized timing behavior. Defaults to standard [Timer.new].
+typedef TimerFactory = Timer Function(
+    Duration duration, void Function() callback);
+
+/// A function signature for asynchronous actions.
+typedef AsyncAction = FutureOr<void> Function();
+
 /// An immutable snapshot of a debouncer's state.
-class DebouncerState {
+class DebouncerState extends Equatable {
   /// Constructs a new [DebouncerState].
   const DebouncerState({
     required this.isRunning,
@@ -17,6 +76,7 @@ class DebouncerState {
     this.lastExecutionTime,
     this.remainingTime,
     this.remainingMaxWait,
+    this.isPaused = false,
   });
 
   /// Whether a debounced action is currently scheduled.
@@ -37,6 +97,9 @@ class DebouncerState {
   /// Time remaining until the maximum wait threshold forces execution.
   final Duration? remainingMaxWait;
 
+  /// Whether the debouncer is currently paused.
+  final bool isPaused;
+
   @override
   String toString() {
     return 'DebouncerState('
@@ -45,22 +108,53 @@ class DebouncerState {
         'executionCount: $executionCount, '
         'lastExecutionTime: $lastExecutionTime, '
         'remainingTime: $remainingTime, '
-        'remainingMaxWait: $remainingMaxWait'
+        'remainingMaxWait: $remainingMaxWait, '
+        'isPaused: $isPaused'
         ')';
+  }
+
+  @override
+  List<Object?> get props => [
+        isRunning,
+        isDisposed,
+        executionCount,
+        lastExecutionTime,
+        remainingTime,
+        remainingMaxWait,
+        isPaused,
+      ];
+
+  /// Creates a copy of this state with optional field updates.
+  DebouncerState copyWith({
+    bool? isRunning,
+    bool? isDisposed,
+    int? executionCount,
+    DateTime? lastExecutionTime,
+    Duration? remainingTime,
+    Duration? remainingMaxWait,
+    bool? isPaused,
+  }) {
+    return DebouncerState(
+      isRunning: isRunning ?? this.isRunning,
+      isDisposed: isDisposed ?? this.isDisposed,
+      executionCount: executionCount ?? this.executionCount,
+      lastExecutionTime: lastExecutionTime ?? this.lastExecutionTime,
+      remainingTime: remainingTime ?? this.remainingTime,
+      remainingMaxWait: remainingMaxWait ?? this.remainingMaxWait,
+      isPaused: isPaused ?? this.isPaused,
+    );
   }
 }
 
-/// A versatile debouncer that helps consolidate rapid events
-/// by scheduling actions to run after a delay, with optional immediate
-/// execution and a maximum wait threshold.
+/// A versatile debouncer that helps consolidate rapid events by scheduling actions to run after a delay.
+/// It features immediate execution, max-wait thresholds, pause/resume support, and reset functionality.
 ///
-/// This class supports synchronous and asynchronous actions, error handling,
-/// and real‐time state monitoring via a stream.
+/// See the library docs above for usage, threading, performance, and custom timing considerations.
 class Debouncer {
   /// Creates a new [Debouncer] instance.
   ///
-  /// - [delay] specifies how long to wait after the last call before executing
-  ///   the action. It must be greater than zero.
+  /// - [delay] specifies how long to wait after the last call before executing the action.
+  ///   It must be greater than zero.
   /// - [maxWait] sets an upper limit on how long to wait before forcing execution.
   ///   If provided, it must be greater than [delay].
   /// - When [immediate] is true, the first call in a burst executes immediately,
@@ -69,6 +163,7 @@ class Debouncer {
   /// - [debugLabel] helps tag log messages.
   /// - [maxHistorySize] defines how many past execution records to store (0 disables history).
   /// - [logger] can be provided to inject a custom logging function.
+  /// - [timerFactory] allows for custom timer creation. Defaults to [Timer].
   Debouncer({
     required Duration delay,
     Duration? maxWait,
@@ -77,13 +172,15 @@ class Debouncer {
     String? debugLabel,
     int maxHistorySize = 0,
     LoggerFunction? logger,
+    TimerFactory? timerFactory,
   })  : _delay = delay,
         _maxWait = maxWait,
         _immediate = immediate,
         _onError = onError,
         _debugLabel = debugLabel,
         _maxHistorySize = maxHistorySize,
-        _logger = logger {
+        _logger = logger,
+        _timerFactory = timerFactory ?? Timer.new {
     if (delay <= Duration.zero) {
       throw ArgumentError('Delay must be greater than zero.');
     }
@@ -104,6 +201,8 @@ class Debouncer {
   final int _maxHistorySize;
   final LoggerFunction? _logger;
 
+  final TimerFactory _timerFactory;
+
   // --------------------- Timer Management ---------------------
   Timer? _timer;
   Timer? _maxWaitTimer;
@@ -115,8 +214,14 @@ class Debouncer {
 
   // --------------------- Execution Tracking ---------------------
   int _executionCount = 0;
-  FutureOr<void> Function()? _lastAction;
+  AsyncAction? _lastAction;
   final List<_ExecutionRecord> _executionHistory = [];
+
+  // --------------------- Pause Management ---------------------
+  bool _isPaused = false;
+  Duration? _remainingDelayOnPause;
+  Duration? _remainingMaxWaitOnPause;
+  DateTime? _pauseTimestamp;
 
   // --------------------- Disposal ---------------------
   bool _isDisposed = false;
@@ -139,9 +244,15 @@ class Debouncer {
   /// Whether the debouncer has been disposed.
   bool get isDisposed => _isDisposed;
 
+  /// Whether the debouncer is currently paused.
+  bool get isPaused => _isPaused;
+
   /// Time remaining until the next scheduled execution fires.
   Duration? get remainingTime {
     if (_timer == null || _lastCallTime == null) return null;
+    if (_isPaused && _remainingDelayOnPause != null) {
+      return _remainingDelayOnPause;
+    }
     final elapsed = DateTime.now().difference(_lastCallTime!);
     final remaining = _delay - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
@@ -152,6 +263,9 @@ class Debouncer {
     if (_maxWaitTimer == null || _firstCallTime == null || _maxWait == null) {
       return null;
     }
+    if (_isPaused && _remainingMaxWaitOnPause != null) {
+      return _remainingMaxWaitOnPause;
+    }
     final elapsed = DateTime.now().difference(_firstCallTime!);
     final remaining = _maxWait! - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
@@ -161,6 +275,18 @@ class Debouncer {
   Duration? get timeSinceLastExecution {
     if (_lastExecutionTime == null) return null;
     return DateTime.now().difference(_lastExecutionTime!);
+  }
+
+  /// The average execution time of successful actions.
+  ///
+  /// Returns null if no successful executions have occurred.
+  Duration? get averageExecutionTime {
+    final successfulRecords = _executionHistory.where((r) => r.success);
+    if (successfulRecords.isEmpty) return null;
+    final totalMicroseconds = successfulRecords.fold<int>(
+        0, (sum, r) => sum + r.duration.inMicroseconds);
+    final avgMicroseconds = totalMicroseconds ~/ successfulRecords.length;
+    return Duration(microseconds: avgMicroseconds);
   }
 
   /// A list of past execution records represented as maps.
@@ -175,36 +301,50 @@ class Debouncer {
         lastExecutionTime: lastExecutionTime,
         remainingTime: remainingTime,
         remainingMaxWait: remainingMaxWait,
+        isPaused: isPaused,
       );
 
   /// Schedules [action] to run after [delay]. In immediate mode, the first call
-  /// executes right away while subsequent calls are debounced.
+  /// executes right away while subsequent calls during that burst are debounced.
   ///
   /// Throws a [StateError] if the debouncer has been disposed.
-  void run(FutureOr<void> Function() action) {
+  void run(AsyncAction action) {
     _ensureNotDisposed();
+    if (_isPaused) {
+      // If paused, store the action and timestamp without scheduling timers.
+      _lastAction = action;
+      _lastCallTime = DateTime.now();
+      _logDebug('Debouncer is paused. Action stored for later execution.');
+      _publishState();
+      return;
+    }
+
     _lastAction = action;
     final now = DateTime.now();
     _lastCallTime = now;
     _firstCallTime ??= now;
 
-    // In immediate mode, execute the first action right away.
+    // In immediate mode, execute the first action immediately.
     if (_immediate && _timer == null) {
       _executeAction(action);
     }
 
-    // Cancel any existing timers and schedule a new trailing edge timer.
+    // Cancel any existing timers.
     _cancelTimers();
-    _timer = Timer(_delay, () {
-      if (!_immediate && _lastAction != null) {
-        _executeAction(_lastAction!);
-      }
-      _cancelTimers();
-    });
+
+    // Schedule a trailing timer only if not in immediate mode (or if resuming a pending action).
+    if (!_immediate || _lastAction != null) {
+      _timer = _timerFactory(_delay, () {
+        if (!_immediate && _lastAction != null) {
+          _executeAction(_lastAction!);
+        }
+        _cancelTimers();
+      });
+    }
 
     // Set up a maxWait timer if specified.
     if (_maxWait != null && _maxWaitTimer == null) {
-      _maxWaitTimer = Timer(_maxWait!, () {
+      _maxWaitTimer = _timerFactory(_maxWait!, () {
         if (_lastAction != null) {
           _executeAction(_lastAction!);
           _cancelTimers();
@@ -222,6 +362,10 @@ class Debouncer {
   /// Throws a [StateError] if the debouncer has been disposed.
   Future<void> flush() async {
     _ensureNotDisposed();
+    if (_isPaused) {
+      _logDebug('Cannot flush while paused.');
+      return;
+    }
     if (_lastAction != null) {
       await _executeAction(_lastAction!);
       _cancelTimers();
@@ -242,7 +386,7 @@ class Debouncer {
   /// Schedules [action] only if no action is already pending.
   ///
   /// Returns true if the action was scheduled, false if skipped.
-  bool runIfNotPending(FutureOr<void> Function() action) {
+  bool runIfNotPending(AsyncAction action) {
     if (_lastAction != null) return false;
     run(action);
     return true;
@@ -256,6 +400,96 @@ class Debouncer {
     _cancelTimers();
     _lastAction = null;
     _logDebug('Cancelled scheduled action.');
+    _publishState();
+  }
+
+  /// Resets the debouncer's internal state without disposing it.
+  ///
+  /// This clears all timers, execution history, and internal counters.
+  void reset() {
+    _ensureNotDisposed();
+    cancel();
+    _firstCallTime = null;
+    _lastCallTime = null;
+    _lastExecutionTime = null;
+    _executionCount = 0;
+    _executionHistory.clear();
+    _isPaused = false;
+    _remainingDelayOnPause = null;
+    _remainingMaxWaitOnPause = null;
+    _pauseTimestamp = null;
+    _logDebug('Debouncer state has been reset.');
+    _publishState();
+  }
+
+  /// Pauses the debouncer, cancelling active timers.
+  ///
+  /// Any pending action will be resumed when [resume] is called.
+  void pause() {
+    _ensureNotDisposed();
+    if (_isPaused) {
+      _logDebug('Already paused, ignoring pause call');
+      return;
+    }
+    _isPaused = true;
+    _pauseTimestamp = DateTime.now();
+    // Capture remaining time for main timer.
+    if (_timer != null && _lastCallTime != null) {
+      final elapsed = DateTime.now().difference(_lastCallTime!);
+      final remaining = _delay - elapsed;
+      _remainingDelayOnPause = remaining.isNegative ? Duration.zero : remaining;
+      _timer?.cancel();
+      _timer = null;
+    }
+    // Capture remaining time for maxWait timer.
+    if (_maxWaitTimer != null && _firstCallTime != null && _maxWait != null) {
+      final elapsed = DateTime.now().difference(_firstCallTime!);
+      final remaining = _maxWait! - elapsed;
+      _remainingMaxWaitOnPause =
+          remaining.isNegative ? Duration.zero : remaining;
+      _maxWaitTimer?.cancel();
+      _maxWaitTimer = null;
+    }
+    _logDebug('Debouncer paused.');
+    _publishState();
+  }
+
+  /// Resumes the debouncer, scheduling pending actions if necessary.
+  void resume() {
+    _ensureNotDisposed();
+    if (!_isPaused) return;
+    _isPaused = false;
+    final now = DateTime.now();
+    // Adjust timestamps to account for the paused duration.
+    if (_pauseTimestamp != null && _lastCallTime != null) {
+      final pauseDuration = now.difference(_pauseTimestamp!);
+      _lastCallTime = _lastCallTime!.add(pauseDuration);
+      if (_firstCallTime != null) {
+        _firstCallTime = _firstCallTime!.add(pauseDuration);
+      }
+    }
+    // Re-schedule timers if a pending action exists.
+    if (_lastAction != null) {
+      _timer = _timerFactory(_remainingDelayOnPause ?? _delay, () {
+        if (!_immediate && _lastAction != null) {
+          _executeAction(_lastAction!);
+        }
+        _cancelTimers();
+      });
+      if (_maxWait != null) {
+        _maxWaitTimer =
+            _timerFactory(_remainingMaxWaitOnPause ?? _maxWait!, () {
+          if (_lastAction != null) {
+            _executeAction(_lastAction!);
+            _cancelTimers();
+          }
+        });
+      }
+    }
+    _remainingDelayOnPause = null;
+    _remainingMaxWaitOnPause = null;
+    _pauseTimestamp = null;
+    _logDebug('Debouncer resumed.');
     _publishState();
   }
 
@@ -280,10 +514,11 @@ class Debouncer {
       lastExecutionTime: null,
       remainingTime: null,
       remainingMaxWait: null,
+      isPaused: false,
     );
 
     _stateController
-      ..safeAdd(finalState)
+      .._safeAdd(finalState)
       ..close();
     _logDebug('Debouncer disposed.');
   }
@@ -291,7 +526,7 @@ class Debouncer {
   // --------------------- Private Helpers ---------------------
 
   /// Executes the provided [action] while handling errors and tracking execution.
-  Future<void> _executeAction(FutureOr<void> Function() action) async {
+  Future<void> _executeAction(AsyncAction action) async {
     final startTime = DateTime.now();
     try {
       await Future.sync(action);
@@ -318,7 +553,7 @@ class Debouncer {
     }
   }
 
-  /// Cancels any active timers and resets the burst state.
+  /// Cancels any active timers and resets burst state.
   void _cancelTimers() {
     if (_timer?.isActive ?? false) {
       _logDebug('Cancelling main timer.');
@@ -352,12 +587,12 @@ class Debouncer {
 
   /// Logs a debug message using the provided logger or the default log function.
   void _logDebug(String message) {
+    final logMessage =
+        'Debouncer${_debugLabel != null ? '($_debugLabel)' : ''}: $message';
     if (_logger != null) {
-      _logger!(
-        'Debouncer${_debugLabel != null ? '($_debugLabel)' : ''}: $message',
-      );
+      _logger!(logMessage);
     } else if (_debugLabel != null) {
-      log('Debouncer($_debugLabel): $message');
+      log(logMessage);
     }
   }
 
@@ -390,16 +625,24 @@ class Debouncer {
 
 /// Internal class for recording details about a single action execution.
 class _ExecutionRecord {
-  _ExecutionRecord({
+  /// Creates a new execution record.
+  const _ExecutionRecord({
     required this.startTime,
     required this.endTime,
     required this.success,
     this.error,
   });
 
+  /// The start time of the execution.
   final DateTime startTime;
+
+  /// The end time of the execution.
   final DateTime endTime;
+
+  /// Whether the execution was successful.
   final bool success;
+
+  /// Any error encountered during execution.
   final Object? error;
 
   /// The duration of the execution.
@@ -413,4 +656,13 @@ class _ExecutionRecord {
         'success': success,
         'error': error?.toString(),
       };
+}
+
+// Extension on StreamController to safely add data.
+extension _StreamControllerExtension<T> on StreamController<T> {
+  void _safeAdd(T data) {
+    if (!isClosed) {
+      add(data);
+    }
+  }
 }

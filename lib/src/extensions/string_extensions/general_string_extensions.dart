@@ -30,6 +30,7 @@ extension DHUStringExtensions on String {
   /// Example: "Line 1\n Line 2" => "Line1Line2"
   String get clean => toOneLine.removeWhiteSpaces;
 
+  /// returns the integer value of the Roman numeral string.
   int get asRomanNumeralToInt => NumbersHelper.fromRomanNumeral(this);
 
   /// Base64 Encode for this String
@@ -45,18 +46,17 @@ extension DHUStringExtensions on String {
   double compareWith(
     String other,
     SimilarityAlgorithm algorithm, {
-    double prefixScale = 0.1,
     StringSimilarityConfig config = const StringSimilarityConfig(),
   }) =>
       StringSimilarity.compare(
         this,
         other,
         algorithm,
-        prefixScale: prefixScale,
         config: config,
       );
 }
 
+///
 extension DHUNullSafeStringExtensions on String? {
   /// Converts the string into a single line by replacing newline characters.
   String? get toOneLine => this?.replaceAll('\n', '');
@@ -352,6 +352,7 @@ extension DHUNullSafeStringExtensions on String? {
     return null;
   }
 
+  /// property returns the integer value of the Roman numeral string.
   int? get asRomanNumeralToInt =>
       this == null ? null : NumbersHelper.fromRomanNumeral(this!);
 }

@@ -1,5 +1,6 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
+/// extension DHUNDateFormatExtension on DateTime?
 extension DHUNDateFormatExtension on DateTime? {
   /// Formats the DateTime object using the provided pattern and optional locale.
   /// respects null dates.
@@ -11,6 +12,7 @@ extension DHUNDateFormatExtension on DateTime? {
       isNull ? null : DateFormat(pattern, locale).format(this!.toUtc());
 }
 
+/// extension DHUDateFormatExtension on DateTime
 extension DHUDateFormatExtension on DateTime {
   /// Formats the DateTime object using the provided pattern and optional locale.
   String format(String pattern, [String? locale]) =>
@@ -118,6 +120,7 @@ extension DHUDateFormatExtension on DateTime {
   String formatAsHms([String? locale]) => DateFormat.Hms(locale).format(this);
 }
 
+/// extension DHUDateFormatStringExtension on String
 extension DHUDateFormatStringExtension on String {
   /// Parses a date string in either of the formats RFC-1123, RFC-850, or ANSI C's asctime().
   ///
@@ -311,6 +314,7 @@ extension DHUDateFormatStringExtension on String {
       DateFormat(format, locale).parseUtc(this);
 }
 
+/// extension DHUDateFormatNStringExtension on String?
 extension DHUDateFormatNStringExtension on String? {
   /// Creates a DateFormat object using the string as the pattern and optional locale.
   DateFormat dateFormat([String? locale]) => DateFormat(this, locale);

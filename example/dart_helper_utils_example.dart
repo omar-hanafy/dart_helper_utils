@@ -162,7 +162,7 @@ Future<void> main() async {
 
   final result = await TimeUtils.runWithTimeout(
     task: () async {
-      500.millisecondsDelay;
+      await 500.millisecondsDelay();
       return 'Completed';
     },
     timeout: const Duration(seconds: 1),

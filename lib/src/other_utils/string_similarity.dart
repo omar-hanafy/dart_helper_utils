@@ -1,55 +1,79 @@
-import 'dart:collection';
+// ignore_for_file: avoid_returning_this
+import 'dart:async';
 import 'dart:math';
 
-/// Algorithms you can use for comparing string similarity.
-enum SimilarityAlgorithm {
-  /// Dice Coefficient algorithm.
-  ///
-  /// Measures the similarity between two strings based on the number of common bigrams.
-  diceCoefficient,
+// TODO(OMAR): Write test code for this file.
+/// Custom exception for string similarity issues.
+class StringSimilarityError implements Exception {
+  /// Creates a [StringSimilarityError] with the given error [message].
+  StringSimilarityError(this.message);
 
-  /// Levenshtein Distance algorithm.
-  ///
-  /// Calculates the minimum number of single-character edits (insertions, deletions, substitutions) required to change one string into the other.
-  levenshteinDistance,
+  /// The error message describing the issue.
+  final String message;
 
-  /// Jaro similarity algorithm.
-  ///
-  /// Measures the similarity between two strings based on the number and order of matching characters.
-  jaro,
-
-  /// Jaro-Winkler similarity algorithm.
-  ///
-  /// An extension of the Jaro algorithm that gives more weight to matches at the beginning of the strings.
-  jaroWinkler,
-
-  /// Cosine similarity algorithm.
-  ///
-  /// Measures the cosine of the angle between two vectors of word frequencies, treating the strings as bags of words.
-  cosine,
-
-  /// Hamming Distance algorithm.
-  ///
-  /// Measures the number of positions at which the corresponding symbols are different.
-  hammingDistance,
-
-  /// Smith-Waterman algorithm.
-  ///
-  /// Performs local sequence alignment; it compares segments of all possible lengths and optimizes the similarity measure.
-  smithWaterman,
-
-  /// Soundex algorithm.
-  ///
-  /// Encodes words into a phonetic representation to compare how they sound.
-  soundex,
+  @override
+  String toString() => 'StringSimilarityError: $message';
 }
 
-/// Configuration for string normalization and processing
+/// Exception for invalid configuration settings related to string similarity.
+class InvalidConfigurationError extends StringSimilarityError {
+  /// Creates an [InvalidConfigurationError] with the given error [message].
+  InvalidConfigurationError(super.message);
+}
+
+/// A generic Least Recently Used (LRU) cache to store computed values (e.g. bigrams).
 ///
-/// By default, the config removes spaces, lowercases the strings,
-/// and performs overall normalization.
+/// This cache evicts the least recently used entry once the capacity is reached.
+class LRUCache<K, V> {
+  /// Creates an [LRUCache] with the given maximum [capacity].
+  LRUCache(this.capacity);
+
+  /// The maximum number of entries the cache can hold.
+  final int capacity;
+
+  final _cache = <K, V>{};
+
+  /// Returns the value associated with [key] if present.
+  ///
+  /// If the key exists, this method marks the entry as recently used.
+  /// Returns `null` if the key is not found.
+  V? get(K key) {
+    if (!_cache.containsKey(key)) return null;
+    // Mark the entry as recently used.
+    final value = _cache.remove(key);
+    if (value != null) _cache[key] = value;
+    return value;
+  }
+
+  /// Inserts the [key] and [value] into the cache.
+  ///
+  /// If the key already exists, its value is updated and its usage refreshed.
+  /// If the cache is at capacity, the least recently used entry is removed.
+  void put(K key, V value) {
+    if (_cache.containsKey(key)) {
+      _cache.remove(key);
+    } else if (_cache.length >= capacity) {
+      // Remove the least recently used entry.
+      _cache.remove(_cache.keys.first);
+    }
+    _cache[key] = value;
+  }
+
+  /// Returns `true` if the cache contains an entry for the given [key].
+  bool containsKey(K key) => _cache.containsKey(key);
+
+  /// Clears all entries from the cache.
+  void clear() => _cache.clear();
+}
+
+/// Configuration class for string similarity operations.
+///
+/// This includes normalization options, caching options, algorithm-specific parameters,
+/// locale settings, and hooks for custom pre- and post-processing.
 class StringSimilarityConfig {
-  /// Creates a new configuration with the specified settings.
+  /// Creates a [StringSimilarityConfig] with the specified settings.
+  ///
+  /// The [jaroPrefixScale] must be between 0 and 0.25.
   const StringSimilarityConfig({
     this.normalize = true,
     this.removeSpaces = true,
@@ -57,34 +81,289 @@ class StringSimilarityConfig {
     this.removeSpecialChars = false,
     this.removeAccents = false,
     this.trimWhitespace = true,
-  });
+    this.locale,
+    this.enableCache = true,
+    this.cacheCapacity = 1000,
+    this.swMatchScore = 2,
+    this.swMismatchScore = -1,
+    this.swGapScore = -1,
+    this.jaroPrefixScale = 0.1,
+    this.preProcessor,
+    this.postProcessor,
+  }) : assert(
+          jaroPrefixScale >= 0 && jaroPrefixScale <= 0.25,
+          'jaroPrefixScale must be between 0 and 0.25',
+        );
 
-  /// Whether to normalize the strings before comparison.
+  // Normalization options.
+
+  /// Whether to normalize the string before processing.
   final bool normalize;
 
-  /// Whether to remove spaces from the strings.
+  /// Whether to remove spaces during normalization.
   final bool removeSpaces;
 
-  /// Whether to lowercase the strings.
+  /// Whether to convert strings to lower case.
   final bool toLowerCase;
 
-  /// Whether to remove special characters from the strings.
+  /// Whether to remove special characters during normalization.
   final bool removeSpecialChars;
 
-  /// Whether to remove accents from the strings.
+  /// Whether to remove accent marks from characters.
   final bool removeAccents;
 
-  /// Whether to trim whitespace from the strings.
+  /// Whether to trim whitespace from the beginning and end of the string.
   final bool trimWhitespace;
+
+  /// The locale to use for locale-specific normalization.
+  final String? locale;
+
+  // Caching options.
+
+  /// Whether caching is enabled for similarity computations.
+  final bool enableCache;
+
+  /// The capacity of the cache.
+  final int cacheCapacity;
+
+  // Algorithm-specific parameters.
+
+  /// The score to assign for a match in the Smith-Waterman algorithm.
+  final int swMatchScore;
+
+  /// The score to assign for a mismatch in the Smith-Waterman algorithm.
+  final int swMismatchScore;
+
+  /// The score to assign for a gap in the Smith-Waterman algorithm.
+  final int swGapScore;
+
+  /// The scaling factor used for the Jaro-Winkler prefix adjustment.
+  final double jaroPrefixScale;
+
+  // Hooks for custom processing.
+
+  /// A function to preprocess the string before similarity computation.
+  final String Function(String)? preProcessor;
+
+  /// A function to postprocess the string after similarity computation.
+  final String Function(String)? postProcessor;
+
+  /// Returns a builder instance to configure a [StringSimilarityConfig] more flexibly.
+  static Builder get builder => Builder();
 }
 
-/// A utility class that offers methods for measuring how similar two strings are.
+/// Builder for [StringSimilarityConfig].
+///
+/// This builder allows step-by-step configuration of string similarity settings.
+class Builder {
+  /// Whether to normalize the string.
+  bool normalize = true;
+
+  /// Whether to remove spaces during normalization.
+  bool removeSpaces = true;
+
+  /// Whether to convert strings to lower case.
+  bool toLowerCase = true;
+
+  /// Whether to remove special characters.
+  bool removeSpecialChars = false;
+
+  /// Whether to remove accent marks from characters.
+  bool removeAccents = false;
+
+  /// Whether to trim whitespace from the string.
+  bool trimWhitespace = true;
+
+  /// The locale to use for locale-specific normalization.
+  String? locale;
+
+  /// Whether caching is enabled.
+  bool enableCache = true;
+
+  /// The capacity of the cache.
+  int cacheCapacity = 1000;
+
+  /// The match score for the Smith-Waterman algorithm.
+  int swMatchScore = 2;
+
+  /// The mismatch score for the Smith-Waterman algorithm.
+  int swMismatchScore = -1;
+
+  /// The gap score for the Smith-Waterman algorithm.
+  int swGapScore = -1;
+
+  /// The scaling factor used for the Jaro-Winkler prefix adjustment.
+  double jaroPrefixScale = 0.1;
+
+  /// A function to preprocess the string before similarity computation.
+  String Function(String)? preProcessor;
+
+  /// A function to postprocess the string after similarity computation.
+  String Function(String)? postProcessor;
+
+  /// Sets whether to normalize the string.
+  Builder setNormalize(bool value) {
+    normalize = value;
+    return this;
+  }
+
+  /// Sets whether to remove spaces during normalization.
+  Builder setRemoveSpaces(bool value) {
+    removeSpaces = value;
+    return this;
+  }
+
+  /// Sets whether to convert strings to lower case.
+  Builder setToLowerCase(bool value) {
+    toLowerCase = value;
+    return this;
+  }
+
+  /// Sets whether to remove special characters.
+  Builder setRemoveSpecialChars(bool value) {
+    removeSpecialChars = value;
+    return this;
+  }
+
+  /// Sets whether to remove accent marks from characters.
+  Builder setRemoveAccents(bool value) {
+    removeAccents = value;
+    return this;
+  }
+
+  /// Sets whether to trim whitespace.
+  Builder setTrimWhitespace(bool value) {
+    trimWhitespace = value;
+    return this;
+  }
+
+  /// Sets the locale for locale-specific normalization.
+  Builder setLocale(String value) {
+    locale = value;
+    return this;
+  }
+
+  /// Sets whether to enable caching.
+  Builder setEnableCache(bool value) {
+    enableCache = value;
+    return this;
+  }
+
+  /// Sets the capacity of the cache.
+  Builder setCacheCapacity(int value) {
+    cacheCapacity = value;
+    return this;
+  }
+
+  /// Sets the match score for the Smith-Waterman algorithm.
+  Builder setSwMatchScore(int value) {
+    swMatchScore = value;
+    return this;
+  }
+
+  /// Sets the mismatch score for the Smith-Waterman algorithm.
+  Builder setSwMismatchScore(int value) {
+    swMismatchScore = value;
+    return this;
+  }
+
+  /// Sets the gap score for the Smith-Waterman algorithm.
+  Builder setSwGapScore(int value) {
+    swGapScore = value;
+    return this;
+  }
+
+  /// Sets the Jaro-Winkler prefix scaling factor.
+  Builder setJaroPrefixScale(double value) {
+    jaroPrefixScale = value;
+    return this;
+  }
+
+  /// Sets a custom preprocessor function to modify strings before computation.
+  Builder setPreProcessor(String Function(String) func) {
+    preProcessor = func;
+    return this;
+  }
+
+  /// Sets a custom postprocessor function to modify strings after computation.
+  Builder setPostProcessor(String Function(String) func) {
+    postProcessor = func;
+    return this;
+  }
+
+  /// Builds and returns a [StringSimilarityConfig] with the current settings.
+  StringSimilarityConfig build() {
+    return StringSimilarityConfig(
+      normalize: normalize,
+      removeSpaces: removeSpaces,
+      toLowerCase: toLowerCase,
+      removeSpecialChars: removeSpecialChars,
+      removeAccents: removeAccents,
+      trimWhitespace: trimWhitespace,
+      locale: locale,
+      enableCache: enableCache,
+      cacheCapacity: cacheCapacity,
+      swMatchScore: swMatchScore,
+      swMismatchScore: swMismatchScore,
+      swGapScore: swGapScore,
+      jaroPrefixScale: jaroPrefixScale,
+      preProcessor: preProcessor,
+      postProcessor: postProcessor,
+    );
+  }
+}
+
+/// Supported similarity algorithms for string comparison.
+///
+/// This enum can be extended or replaced by a plugin system in the future.
+enum SimilarityAlgorithm {
+  /// The Dice Coefficient algorithm.
+  diceCoefficient,
+
+  /// The Levenshtein Distance algorithm.
+  levenshteinDistance,
+
+  /// The Jaro algorithm.
+  jaro,
+
+  /// The Jaro-Winkler algorithm.
+  jaroWinkler,
+
+  /// The Cosine Similarity algorithm.
+  cosine,
+
+  /// The Hamming Distance algorithm.
+  hammingDistance,
+
+  /// The Smith-Waterman algorithm.
+  smithWaterman,
+
+  /// The Soundex algorithm.
+  soundex,
+  // Custom algorithms can be added via plugins.
+}
+
+/// Main utility class for string similarity calculations, reporting, and batch processing.
 class StringSimilarity {
   // Private constructor to prevent instantiation.
   const StringSimilarity._();
 
-  static final _cache = HashMap<String, Map<String, int>>();
+  // Optional LRU cache for bigrams.
+  static LRUCache<String, Map<String, int>>? _bigramCache;
 
+  /// Clears the current cache.
+  static void clearCache() {
+    _bigramCache?.clear();
+  }
+
+  /// Initializes the cache if caching is enabled.
+  static void _initializeCache(StringSimilarityConfig config) {
+    if (config.enableCache && _bigramCache == null) {
+      _bigramCache = LRUCache(config.cacheCapacity);
+    }
+  }
+
+  // A basic accent mapping for normalization.
   static const _accentMap = {
     'à': 'a',
     'á': 'a',
@@ -114,19 +393,21 @@ class StringSimilarity {
     'ÿ': 'y',
   };
 
+  /// Normalizes a string according to the provided [config].
+  /// Applies pre- and post-processing hooks if provided.
   static String _normalizeString(String input, StringSimilarityConfig config) {
     if (!config.normalize) return input;
 
-    var result = input;
-    if (config.trimWhitespace) {
-      result = result.trim();
-    }
-    if (config.removeSpaces) {
-      result = result.replaceAll(RegExp(r'\s+'), '');
-    }
-    if (config.toLowerCase) {
-      result = result.toLowerCase();
-    }
+    // Apply pre-processing hook.
+    var result =
+        config.preProcessor != null ? config.preProcessor!(input) : input;
+
+    // Unicode normalization – for a robust solution, consider a dedicated library.
+    result = _unicodeNormalize(result, config.locale);
+
+    if (config.trimWhitespace) result = result.trim();
+    if (config.removeSpaces) result = result.replaceAll(RegExp(r'\s+'), '');
+    if (config.toLowerCase) result = result.toLowerCase();
     if (config.removeSpecialChars) {
       result = result.replaceAll(RegExp(r'[^\w\s]'), '');
     }
@@ -136,13 +417,28 @@ class StringSimilarity {
         (Match m) => _accentMap[m[0]] ?? m[0]!,
       );
     }
+
+    // Apply post-processing hook.
+    if (config.postProcessor != null) result = config.postProcessor!(result);
+
     return result;
   }
 
-  static Map<String, int> _createBigrams(String input) {
-    // Check cache first
-    if (_cache.containsKey(input)) {
-      return Map.from(_cache[input]!);
+  /// Placeholder for Unicode normalization.
+  /// Replace with robust normalization (NFD, NFC, etc.) as needed.
+  static String _unicodeNormalize(String input, String? locale) {
+    // Locale-specific logic could be implemented here.
+    return input;
+  }
+
+  /// Generates bigrams from a string.
+  /// For very long strings, this loop might be parallelized.
+  static Map<String, int> _createBigrams(
+      String input, StringSimilarityConfig config) {
+    _initializeCache(config);
+    if (config.enableCache && _bigramCache != null) {
+      final cached = _bigramCache!.get(input);
+      if (cached != null) return Map.from(cached);
     }
 
     if (input.length < 2) return {};
@@ -153,16 +449,14 @@ class StringSimilarity {
       bigramCounts[bigram] = (bigramCounts[bigram] ?? 0) + 1;
     }
 
-    // Cache the result
-    _cache[input] = Map.from(bigramCounts);
+    if (config.enableCache && _bigramCache != null) {
+      _bigramCache!.put(input, Map.from(bigramCounts));
+    }
     return bigramCounts;
   }
 
-  /// Computes the Dice Coefficient for two strings.
-  /// Returns a value between 0 and 1, where 1 means identical strings.
-  ///
-  /// This version normalizes both strings (by default) and uses bigrams for each,
-  /// then counts the overlap.
+  /// Computes the Dice Coefficient between two strings.
+  /// Returns a normalized score between 0 and 1.
   static double diceCoefficient(
     String first,
     String second, [
@@ -176,8 +470,8 @@ class StringSimilarity {
     if (s1 == s2) return 1;
     if (s1.length < 2 || s2.length < 2) return 0;
 
-    final firstBigrams = _createBigrams(s1);
-    final secondBigrams = _createBigrams(s2);
+    final firstBigrams = _createBigrams(s1, config);
+    final secondBigrams = _createBigrams(s2, config);
 
     var intersectionSize = 0;
     for (final entry in firstBigrams.entries) {
@@ -190,8 +484,7 @@ class StringSimilarity {
   }
 
   /// Computes the Hamming Distance between two strings.
-  /// Returns the number of positions at which the corresponding symbols are different.
-  /// Throws an [ArgumentError] if the strings are of different lengths.
+  /// Throws an error if strings are of different lengths.
   static int hammingDistance(
     String s1,
     String s2, [
@@ -201,7 +494,8 @@ class StringSimilarity {
     final str2 = _normalizeString(s2, config);
 
     if (str1.length != str2.length) {
-      throw ArgumentError('Strings must be of equal length');
+      throw StringSimilarityError(
+          'Hamming Distance requires strings of equal length');
     }
 
     var distance = 0;
@@ -211,7 +505,8 @@ class StringSimilarity {
     return distance;
   }
 
-  /// Smith-Waterman Algorithm for local sequence alignment
+  /// Smith-Waterman algorithm for local sequence alignment.
+  /// Returns a normalized similarity score between 0 and 1.
   static double smithWaterman(
     String s1,
     String s2, [
@@ -222,9 +517,9 @@ class StringSimilarity {
 
     if (str1.isEmpty || str2.isEmpty) return 0;
 
-    const matchScore = 2;
-    const mismatchScore = -1;
-    const gapScore = -1;
+    final matchScore = config.swMatchScore;
+    final mismatchScore = config.swMismatchScore;
+    final gapScore = config.swGapScore;
 
     final matrix = List.generate(
       str1.length + 1,
@@ -232,36 +527,23 @@ class StringSimilarity {
     );
 
     var maxScore = 0;
-
     for (var i = 1; i <= str1.length; i++) {
       for (var j = 1; j <= str2.length; j++) {
-        final match = matrix[i - 1][j - 1] +
+        final scoreDiag = matrix[i - 1][j - 1] +
             (str1[i - 1] == str2[j - 1] ? matchScore : mismatchScore);
-        final delete = matrix[i - 1][j] + gapScore;
-        final insert = matrix[i][j - 1] + gapScore;
-
-        matrix[i][j] = max(0, max(match, max(delete, insert)));
+        final scoreUp = matrix[i - 1][j] + gapScore;
+        final scoreLeft = matrix[i][j - 1] + gapScore;
+        matrix[i][j] = max(0, max(scoreDiag, max(scoreUp, scoreLeft)));
         maxScore = max(maxScore, matrix[i][j]);
       }
     }
 
-    // Normalize the score
     final maxPossible = matchScore * min(str1.length, str2.length);
     return maxPossible == 0 ? 0 : maxScore / maxPossible;
   }
 
-  /// Computes the Soundex encoding for a given string.
-  /// Returns a four-character code representing the phonetic sound of the string.
-  ///
-  /// This version normalizes the string (by default) and then applies the Soundex algorithm.
-  /// The resulting code consists of the first letter of the string followed by three digits.
-  /// If the string is too short, it is padded with zeros.
-  ///
-  /// Example:
-  /// ```dart
-  /// final soundexCode = StringSimilarity.soundex('example');
-  /// print(soundexCode); // E251
-  /// ```
+  /// Computes a phonetic signature using the Soundex algorithm.
+  /// Returns a four-character code.
   static String soundex(
     String input, [
     StringSimilarityConfig config = const StringSimilarityConfig(),
@@ -292,30 +574,22 @@ class StringSimilarity {
 
     final result = StringBuffer(str[0].toUpperCase());
     var previousCode = soundexMap[str[0].toLowerCase()];
-
     for (var i = 1; i < str.length && result.length < 4; i++) {
       final currentChar = str[i].toLowerCase();
       final currentCode = soundexMap[currentChar];
-
       if (currentCode != null && currentCode != previousCode) {
         result.write(currentCode);
         previousCode = currentCode;
       }
     }
-
     while (result.length < 4) {
       result.write('0');
     }
-
     return result.toString();
   }
 
-  /// Computes the Levenshtein distance between two strings,
-  /// telling you how many single-character edits (insertions, deletions, substitutions)
-  /// you need to transform one string into the other.
-  ///
-  /// Here, it uses a memory-optimized approach that keeps only two rows of the matrix:
-  /// the previous row and the current row.
+  /// Computes the Levenshtein distance (edit distance) between two strings.
+  /// Uses a memory-optimized dynamic programming approach.
   static int levenshteinDistance(
     String s1,
     String s2, [
@@ -332,7 +606,6 @@ class StringSimilarity {
 
     for (var i = 0; i < str1.length; i++) {
       currRow[0] = i + 1;
-
       for (var j = 0; j < str2.length; j++) {
         final cost = str1[i] == str2[j] ? 0 : 1;
         currRow[j + 1] = min(
@@ -340,18 +613,15 @@ class StringSimilarity {
           prevRow[j] + cost,
         );
       }
-
-      // Swap the rows instead of re-creating them each time.
       final temp = prevRow;
       prevRow = currRow;
       currRow = temp;
     }
-
     return prevRow[str2.length];
   }
 
-  /// Calculates the Jaro similarity score, which ranges from 0 to 1.
-  /// A score of 1 indicates the strings are identical; 0 means they share nothing in common.
+  /// Computes the Jaro similarity score.
+  /// Returns a score between 0 (no similarity) and 1 (exact match).
   static double jaro(
     String s1,
     String s2, [
@@ -366,26 +636,21 @@ class StringSimilarity {
 
     final matchDistance = ((max(str1.length, str2.length) / 2) - 1).floor();
     final matches = _findMatches(str1, str2, matchDistance);
-
     if (matches.isEmpty) return 0;
 
     final transpositions = _countTranspositions(matches);
     final m = matches.length.toDouble();
-
     return (m / str1.length + m / str2.length + (m - transpositions) / m) / 3;
   }
 
-  /// Helper that finds matching characters within a defined distance,
-  /// used for the Jaro similarity calculation.
+  /// Helper: Finds matching characters for Jaro similarity.
   static List<_Match> _findMatches(String s1, String s2, int maxDistance) {
     final matches = <_Match>[];
     final marked1 = List<bool>.filled(s1.length, false);
     final marked2 = List<bool>.filled(s2.length, false);
-
     for (var i = 0; i < s1.length; i++) {
       final start = max(0, i - maxDistance);
       final end = min(i + maxDistance + 1, s2.length);
-
       for (var j = start; j < end; j++) {
         if (!marked2[j] && s1[i] == s2[j]) {
           marked1[i] = marked2[j] = true;
@@ -394,50 +659,41 @@ class StringSimilarity {
         }
       }
     }
-
-    // Sort matches by the index j in the second string
+    // Sort by index in second string.
     matches.sort((a, b) => a.j.compareTo(b.j));
     return matches;
   }
 
-  /// Counts the transpositions for the matched characters.
-  /// For Jaro, each pair of non-identical neighboring characters
-  /// contributes to the transposition count.
+  /// Helper: Counts transpositions in the matching characters.
   static int _countTranspositions(List<_Match> matches) {
     var transpositions = 0;
-    for (var i = 0; i < matches.length - 1; i++) {
-      if (matches[i].char != matches[i + 1].char) {
+    final s1Matches = matches.map((m) => m.char).toList();
+    final s2Matches = matches.map((m) => m.char).toList();
+
+    for (var i = 0; i < s1Matches.length; i++) {
+      if (s1Matches[i] != s2Matches[i]) {
         transpositions++;
       }
     }
     return transpositions ~/ 2;
   }
 
-  /// Calculates Jaro-Winkler similarity, which builds on Jaro by giving
-  /// extra weight to matching prefixes at the start of the strings.
-  /// [prefixScale] defaults to 0.1 and must stay between 0 and 0.25.
+  /// Computes the Jaro-Winkler similarity.
+  /// Boosts the score based on common prefixes.
   static double jaroWinkler(
     String s1,
     String s2, {
-    double prefixScale = 0.1,
     StringSimilarityConfig config = const StringSimilarityConfig(),
   }) {
-    if (prefixScale < 0 || prefixScale > 0.25) {
-      throw ArgumentError('prefixScale must be between 0 and 0.25');
-    }
-
-    final jaroScore = jaro(s1, s2, config);
+    final baseJaro = jaro(s1, s2, config);
     final prefixLength = _commonPrefixLength(
       _normalizeString(s1, config),
       _normalizeString(s2, config),
     );
-
-    // Winkler modifies the Jaro score based on the length of the common prefix.
-    return jaroScore + (prefixLength * prefixScale * (1 - jaroScore));
+    return baseJaro + (prefixLength * config.jaroPrefixScale * (1 - baseJaro));
   }
 
-  /// Counts how many characters from the start of both strings are the same,
-  /// up to a maximum of 4. Important for Jaro-Winkler.
+  /// Helper: Determines the common prefix length (max 4 characters) for Jaro-Winkler.
   static int _commonPrefixLength(String s1, String s2) {
     var i = 0;
     while (i < min(s1.length, s2.length) && s1[i] == s2[i] && i < 4) {
@@ -446,8 +702,7 @@ class StringSimilarity {
     return i;
   }
 
-  /// Uses the Cosine Similarity measure on two strings by breaking them into words,
-  /// counting frequencies, and then computing the cosine of their frequency vectors.
+  /// Computes Cosine similarity by treating strings as bags of words.
   static double cosine(
     String text1,
     String text2, [
@@ -456,37 +711,32 @@ class StringSimilarity {
     final str1 = _normalizeString(text1, config);
     final str2 = _normalizeString(text2, config);
 
-    // Split on whitespace and drop empty elements.
+    // Tokenize based on whitespace.
     final words1 = str1.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
     final words2 = str2.split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
 
-    // If both are empty, consider them identical.
     if (words1.isEmpty && words2.isEmpty) return 1;
-    // If one is empty while the other is not, they're completely different.
     if (words1.isEmpty || words2.isEmpty) return 0;
 
     final freq1 = _createFrequencyMap(words1);
     final freq2 = _createFrequencyMap(words2);
     final allWords = {...freq1.keys, ...freq2.keys};
 
-    var dotProduct = 0.0;
-    var magnitude1 = 0.0;
-    var magnitude2 = 0.0;
-
+    double dotProduct = 0;
+    double magnitude1 = 0;
+    double magnitude2 = 0;
     for (final word in allWords) {
       final f1 = freq1[word] ?? 0;
       final f2 = freq2[word] ?? 0;
-
       dotProduct += f1 * f2;
       magnitude1 += f1 * f1;
       magnitude2 += f2 * f2;
     }
-
     final magnitude = sqrt(magnitude1) * sqrt(magnitude2);
-    return magnitude == 0 ? 0.0 : dotProduct / magnitude;
+    return magnitude == 0 ? 0 : dotProduct / magnitude;
   }
 
-  /// Builds a map of word frequencies for an Iterable of words.
+  /// Builds a frequency map from a collection of words.
   static Map<String, int> _createFrequencyMap(Iterable<String> words) {
     return words.fold<Map<String, int>>({}, (map, word) {
       map[word] = (map[word] ?? 0) + 1;
@@ -494,14 +744,12 @@ class StringSimilarity {
     });
   }
 
-  /// A convenience method that compares two strings using the specified algorithm.
-  /// For algorithms that produce a distance (like Levenshtein),
-  /// it's normalized to a 0-1 similarity range (1 means identical).
+  /// Compares two strings using the specified [algorithm].
+  /// For distance-based algorithms, the score is normalized to [0,1].
   static double compare(
     String first,
     String second,
     SimilarityAlgorithm algorithm, {
-    double prefixScale = 0.1,
     StringSimilarityConfig config = const StringSimilarityConfig(),
   }) {
     switch (algorithm) {
@@ -510,16 +758,11 @@ class StringSimilarity {
       case SimilarityAlgorithm.levenshteinDistance:
         final distance = levenshteinDistance(first, second, config);
         final maxLength = max(first.length, second.length);
-        return 1 - (distance / maxLength);
+        return maxLength == 0 ? 1 : 1 - (distance / maxLength);
       case SimilarityAlgorithm.jaro:
         return jaro(first, second, config);
       case SimilarityAlgorithm.jaroWinkler:
-        return jaroWinkler(
-          first,
-          second,
-          prefixScale: prefixScale,
-          config: config,
-        );
+        return jaroWinkler(first, second, config: config);
       case SimilarityAlgorithm.cosine:
         return cosine(first, second, config);
       case SimilarityAlgorithm.hammingDistance:
@@ -527,7 +770,7 @@ class StringSimilarity {
           final distance = hammingDistance(first, second, config);
           return 1 - (distance / first.length);
         } catch (e) {
-          return 0; // Return 0 if strings are of different lengths
+          return 0;
         }
       case SimilarityAlgorithm.smithWaterman:
         return smithWaterman(first, second, config);
@@ -535,12 +778,57 @@ class StringSimilarity {
         return soundex(first, config) == soundex(second, config) ? 1.0 : 0.0;
     }
   }
+
+  /// Asynchronous version of [compare] for integration in async workflows.
+  static Future<double> compareAsync(
+    String first,
+    String second,
+    SimilarityAlgorithm algorithm, {
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  }) async {
+    // For batch heavy operations, consider isolating to a separate isolate.
+    return compare(first, second, algorithm, config: config);
+  }
+
+  /// Batch processing: compares a list of string pairs.
+  /// Each pair must contain exactly two strings.
+  static List<double> compareBatch(
+    List<List<String>> pairs,
+    SimilarityAlgorithm algorithm, {
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  }) {
+    return pairs.map((pair) {
+      if (pair.length != 2) {
+        throw StringSimilarityError(
+            'Each pair must contain exactly 2 strings.');
+      }
+      return compare(pair[0], pair[1], algorithm, config: config);
+    }).toList();
+  }
+
+  /// Generates a detailed similarity report.
+  /// This can be extended to include visualization or confidence metrics.
+  static String generateReport(
+    String first,
+    String second,
+    SimilarityAlgorithm algorithm, {
+    StringSimilarityConfig config = const StringSimilarityConfig(),
+  }) {
+    final similarity = compare(first, second, algorithm, config: config);
+    return 'Similarity Score: ${similarity.toStringAsFixed(3)}\n'
+        'First String: $first\n'
+        'Second String: $second\n'
+        'Algorithm: $algorithm';
+  }
 }
 
-/// Internal class used by the Jaro algorithm to record which characters match
-/// and their positions in each string.
+/// Internal helper class for the Jaro algorithm to record matching characters.
 class _Match {
-  const _Match(this.i, this.j, this.char);
+  const _Match(
+    this.i,
+    this.j,
+    this.char,
+  );
 
   final int i;
   final int j;

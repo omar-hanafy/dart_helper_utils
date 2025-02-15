@@ -1,25 +1,22 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:async/async.dart';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:meta/meta.dart';
 
-/// Describes the current loading state of a page.
-enum PageState {
-  /// Initial loading state before any data is fetched.
-  initial,
-
-  /// Indicates that the page is currently loading.
-  loading,
-
-  /// Indicates that the page has successfully loaded.
-  loaded,
-
-  /// Indicates that an error occurred while loading the page.
-  error,
-}
-
 /// Configuration that allows tweaking retry logic, caching, and other pagination behaviors.
+///
+/// Example:
+/// ```dart
+/// final config = PaginationConfig(
+///   retryAttempts: 5,
+///   retryDelay: Duration(seconds: 2),
+///   cacheTimeout: Duration(minutes: 10),
+///   autoCancelFetches: false,
+///   maxCacheSize: 50,
+/// );
+/// ```
 class PaginationConfig {
   /// Creates a [PaginationConfig] with optional parameters.
   ///
@@ -32,30 +29,36 @@ class PaginationConfig {
     this.retryDelay = const Duration(seconds: 1),
     this.cacheTimeout = const Duration(minutes: 5),
     this.autoCancelFetches = true,
+    this.maxCacheSize = 100,
   });
 
   /// Number of times to retry fetching a page after a failure.
   final int retryAttempts;
 
-  /// Duration to wait between retry attempts.
+  /// Base duration to wait between retry attempts (exponentially scaled).
   final Duration retryDelay;
 
   /// Duration before cached pages expire.
   final Duration cacheTimeout;
 
-  /// If true, any ongoing fetch is canceled before initiating a new one.
+  /// If true, cancels any ongoing fetch before starting a new one.
   final bool autoCancelFetches;
+
+  /// Maximum number of cached entries allowed.
+  final int maxCacheSize;
 }
 
-/// A custom exception class for handling pagination-related errors.
+/// Exception thrown when pagination operations fail.
+///
+/// Contains an error message and optionally the original error.
 class PaginationException implements Exception {
   /// Creates a [PaginationException] with a message and an optional original error.
   PaginationException(this.message, {this.originalError});
 
-  /// A descriptive message for the exception.
+  /// A descriptive error message.
   final String message;
 
-  /// The original error that caused this exception, if any.
+  /// The original error, if available.
   final Object? originalError;
 
   @override
@@ -65,50 +68,52 @@ class PaginationException implements Exception {
   }
 }
 
-/// A simple cache entry containing data and a timestamp.
+/// Internal cache entry used for caching pages or transformed paginators.
 ///
-/// Used to manage the expiration of cached pages or transformed results.
+/// This is not part of the public API.
 class _CacheEntry<V> {
-  /// Creates a [_CacheEntry] with the provided data.
-  ///
-  /// The [createdAt] timestamp is automatically set to the current time.
   _CacheEntry(this.data) : createdAt = DateTime.now();
 
   /// The cached data.
   final V data;
 
-  /// The timestamp when the data was cached.
+  /// Timestamp when the data was cached.
   final DateTime createdAt;
 }
 
 /// Basic interface that any paginator should implement.
+///
+/// This interface defines the essential operations for pagination,
+/// such as navigating pages and retrieving current page items.
 abstract class IPaginator<T> {
-  /// Number of items each page should contain.
+  /// The number of items per page.
   int get pageSize;
 
   /// Sets the number of items per page. Must be greater than 0.
   set pageSize(int value);
 
-  /// The current page number, starting at 1.
+  /// The current page number (starting at 1).
   int get currentPage;
 
-  /// Indicates whether there is another page available ahead.
+  /// Indicates whether there is a next page.
   FutureOr<bool> get hasNextPage;
 
-  /// Indicates whether there is a previous page available.
+  /// Indicates whether there is a previous page.
   bool get hasPreviousPage;
 
   /// Jumps directly to the specified [pageNumber].
+  ///
+  /// Throws a [StateError] if the paginator has been disposed.
   void goToPage(int pageNumber);
 
   /// Moves to the next page if it exists.
   ///
-  /// Returns `true` if the page was changed, `false` otherwise.
+  /// Returns `true` if the page was changed, otherwise `false`.
   FutureOr<bool> nextPage();
 
   /// Moves to the previous page if it exists.
   ///
-  /// Returns `true` if the page was changed, `false` otherwise.
+  /// Returns `true` if the page was changed, otherwise `false`.
   FutureOr<bool> previousPage();
 
   /// Resets the paginator to its initial state (e.g., first page).
@@ -116,9 +121,14 @@ abstract class IPaginator<T> {
 
   /// Retrieves the items for the current page.
   FutureOr<List<T>> get currentPageItems;
+
+  /// Returns `true` if the paginator has been disposed.
+  bool get isDisposed;
 }
 
-/// A helper base class that provides shared logic for both synchronous and asynchronous paginators.
+/// Base class for paginators that provides shared logic, debouncing, and disposal checks.
+///
+/// Subclasses must call [dispose] when no longer needed to free resources.
 abstract class BasePaginator<T> implements IPaginator<T> {
   /// Creates a [BasePaginator] with the specified [initialPageSize] and optional [config].
   ///
@@ -135,16 +145,13 @@ abstract class BasePaginator<T> implements IPaginator<T> {
   /// Configuration for pagination behavior.
   final PaginationConfig config;
 
-  /// Stream controller for lifecycle events such as "pageChanged" or "reset".
   final StreamController<String> _lifecycleController =
       StreamController<String>.broadcast();
 
-  /// Stream of lifecycle events that listeners can subscribe to.
+  /// A broadcast stream of lifecycle events (e.g., "pageChanged", "reset").
   Stream<String> get lifecycleStream => _lifecycleController.stream;
 
-  /// Emits a lifecycle event with the given [eventName].
-  ///
-  /// This helps listeners know what actions are occurring within the paginator.
+  /// Emits a lifecycle event.
   @protected
   void emitLifecycleEvent(String eventName) {
     if (!_lifecycleController.isClosed) {
@@ -154,15 +161,27 @@ abstract class BasePaginator<T> implements IPaginator<T> {
 
   int _pageSize;
   int _currentPage = 1;
+  Timer? _debounceTimer;
 
-  /// Stores the most recent error to assist with debugging and logging.
+  /// The most recent error encountered during pagination operations.
   Exception? lastError;
+
+  bool _isDisposed = false;
+
+  /// Ensures the paginator is not disposed. Throws a [StateError] if disposed.
+  @protected
+  void _ensureNotDisposed() {
+    if (_isDisposed) {
+      throw StateError('Paginator has been disposed');
+    }
+  }
 
   @override
   int get pageSize => _pageSize;
 
   @override
   set pageSize(int value) {
+    _ensureNotDisposed();
     if (value <= 0) {
       throw ArgumentError('pageSize must be > 0');
     }
@@ -176,8 +195,6 @@ abstract class BasePaginator<T> implements IPaginator<T> {
   }
 
   /// Called when the page size has changed.
-  ///
-  /// Subclasses can override this method to implement custom logic.
   @protected
   void onPageSizeChanged(int newSize) {}
 
@@ -189,24 +206,26 @@ abstract class BasePaginator<T> implements IPaginator<T> {
 
   @override
   void goToPage(int pageNumber) {
-    var pn = pageNumber;
-    // Clamp pageNumber to ensure it never goes below 1.
-    if (pn < 1) pn = 1;
-    if (pn != _currentPage) {
-      _currentPage = pn;
-      onPageChanged(pn);
-      emitLifecycleEvent('pageChanged');
-    }
+    if (isDisposed) return; // If disposed, do nothing.
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 100), () {
+      if (isDisposed) return; // Check again inside the timer.
+      final pn = pageNumber < 1 ? 1 : pageNumber;
+      if (pn != _currentPage) {
+        _currentPage = pn;
+        onPageChanged(pn);
+        emitLifecycleEvent('pageChanged');
+      }
+    });
   }
 
   /// Called when the current page changes.
-  ///
-  /// Subclasses can override this method to implement custom logic.
   @protected
   void onPageChanged(int newPage) {}
 
   @override
   void reset() {
+    _ensureNotDisposed();
     _currentPage = 1;
     lastError = null;
     onReset();
@@ -214,32 +233,41 @@ abstract class BasePaginator<T> implements IPaginator<T> {
   }
 
   /// Called when the paginator is reset.
-  ///
-  /// Subclasses can override this method to clear resources or perform other reset actions.
   @protected
-  void onReset() {
-    // Subclasses can override if needed.
-  }
+  void onReset() {}
 
-  /// Disposes of resources such as streams or caches.
+  @override
+  bool get isDisposed => _isDisposed;
+
+  /// Disposes of resources used by the paginator, such as timers and stream controllers.
   ///
-  /// Always call `super.dispose()` in overrides to ensure proper cleanup.
+  /// This method must be called when the paginator is no longer needed to free up resources and
+  /// avoid memory leaks. Once [dispose] is called, the paginator is considered disposed and any
+  /// further operations on it may throw a [StateError]. Subclasses that override [dispose] should
+  /// call `super.dispose()` to ensure proper cleanup.
+  ///
+  /// The method checks if the paginator has already been disposed (using the [_isDisposed] flag)
+  /// to prevent multiple disposals.
   @mustCallSuper
   void dispose() {
+    if (_isDisposed) return;
+    _debounceTimer?.cancel();
     _lifecycleController.close();
+    _isDisposed = true;
   }
 }
 
-/// A mixin that provides analytics tracking for pagination operations.
+/// Mixin that provides analytics tracking for pagination operations.
+///
+/// Tracks page load events, errors, and cache hits.
 mixin PaginationAnalytics<T> on BasePaginator<T> {
-  /// Internal metrics tracking various pagination events.
   final _metrics = <String, int>{
     'pageLoads': 0,
     'errors': 0,
     'cacheHits': 0,
   };
 
-  /// Exposes the collected metrics as an unmodifiable map.
+  /// Returns an unmodifiable map of collected metrics.
   Map<String, int> get metrics => Map.unmodifiable(_metrics);
 
   /// Logs a page load event.
@@ -254,11 +282,15 @@ mixin PaginationAnalytics<T> on BasePaginator<T> {
       _metrics['cacheHits'] = (_metrics['cacheHits'] ?? 0) + 1;
 }
 
-/// Synchronous, in-memory paginator.
+/// Synchronous, in-memory paginator that paginates a provided list of items.
 ///
-/// Stores all items in a list and slices them according to [pageSize].
-class Paginator<T> extends BasePaginator<T> {
-  /// Creates a [Paginator] with the provided [items], optional [pageSize], and [config].
+/// This paginator slices a full list into pages and supports transformation,
+/// filtering, and sorting with caching.
+class Paginator<T> extends BasePaginator<T> with PaginationAnalytics<T> {
+  /// Creates a new [Paginator] with a list of [items].
+  ///
+  /// [pageSize] determines the number of items per page. If not specified, defaults to 10.
+  /// [config] can be provided to customize pagination behavior.
   Paginator({
     required this.items,
     int pageSize = 10,
@@ -271,26 +303,38 @@ class Paginator<T> extends BasePaginator<T> {
   /// The complete list of items to paginate.
   final List<T> items;
 
-  /// Cache for storing transformed paginators to avoid redundant operations.
-  ///
-  /// Each entry contains a transformed [Paginator<T>] along with its creation timestamp.
+  /// Cache for storing transformed paginators.
   final Map<Object, _CacheEntry<Paginator<T>>> _transformCache = {};
+
+  /// Evicts the oldest cache entry if the cache exceeds the maximum allowed size.
+  void _evictOldCacheEntries() {
+    if (_transformCache.length > config.maxCacheSize) {
+      Object? oldestKey;
+      DateTime? oldestDate;
+      _transformCache.forEach((key, entry) {
+        if (oldestDate == null || entry.createdAt.isBefore(oldestDate!)) {
+          oldestDate = entry.createdAt;
+          oldestKey = key;
+        }
+      });
+      if (oldestKey != null) {
+        _transformCache.remove(oldestKey);
+      }
+    }
+  }
 
   @override
   List<T> get currentPageItems {
+    _ensureNotDisposed();
     if (items.isEmpty) return const [];
     final total = totalItems;
     final totalPages =
         (total / pageSize).ceil().clamp(1, double.infinity).toInt();
-
-    // If the current page exceeds totalPages, clamp it to totalPages.
     if (currentPage > totalPages) {
       goToPage(totalPages);
     }
-
     final startIndex = (currentPage - 1) * pageSize;
-    final endIndex = (startIndex + pageSize).clamp(0, total);
-
+    final endIndex = min(startIndex + pageSize, total);
     try {
       return items.sublist(startIndex, endIndex);
     } catch (e) {
@@ -299,10 +343,10 @@ class Paginator<T> extends BasePaginator<T> {
     }
   }
 
-  /// Total number of items available for pagination.
+  /// Total number of items available.
   int get totalItems => items.length;
 
-  /// Total number of pages based on [totalItems] and [pageSize].
+  /// Total number of pages.
   int get totalPages => totalItems == 0 ? 1 : (totalItems / pageSize).ceil();
 
   @override
@@ -310,6 +354,7 @@ class Paginator<T> extends BasePaginator<T> {
 
   @override
   bool nextPage() {
+    _ensureNotDisposed();
     if (hasNextPage) {
       goToPage(currentPage + 1);
       return true;
@@ -319,6 +364,7 @@ class Paginator<T> extends BasePaginator<T> {
 
   @override
   bool previousPage() {
+    _ensureNotDisposed();
     if (hasPreviousPage) {
       goToPage(currentPage - 1);
       return true;
@@ -328,6 +374,7 @@ class Paginator<T> extends BasePaginator<T> {
 
   /// Clears all cached transformations.
   void clearTransforms() {
+    _ensureNotDisposed();
     _transformCache.clear();
   }
 
@@ -341,15 +388,16 @@ class Paginator<T> extends BasePaginator<T> {
   @override
   @mustCallSuper
   void dispose() {
+    if (_isDisposed) return;
     clearTransforms();
     super.dispose();
   }
 
-  /// Creates a new [Paginator] by applying a transformation function to each item.
+  /// Creates a new paginator by applying a transformation function to each item.
   ///
-  /// The [transform] function is applied to each item, and a new paginator is returned
-  /// with the transformed items.
+  /// Returns a new [Paginator] containing items of type [R].
   Paginator<R> map<R>(R Function(T) transform) {
+    _ensureNotDisposed();
     final transformedItems = items.map(transform).toList();
     return Paginator<R>(
       items: transformedItems,
@@ -358,58 +406,59 @@ class Paginator<T> extends BasePaginator<T> {
     );
   }
 
-  /// Filters the items based on a [predicate] and returns a new [Paginator].
+  /// Creates a new paginator by filtering items with [predicate].
   ///
-  /// Optionally, a [cacheKey] can be provided to reuse cached filter results.
+  /// Optionally provide a [cacheKey] to reuse previous filter results.
   Paginator<T> where(bool Function(T) predicate, {Object? cacheKey}) {
+    _ensureNotDisposed();
     final key = cacheKey ?? predicate.hashCode;
     final cacheEntry = _transformCache[key];
     if (cacheEntry != null) {
       final isExpired =
           DateTime.now().difference(cacheEntry.createdAt) > config.cacheTimeout;
       if (!isExpired) {
-        // Return the cached paginator.
+        logCacheHit();
         return cacheEntry.data;
       } else {
         _transformCache.remove(key);
       }
     }
-
     final filtered = items.where(predicate).toList();
     final newPaginator = Paginator<T>(
       items: filtered,
       pageSize: pageSize,
       config: config,
     );
-
     _transformCache[key] = _CacheEntry<Paginator<T>>(newPaginator);
+    _evictOldCacheEntries();
     return newPaginator;
   }
 
-  /// Sorts the items based on a [compare] function and returns a new [Paginator].
+  /// Creates a new paginator by sorting items with the provided [compare] function.
   ///
-  /// Optionally, a [cacheKey] can be provided to reuse cached sort results.
+  /// Optionally provide a [cacheKey] to reuse previous sort results.
   Paginator<T> sort(int Function(T a, T b) compare, {Object? cacheKey}) {
+    _ensureNotDisposed();
     final key = cacheKey ?? compare.hashCode;
     final cacheEntry = _transformCache[key];
     if (cacheEntry != null) {
       final isExpired =
           DateTime.now().difference(cacheEntry.createdAt) > config.cacheTimeout;
       if (!isExpired) {
+        logCacheHit();
         return cacheEntry.data;
       } else {
         _transformCache.remove(key);
       }
     }
-
     final sortedItems = List<T>.from(items)..sort(compare);
     final newPaginator = Paginator<T>(
       items: sortedItems,
       pageSize: pageSize,
       config: config,
     );
-
     _transformCache[key] = _CacheEntry<Paginator<T>>(newPaginator);
+    _evictOldCacheEntries();
     return newPaginator;
   }
 
@@ -424,9 +473,25 @@ class Paginator<T> extends BasePaginator<T> {
       };
 }
 
-/// An asynchronous paginator that fetches pages using a provided fetch function.
+/// An asynchronous paginator that fetches pages using a provided [fetchPage] function.
 ///
-/// Includes concurrency handling, caching, retry logic, and more.
+/// This class handles request deduplication, caching, exponential backoff for retries,
+/// and cancellation of ongoing requests. Always ensure you implement your [fetchPage]
+/// function in a non-blocking, cancelable way.
+///
+/// **Usage Example:**
+/// ```dart
+/// Future<List<int>> fetchPage(int pageNumber, int pageSize) async {
+/// 100.millisecondsDelay();
+///   return List.generate(pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+/// }
+///
+/// final asyncPaginator = AsyncPaginator<int>(
+///   fetchPage: fetchPage,
+///   pageSize: 10,
+/// );
+/// final items = await asyncPaginator.currentPageItems;
+/// ```
 class AsyncPaginator<T> extends BasePaginator<T> {
   /// Creates an [AsyncPaginator] with the specified [fetchPage] function, optional [pageSize],
   /// [config], and an optional [totalItemsFetcher].
@@ -440,56 +505,42 @@ class AsyncPaginator<T> extends BasePaginator<T> {
           config: config ?? const PaginationConfig(),
         );
 
-  /// The function responsible for fetching a specific page.
+  /// Function to fetch a page.
   ///
-  /// Example signature: `Future<List<T>> fetchPage(int pageNumber, int pageSize)`.
+  /// Must return a [Future] that completes with a list of items.
   final Future<List<T>> Function(int pageNumber, int pageSize) fetchPage;
 
-  /// Optional function to fetch the total number of items from an external source (e.g., an API).
-  ///
-  /// Used for determining the availability of the next page precisely.
+  /// Optional function to fetch the total number of items.
   final Future<int> Function()? totalItemsFetcher;
 
-  /// Cache for storing fetched pages along with their timestamps.
   final Map<int, _CacheEntry<List<T>>> _pageCache = {};
-
-  /// Tracks the loading state for each page.
   final Map<int, PageState> _pageStates = {};
-
-  /// Stream controller for broadcasting page-state changes.
   final StreamController<Map<String, dynamic>> _stateController =
       StreamController.broadcast();
-
-  /// If a fetch is in progress, it is stored here to allow cancellation or awaiting.
   CancelableOperation<List<T>>? _ongoingFetch;
+  final Map<int, Future<List<T>>> _requestCache = {};
 
-  /// Broadcast stream of each page's state changes.
-  ///
-  /// Emits a map containing the page number and its new state.
+  /// A broadcast stream of page state changes.
   Stream<Map<String, dynamic>> get stateStream => _stateController.stream;
 
-  /// Emits the state change for a specific [page].
+  /// Returns `true` if the current page is loading.
+  bool get isLoading => getPageState(currentPage) == PageState.loading;
+
   void _emitPageState(int page, PageState state) {
     _pageStates[page] = state;
-    _stateController.add({
-      'page': page,
-      'state': state,
-    });
+    _stateController.add({'page': page, 'state': state});
   }
 
-  /// Retrieves the current state of a given [page].
-  ///
-  /// Returns [PageState.initial] if the state is not explicitly set.
+  /// Returns the current state of a given page.
   PageState getPageState(int page) => _pageStates[page] ?? PageState.initial;
 
   @override
   Future<bool> get hasNextPage async {
-    // If a total item count is known, use it to determine if there's a next page.
+    _ensureNotDisposed();
     if (totalItemsFetcher != null) {
       final total = await totalItemsFetcher!();
       return currentPage * pageSize < total;
     }
-    // Otherwise, perform a "peek" by fetching one item from the next page.
     try {
       final peekItems = await fetchPage(currentPage + 1, 1);
       return peekItems.isNotEmpty;
@@ -500,73 +551,65 @@ class AsyncPaginator<T> extends BasePaginator<T> {
 
   @override
   Future<List<T>> get currentPageItems async {
+    _ensureNotDisposed();
     final page = currentPage;
-
-    // Return cached data if available and not expired.
     final cacheEntry = _pageCache[page];
     if (cacheEntry != null) {
       final age = DateTime.now().difference(cacheEntry.createdAt);
-      if (age < config.cacheTimeout) {
-        return cacheEntry.data;
-      } else {
-        // Remove expired cache entry.
-        _pageCache.remove(page);
-      }
+      if (age < config.cacheTimeout) return cacheEntry.data;
+      _pageCache.remove(page);
     }
-
-    // Prevent concurrent fetches for the same page.
-    if (getPageState(page) == PageState.loading) {
-      throw PaginationException('Page $page is already loading');
+    if (_requestCache.containsKey(page)) {
+      return _requestCache[page]!;
     }
-
-    // Optionally cancel any ongoing fetch if configured to do so.
     if (config.autoCancelFetches && _ongoingFetch != null) {
       await _ongoingFetch?.cancel();
       _ongoingFetch = null;
     }
-
-    // Mark the page as loading.
     _emitPageState(page, PageState.loading);
     lastError = null;
-
-    var attempts = 0;
-    while (attempts < config.retryAttempts) {
-      attempts++;
-      try {
-        final operation = CancelableOperation<List<T>>.fromFuture(
-          fetchPage(page, pageSize),
-        );
-        _ongoingFetch = operation;
-
-        final items = await operation.valueOrCancellation();
-        if (items == null) {
-          throw PaginationException('Fetch for page $page was canceled');
-        }
-
-        // Cache the fetched items.
-        _pageCache[page] = _CacheEntry<List<T>>(items);
-
-        _emitPageState(page, PageState.loaded);
-        return items;
-      } catch (e) {
-        if (attempts >= config.retryAttempts) {
-          lastError = PaginationException(
-            'Failed to fetch page $page after $attempts attempts',
-            originalError: e,
+    Future<List<T>> fetchOperation() async {
+      var attempts = 0;
+      while (attempts < config.retryAttempts) {
+        attempts++;
+        try {
+          final operation = CancelableOperation<List<T>>.fromFuture(
+            fetchPage(page, pageSize),
           );
-          _emitPageState(page, PageState.error);
-          rethrow;
+          _ongoingFetch = operation;
+          final items = await operation.valueOrCancellation();
+          if (items == null) {
+            throw PaginationException('Fetch for page $page was canceled');
+          }
+          _pageCache[page] = _CacheEntry<List<T>>(items);
+          _emitPageState(page, PageState.loaded);
+          return items;
+        } catch (e) {
+          if (attempts >= config.retryAttempts) {
+            lastError = PaginationException(
+              'Failed to fetch page $page after $attempts attempts',
+              originalError: e,
+            );
+            _emitPageState(page, PageState.error);
+            throw lastError!;
+          }
+          final delayMillis =
+              config.retryDelay.inMilliseconds * (1 << (attempts - 1));
+          await delayMillis.millisecondsDelay();
         }
-        // Wait before retrying.
-        await config.retryDelay.delayed<dynamic>();
       }
+      throw StateError('Unexpected: fell through retry loop');
     }
 
-    throw StateError('Unexpected: fell through retry loop');
+    final future = fetchOperation();
+    _requestCache[page] = future;
+    await future.whenComplete(() => _requestCache.remove(page));
+    return future;
   }
 
   @override
   Future<bool> nextPage() async {
+    _ensureNotDisposed();
     if (await hasNextPage) {
       goToPage(currentPage + 1);
       return true;
@@ -576,6 +619,7 @@ class AsyncPaginator<T> extends BasePaginator<T> {
 
   @override
   Future<bool> previousPage() async {
+    _ensureNotDisposed();
     if (hasPreviousPage) {
       goToPage(currentPage - 1);
       return true;
@@ -583,8 +627,9 @@ class AsyncPaginator<T> extends BasePaginator<T> {
     return false;
   }
 
-  /// Clears all cached pages and resets page states.
+  /// Clears all cached pages and page states.
   void clearCache() {
+    _ensureNotDisposed();
     _pageCache.clear();
     _pageStates.clear();
   }
@@ -599,6 +644,7 @@ class AsyncPaginator<T> extends BasePaginator<T> {
   @override
   @mustCallSuper
   void dispose() {
+    if (_isDisposed) return;
     _ongoingFetch?.cancel();
     _stateController.close();
     clearCache();
@@ -608,30 +654,73 @@ class AsyncPaginator<T> extends BasePaginator<T> {
 
 /// A generic "cursor" used for cursor-based pagination.
 ///
-/// Immutable to ensure the cursor value remains consistent.
+/// Immutable to ensure consistency.
 @immutable
 class PaginationCursor<T> {
   /// Creates a [PaginationCursor] with the provided [value].
   const PaginationCursor(this.value);
 
-  /// The value representing the current position in pagination.
+  /// The value representing the current position.
   final T value;
 
   @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is PaginationCursor<T> && other.value == value);
-  }
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PaginationCursor<T> && other.value == value);
 
   @override
   int get hashCode => value.hashCode;
 }
 
-/// An infinite paginator that supports both page-based and cursor-based pagination.
+/// An infinite paginator that supports continuous loading of items.
 ///
-/// Continuously loads more items until no more are available.
+/// This paginator supports both page-based and cursor-based approaches.
+/// It continuously loads more items until no more data is available.
+///
+/// **Usage Examples:**
+///
+/// *Page-based*
+/// ```dart
+/// Future<List<int>> fetchItems(int pageSize, int pageNumber) async {
+/// 100.millisecondsDelay();
+///   if (pageNumber > 5) return []; // No more data after page 5.
+///   return List.generate(pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+/// }
+///
+/// final infinitePaginator = InfinitePaginator.pageBased(
+///   fetchItems: fetchItems,
+///   pageSize: 10,
+///   initialPageNumber: 1,
+/// );
+/// await infinitePaginator.loadMoreItems();
+/// print(infinitePaginator.items);
+/// ```
+///
+/// *Cursor-based*
+/// ```dart
+/// Future<List<String>> fetchItems(
+///   int pageSize,
+///   PaginationCursor<String> cursor,
+/// ) async {
+/// 100.millisecondsDelay();
+///   if (cursor.value == 'end') return [];
+///   return List.generate(pageSize, (i) => '${cursor.value}_item${i + 1}');
+/// }
+///
+/// PaginationCursor<String> getNextCursor(List<String> items) {
+///   return items.isNotEmpty ? PaginationCursor('next') : PaginationCursor('end');
+/// }
+///
+/// final infinitePaginator = InfinitePaginator.cursorBased(
+///   fetchItems: fetchItems,
+///   getNextCursor: getNextCursor,
+///   pageSize: 5,
+///   initialCursor: PaginationCursor('start'),
+/// );
+/// await infinitePaginator.loadMoreItems();
+/// print(infinitePaginator.items);
+/// ```
 class InfinitePaginator<T, C> {
-  /// Private constructor used by factory methods.
   InfinitePaginator._({
     required this.fetchItems,
     required this.updatePaginationKey,
@@ -642,12 +731,11 @@ class InfinitePaginator<T, C> {
     _currentKey = initialKey;
   }
 
-  /// Factory constructor for creating a page-based [InfinitePaginator].
+  /// Factory constructor for a page-based infinite paginator.
   ///
-  /// - [fetchItems]: Function to fetch items based on [pageSize] and [pageNumber].
-  /// - [pageSize]: Number of items per fetch. Defaults to 20.
-  /// - [initialPageNumber]: Starting page number. Defaults to 1.
-  /// - [config]: Optional pagination configuration.
+  /// [fetchItems] is called with the [pageSize] and page number.
+  /// [initialPageNumber] defines the starting page (defaults to 1).
+  /// [config] can be used to customize pagination behavior.
   factory InfinitePaginator.pageBased({
     required Future<List<T>> Function(int pageSize, int pageNumber) fetchItems,
     int pageSize = 20,
@@ -663,13 +751,11 @@ class InfinitePaginator<T, C> {
     );
   }
 
-  /// Factory constructor for creating a cursor-based [InfinitePaginator].
+  /// Factory constructor for a cursor-based infinite paginator.
   ///
-  /// - [fetchItems]: Function to fetch items based on [pageSize] and a [PaginationCursor].
-  /// - [getNextCursor]: Function to determine the next cursor from newly fetched items.
-  /// - [pageSize]: Number of items per fetch. Defaults to 20.
-  /// - [initialCursor]: Optional initial cursor. If not provided, defaults to `null`.
-  /// - [config]: Optional pagination configuration.
+  /// [fetchItems] is called with the [pageSize] and a [PaginationCursor].
+  /// [getNextCursor] determines the next cursor value from the fetched items.
+  /// [initialCursor] must be provided for non-int cursor types.
   factory InfinitePaginator.cursorBased({
     required Future<List<T>> Function(int pageSize, PaginationCursor<C> cursor)
         fetchItems,
@@ -678,80 +764,101 @@ class InfinitePaginator<T, C> {
     PaginationCursor<C>? initialCursor,
     PaginationConfig? config,
   }) {
+    final initial = initialCursor ??
+        (() {
+          if (C == int) return PaginationCursor<C>(0 as C);
+          throw ArgumentError(
+              'initialCursor must be provided for non-int cursor types');
+        }());
     return InfinitePaginator._(
       fetchItems: (size, key) => fetchItems(size, key as PaginationCursor<C>),
       updatePaginationKey: (items, oldKey) => getNextCursor(items),
       pageSize: pageSize,
-      initialKey: initialCursor ?? PaginationCursor<C>(null as C),
+      initialKey: initial,
       config: config ?? const PaginationConfig(),
     );
   }
 
-  /// Internal list of all loaded items.
+  /// Internal list that stores all loaded items.
   final List<T> _items = [];
 
-  /// Function to fetch items based on [pageSize] and a dynamic pagination key.
+  /// Function that fetches items based on the given [pageSize] and a dynamic [paginationKey].
+  ///
+  /// This function must return a [Future] that completes with a [List] of items.
   final Future<List<T>> Function(int pageSize, dynamic paginationKey)
       fetchItems;
 
-  /// Function to update the pagination key based on newly fetched [items] and the current [oldKey].
+  /// Function that updates the pagination key based on the newly fetched [items] and the current key ([currentKey]).
+  ///
+  /// This is used to generate the next key required to fetch subsequent pages.
   final dynamic Function(List<T> items, dynamic currentKey) updatePaginationKey;
 
-  /// Configuration for pagination behavior.
+  /// Configuration options for pagination behavior.
+  ///
+  /// This includes settings for retry attempts, retry delay, caching, and other pagination parameters.
   final PaginationConfig config;
 
-  /// Number of items to fetch per request.
+  /// Number of items to fetch per request (i.e., the page size).
   final int pageSize;
 
-  /// The initial pagination key (page number or cursor).
+  /// The initial pagination key used when starting pagination (e.g., initial page number or cursor).
   final dynamic initialKey;
 
+  /// The current pagination key, updated after each successful fetch operation.
+  ///
+  /// This key is used by [fetchItems] to fetch the next set of items.
   dynamic _currentKey;
+
+  /// Flag indicating whether a fetch operation is currently in progress.
   bool _isLoading = false;
+
+  /// Flag indicating whether there are more items available to be loaded.
+  ///
+  /// When set to `false`, no further fetches will occur.
   bool _hasMoreItems = true;
 
-  /// lastError
+  /// Holds the most recent error encountered during a fetch operation, if any.
   Exception? lastError;
 
-  /// Stream controller to broadcast loading state changes.
+  /// A broadcast [StreamController] that emits loading state changes.
+  ///
+  /// It emits `true` when a fetch operation starts and `false` when it ends.
   final StreamController<bool> _loadingController =
       StreamController<bool>.broadcast();
 
-  /// If a fetch is in progress, it is stored here to allow cancellation or awaiting.
+  /// Reference to the current ongoing fetch operation as a [CancelableOperation].
+  ///
+  /// This allows cancellation of the fetch operation if needed.
   CancelableOperation<List<T>>? _ongoingFetch;
 
   /// Stream that notifies listeners about loading state changes.
-  ///
-  /// Emits `true` when loading starts and `false` when loading ends.
   Stream<bool> get loadingStream => _loadingController.stream;
 
-  /// Unmodifiable list of all loaded items.
+  /// Unmodifiable list of loaded items.
   List<T> get items => List.unmodifiable(_items);
 
-  /// Indicates whether a fetch operation is currently in progress.
+  /// Indicates whether a fetch operation is in progress.
   bool get isLoading => _isLoading;
 
   /// Indicates whether there are more items to load.
   bool get hasMoreItems => _hasMoreItems;
 
-  /// Total number of items loaded so far.
+  /// Total number of items loaded.
   int get itemCount => _items.length;
 
   /// Loads more items into the paginator.
   ///
-  /// Handles retry logic and updates the pagination key accordingly.
+  /// Handles retry logic with exponential backoff, cancellation of ongoing requests,
+  /// and updates the internal pagination key. If no more items are available, further
+  /// calls will have no effect.
   Future<void> loadMoreItems() async {
     if (_isLoading || !_hasMoreItems) return;
-
     _isLoading = true;
     _loadingController.add(true);
-
-    // Optionally cancel any ongoing fetch to prevent overlaps.
     if (config.autoCancelFetches && _ongoingFetch != null) {
       await _ongoingFetch?.cancel();
       _ongoingFetch = null;
     }
-
     var attempts = 0;
     while (attempts < config.retryAttempts) {
       attempts++;
@@ -760,21 +867,16 @@ class InfinitePaginator<T, C> {
           fetchItems(pageSize, _currentKey),
         );
         _ongoingFetch = operation;
-
         final newItems = await operation.valueOrCancellation();
         if (newItems == null) {
           throw PaginationException('InfinitePaginator fetch canceled');
         }
-
         if (newItems.isEmpty) {
-          // No more items to load.
           _hasMoreItems = false;
         } else {
           _items.addAll(newItems);
-          // Update the pagination key for the next fetch.
           _currentKey = updatePaginationKey(newItems, _currentKey);
         }
-
         lastError = null;
         break;
       } catch (e) {
@@ -785,8 +887,9 @@ class InfinitePaginator<T, C> {
           );
           rethrow;
         }
-        // Wait before retrying.
-        await config.retryDelay.delayed<dynamic>();
+        final delayMillis =
+            config.retryDelay.inMilliseconds * (1 << (attempts - 1));
+        await delayMillis.millisecondsDelay();
       } finally {
         _isLoading = false;
         _loadingController.add(false);
@@ -803,7 +906,7 @@ class InfinitePaginator<T, C> {
 
   /// Resets the paginator to its initial state.
   ///
-  /// Clears all loaded items and resets pagination keys.
+  /// Clears all loaded items and resets the internal pagination key.
   void reset() {
     _items.clear();
     _hasMoreItems = true;
@@ -813,15 +916,25 @@ class InfinitePaginator<T, C> {
     _loadingController.add(false);
   }
 
-  /// Disposes of resources used by the paginator, such as ongoing fetches and streams.
+  bool _isDisposed = false;
+
+  /// Returns `true` if the infinite paginator has been disposed.
+  bool get isDisposed => _isDisposed;
+
+  /// Disposes of resources used by the infinite paginator.
+  ///
+  /// Must be called when the paginator is no longer needed to prevent memory leaks.
   void dispose() {
+    if (_isDisposed) return;
     _ongoingFetch?.cancel();
     _loadingController.close();
-    // Clear loaded items to free memory.
     _items.clear();
+    _isDisposed = true;
   }
 
-  /// Provides the current state of the paginator for debugging or informational purposes.
+  /// Returns the current state of the paginator as a [Map].
+  ///
+  /// Useful for debugging or logging.
   Map<String, dynamic> get state => {
         'itemCount': itemCount,
         'hasMoreItems': hasMoreItems,
@@ -831,9 +944,6 @@ class InfinitePaginator<T, C> {
 }
 
 /// Extension methods to transform fetched data in an [AsyncPaginator].
-///
-/// Note: If your filtering is expensive or the data set is large,
-/// consider handling those transformations server-side if possible.
 extension AsyncPaginatorTransform<T> on AsyncPaginator<T> {
   /// Returns a new [AsyncPaginator] that maps each fetched item using the [transform] function.
   ///
@@ -852,8 +962,8 @@ extension AsyncPaginatorTransform<T> on AsyncPaginator<T> {
 
   /// Returns a new [AsyncPaginator] that filters each fetched page using the [predicate].
   ///
-  /// This approach fetches double the [pageSize], applies the filter, and then takes the first [pageSize] items.
-  /// For more comprehensive filtering, consider fetching additional pages until a full page of valid items is obtained.
+  /// The fetch operation retrieves twice the [pageSize] and applies the filter,
+  /// returning only the first [pageSize] items that match the predicate.
   AsyncPaginator<T> where(bool Function(T) predicate) {
     return AsyncPaginator<T>(
       pageSize: pageSize,
@@ -874,7 +984,7 @@ extension AsyncPaginatorTransform<T> on AsyncPaginator<T> {
 extension PaginatorTesting<T> on IPaginator<T> {
   /// Validates the paginator's current state.
   ///
-  /// Throws a [StateError] if any validation fails.
+  /// Throws a [StateError] if the [pageSize] is less than or equal to 0 or if [currentPage] is less than 1.
   void validate() {
     if (pageSize <= 0) {
       throw StateError('Invalid pageSize: $pageSize');
@@ -886,15 +996,19 @@ extension PaginatorTesting<T> on IPaginator<T> {
   }
 }
 
-/*
-**Areas for Potential Improvement or Consideration:**
+/// Describes the current loading state of a page.
+///
+/// Used by asynchronous paginators to report the status of page fetch operations.
+enum PageState {
+  /// Initial state before any data is fetched.
+  initial,
 
-*   **Transform Cache in `AsyncPaginator`:** While the `Paginator` class has a transform cache, the `AsyncPaginator` doesn't. For consistency and potential performance gains in scenarios where transformations are applied to `AsyncPaginator`, adding a similar caching mechanism could be beneficial.
-*   **Limited Filtering in `AsyncPaginatorTransform`:** The `where` method fetches double the `pageSize` and applies the filter, which may not be optimal. A more robust approach could involve fetching additional pages until a full page of valid items is obtained or possibly offloading filtering to server-side when possible, as mentioned in the code's comment.
-*   **Server-Side Filtering/Sorting Suggestion:** The documentation could more strongly emphasize the benefits of performing filtering and sorting on the server-side when dealing with large datasets.
-*   **Testing:** While the `PaginatorTesting` extension hints at testing, providing a more comprehensive test suite alongside the library would enhance its reliability and maintainability.
-*   **Total Items Fetching:** `totalItemsFetcher` in `AsyncPaginator` is a good feature, but there could be scenarios where the total number changes after the initial fetch. A way to refresh the total count could be useful.
-*   **Naming Consistency:** While generally consistent, `totalItemsFetcher` in `AsyncPaginator` uses "Items" while the `Paginator`'s `pageInfo` uses "totalItems". Using consistent terminology across classes would be slightly clearer.
-*   **Cursor-Based Total Items:** In cursor-based pagination, knowing the total number of items might not be feasible. The documentation could clarify how or if `hasNextPage` behaves in such scenarios.
-*   **Potential for `notifyListeners()` for non-stream users** If user's don't want to use streams, then implementing `ChangeNotifier` might provide more value.
-*/
+  /// Indicates that the page is currently loading.
+  loading,
+
+  /// Indicates that the page has successfully loaded.
+  loaded,
+
+  /// Indicates that an error occurred while loading the page.
+  error,
+}

@@ -1,75 +1,103 @@
 # Migration Guide (v4)
 
-### 1. Update Imports and Class Names
+This guide explains the major changes in version 4 of the pagination library and provides step-by-step instructions to
+update your code.
 
-- In older versions, you may have imported a single file containing `Paginator` or `AsyncPaginator`. Now, these classes
-  might be organized differently, possibly split across multiple files or using new package imports.
-- If you see errors referencing `IPaginator` or `BasePaginator`, ensure you've updated import paths to point to the new,
-  refactored code.
+---
 
-### 2. Adjust for New `BasePaginator` and Lifecycle Events
+### 1. Adjust for the New `BasePaginator` and Lifecycle Events
 
-- Version 4 introduces a `BasePaginator<T>` class that centralizes shared logic. If you subclassed an old `Paginator`
-  directly, you'll now likely extend `BasePaginator<T>` or `Paginator<T>` instead.
-- If you relied on custom page-change logic, override `onPageChanged` in your subclass. This replaces older patterns
-  where you might have had your own "goToPage" hooking mechanism.
+- **Centralized Logic:**  
+  v4 introduces a `BasePaginator<T>` class that centralizes shared logic such as debouncing and disposal checks.  
+  **Action:**
+    - If you previously subclassed `Paginator` directly, consider extending either `BasePaginator<T>` or the new
+      `Paginator<T>`.
+    - Override the `onPageChanged` method if you need custom behavior on page transitions. This replaces any older
+      custom hooking mechanisms around `goToPage`.
 
-### 3. Handle Casting and Transformations
+---
 
-- In prior versions, transformations like `filter()` or `sorted()` might have returned raw lists or used a different
-  caching approach. Now, we store and retrieve fully instantiated `Paginator<T>` objects in an internal
-  `_transformCache` with time-based expiration.
-- If your code was accessing transform results directly, you'll need to rely on the newly returned `Paginator<T>` from
-  methods like `where(...)` or `sort(...)`.
+### 2. Handle Casting and Transformations
 
-### 4. Use `CancelableOperation` in `AsyncPaginator` (Optional)
+- **Transformation Methods:**  
+  Earlier versions might have returned raw lists or used a different caching mechanism for methods like `where()` or
+  `sort()`.  
+  **Action:**
+    - In v4, these methods now return fully instantiated `Paginator<T>` objects, stored internally in a time-based
+      `_transformCache`.
+    - Update your code to work with the returned `Paginator<T>` instances instead of accessing raw transformation
+      results.
 
-- If you want to avoid overlapping fetch requests, ensure `autoCancelFetches` is set to `true` in your
-  `PaginationConfig`. If you're upgrading and want to preserve old behavior (which might allow multiple fetches at
-  once), you can set it to `false`.
+---
 
-### 5. Infinite Paginator Changes
+### 3. Use of `CancelableOperation` in `AsyncPaginator` (Optional)
 
-- The `InfinitePaginator` now supports both page-based and cursor-based patterns through factory constructors. If you
-  previously used separate classes for these patterns, you might need to switch to `InfinitePaginator.pageBased()` or
-  `InfinitePaginator.cursorBased()`.
-- Check your existing code for any references to legacy infinite scroll classes or direct calls that now require passing
-  a `paginationKey`. Adapt them to match the new factory constructor signature.
+- **Avoid Overlapping Requests:**  
+  The new implementation uses `CancelableOperation` to deduplicate and cancel overlapping fetch requests.  
+  **Action:**
+    - Set `autoCancelFetches` to `true` in your `PaginationConfig` if you want to prevent concurrent fetches.
+    - If you prefer the old behavior (allowing multiple simultaneous requests), set `autoCancelFetches` to `false`.
 
-### 6. Number Extensions Delay Methods
+---
 
-- The `delay()` method has been removed in favor of more specific duration-based delays.
-- Replace `n.delay()` calls with the appropriate specific delay method:
+### 4. Infinite Paginator Changes
+
+- **Unified Infinite Scrolling:**  
+  The `InfinitePaginator` now supports both page-based and cursor-based approaches via factory constructors.  
+  **Action:**
+    - Replace any legacy infinite scroll classes or custom implementations with either `InfinitePaginator.pageBased()`
+      or `InfinitePaginator.cursorBased()`.
+    - Adapt any direct usage of pagination keys to match the new factory constructor signatures.
+
+---
+
+### 5. Updated Number Extensions for Delay Methods
+
+- **Specific Duration Methods:**  
+  The generic `delay()` method has been replaced by more specific duration-based delay methods.
+
+  **Action:** Replace old delay methods as follows:
+    - Replace await `2.delay();` and `await 2.secDelay;` with `await 2.secondsDelay();`
+    - Replace await `5.minDelay;` with `await 5.minutesDelay();`
+    - Replace await `1.daysDelay;` with `await 1.daysDelay();`
+    - And so on for other time units.
+
+  Additionally, if you previously used a delay with a callback:
+
   ```dart
-  // Old
-  await 2.delay();
-  await 2.secDelay;
-  await 5.minDelay;
-  await 1.daysDelay;
-  
-  // New
-  await 2.secondsDelay();
-  await 5.minutesDelay();
-  await 1.daysDelay();
-  ```
-- All delay methods now support generic return types for computations:
-  ```dart
-  // Old
+  // Old:
   await 2.delay(() => someFunction());
   
-  // New
+  // New:
   final result = await 2.secondsDelay(() => someFunction());
   ```
 
-### 7. Analytics (Optional)
+---
 
-- If you want to track usage metrics, add the `PaginationAnalytics` mixin to your custom paginator class. This is
-  optional but can be handy if you want to log the number of page loads, errors, etc.
+### 6. Analytics (Optional)
 
-### 8. Testing
+- **Tracking Metrics:**  
+  If you need to track metrics (such as page loads, errors, and cache hits), add the `PaginationAnalytics` mixin to your
+  custom paginator class.
 
-- Lastly, confirm your existing tests still pass or update them to reflect any structural changes in version 4 (like new
-  method names, new overrides, or changed class hierarchies).
+  **Action:** Incorporate the mixin where needed to log metrics according to your application requirements.
+
+---
+
+### 7. Testing and Disposal Behavior
+
+- **No-Op After Disposal:**  
+  In v4, methods such as `goToPage` are designed to be no-ops (instead of throwing exceptions) after the paginator is
+  disposed. This ensures that lifecycle streams remain silent post-disposal.
+
+  **Action:**
+
+    - Update your tests to reflect this behavior.
+    - If your code previously expected an exception after disposal, refactor it to handle no-ops instead.
+
+- **Review Your Tests:**  
+  Confirm that your existing tests pass. Update any tests that reference legacy method names, class hierarchies, or
+  disposal behavior.
 
 ## Migration Guide (v3)
 

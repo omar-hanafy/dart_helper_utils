@@ -2,19 +2,16 @@
 
 ## 4.0.0
 
-### Pagination
-
--   **Unified Paginator:** Introduced `BasePaginator<T>` for shared logic and a single `InfinitePaginator` to handle both page-based and cursor-based infinite scrolling through factory constructors.
--   **Improved `AsyncPaginator`:** Now uses `CancelableOperation` to optionally cancel in-flight requests when `autoCancelFetches` is true, preventing race conditions.
--   **Enhanced Caching:** A consistent `_CacheEntry` class now stores either `Paginator<T>` or `List<T>` with expiration checks for both sync and async paginators.
--   **Analytics:** Added `PaginationAnalytics` mixin to track page loads, errors, and cache hits.
-
 ### String Similarity
--   **New `StringSimilarity` Utility:** Added with algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`, `jaroWinkler`, and `cosine`.
--   **`String` Extension:**  `compareWith` method for quick similarity comparisons.
+
+- **New `StringSimilarity` Utility:** Added with algorithms like `diceCoefficient`, `levenshteinDistance`, `jaro`,
+  `jaroWinkler`, and `cosine`.
+- **`String` Extension:**  `compareWith` method for quick similarity comparisons.
 
 ### Debouncer
+
 Added new `Debouncer` class for function execution control:
+
 - Configurable delay and max wait times
 - Support for sync/async functions
 - Real-time state monitoring via stream
@@ -25,34 +22,63 @@ Added new `Debouncer` class for function execution control:
 - State inspection: remainingTime, executionCount, etc.
 
 ### Math
--   **`sqrt()`:** Added to numeric extensions for square root calculations.
+
+- **`sqrt()`:** Added to numeric extensions for square root calculations.
 
 ### Number Extensions
 
--   **HTTP Status Code Helpers:**
-    -   Added `isOkCode`, `isCreatedCode`, `isAcceptedCode`, `isNoContentCode`, `isTemporaryRedirect`, `isPermanentRedirect`, `isAuthenticationError`, `isValidationError`, `isRateLimitError`, `isTimeoutError`, `isConflictError`, `isNotFoundError`, and `isRetryableError`.
-    -   Added `statusCodeRetryDelay` for suggested retry durations.
-    -   Added `toHttpStatusUserMessage` and `toHttpStatusDevMessage` for user-friendly and developer-specific messages.
-    -   `isSuccessCode` now checks for all 2xx codes (not just 200 and 201).
+- **HTTP Status Code Helpers:**
+    - Added `isOkCode`, `isCreatedCode`, `isAcceptedCode`, `isNoContentCode`, `isTemporaryRedirect`,
+      `isPermanentRedirect`, `isAuthenticationError`, `isValidationError`, `isRateLimitError`, `isTimeoutError`,
+      `isConflictError`, `isNotFoundError`, and `isRetryableError`.
+    - Added `statusCodeRetryDelay` for suggested retry durations.
+    - Added `toHttpStatusUserMessage` and `toHttpStatusDevMessage` for user-friendly and developer-specific messages.
+    - `isSuccessCode` now checks for all 2xx codes (not just 200 and 201).
 
 ### Delay Extensions
 
--   **Refactored for Consistency:**
-    -   Removed generic `delay()` on numbers. Use specific duration methods instead (e.g., `1.secondsDelay()`, `5.minutesDelay()`).
-    -   All delay methods now support typed computations.
-    -   Converted getter delays to methods and used more descriptive names.
+- **Refactored for Consistency:**
+    - Removed generic `delay()` on numbers. Use specific duration methods instead (e.g., `1.secondsDelay()`,
+      `5.minutesDelay()`).
+    - All delay methods now support typed computations.
+    - Converted getter delays to methods and used more descriptive names.
 
 ### DateTime Extensions
+
 - Added `isBetween` for date range checks.
+
+### Pagination
+
+- **Unified Paginator:**  
+  Introduced `BasePaginator<T>` to centralize shared logic—such as debouncing, lifecycle events, and disposal
+  checks—across all paginators. The new design includes a single `InfinitePaginator` that supports both page-based and
+  cursor-based infinite scrolling via dedicated factory constructors.
+- **Improved AsyncPaginator:**  
+  Updated `AsyncPaginator` to utilize `CancelableOperation` for deduplication and optional cancellation of in-flight
+  requests when `autoCancelFetches` is set to true in `PaginationConfig`. This prevents race conditions and overlapping
+  requests.
+- **Enhanced Caching and Transformations:**  
+  Implemented a consistent `_CacheEntry` class to cache both `Paginator<T>` objects and raw `List<T>` results with
+  time-based expiration checks. Transformation methods (e.g., `where()`, `sort()`, and `map()`) now return fully
+  instantiated `Paginator<T>` objects with internal caching.
+- **Lifecycle and Disposal Improvements:**  
+  Added robust disposal checks and modified methods (like `goToPage`) to be no-ops after disposal instead of throwing
+  exceptions. This ensures that lifecycle streams remain silent post-disposal.
+- **Analytics:**  
+  Introduced the `PaginationAnalytics` mixin to track page loads, errors, and cache hits, enabling detailed insights
+  into paginator usage.
 
 ### New Raw Data
 
--   **HTTP Status Messages:** Added `httpStatusUserMessage` (user-friendly) and `httpStatusDevMessage` (technical) for explanations and troubleshooting hints.
--   **cssColorNamesToArgb**: Maps CSS color names to their corresponding ARGB values. e.g. `cssColorNamesToArgb['red']` returns `0xFFFF0000`.
+- **HTTP Status Messages:** Added `httpStatusUserMessage` (user-friendly) and `httpStatusDevMessage` (technical) for
+  explanations and troubleshooting hints.
+- **cssColorNamesToArgb**: Maps CSS color names to their corresponding ARGB values. e.g. `cssColorNamesToArgb['red']`
+  returns `0xFFFF0000`.
 
 ### Migration
 
--   See the [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) for upgrading instructions.
+- See the [Migration Guide](https://github.com/omar-hanafy/dart_helper_utils/tree/main/migration_guides.md) for
+  upgrading instructions.
 
 ## [3.3.0]
 

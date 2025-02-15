@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-// TODO(OMAR): see merge throttle logic in stream transformer package form bloc, into this one.
 
 /// ---------------------------------------------------------------------------
 /// StreamController Safety Extensions
@@ -194,34 +193,8 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   }
 }
 
-/// ---------------------------------------------------------------------------
-/// Stream Transformations & New Features
-/// ---------------------------------------------------------------------------
-
-/// Provides various transformation operators and new features on [Stream].
+/// Additional stream transformations not covered by the official Dart [RateLimit] extension.
 extension StreamTransformations<T> on Stream<T> {
-  /// Emits at most one event per [duration]. Subsequent events within the same
-  /// interval are discarded.
-  ///
-  /// Example:
-  /// ```dart
-  /// myStream.throttle(Duration(milliseconds: 500))
-  ///   .listen((data) => print(data));
-  /// ```
-  Stream<T> throttle(Duration duration) {
-    assert(duration.inMilliseconds > 0, 'Duration must be greater than zero');
-    DateTime? lastEmission;
-    return transform(
-      StreamTransformer<T, T>.fromHandlers(handleData: (data, sink) {
-        final now = DateTime.now();
-        if (lastEmission == null || now.difference(lastEmission!) >= duration) {
-          lastEmission = now;
-          sink.add(data);
-        }
-      }),
-    );
-  }
-
   /// Buffers incoming events into lists of size [count].
   ///
   /// When the buffer reaches [count] elements, it is emitted. Any remaining
@@ -233,7 +206,7 @@ extension StreamTransformations<T> on Stream<T> {
   ///   print('Received a chunk of ${chunk.length} items');
   /// });
   /// ```
-  Stream<List<T>> buffer(int count) {
+  Stream<List<T>> bufferCount(int count) {
     assert(count > 0, 'Buffer count must be greater than zero');
     final bucket = <T>[];
     return transform(
@@ -251,47 +224,6 @@ extension StreamTransformations<T> on Stream<T> {
         },
       ),
     );
-  }
-
-  /// Debounces events by [duration], emitting only the latest event after the
-  /// specified pause in event activity.
-  ///
-  /// Example:
-  /// ```dart
-  /// myStream.debounce(Duration(milliseconds: 300))
-  ///   .listen((data) => print(data));
-  /// ```
-  Stream<T> debounce(Duration duration) {
-    assert(duration.inMilliseconds > 0, 'Duration must be greater than zero');
-    Timer? timer;
-    StreamController<T>? controller;
-    controller = StreamController<T>(
-      sync: true,
-      onListen: () {
-        final subscription = listen(
-          (data) {
-            timer?.cancel();
-            timer = Timer(duration, () {
-              if (!controller!.isClosed) controller.add(data);
-            });
-          },
-          onError: (dynamic error, dynamic st) {
-            timer?.cancel();
-            controller!._handleDynamicOnError(error, st);
-          },
-          onDone: () {
-            timer?.cancel();
-            if (!controller!.isClosed) controller.close();
-          },
-          cancelOnError: false,
-        );
-        controller!.onCancel = () async {
-          timer?.cancel();
-          await subscription.cancel();
-        };
-      },
-    );
-    return controller.stream;
   }
 
   /// Buffers events into time-based windows defined by [windowDuration].
@@ -323,7 +255,10 @@ extension StreamTransformations<T> on Stream<T> {
         timer = Timer.periodic(windowDuration, (_) => emitBuffer());
         final subscription = listen(
           buffer.add,
-          onError: controller?._handleDynamicOnError,
+          onError: (dynamic error, dynamic stackTrace) {
+            timer?.cancel();
+            controller?._handleDynamicOnError(error, stackTrace);
+          },
           onDone: () {
             timer?.cancel();
             emitBuffer();
@@ -374,7 +309,9 @@ extension StreamTransformations<T> on Stream<T> {
           controller.add(data);
         }
       },
-      onError: controller._handleDynamicOnError,
+      onError: (dynamic error, dynamic stackTrace) {
+        controller._handleDynamicOnError(error, stackTrace);
+      },
       onDone: controller.close,
       cancelOnError: false,
     );
@@ -422,7 +359,9 @@ extension StreamTransformations<T> on Stream<T> {
         hasValue = true;
         controller.add(data);
       },
-      onError: controller._handleDynamicOnError,
+      onError: (dynamic error, dynamic stackTrace) {
+        controller._handleDynamicOnError(error, stackTrace);
+      },
       onDone: controller.close,
     );
 
@@ -463,10 +402,9 @@ extension StreamTransformations<T> on Stream<T> {
 extension StreamErrorRecovery<T> on Stream<T> {
   /// Retries the stream subscription in case of error.
   ///
-  /// The [retryCount] parameter specifies the maximum number of retry attempts.
-  /// The [delayFactor] determines the base delay for exponential backoff.
-  /// The optional [shouldRetry] callback can be used to decide whether to
-  /// retry for a specific error.
+  /// [retryCount] specifies the maximum number of retry attempts.
+  /// [delayFactor] determines the base delay for exponential backoff.
+  /// [shouldRetry] can be used to decide whether to retry for a specific error.
   ///
   /// Returns a new stream that, upon error, will resubscribe to the source.
   Stream<T> retry({
@@ -547,14 +485,13 @@ extension StreamErrorRecovery<T> on Stream<T> {
 /// Example:
 /// ```dart
 /// final pausable = myStream.asPausable();
-/// final sub = pausable.stream.listen((data) => print(data));
-/// // Pause the stream processing:
+/// pausable.stream.listen((data) => print(data));
+/// // Pause or resume as needed:
 /// pausable.pause();
-/// // Later, resume:
 /// pausable.resume();
 /// ```
 class PausableStream<T> {
-  /// Creates a [PausableStream] that wraps [_source].
+  /// Creates a [PausableStream] that wraps the [_source] stream.
   PausableStream(this._source) {
     _controller = StreamController<T>(
       onListen: _start,
@@ -584,7 +521,9 @@ class PausableStream<T> {
           _controller.add(data);
         }
       },
-      onError: _controller._handleDynamicOnError,
+      onError: (dynamic error, dynamic stackTrace) {
+        _controller._handleDynamicOnError(error, stackTrace);
+      },
       onDone: () {
         if (!_controller.isClosed) {
           _controller.close();
@@ -594,7 +533,7 @@ class PausableStream<T> {
     );
   }
 
-  /// Pauses the stream. Events from the source will be held until resumed.
+  /// Pauses the stream so that events from the source are held until resumed.
   void pause() {
     if (!_paused) {
       _paused = true;
