@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.0.1
+
+- renamed `Builder` class to `StringSimilarityBuilder` to avoid conflict with `Builder` widget the flutter sdk.
+
 ## 4.0.0
 
 ### String Similarity

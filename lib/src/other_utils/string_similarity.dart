@@ -149,13 +149,13 @@ class StringSimilarityConfig {
   final String Function(String)? postProcessor;
 
   /// Returns a builder instance to configure a [StringSimilarityConfig] more flexibly.
-  static Builder get builder => Builder();
+  static StringSimilarityBuilder get builder => StringSimilarityBuilder();
 }
 
 /// Builder for [StringSimilarityConfig].
 ///
 /// This builder allows step-by-step configuration of string similarity settings.
-class Builder {
+class StringSimilarityBuilder {
   /// Whether to normalize the string.
   bool normalize = true;
 
@@ -202,91 +202,91 @@ class Builder {
   String Function(String)? postProcessor;
 
   /// Sets whether to normalize the string.
-  Builder setNormalize(bool value) {
+  StringSimilarityBuilder setNormalize(bool value) {
     normalize = value;
     return this;
   }
 
   /// Sets whether to remove spaces during normalization.
-  Builder setRemoveSpaces(bool value) {
+  StringSimilarityBuilder setRemoveSpaces(bool value) {
     removeSpaces = value;
     return this;
   }
 
   /// Sets whether to convert strings to lower case.
-  Builder setToLowerCase(bool value) {
+  StringSimilarityBuilder setToLowerCase(bool value) {
     toLowerCase = value;
     return this;
   }
 
   /// Sets whether to remove special characters.
-  Builder setRemoveSpecialChars(bool value) {
+  StringSimilarityBuilder setRemoveSpecialChars(bool value) {
     removeSpecialChars = value;
     return this;
   }
 
   /// Sets whether to remove accent marks from characters.
-  Builder setRemoveAccents(bool value) {
+  StringSimilarityBuilder setRemoveAccents(bool value) {
     removeAccents = value;
     return this;
   }
 
   /// Sets whether to trim whitespace.
-  Builder setTrimWhitespace(bool value) {
+  StringSimilarityBuilder setTrimWhitespace(bool value) {
     trimWhitespace = value;
     return this;
   }
 
   /// Sets the locale for locale-specific normalization.
-  Builder setLocale(String value) {
+  StringSimilarityBuilder setLocale(String value) {
     locale = value;
     return this;
   }
 
   /// Sets whether to enable caching.
-  Builder setEnableCache(bool value) {
+  StringSimilarityBuilder setEnableCache(bool value) {
     enableCache = value;
     return this;
   }
 
   /// Sets the capacity of the cache.
-  Builder setCacheCapacity(int value) {
+  StringSimilarityBuilder setCacheCapacity(int value) {
     cacheCapacity = value;
     return this;
   }
 
   /// Sets the match score for the Smith-Waterman algorithm.
-  Builder setSwMatchScore(int value) {
+  StringSimilarityBuilder setSwMatchScore(int value) {
     swMatchScore = value;
     return this;
   }
 
   /// Sets the mismatch score for the Smith-Waterman algorithm.
-  Builder setSwMismatchScore(int value) {
+  StringSimilarityBuilder setSwMismatchScore(int value) {
     swMismatchScore = value;
     return this;
   }
 
   /// Sets the gap score for the Smith-Waterman algorithm.
-  Builder setSwGapScore(int value) {
+  StringSimilarityBuilder setSwGapScore(int value) {
     swGapScore = value;
     return this;
   }
 
   /// Sets the Jaro-Winkler prefix scaling factor.
-  Builder setJaroPrefixScale(double value) {
+  StringSimilarityBuilder setJaroPrefixScale(double value) {
     jaroPrefixScale = value;
     return this;
   }
 
   /// Sets a custom preprocessor function to modify strings before computation.
-  Builder setPreProcessor(String Function(String) func) {
+  StringSimilarityBuilder setPreProcessor(String Function(String) func) {
     preProcessor = func;
     return this;
   }
 
   /// Sets a custom postprocessor function to modify strings after computation.
-  Builder setPostProcessor(String Function(String) func) {
+  StringSimilarityBuilder setPostProcessor(String Function(String) func) {
     postProcessor = func;
     return this;
   }

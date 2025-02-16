@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 import 'package:dart_helper_utils/src/src.dart';
+import 'package:meta/meta.dart';
 
 /// DHUHttpEx
 extension DHUHttpEx on num? {
@@ -215,6 +216,7 @@ extension DHUNumExtensions on num {
   }
 
   /// Delay equivalent to the number of days.
+  @optionalTypeArgs
   Future<T> daysDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
@@ -224,6 +226,7 @@ extension DHUNumExtensions on num {
       );
 
   /// Delay equivalent to the number of hours.
+  @optionalTypeArgs
   Future<T> hoursDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
@@ -233,6 +236,7 @@ extension DHUNumExtensions on num {
       );
 
   /// Delay equivalent to the number of minutes.
+  @optionalTypeArgs
   Future<T> minutesDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
@@ -242,6 +246,7 @@ extension DHUNumExtensions on num {
       );
 
   /// Delay equivalent to the number of seconds.
+  @optionalTypeArgs
   Future<T> secondsDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
@@ -251,6 +256,7 @@ extension DHUNumExtensions on num {
       );
 
   /// Delay equivalent to the number of milliseconds.
+  @optionalTypeArgs
   Future<T> millisecondsDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
