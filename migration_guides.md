@@ -1,6 +1,6 @@
 # Migration Guide (v4)
 
-This guide explains the major changes in version 4 of the pagination library and provides step-by-step instructions to
+This guide explains the major changes in version 4 provides step-by-step instructions to
 update your code.
 
 ---
