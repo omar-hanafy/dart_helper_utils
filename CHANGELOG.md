@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.1.0
+
+- Introduced `rebuild` in Uri extension, a builder-based URI replacement.
+
 ## 4.0.1
 
 - renamed `Builder` class to `StringSimilarityBuilder` to avoid conflict with `Builder` widget the flutter sdk.

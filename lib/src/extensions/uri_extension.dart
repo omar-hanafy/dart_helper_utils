@@ -37,4 +37,36 @@ extension DHUUriEx on Uri {
     // Return the first part as the domain name, or an empty string if not found
     return parts.isNotEmpty ? parts[0] : host;
   }
+
+  /// Creates a new `Uri` based on this one by applying builder functions
+  /// to individual components.
+  ///
+  /// Each builder, if provided, receives the current value and should
+  /// return the new value. If a builder isn't provided, the current value
+  /// is retained.
+  Uri rebuild({
+    String? Function(String current)? schemeBuilder,
+    String? Function(String current)? userInfoBuilder,
+    String? Function(String current)? hostBuilder,
+    int? Function(int current)? portBuilder,
+    String? Function(String current)? pathBuilder,
+    Iterable<String>? Function(Iterable<String> current)? pathSegmentsBuilder,
+    String? Function(String current)? queryBuilder,
+    Map<String, dynamic>? Function(Map<String, dynamic> current)?
+        queryParametersBuilder,
+    String? Function(String current)? fragmentBuilder,
+  }) {
+    return Uri(
+      scheme: schemeBuilder?.call(scheme) ?? scheme,
+      userInfo: userInfoBuilder?.call(userInfo) ?? userInfo,
+      host: hostBuilder?.call(host) ?? host,
+      port: portBuilder?.call(port) ?? port,
+      path: pathBuilder?.call(path) ?? path,
+      pathSegments: pathSegmentsBuilder?.call(pathSegments) ?? pathSegments,
+      query: queryBuilder?.call(query) ?? query,
+      queryParameters:
+          queryParametersBuilder?.call(queryParameters) ?? queryParameters,
+      fragment: fragmentBuilder?.call(fragment) ?? fragment,
+    );
+  }
 }
