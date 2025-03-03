@@ -2,9 +2,14 @@ import 'dart:developer';
 
 import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 import 'package:dart_helper_utils/src/src.dart';
+import 'package:meta/meta.dart';
+
+/// A callback function that converts an element to a specific type.
+typedef ElementConverter<T> = T Function(Object? element);
 
 /// A utility class for converting objects to different types.
 abstract class ConvertObject {
+  @optionalTypeArgs
   static T? _convertObject<T>(
     dynamic object, {
     dynamic mapKey,
@@ -51,32 +56,19 @@ abstract class ConvertObject {
   ///
   /// Returns a string if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails or the object is `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 'Hello';
-  /// final string1 = ConvertObject.toString1(object1); // 'Hello'
-  ///
-  /// final object2 = 10;
-  /// final string2 = ConvertObject.toString1(object2); // '10'
-  ///
-  /// final object3 = true;
-  /// final string3 = ConvertObject.toString1(object3); // 'true'
-  ///
-  /// final object4 = null;
-  /// final string4 = ConvertObject.toString1(object4); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static String toString1(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     String? defaultValue,
+    ElementConverter<String>? converter,
   }) {
     final data = _convertObject<String>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) => object.toString(),
+      converter: converter ?? ((object) => object.toString()),
     );
 
     if (data == null) {
@@ -100,32 +92,19 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a string if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 'Hello';
-  /// final string1 = ConvertObject.tryToString(object1); // 'Hello'
-  ///
-  /// final object2 = 10;
-  /// final string2 = ConvertObject.tryToString(object2); // '10'
-  ///
-  /// final object3 = true;
-  /// final string3 = ConvertObject.tryToString(object3); // 'true'
-  ///
-  /// final object4 = null;
-  /// final string4 = ConvertObject.tryToString(object4); // null
-  /// ```
+  @optionalTypeArgs
   static String? tryToString(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     String? defaultValue,
+    ElementConverter<String>? converter,
   }) {
     return _convertObject<String>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) => object.toString(),
+          converter: converter ?? ((object) => object.toString()),
         ) ??
         defaultValue;
   }
@@ -142,24 +121,7 @@ abstract class ConvertObject {
   ///
   /// Returns a [num] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails or the object is `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 10;
-  /// final num1 = ConvertObject.toNum(object1); // 10
-  ///
-  /// final object2 = '5.5';
-  /// final num2 = ConvertObject.toNum(object2); // 5.5
-  ///
-  /// final object3 = true;
-  /// final num3 = ConvertObject.toNum(object3); // 1
-  ///
-  /// final object4 = 'abc';
-  /// final num4 = ConvertObject.toNum(object4); // throws ParsingException
-  ///
-  /// final object5 = null;
-  /// final num5 = ConvertObject.toNum(object5); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static num toNum(
     dynamic object, {
     dynamic mapKey,
@@ -167,15 +129,19 @@ abstract class ConvertObject {
     String? format,
     String? locale,
     num? defaultValue,
+    ElementConverter<num>? converter,
   }) {
     final data = _convertObject<num>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
-        return '$object'.toNum;
-      },
+      converter: converter ??
+          ((object) {
+            if (format.isNotBlank) {
+              return '$object'.toNumFormatted(format, locale);
+            }
+            return '$object'.toNum;
+          }),
     );
     if (data == null) {
       if (defaultValue != null) return defaultValue;
@@ -197,24 +163,7 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [num] if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 10;
-  /// final num1 = ConvertObject.tryToNum(object1); // 10
-  ///
-  /// final object2 = '5.5';
-  /// final num2 = ConvertObject.tryToNum(object2); // 5.5
-  ///
-  /// final object3 = true;
-  /// final num3 = ConvertObject.tryToNum(object3); // 1
-  ///
-  /// final object4 = 'abc';
-  /// final num4 = ConvertObject.tryToNum(object4); // null
-  ///
-  /// final object5 = null;
-  /// final num5 = ConvertObject.tryToNum(object5); // null
-  /// ```
+  @optionalTypeArgs
   static num? tryToNum(
     dynamic object, {
     dynamic mapKey,
@@ -222,15 +171,19 @@ abstract class ConvertObject {
     String? locale,
     int? listIndex,
     num? defaultValue,
+    ElementConverter<num>? converter,
   }) {
     return _convertObject<num?>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        if (format.isNotBlank) return '$object'.toNumFormatted(format, locale);
-        return '$object'.tryToNum;
-      },
+      converter: converter ??
+          ((object) {
+            if (format.isNotBlank) {
+              return '$object'.toNumFormatted(format, locale);
+            }
+            return '$object'.tryToNum;
+          }),
     );
   }
 
@@ -245,21 +198,7 @@ abstract class ConvertObject {
   ///
   /// Returns an [int] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 10;
-  /// final int1 = ConvertObject.toInt(object1); // 10
-  ///
-  /// final object2 = '5';
-  /// final int2 = ConvertObject.toInt(object2); // 5
-  ///
-  /// final object3 = true;
-  /// final int3 = ConvertObject.toInt(object3); // 1
-  ///
-  /// final object4 = 'abc';
-  /// final int4 = ConvertObject.toInt(object4); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static int toInt(
     dynamic object, {
     dynamic mapKey,
@@ -267,16 +206,20 @@ abstract class ConvertObject {
     String? format,
     String? locale,
     int? defaultValue,
+    ElementConverter<int>? converter,
   }) {
     final data = _convertObject<int>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        if (format.isNotBlank) return '$object'.toIntFormatted(format, locale);
-        if (object is num) return object.toInt();
-        return '$object'.toInt;
-      },
+      converter: converter ??
+          ((object) {
+            if (format.isNotBlank) {
+              return '$object'.toIntFormatted(format, locale);
+            }
+            if (object is num) return object.toInt();
+            return '$object'.toInt;
+          }),
     );
     if (data == null) {
       if (defaultValue != null) return defaultValue;
@@ -298,24 +241,7 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns an [int] if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 10;
-  /// final int1 = ConvertObject.tryToInt(object1); // 10
-  ///
-  /// final object2 = '5';
-  /// final int2 = ConvertObject.tryToInt(object2); // 5
-  ///
-  /// final object3 = true;
-  /// final int3 = ConvertObject.tryToInt(object3); // 1
-  ///
-  /// final object4 = 'abc';
-  /// final int4 = ConvertObject.tryToInt(object4); // null
-  ///
-  /// final object5 = null;
-  /// final int5 = ConvertObject.tryToInt(object5); // null
-  /// ```
+  @optionalTypeArgs
   static int? tryToInt(
     dynamic object, {
     dynamic mapKey,
@@ -323,18 +249,20 @@ abstract class ConvertObject {
     String? locale,
     int? listIndex,
     int? defaultValue,
+    ElementConverter<int>? converter,
   }) {
     return _convertObject<int?>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) {
-            if (format.isNotBlank) {
-              return '$object'.tryToIntFormatted(format, locale);
-            }
-            if (object is num) return object.toInt();
-            return '$object'.tryToInt;
-          },
+          converter: converter ??
+              ((object) {
+                if (format.isNotBlank) {
+                  return '$object'.tryToIntFormatted(format, locale);
+                }
+                if (object is num) return object.toInt();
+                return '$object'.tryToInt;
+              }),
         ) ??
         defaultValue;
   }
@@ -352,35 +280,23 @@ abstract class ConvertObject {
   ///
   /// Returns a [BigInt] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails or the object is `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 10;
-  /// final bigInt1 = ConvertObject.toBigInt(object1); // BigInt.from(10)
-  ///
-  /// final object2 = '1234567890';
-  /// final bigInt2 = ConvertObject.toBigInt(object2); // BigInt.from(1234567890)
-  ///
-  /// final object3 = 'abc';
-  /// final bigInt3 = ConvertObject.toBigInt(object3); // throws ParsingException
-  ///
-  /// final object4 = null;
-  /// final bigInt4 = ConvertObject.toBigInt(object4); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static BigInt toBigInt(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     BigInt? defaultValue,
+    ElementConverter<BigInt>? converter,
   }) {
     final data = _convertObject<BigInt>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        if (object is num) return BigInt.from(object);
-        return BigInt.parse('$object');
-      },
+      converter: converter ??
+          ((object) {
+            if (object is num) return BigInt.from(object);
+            return BigInt.parse('$object');
+          }),
     );
     if (data == null) {
       if (defaultValue != null) return defaultValue;
@@ -404,35 +320,23 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [BigInt] if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 10;
-  /// final bigInt1 = ConvertObject.tryToBigInt(object1); // BigInt.from(10)
-  ///
-  /// final object2 = '1234567890';
-  /// final bigInt2 = ConvertObject.tryToBigInt(object2); // BigInt.from(1234567890)
-  ///
-  /// final object3 = 'abc';
-  /// final bigInt3 = ConvertObject.tryToBigInt(object3); // null
-  ///
-  /// final object4 = null;
-  /// final bigInt4 = ConvertObject.tryToBigInt(object4); // null
-  /// ```
+  @optionalTypeArgs
   static BigInt? tryToBigInt(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     BigInt? defaultValue,
+    ElementConverter<BigInt>? converter,
   }) {
     return _convertObject<BigInt?>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) {
-            if (object is num) return BigInt.from(object);
-            return BigInt.tryParse('$object');
-          },
+          converter: converter ??
+              ((object) {
+                if (object is num) return BigInt.from(object);
+                return BigInt.tryParse('$object');
+              }),
         ) ??
         defaultValue;
   }
@@ -448,21 +352,7 @@ abstract class ConvertObject {
   ///
   /// Returns a [double] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 5.5;
-  /// final double1 = ConvertObject.toDouble(object1); // 5.5
-  ///
-  /// final object2 = '3.14';
-  /// final double2 = ConvertObject.toDouble(object2); // 3.14
-  ///
-  /// final object3 = true;
-  /// final double3 = ConvertObject.toDouble(object3); // 1.0
-  ///
-  /// final object4 = 'abc';
-  /// final double4 = ConvertObject.toDouble(object4); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static double toDouble(
     dynamic object, {
     dynamic mapKey,
@@ -470,18 +360,20 @@ abstract class ConvertObject {
     String? format,
     String? locale,
     double? defaultValue,
+    ElementConverter<double>? converter,
   }) {
     final data = _convertObject<double>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        if (format.isNotBlank) {
-          return '$object'.toDoubleFormatted(format, locale);
-        }
-        if (object is num) return object.toDouble();
-        return '$object'.toDouble;
-      },
+      converter: converter ??
+          ((object) {
+            if (format.isNotBlank) {
+              return '$object'.toDoubleFormatted(format, locale);
+            }
+            if (object is num) return object.toDouble();
+            return '$object'.toDouble;
+          }),
     );
     if (data == null) {
       if (defaultValue != null) return defaultValue;
@@ -503,24 +395,7 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [double] if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 5.5;
-  /// final double1 = ConvertObject.tryToDouble(object1); // 5.5
-  ///
-  /// final object2 = '3.14';
-  /// final double2 = ConvertObject.tryToDouble(object2); // 3.14
-  ///
-  /// final object3 = true;
-  /// final double3 = ConvertObject.tryToDouble(object3); // 1.0
-  ///
-  /// final object4 = 'abc';
-  /// final double4 = ConvertObject.tryToDouble(object4); // null
-  ///
-  /// final object5 = null;
-  /// final double5 = ConvertObject.tryToDouble(object5); // null
-  /// ```
+  @optionalTypeArgs
   static double? tryToDouble(
     dynamic object, {
     dynamic mapKey,
@@ -528,18 +403,20 @@ abstract class ConvertObject {
     String? format,
     String? locale,
     double? defaultValue,
+    ElementConverter<double>? converter,
   }) {
     return _convertObject<double?>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) {
-            if (format.isNotBlank) {
-              return '$object'.tryToDoubleFormatted(format, locale);
-            }
-            if (object is num) return object.toDouble();
-            return '$object'.tryToDouble;
-          },
+          converter: converter ??
+              ((object) {
+                if (format.isNotBlank) {
+                  return '$object'.tryToDoubleFormatted(format, locale);
+                }
+                if (object is num) return object.toDouble();
+                return '$object'.tryToDouble;
+              }),
         ) ??
         defaultValue;
   }
@@ -556,38 +433,19 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a `bool`, with a default value of `false`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = true;
-  /// final bool1 = ConvertObject.toBool(object1); // true
-  ///
-  /// final object2 = 'yes';
-  /// final bool2 = ConvertObject.toBool(object2); // true
-  ///
-  /// final object3 = 10;
-  /// final bool3 = ConvertObject.toBool(object3); // true
-  ///
-  /// final object4 = false;
-  /// final bool4 = ConvertObject.toBool(object4); // false
-  ///
-  /// final object5 = 'no';
-  /// final bool5 = ConvertObject.toBool(object5); // false
-  ///
-  /// final object6 = null;
-  /// final bool6 = ConvertObject.toBool(object6); // false
-  /// ```
+  @optionalTypeArgs
   static bool toBool(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     bool? defaultValue,
+    ElementConverter<bool>? converter,
   }) {
     final data = _convertObject<bool?>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) => (object as Object?).asBool,
+      converter: converter ?? ((object) => (object as Object?).asBool),
     );
     return data ?? defaultValue ?? false;
   }
@@ -603,38 +461,19 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a `bool` if conversion is applicable, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = true;
-  /// final bool1 = ConvertObject.tryToBool(object1); // true
-  ///
-  /// final object2 = 'yes';
-  /// final bool2 = ConvertObject.tryToBool(object2); // true
-  ///
-  /// final object3 = 10;
-  /// final bool3 = ConvertObject.tryToBool(object3); // null
-  ///
-  /// final object4 = false;
-  /// final bool4 = ConvertObject.tryToBool(object4); // false
-  ///
-  /// final object5 = 'no';
-  /// final bool5 = ConvertObject.tryToBool(object5); // false
-  ///
-  /// final object6 = null;
-  /// final bool6 = ConvertObject.tryToBool(object6); // null
-  /// ```
+  @optionalTypeArgs
   static bool? tryToBool(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     bool? defaultValue,
+    ElementConverter<bool>? converter,
   }) {
     return _convertObject<bool?>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) => (object as Object?).asBool,
+          converter: converter ?? ((object) => (object as Object?).asBool),
         ) ??
         defaultValue;
   }
@@ -653,21 +492,7 @@ abstract class ConvertObject {
   ///
   /// Returns a [DateTime] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails or the object is `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = '2023-06-26T12:00:00Z';
-  /// final dateTime1 = ConvertObject.toDateTime(object1); // 2023-06-26 12:00:00.000Z
-  ///
-  /// final object2 = DateTime(2023, 6, 26, 12, 0, 0);
-  /// final dateTime2 = ConvertObject.toDateTime(object2); // 2023-06-26 12:00:00.000
-  ///
-  /// final object3 = 'Invalid DateTime';
-  /// final dateTime3 = ConvertObject.toDateTime(object3); // ParsingException (logs an error)
-  ///
-  /// final object4 = null;
-  /// final dateTime4 = ConvertObject.toDateTime(object4); // ParsingException (null object)
-  /// ```
+  @optionalTypeArgs
   static DateTime toDateTime(
     dynamic object, {
     dynamic mapKey,
@@ -678,24 +503,26 @@ abstract class ConvertObject {
     bool useCurrentLocale = false,
     bool utc = false,
     DateTime? defaultValue,
+    ElementConverter<DateTime>? converter,
   }) {
     final data = _convertObject<DateTime>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        if (format != null) {
-          return '$object'.toDateFormatted(format, locale, utc);
-        }
-        if (autoDetectFormat) {
-          return '$object'.toDateAutoFormat(
-            locale: locale,
-            useCurrentLocale: useCurrentLocale,
-            utc: utc,
-          );
-        }
-        return '$object'.toDateTime;
-      },
+      converter: converter ??
+          ((object) {
+            if (format != null) {
+              return '$object'.toDateFormatted(format, locale, utc);
+            }
+            if (autoDetectFormat) {
+              return '$object'.toDateAutoFormat(
+                locale: locale,
+                useCurrentLocale: useCurrentLocale,
+                utc: utc,
+              );
+            }
+            return '$object'.toDateTime;
+          }),
     );
     if (data == null) {
       if (defaultValue != null) return defaultValue;
@@ -719,21 +546,7 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [DateTime] if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = '2023-06-26T12:00:00Z';
-  /// final dateTime1 = ConvertObject.tryToDateTime(object1); // 2023-06-26 12:00:00.000Z
-  ///
-  /// final object2 = DateTime(2023, 6, 26, 12, 0, 0);
-  /// final dateTime2 = ConvertObject.tryToDateTime(object2); // 2023-06-26 12:00:00.000
-  ///
-  /// final object3 = 'Invalid DateTime';
-  /// final dateTime3 = ConvertObject.tryToDateTime(object3); // null (logs an error)
-  ///
-  /// final object4 = null;
-  /// final dateTime4 = ConvertObject.tryToDateTime(object4); // null
-  /// ```
+  @optionalTypeArgs
   static DateTime? tryToDateTime(
     dynamic object, {
     dynamic mapKey,
@@ -744,24 +557,26 @@ abstract class ConvertObject {
     bool useCurrentLocale = false,
     bool utc = false,
     DateTime? defaultValue,
+    ElementConverter<DateTime>? converter,
   }) {
     return _convertObject<DateTime?>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) {
-            if (format != null) {
-              return '$object'.tryToDateFormatted(format, locale, utc);
-            }
-            if (autoDetectFormat) {
-              return '$object'.tryToDateAutoFormat(
-                locale: locale,
-                useCurrentLocale: useCurrentLocale,
-                utc: utc,
-              );
-            }
-            return '$object'.tryToDateTime;
-          },
+          converter: converter ??
+              ((object) {
+                if (format != null) {
+                  return '$object'.tryToDateFormatted(format, locale, utc);
+                }
+                if (autoDetectFormat) {
+                  return '$object'.tryToDateAutoFormat(
+                    locale: locale,
+                    useCurrentLocale: useCurrentLocale,
+                    utc: utc,
+                  );
+                }
+                return '$object'.tryToDateTime;
+              }),
         ) ??
         defaultValue;
   }
@@ -778,33 +593,24 @@ abstract class ConvertObject {
   ///
   /// Returns a [Uri] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails or the object is null.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 'https://www.example.com';
-  /// final uri1 = ConvertObject.toUri(object1); // Uri.parse('https://www.example.com')
-  ///
-  /// final object2 = 'invalid_uri';
-  /// final uri2 = ConvertObject.toUri(object2); // throws ParsingException
-  ///
-  /// final object3 = null;
-  /// final uri3 = ConvertObject.toUri(object3); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static Uri toUri(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     Uri? defaultValue,
+    ElementConverter<Uri>? converter,
   }) {
     final data = _convertObject<Uri>(
       object,
       mapKey: mapKey,
       listIndex: listIndex,
-      converter: (object) {
-        final ob = object.toString();
-        if (ob.isValidPhoneNumber) return ob.toPhoneUri;
-        return ob.toUri;
-      },
+      converter: converter ??
+          ((object) {
+            final ob = object.toString();
+            if (ob.isValidPhoneNumber) return ob.toPhoneUri;
+            return ob.toUri;
+          }),
     );
     if (data == null) {
       if (defaultValue != null) return defaultValue;
@@ -827,33 +633,24 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [Uri] if conversion is successful, otherwise null.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = 'https://www.example.com';
-  /// final uri1 = ConvertObject.tryToUri(object1); // Uri.parse('https://www.example.com')
-  ///
-  /// final object2 = 'invalid_uri';
-  /// final uri2 = ConvertObject.tryToUri(object2); // null (logs an error)
-  ///
-  /// final object3 = null;
-  /// final uri3 = ConvertObject.tryToUri(object3); // null
-  /// ```
+  @optionalTypeArgs
   static Uri? tryToUri(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     Uri? defaultValue,
+    ElementConverter<Uri>? converter,
   }) {
     return _convertObject<Uri?>(
           object,
           mapKey: mapKey,
           listIndex: listIndex,
-          converter: (object) {
-            final ob = object.toString();
-            if (ob.isValidPhoneNumber) return ob.toPhoneUri;
-            return ob.toUri;
-          },
+          converter: converter ??
+              ((object) {
+                final ob = object.toString();
+                if (ob.isValidPhoneNumber) return ob.toPhoneUri;
+                return ob.toUri;
+              }),
         ) ??
         defaultValue;
   }
@@ -871,26 +668,14 @@ abstract class ConvertObject {
   ///
   /// Returns a [Map<K, V>] if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = {'key1': 'value1', 'key2': 'value2'};
-  /// final map1 = ConvertObject.toMap<String, String>(object1); // {'key1': 'value1', 'key2': 'value2'}
-  ///
-  /// final object2 = {'key1': 1, 'key2': 2};
-  /// final map2 = ConvertObject.toMap<String, int>(object2); // {'key1': 1, 'key2': 2'}
-  ///
-  /// final object3 = 'Hello';
-  /// final map3 = ConvertObject.toMap<String, int>(object3); // ParsingException (logs an error)
-  ///
-  /// final object4 = null;
-  /// final map4 = ConvertObject.toMap<String, int>(object4); // ParsingException (null object)
-  /// ```
+  @optionalTypeArgs
   static Map<K, V> toMap<K, V>(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     Map<K, V>? defaultValue,
+    ElementConverter<K>? keyConverter,
+    ElementConverter<V>? valueConverter,
   }) {
     final data = _convertObject<Map<K, V>>(
       object,
@@ -899,11 +684,16 @@ abstract class ConvertObject {
       listIndex: listIndex,
       converter: (object) {
         if (object is Map && object.isEmpty) return <K, V>{};
-        try {
-          return object as Map<K, V>;
-        } catch (_) {}
-        return (object as Map)
-            .map((key, value) => MapEntry(key as K, value as V));
+        if (object is Map<K, V>) return object;
+
+        return (object as Map).map(
+          (key, value) {
+            return MapEntry(
+              keyConverter?.call(key) ?? key as K,
+              valueConverter?.call(value) ?? value as V,
+            );
+          },
+        );
       },
     );
     if (data == null) {
@@ -928,39 +718,31 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [Map<K, V>] if conversion is successful, otherwise null.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = {'key1': 'value1', 'key2': 'value2'};
-  /// final map1 = ConvertObject.tryToMap<String, String>(object1); // {'key1': 'value1', 'key2': 'value2'}
-  ///
-  /// final object2 = {'key1': 1, 'key2': 2};
-  /// final map2 = ConvertObject.tryToMap<String, int>(object2); // {'key1': 1, 'key2': 2}
-  ///
-  /// final object3 = 'Hello';
-  /// final map3 = ConvertObject.tryToMap<String, int>(object3); // null (logs an error)
-  ///
-  /// final object4 = null;
-  /// final map4 = ConvertObject.tryToMap<String, int>(object4); // null
-  /// ```
+  @optionalTypeArgs
   static Map<K, V>? tryToMap<K, V>(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     Map<K, V>? defaultValue,
+    ElementConverter<K>? keyConverter,
+    ElementConverter<V>? valueConverter,
   }) {
-    return _convertObject<Map<K, V>>(
+    return _convertObject<Map<K, V>?>(
           object,
           decodeInput: true,
           mapKey: mapKey,
           listIndex: listIndex,
           converter: (object) {
             if (object is Map && object.isEmpty) return <K, V>{};
-            try {
-              return object as Map<K, V>;
-            } catch (_) {}
+            if (object is Map<K, V>?) return object;
+
             return (object as Map).map(
-              (key, value) => MapEntry(key as K, value as V),
+              (key, value) {
+                return MapEntry(
+                  keyConverter?.call(key) ?? key as K,
+                  valueConverter?.call(value) ?? value as V,
+                );
+              },
             );
           },
         ) ??
@@ -980,26 +762,13 @@ abstract class ConvertObject {
   ///
   /// Returns a [Set] of type `T` if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = {1, 2, 3};
-  /// final set1 = ConvertObject.toSet<int>(object1); // {1, 2, 3}
-  ///
-  /// final object2 = [1, 2, 3];
-  /// final set2 = ConvertObject.toSet<int>(object2); // {1, 2, 3}
-  ///
-  /// final object3 = 'Hello';
-  /// final set3 = ConvertObject.toSet<int>(object3); // ParsingException (logs an error)
-  ///
-  /// final object4 = null;
-  /// final set4 = ConvertObject.toSet<int>(object4); // ParsingException (null object)
-  /// ```
+  @optionalTypeArgs
   static Set<T> toSet<T>(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     Set<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
   }) {
     final data = _convertObject<Set<T>>(
       object,
@@ -1011,9 +780,12 @@ abstract class ConvertObject {
         if (object is Set<T>) return object;
         if (object is T) return <T>{object};
         if (object is Map<dynamic, T>) return object.values.toSet();
-        return (object as Iterable)
-            .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-            .toSet();
+        return (object as Iterable).map(
+          (tmp) {
+            if (elementConverter != null) return elementConverter(tmp);
+            return tmp is T ? tmp : toType<T>(tmp);
+          },
+        ).toSet();
       },
     );
     if (data == null) {
@@ -1038,26 +810,13 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [Set] of type `T` if conversion is successful, otherwise null.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = {1, 2, 3};
-  /// final set1 = ConvertObject.tryToSet<int>(object1); // {1, 2, 3}
-  ///
-  /// final object2 = [1, 2, 3];
-  /// final set2 = ConvertObject.tryToSet<int>(object2); // {1, 2, 3}
-  ///
-  /// final object3 = 'Hello';
-  /// final set3 = ConvertObject.tryToSet<int>(object3); // null (logs an error)
-  ///
-  /// final object4 = null;
-  /// final set4 = ConvertObject.tryToSet<int>(object4); // null
-  /// ```
+  @optionalTypeArgs
   static Set<T>? tryToSet<T>(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     Set<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
   }) {
     return _convertObject<Set<T>?>(
           object,
@@ -1069,9 +828,12 @@ abstract class ConvertObject {
             if (object is Set<T>?) return object;
             if (object is T) return <T>{object};
             if (object is Map<dynamic, T>) return object.values.toSet();
-            return (object as Iterable)
-                .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-                .toSet();
+            return (object as Iterable).map(
+              (tmp) {
+                if (elementConverter != null) return elementConverter(tmp);
+                return tmp is T ? tmp : toType<T>(tmp);
+              },
+            ).toSet();
           },
         ) ??
         defaultValue;
@@ -1092,32 +854,13 @@ abstract class ConvertObject {
   ///
   /// Returns a [List] of type `T` if conversion is successful.
   /// Throws a [ParsingException] if the conversion fails.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = [1, 2, 3];
-  /// final list1 = ConvertObject.toList<int>(object1); // [1, 2, 3]
-  ///
-  /// final object2 = 42;
-  /// final list2 = ConvertObject.toList<int>(object2); // [42]
-  ///
-  /// final object3 = {'a': 1, 'b': 2};
-  /// final list3 = ConvertObject.toList<int>(object3); // [1, 2]
-  ///
-  /// final object4 = {'a': [1, 2], 'b': [3, 4]};
-  /// final list4 = ConvertObject.toList<int>(object4, mapKey: 'a'); // [1, 2]
-  ///
-  /// final object5 = [[1, 2], [3, 4]];
-  /// final list5 = ConvertObject.toList<int>(object5, listIndex: 0); // [1, 3]
-  ///
-  /// final object6 = 'Hello';
-  /// final list6 = ConvertObject.toList<int>(object6); // throws ParsingException
-  /// ```
+  @optionalTypeArgs
   static List<T> toList<T>(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     List<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
   }) {
     final data = _convertObject<List<T>?>(
       object,
@@ -1129,9 +872,13 @@ abstract class ConvertObject {
         if (object is List<T>) return object;
         if (object is T) return <T>[object];
         if (object is Map<dynamic, T>) return object.values.toList();
-        return (object as Iterable)
-            .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-            .toList();
+
+        return (object as Iterable).map(
+          (tmp) {
+            if (elementConverter != null) return elementConverter(tmp);
+            return tmp is T ? tmp : toType<T>(tmp);
+          },
+        ).toList();
       },
     );
     if (data == null) {
@@ -1158,35 +905,13 @@ abstract class ConvertObject {
   /// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
   ///
   /// Returns a [List] of type `T` if conversion is successful, otherwise `null`.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// final object1 = [1, 2, 3];
-  /// final list1 = ConvertObject.tryToList<int>(object1); // [1, 2, 3]
-  ///
-  /// final object2 = 42;
-  /// final list2 = ConvertObject.tryToList<int>(object2); // [42]
-  ///
-  /// final object3 = {'a': 1, 'b': 2};
-  /// final list3 = ConvertObject.tryToList<int>(object3); // [1, 2]
-  ///
-  /// final object4 = {'a': [1, 2], 'b': [3, 4]};
-  /// final list4 = ConvertObject.tryToList<int>(object4, mapKey: 'a'); // [1, 2]
-  ///
-  /// final object5 = [[1, 2], [3, 4]];
-  /// final list5 = ConvertObject.tryToList<int>(object5, listIndex: 0); // [1, 3]
-  ///
-  /// final object6 = 'Hello';
-  /// final list6 = ConvertObject.tryToList<int>(object6); // null (logs an error)
-  ///
-  /// final object7 = null;
-  /// final list7 = ConvertObject.tryToList<int>(object7); // null
-  /// ```
+  @optionalTypeArgs
   static List<T>? tryToList<T>(
     dynamic object, {
     dynamic mapKey,
     int? listIndex,
     List<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
   }) {
     return _convertObject<List<T>?>(
           object,
@@ -1198,11 +923,1840 @@ abstract class ConvertObject {
             if (object is List<T>?) return object;
             if (object is T) return <T>[object];
             if (object is Map<dynamic, T>) return object.values.toList();
-            return (object as Iterable)
-                .map((tmp) => tmp is T ? tmp : toType<T>(tmp))
-                .toList();
+
+            return (object as Iterable).map((element) {
+              if (elementConverter != null) return elementConverter(element);
+              return element is T ? element : toType<T>(element);
+            }).toList();
           },
         ) ??
         defaultValue;
   }
+}
+
+/// Extension method that uses [ConvertObject] on Iterables
+@optionalTypeArgs
+extension ConvertObjectIterableEx<E> on Iterable<E> {
+  /// uses the [toString] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [String].
+  String getString(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? defaultValue,
+    ElementConverter<String>? converter,
+  }) =>
+      ConvertObject.toString1(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [toNum] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [num].
+  num getNum(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    num? defaultValue,
+    ElementConverter<num>? converter,
+  }) =>
+      ConvertObject.toNum(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [toInt] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [int].
+  int getInt(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    int? defaultValue,
+    ElementConverter<int>? converter,
+  }) =>
+      ConvertObject.toInt(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [BigInt].
+  BigInt getBigInt(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    BigInt? defaultValue,
+    ElementConverter<BigInt>? converter,
+  }) =>
+      ConvertObject.toBigInt(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [toDouble] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [double].
+  double getDouble(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    double? defaultValue,
+    ElementConverter<double>? converter,
+  }) =>
+      ConvertObject.toDouble(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [toBool] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [bool].
+  bool getBool(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    bool? defaultValue,
+    ElementConverter<bool>? converter,
+  }) =>
+      ConvertObject.toBool(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [DateTime].
+  DateTime getDateTime(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
+    DateTime? defaultValue,
+    ElementConverter<DateTime>? converter,
+  }) =>
+      ConvertObject.toDateTime(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+        converter: converter,
+      );
+
+  /// uses the [toUri] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [Uri].
+  Uri getUri(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    Uri? defaultValue,
+    ElementConverter<Uri>? converter,
+  }) =>
+      ConvertObject.toUri(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [toMap] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [Map].
+  Map<K2, V2> getMap<K2, V2>(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    Map<K2, V2>? defaultValue,
+    ElementConverter<K2>? keyConverter,
+    ElementConverter<V2>? valueConverter,
+  }) =>
+      ConvertObject.toMap(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        keyConverter: keyConverter,
+        valueConverter: valueConverter,
+      );
+
+  /// uses the [toSet] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [Set].
+  Set<T> getSet<T>(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    Set<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.toSet(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        elementConverter: elementConverter,
+      );
+
+  /// uses the [toList] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [index] in that Iterable to [List].
+  List<T> getList<T>(
+    int index, {
+    dynamic innerMapKey,
+    int? innerIndex,
+    List<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.toList(
+        elementAt(index),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        elementConverter: elementConverter,
+      );
+}
+
+/// Extension method that uses [ConvertObject] on Nullable Iterables
+@optionalTypeArgs
+extension ConvertObjectIterableNEx<E> on Iterable<E>? {
+  /// Helper function to get the element from the list using the provided primary index or alternative indexes.
+  E? _getElementAtIndex(
+    int index, {
+    List<int>? altIndexes,
+  }) {
+    if (this == null || index < 0) return null;
+
+    try {
+      return this!.elementAt(index);
+    } catch (_) {}
+
+    if (altIndexes != null) {
+      for (final altIndex in altIndexes) {
+        try {
+          return this!.elementAt(altIndex);
+        } catch (_) {}
+      }
+    }
+
+    return null;
+  }
+
+  /// uses the [tryToString] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [String] or return null.
+  @optionalTypeArgs
+  String? tryGetString(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? defaultValue,
+    ElementConverter<String>? converter,
+  }) =>
+      ConvertObject.tryToString(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [num] or return null.
+  @optionalTypeArgs
+  num? tryGetNum(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    num? defaultValue,
+    ElementConverter<num>? converter,
+  }) =>
+      ConvertObject.tryToNum(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [int] or return null.
+  @optionalTypeArgs
+  int? tryGetInt(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    int? defaultValue,
+    ElementConverter<int>? converter,
+  }) =>
+      ConvertObject.tryToInt(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [BigInt] or return null.
+  @optionalTypeArgs
+  BigInt? tryGetBigInt(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    BigInt? defaultValue,
+    ElementConverter<BigInt>? converter,
+  }) =>
+      ConvertObject.tryToBigInt(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [double] or return null.
+  @optionalTypeArgs
+  double? tryGetDouble(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    double? defaultValue,
+    ElementConverter<double>? converter,
+  }) =>
+      ConvertObject.tryToDouble(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [bool] or return null.
+  @optionalTypeArgs
+  bool? tryGetBool(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    bool? defaultValue,
+    ElementConverter<bool>? converter,
+  }) =>
+      ConvertObject.tryToBool(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [DateTime] or return null.
+  @optionalTypeArgs
+  DateTime? tryGetDateTime(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    String? format,
+    String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
+    DateTime? defaultValue,
+    ElementConverter<DateTime>? converter,
+  }) =>
+      ConvertObject.tryToDateTime(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        format: format,
+        locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+        converter: converter,
+      );
+
+  /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Uri] or return null.
+  @optionalTypeArgs
+  Uri? tryGetUri(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    Uri? defaultValue,
+    ElementConverter<Uri>? converter,
+  }) =>
+      ConvertObject.tryToUri(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Map] or return null.
+  @optionalTypeArgs
+  Map<K2, V2>? tryGetMap<K2, V2>(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    Map<K2, V2>? defaultValue,
+    ElementConverter<K2>? keyConverter,
+    ElementConverter<V2>? valueConverter,
+  }) =>
+      ConvertObject.tryToMap(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        keyConverter: keyConverter,
+        valueConverter: valueConverter,
+      );
+
+  /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [Set] or return null.
+  @optionalTypeArgs
+  Set<T>? tryGetSet<T>(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    Set<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.tryToSet(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        elementConverter: elementConverter,
+      );
+
+  /// uses the [tryToList] defined in the [ConvertObject] class to convert a
+  /// specific element by [index] in that Iterable to [List] or return null.
+  @optionalTypeArgs
+  List<T>? tryGetList<T>(
+    int index, {
+    List<int>? altIndexes,
+    dynamic innerMapKey,
+    int? innerIndex,
+    List<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.tryToList(
+        _getElementAtIndex(index, altIndexes: altIndexes),
+        defaultValue: defaultValue,
+        mapKey: innerMapKey,
+        listIndex: innerIndex,
+        elementConverter: elementConverter,
+      );
+}
+
+/// Extension method that uses [ConvertObject] on Nullable Sets
+@optionalTypeArgs
+extension ConvertObjectSetNEx<E> on Set<E>? {
+  /// If a direct conversion fails, it attempts element-wise conversion using `toType`, ensuring
+  /// a smooth conversion process without the risk of runtime errors.
+  ///
+  /// Example usage:
+  /// ```dart
+  /// Set<dynamic> set = {1, 2, '3'};
+  /// Set<int> intSet = set.convertTo<int>(); // Tries to convert all elements to int.
+  /// ```
+  @optionalTypeArgs
+  Set<R> convertTo<R>() => ConvertObject.toSet<R>(this);
+}
+
+/// Extension method that uses [ConvertObject] on Nullable List
+@optionalTypeArgs
+extension ConvertObjectListNEx<E> on List<E>? {
+  /// Converts the list to a different type [R] using custom conversion logic.
+  ///
+  /// Example:
+  /// ```dart
+  /// List <dynamic> list = [1, 2, '3'];
+  /// List <int> intList = list.convertTo<int>();
+  /// ```
+  List<R> convertTo<R>() => ConvertObject.toList<R>(this);
+}
+
+/// Extension method that uses [ConvertObject] on Maps
+@optionalTypeArgs
+extension ConvertObjectMapEx<K, V> on Map<K, V> {
+  /// uses the [toString] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [String].
+  String getString(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    String? defaultValue,
+    ElementConverter<String>? converter,
+  }) =>
+      ConvertObject.toString1(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [toNum] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [num].
+  num getNum(
+    K key, {
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    List<K>? altKeys,
+    String? locale,
+    num? defaultValue,
+    ElementConverter<num>? converter,
+  }) =>
+      ConvertObject.toNum(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [toInt] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [int].
+  int getInt(
+    K key, {
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    List<K>? altKeys,
+    String? locale,
+    int? defaultValue,
+    ElementConverter<int>? converter,
+  }) =>
+      ConvertObject.toInt(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [BigInt].
+  BigInt getBigInt(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    BigInt? defaultValue,
+    ElementConverter<BigInt>? converter,
+  }) =>
+      ConvertObject.toBigInt(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [toDouble] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [double].
+  double getDouble(
+    K key, {
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    List<K>? altKeys,
+    String? locale,
+    double? defaultValue,
+    ElementConverter<double>? converter,
+  }) =>
+      ConvertObject.toDouble(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [toBool] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [bool].
+  bool getBool(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    bool? defaultValue,
+    ElementConverter<bool>? converter,
+  }) =>
+      ConvertObject.toBool(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [DateTime].
+  DateTime getDateTime(
+    K key, {
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    List<K>? altKeys,
+    bool utc = false,
+    DateTime? defaultValue,
+    ElementConverter<DateTime>? converter,
+  }) =>
+      ConvertObject.toDateTime(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+        converter: converter,
+      );
+
+  /// uses the [toUri] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [Uri].
+  Uri getUri(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    Uri? defaultValue,
+    ElementConverter<Uri>? converter,
+  }) =>
+      ConvertObject.toUri(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [toMap] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [Map].
+  Map<K2, V2> getMap<K2, V2>(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    Map<K2, V2>? defaultValue,
+    ElementConverter<K2>? keyConverter,
+    ElementConverter<V2>? valueConverter,
+  }) =>
+      ConvertObject.toMap(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        keyConverter: keyConverter,
+        valueConverter: valueConverter,
+      );
+
+  /// uses the [toSet] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [Set].
+  Set<T> getSet<T>(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    Set<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.toSet(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        elementConverter: elementConverter,
+      );
+
+  /// uses the [toList] defined in the [ConvertObject] class to convert a
+  @optionalTypeArgs
+
+  /// specific element by [key] in that Iterable to [List].
+  List<T> getList<T>(
+    K key, {
+    dynamic innerKey,
+    List<K>? altKeys,
+    int? innerListIndex,
+    List<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.toList(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        elementConverter: elementConverter,
+      );
+
+  /// Extracts a value from the map by the given [key] and attempts to
+  /// construct an object of type [T] using the provided [fromJson] function.
+  T parse<T, K2, V2>(K key, T Function(Map<K2, V2> json) converter) {
+    final map = getMap<K2, V2>(key);
+    return converter.call(map);
+  }
+}
+
+/// Extension method that uses [ConvertObject] on nullable Maps
+@optionalTypeArgs
+extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
+  /// Retrieves a value from the map using the provided primary key or alternative keys.
+  ///
+  /// [key] The primary key to search for.
+  /// [altKeys] An optional list of alternative keys to search if the primary key is not found.
+  ///
+  /// Returns the value associated with the first found key, or null if no key is found.
+  V? _getObjectFromMap(
+    K key, {
+    List<K>? altKeys,
+  }) {
+    final map = this;
+    if (map == null) return null;
+
+    // Get the value using primary key
+    var value = map[key];
+
+    // If value is not found and alternative keys are provided, search in them
+    if (value == null && altKeys != null && altKeys.isNotEmpty) {
+      final altKey = altKeys.firstWhereOrNull(map.containsKey);
+      if (altKey != null) value = map[altKey];
+    }
+
+    return value;
+  }
+
+  /// uses the [tryToString] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [String] or return null.
+  @optionalTypeArgs
+  String? tryGetString(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    String? defaultValue,
+    ElementConverter<String>? converter,
+  }) =>
+      ConvertObject.tryToString(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [num] or return null.
+  @optionalTypeArgs
+  num? tryGetNum(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+    num? defaultValue,
+    ElementConverter<num>? converter,
+  }) =>
+      ConvertObject.tryToNum(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [int] or return null.
+  @optionalTypeArgs
+  int? tryGetInt(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+    int? defaultValue,
+    ElementConverter<int>? converter,
+  }) =>
+      ConvertObject.tryToInt(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [BigInt] or return null.
+  @optionalTypeArgs
+  BigInt? tryGetBigInt(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    BigInt? defaultValue,
+    ElementConverter<BigInt>? converter,
+  }) =>
+      ConvertObject.tryToBigInt(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [double] or return null.
+  @optionalTypeArgs
+  double? tryGetDouble(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+    double? defaultValue,
+    ElementConverter<double>? converter,
+  }) =>
+      ConvertObject.tryToDouble(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        converter: converter,
+      );
+
+  /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [bool] or return null.
+  @optionalTypeArgs
+  bool? tryGetBool(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    bool? defaultValue,
+    ElementConverter<bool>? converter,
+  }) =>
+      ConvertObject.tryToBool(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [DateTime] or return null.
+  @optionalTypeArgs
+  DateTime? tryGetDateTime(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    String? format,
+    String? locale,
+    bool autoDetectFormat = false,
+    bool useCurrentLocale = false,
+    bool utc = false,
+    DateTime? defaultValue,
+    ElementConverter<DateTime>? converter,
+  }) =>
+      ConvertObject.tryToDateTime(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        format: format,
+        locale: locale,
+        autoDetectFormat: autoDetectFormat,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+        converter: converter,
+      );
+
+  /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Uri] or return null.
+  @optionalTypeArgs
+  Uri? tryGetUri(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    Uri? defaultValue,
+    ElementConverter<Uri>? converter,
+  }) =>
+      ConvertObject.tryToUri(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        converter: converter,
+      );
+
+  /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Map] or return null.
+  @optionalTypeArgs
+  Map<K2, V2>? tryGetMap<K2, V2>(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    Map<K2, V2>? defaultValue,
+    ElementConverter<K2>? keyConverter,
+    ElementConverter<V2>? valueConverter,
+  }) =>
+      ConvertObject.tryToMap(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        keyConverter: keyConverter,
+        valueConverter: valueConverter,
+      );
+
+  /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [Set] or return null.
+  @optionalTypeArgs
+  Set<T>? tryGetSet<T>(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    Set<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.tryToSet(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        elementConverter: elementConverter,
+      );
+
+  /// uses the [tryToList] defined in the [ConvertObject] class to convert a
+  /// specific element by [key] in that Iterable to [List] or return null.
+  @optionalTypeArgs
+  List<T>? tryGetList<T>(
+    K key, {
+    List<K>? altKeys,
+    dynamic innerKey,
+    int? innerListIndex,
+    List<T>? defaultValue,
+    ElementConverter<T>? elementConverter,
+  }) =>
+      ConvertObject.tryToList(
+        _getObjectFromMap(key, altKeys: altKeys),
+        defaultValue: defaultValue,
+        mapKey: innerKey,
+        listIndex: innerListIndex,
+        elementConverter: elementConverter,
+      );
+
+  /// Tries to extracts a value from the map by the given [key] and attempts to
+  /// construct an object of type [T] using the provided [fromJson] function.
+  /// returns null if failed or key is not exists or contains null value.
+  @optionalTypeArgs
+  T? tryParse<T, K2, V2>(K key, T Function(Map<K2, V2> json) converter) {
+    if (this == null) return null;
+    final map = tryGetMap<K2, V2>(key);
+    if (map == null) return null;
+    return converter.call(map);
+  }
+}
+
+/// Converts any object to a string if the object is not `null`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts various object types to their string representation.
+/// - If the object is `null`, throws a [ParsingException] with a `nullObject` error.
+/// - If the conversion to string fails, throws a [ParsingException].
+///
+/// [object] The object to be converted to a string.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a string if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails or the object is `null`.
+@optionalTypeArgs
+String toString1(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? defaultValue,
+  ElementConverter<String>? converter,
+}) =>
+    ConvertObject.toString1(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts any object to a string, or returns `null` if the object is `null`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts various object types to their string representation.
+/// - If the conversion to string fails, logs an error and returns `null`.
+///
+/// [object] The object to be converted to a string.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a string if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+String? tryToString(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? defaultValue,
+  ElementConverter<String>? converter,
+}) =>
+    ConvertObject.tryToString(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to a [num].
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid numbers to [num].
+/// - If the object is `null`, throws a [ParsingException] with a `nullObject` error.
+/// - If the conversion to [num] fails, throws a [ParsingException].
+///
+/// [object] The object to be converted to a [num].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [num] if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails or the object is `null`.
+@optionalTypeArgs
+num toNum(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  num? defaultValue,
+  ElementConverter<num>? converter,
+}) =>
+    ConvertObject.toNum(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a [num], or returns `null` if the object is `null` or conversion fails.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid numbers to [num].
+/// - If the conversion to [num] fails (e.g., non-numeric string), logs an error and returns `null`.
+///
+/// [object] The object to be converted to a [num].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [num] if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+num? tryToNum(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  num? defaultValue,
+  ElementConverter<num>? converter,
+}) =>
+    ConvertObject.tryToNum(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to an [int].
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid integers to [int].
+/// - If the conversion to [int] fails (e.g., non-integer string), throws a [ParsingException].
+///
+/// [object] The object to be converted to an [int].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns an [int] if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails.
+@optionalTypeArgs
+int toInt(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  int? defaultValue,
+  ElementConverter<int>? converter,
+}) =>
+    ConvertObject.toInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to an [int], or returns `null` if the object is `null` or conversion fails.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid integers to [int].
+/// - If the conversion to [int] fails (e.g., non-integer string), logs an error and returns `null`.
+///
+/// [object] The object to be converted to an [int].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns an [int] if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+int? tryToInt(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  int? defaultValue,
+  ElementConverter<int>? converter,
+}) =>
+    ConvertObject.tryToInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to a [BigInt].
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid large integers to [BigInt].
+/// - IMPORTANT: BigInt operations can be computationally expensive, especially for very large integers.
+///   Use BigInt only when necessary, and be mindful of performance implications.
+/// - If the conversion to [BigInt] fails or the object is `null`, throws a [ParsingException].
+///
+/// [object] The object to be converted to a [BigInt].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [BigInt] if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails or the object is `null`.
+@optionalTypeArgs
+BigInt toBigInt(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  BigInt? defaultValue,
+  ElementConverter<BigInt>? converter,
+}) =>
+    ConvertObject.toBigInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a [BigInt], or returns `null` if the object is `null` or conversion fails.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid large integers to [BigInt].
+/// - IMPORTANT: BigInt operations can be computationally expensive, especially for very large integers.
+///   Use BigInt only when necessary, and be mindful of performance implications.
+/// - If the conversion to [BigInt] fails (e.g., non-numeric string), logs an error and returns `null`.
+///
+/// [object] The object to be converted to a [BigInt].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [BigInt] if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+BigInt? tryToBigInt(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  BigInt? defaultValue,
+  ElementConverter<BigInt>? converter,
+}) =>
+    ConvertObject.tryToBigInt(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to a [double].
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid numbers to [double].
+/// - If the conversion to [double] fails (e.g., non-numeric string), throws a [ParsingException].
+///
+/// [object] The object to be converted to a [double].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [double] if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails.
+@optionalTypeArgs
+double toDouble(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  double? defaultValue,
+  ElementConverter<double>? converter,
+}) =>
+    ConvertObject.toDouble(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a [double], or returns `null` if the object is `null` or conversion fails.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Converts numeric types and strings that represent valid numbers to [double].
+/// - If the conversion to [double] fails (e.g., non-numeric string), logs an error and returns `null`.
+///
+/// [object] The object to be converted to a [double].
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [double] if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+double? tryToDouble(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  double? defaultValue,
+  ElementConverter<double>? converter,
+}) =>
+    ConvertObject.tryToDouble(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to a `bool`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Returns `true` if the object is a `bool` and equal to `true`.
+/// - Returns `true` if the object is a `String` and equal to 'yes' or 'true' (case-insensitive).
+/// - Returns `true` if the object is a `num`, `int`, or `double` and is larger than zero.
+/// - Returns `false` for other types or if the object is `null`.
+///
+/// [object] The object to be converted to a `bool`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a `bool`, with a default value of `false`.
+@optionalTypeArgs
+bool toBool(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  bool? defaultValue,
+  ElementConverter<bool>? converter,
+}) =>
+    ConvertObject.toBool(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a `bool`, or returns `null` if the object is `null` or conversion is not applicable.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Returns `true` if the object is a `bool` and equal to `true`.
+/// - Returns `true` if the object is a `String` and equal to 'yes' or 'true' (case-insensitive).
+/// - Returns `null` for other types or if the object is `null`.
+///
+/// [object] The object to be converted to a `bool`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a `bool` if conversion is applicable, otherwise `null`.
+@optionalTypeArgs
+bool? tryToBool(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  bool? defaultValue,
+  ElementConverter<bool>? converter,
+}) =>
+    ConvertObject.tryToBool(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a `bool`, or returns `null` if the object is `null` or conversion is not applicable.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - Returns `true` if the object is a `bool` and equal to `true`.
+/// - Returns `true` if the object is a `String` and equal to 'yes' or 'true' (case-insensitive).
+/// - Returns `null` for other types or if the object is `null`.
+///
+/// [object] The object to be converted to a `bool`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a `bool` if conversion is applicable, otherwise `null`.
+@optionalTypeArgs
+DateTime toDateTime(
+  dynamic object, {
+  dynamic mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  bool autoDetectFormat = false,
+  bool useCurrentLocale = false,
+  bool utc = false,
+  DateTime? defaultValue,
+  ElementConverter<DateTime>? converter,
+}) =>
+    ConvertObject.toDateTime(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      autoDetectFormat: autoDetectFormat,
+      useCurrentLocale: useCurrentLocale,
+      utc: utc,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a [DateTime], or returns `null` if the object is `null` or conversion fails.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is a string representing a valid DateTime, it converts it to a [DateTime] object.
+/// - If the object is already a [DateTime], it is returned as-is.
+/// - If the conversion to [DateTime] fails (e.g., invalid format), logs an error and returns `null`.
+///
+/// [object] The object to be converted to a [DateTime].
+/// [format] (Optional) Specify the format if the object is a string representing a DateTime.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [DateTime] if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+DateTime? tryToDateTime(
+  dynamic object, {
+  dynamic mapKey,
+  int? listIndex,
+  String? format,
+  String? locale,
+  bool autoDetectFormat = false,
+  bool useCurrentLocale = false,
+  bool utc = false,
+  DateTime? defaultValue,
+  ElementConverter<DateTime>? converter,
+}) =>
+    ConvertObject.tryToDateTime(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      format: format,
+      locale: locale,
+      autoDetectFormat: autoDetectFormat,
+      useCurrentLocale: useCurrentLocale,
+      utc: utc,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to a [Uri].
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is a string representing a valid URI, it converts it to a [Uri] object.
+/// - If the object is `null`, throws a [ParsingException] with a `nullObject` error.
+/// - If the conversion to [Uri] fails (e.g., if the string is not a valid URI), throws a [ParsingException].
+///
+/// [object] The object to be converted to a [Uri]. Expected to be a string representing a URI.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [Uri] if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails or the object is null.
+@optionalTypeArgs
+Uri toUri(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  Uri? defaultValue,
+  ElementConverter<Uri>? converter,
+}) =>
+    ConvertObject.toUri(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Attempts to convert an object to a [Uri], or returns `null` if the object is `null` or conversion fails.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is a string representing a valid URI, it converts it to a [Uri] object.
+/// - If the conversion to [Uri] fails (e.g., if the string is not a valid URI), it logs an error and returns `null`.
+/// - If the object is null, returns null.
+///
+/// [object] The object to be converted to a [Uri]. Expected to be a string representing a URI.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [Uri] if conversion is successful, otherwise null.
+@optionalTypeArgs
+Uri? tryToUri(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  Uri? defaultValue,
+  ElementConverter<Uri>? converter,
+}) =>
+    ConvertObject.tryToUri(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      converter: converter,
+    );
+
+/// Converts an object to a [Map] with keys of type `K` and values of type `V`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is already a [Map] with the correct key and value types, it is returned as-is.
+/// - If the object is an empty [Map], an empty [Map] is returned.
+/// - If the object is null, throws a [ParsingException] with a `nullObject` error.
+/// - If the object cannot be converted to a [Map] with the specified types, throws a [ParsingException].
+///
+/// [object] The object to be converted to a [Map] with keys of type `K` and values of type `V`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [Map<K, V>] if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails.
+@optionalTypeArgs
+Map<K, V> toMap<K, V>(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  Map<K, V>? defaultValue,
+  ElementConverter<K>? keyConverter,
+  ElementConverter<V>? valueConverter,
+}) =>
+    ConvertObject.toMap(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      keyConverter: keyConverter,
+      valueConverter: valueConverter,
+    );
+
+/// Attempts to convert an object to a [Map] with keys of type `K` and values of type `V`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is already a [Map] with the correct key and value types, it is returned as-is.
+/// - If the object is an empty [Map], an empty [Map] is returned.
+/// - If the object is null, returns null.
+/// - If the object cannot be converted to a [Map] with the specified types, logs an error and returns null.
+///
+/// [object] The object to be converted to a [Map] with keys of type `K` and values of type `V`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [Map<K, V>] if conversion is successful, otherwise null.
+@optionalTypeArgs
+Map<K, V>? tryToMap<K, V>(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  Map<K, V>? defaultValue,
+  ElementConverter<K>? keyConverter,
+  ElementConverter<V>? valueConverter,
+}) =>
+    ConvertObject.tryToMap(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      keyConverter: keyConverter,
+      valueConverter: valueConverter,
+    );
+
+/// Converts an object to a [Set] of type `T`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is already a [Set] of type `T`, it is returned as-is.
+/// - If the object is an [Iterable], it converts it to a [Set] of type `T`.
+/// - If the object is null, throws a [ParsingException] with a `nullObject` error.
+/// - If the object cannot be converted to a [Set] of type `T`, throws a [ParsingException].
+///
+/// [object] The object to be converted to a [Set] of type `T`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [Set] of type `T` if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails.
+@optionalTypeArgs
+Set<T> toSet<T>(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  Set<T>? defaultValue,
+  ElementConverter<T>? elementConverter,
+}) =>
+    ConvertObject.toSet(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      elementConverter: elementConverter,
+    );
+
+/// Attempts to convert an object to a [Set] of type `T`, or returns null if conversion is not possible.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is already a [Set] of type `T`, it is returned as-is.
+/// - If the object is an [Iterable], it converts it to a [Set] of type `T`.
+/// - If the object is null, returns null.
+/// - If the object cannot be converted to a [Set] of type `T`, logs an error and returns null.
+///
+/// [object] The object to be converted to a [Set] of type `T`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [Set] of type `T` if conversion is successful, otherwise null.
+@optionalTypeArgs
+Set<T>? tryToSet<T>(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  Set<T>? defaultValue,
+  ElementConverter<T>? elementConverter,
+}) =>
+    ConvertObject.tryToSet(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      elementConverter: elementConverter,
+    );
+
+/// Converts an object to a [List] of type `T`.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is already a [List] of type `T`, it is returned as-is.
+/// - If the object is a single instance of type `T`, it returns a [List] containing that object.
+/// - If the object is a [Map], and `mapKey` is provided, it returns a [List] of the values for that key across all map entries.
+/// - If the object is a [Map] with values of type `T` and no `mapKey` is provided, it returns a [List] of all the map's values.
+/// - If the object is a [List], and `listIndex` is provided, it attempts to return a [List] containing the element at that index from each list in the original list.
+/// - If the object cannot be converted to a [List] of type `T`, a [ParsingException] is thrown.
+///
+/// [object] The object to be converted to a [List] of type `T`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [List] of type `T` if conversion is successful.
+/// Throws a [ParsingException] if the conversion fails.
+@optionalTypeArgs
+List<T> toList<T>(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  List<T>? defaultValue,
+  ElementConverter<T>? elementConverter,
+}) =>
+    ConvertObject.toList(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      elementConverter: elementConverter,
+    );
+
+/// Attempts to convert an object to a [List] of type `T`, or returns `null` if conversion is not possible.
+/// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
+///
+/// - If the object is already a [List] of type `T`, it is returned as-is.
+/// - If the object is a single instance of type `T`, it returns a [List] containing that object.
+/// - If the object is a [Map], and `mapKey` is provided, it returns a [List] of the values for that key across all map entries.
+/// - If the object is a [Map] with values of type `T` and no `mapKey` is provided, it returns a [List] of all the map's values.
+/// - If the object is a [List], and `listIndex` is provided, it attempts to return a [List] containing the element at that index from each list in the original list.
+/// - If the object cannot be converted to a [List] of type `T`, an error is logged, and `null` is returned.
+///
+/// [object] The object to be converted to a [List] of type `T`.
+/// [mapKey] (Optional) Specifies the key to extract values from a [Map] object.
+/// [listIndex] (Optional) Specifies the index to extract elements from a [List] object.
+///
+/// Returns a [List] of type `T` if conversion is successful, otherwise `null`.
+@optionalTypeArgs
+List<T>? tryToList<T>(
+  dynamic object, {
+  Object? mapKey,
+  int? listIndex,
+  List<T>? defaultValue,
+  ElementConverter<T>? elementConverter,
+}) =>
+    ConvertObject.tryToList(
+      object,
+      mapKey: mapKey,
+      listIndex: listIndex,
+      defaultValue: defaultValue,
+      elementConverter: elementConverter,
+    );
+
+/// Global function that allow Convert an object to a specified type.
+///
+/// - If the object is already of type [T], it will be returned.
+/// - If the object is null, a [ParsingException] with a `nullObject` error will
+///     be thrown. If you want to ensure null safe values, consider using [tryToType] instead.
+/// - If the object cannot be converted to the specified type, a [ParsingException] will be thrown.
+///
+/// - Supported conversion types:
+///   - [bool]
+///   - [int]
+///   - [BigInt]
+///   - [double]
+///   - [num]
+///   - [String]
+///   - [DateTime]
+///
+/// Throws a [ParsingException] if it cannot be converted to the specified type.
+@optionalTypeArgs
+T toType<T>(dynamic object) {
+  if (object is T) return object;
+  if (object == null) {
+    throw ParsingException.nullObject(
+      parsingInfo: 'toType',
+      stackTrace: StackTrace.current,
+    );
+  }
+  try {
+    if (T == bool) return ConvertObject.toBool(object) as T;
+    if (T == int) return ConvertObject.toInt(object) as T;
+    if (T == double) return ConvertObject.toDouble(object) as T;
+    if (T == num) return ConvertObject.toNum(object) as T;
+    if (T == BigInt) return ConvertObject.toBigInt(object) as T;
+    if (T == String) return ConvertObject.toString1(object) as T;
+    if (T == DateTime) return ConvertObject.toDateTime(object) as T;
+  } catch (e, s) {
+    throw ParsingException(
+      error: e,
+      parsingInfo: 'toType',
+      stackTrace: s,
+    );
+  }
+  try {
+    return object as T;
+  } catch (_) {}
+  throw ParsingException(
+    parsingInfo: 'toType',
+    error:
+        'Unsupported type detected. Please ensure that the type you are attempting to convert to is either a primitive type or a valid data type: $T.',
+  );
+}
+
+/// Global function that allow Convert an object to a specified type or return null.
+///
+/// If the object is already of type [T], it will be returned.
+/// If the object is null, a null value will be returned. If you want to ensure non-nullable values, consider using [toType] instead.
+/// If the object cannot be converted to the specified type, a [ParsingException] will be thrown.
+///
+/// Supported conversion types:
+///   - [bool]
+///   - [int]
+///   - [BigInt]
+///   - [double]
+///   - [num]
+///   - [String]
+///   - [DateTime]
+/// Throws a [ParsingException] if the object cannot be converted to the specified type.
+@optionalTypeArgs
+T? tryToType<T>(dynamic object) {
+  if (object is T) return object;
+  if (object == null) return null;
+  try {
+    if (T == bool) return ConvertObject.tryToBool(object) as T?;
+    if (T == int) return ConvertObject.tryToInt(object) as T?;
+    if (T == BigInt) return ConvertObject.tryToBigInt(object) as T?;
+    if (T == double) return ConvertObject.tryToDouble(object) as T?;
+    if (T == num) return ConvertObject.tryToNum(object) as T?;
+    if (T == String) return ConvertObject.tryToString(object) as T?;
+    if (T == DateTime) return ConvertObject.tryToDateTime(object) as T?;
+  } catch (e, s) {
+    throw ParsingException(
+      error: e,
+      parsingInfo: 'tryToType',
+      stackTrace: s,
+    );
+  }
+  try {
+    return object as T;
+  } catch (_) {}
+  throw ParsingException(
+    error: 'Unsupported type: $T',
+    parsingInfo: 'tryToType',
+  );
 }

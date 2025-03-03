@@ -1,0 +1,49 @@
+# Plain Text Documentation for AI Agents
+Generated: 2025-02-27
+Source: /Users/omarhanafy/Development/MyProjects/dart_helper_utils/lib/src/extensions/collections.dart
+
+## collections.dart
+### Set<E>? Extensions
+- isEmptyOrNull, isNotEmptyOrNull(Output: bool)
+### List<E>? Extensions
+- tryRemoveAt(Input: int index, Output: void)
+- indexOfOrNull(Input: E? element, Output: int?)
+- indexWhereOrNull(Input: Predicate<E> test, int start = 0, Output: int?)
+- tryRemoveWhere(Input: int element, Output: void)
+### Iterable<E>? Extensions
+- toDoublyLinkedList(Output: DoublyLinkedList<E>)
+- of(Input: int index, Output: E?)
+- isEmptyOrNull, isNotEmptyOrNull(Output: bool)
+- firstOrNull, lastOrNull(Output: E?)
+- firstWhereOrNull(Input: Predicate<E> predicate, Output: E?)
+- lastOrDefault, firstOrDefault(Input: E defaultValue, Output: E?)
+- tryGetRandom(Input: int? seed, Output: E?)
+- isPrimitive(Output: bool)
+- isEqual(Input: Iterable<E>? other, Output: bool)
+- totalBy(Input: num? Function(E) valueSelector, Output: num)
+### Iterable<E> Extensions
+- toListConverted<R>, toSetConverted<R>(Output: List<R>, Set<R>)
+- orEmpty(Output: Iterable<E>)
+- any(Input: Predicate<E> predicate, Output: bool)
+- concatWithSingleList(Input: Iterable<E> iterable, Output: List<E>)
+- concatWithMultipleList(Input: List<Iterable<E>> iterables, Output: List<E>)
+- toMutableSet(Output: Set<E>)
+- intersect(Input: Iterable<E> other, Output: Set<E>)
+- groupBy<T, K>(Input: K Function(T e) key, Output: Map<K, List<T>>)
+- filter, filterNot(Input: Predicate<E> test, Output: List<E>)
+- halfLength(Output: int)
+- takeOnly, drop(Input: int n, Output: List<E>)
+- mapList<E2>(Input: E2 Function(E e) f, Output: List<E2>)
+- firstHalf, secondHalf(Output: List<E>)
+- mapIndexed<E2>, mapIndexedList<E2>(Input: E2 Function(int index, E element) f, Output: List<E2>)
+- swap(Input: int i, int j, Output: List<E>)
+- getRandom(Input: int? seed, Output: E)
+- whereIndexed(Input: IndexedPredicate<E> predicate, Output: Iterable<E>)
+- forEachIndexed(Input: void Function(E element, int index) action, Output: void)
+- sortedDescending(Output: List<E>)
+- containsAll(Input: Iterable<E> collection, Output: bool)
+- count(Input: Predicate<E>? predicate, Output: int)
+- distinctBy<R>(Input: R Function(E) keySelector, bool Function(R, R)? equals, int Function(R)? hashCode, bool Function(dynamic)? isValidKey, Output: List<E>)
+- subtract(Input: Iterable<E> other, Output: dynamic)
+- find(Input: Predicate<E> predicate, Output: E?)
+- encodedJson(Output: String)

@@ -1,0 +1,17 @@
+file: extensions/bool.dart
+dependencies: import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+DHUBoolEx: (Extension on `bool`)
+  Define: Provides extension methods for the `bool` type.
+  Methods:
+    toggled: (bool, get) - Returns the negation of the boolean value.
+
+DHUBoolNullablelEx: (Extension on `bool?`)
+  Define: Provides extension methods for the nullable `bool?` type.
+  Methods:
+    isTrue: (bool, get) - Returns `true` if the value is non-null and `true`; otherwise, `false`.
+    val: (bool, get) - Returns the boolean value, or `false` if null.
+    isFalse: (bool, get) - Returns `true` if the value is non-null and `false`; otherwise, `false`.
+    binary: (int, get) - Returns 1 if `true`, 0 if `false` or null.
+    binaryText: (String, get) - Returns "1" if `true`, "0" if `false` or null.
+    toggled: (bool?, get) - Returns the negation of the boolean value, or null if the original value is null.

@@ -1,0 +1,46 @@
+extensions related to dates and time.
+Source: dart_helper_utils
+
+## date.dart
+### String Extensions
+- toDateTime(Output: DateTime)
+- timestampToDate(Output: DateTime)
+### String? Extensions
+- tryToDateTime(Output: DateTime?)
+- tryTimestampToDate(Output: DateTime?)
+### num Extensions
+- toFullMonthName, toFullDayName, toSmallDayName, toSmallMonthName(Output: String)
+- timestampToDate(Output: DateTime)
+- isBetweenMonths(Input: int startMonth, int endMonth, Output: bool)
+- isCurrentDayOfWeek, isCurrentYear, isCurrentMonth, isCurrentDay(Output: bool)
+### DateTime? Extensions
+- local(Output: DateTime?)
+- toUtcIso(Output: String?)
+- isTomorrow, isToday, isYesterday, isPresent, isPast, isInPastWeek, isInThisYear, isInThisMonth, isLeapYear(Output: bool)
+- isBetween(Input: DateTime start, DateTime end, bool inclusiveStart = true, bool inclusiveEnd = false, bool ignoreTime = false, bool normalize = false, Output: bool)
+- passedDuration, remainingDuration(Output: Duration?)
+- remainingDays, passedDays(Output: int?)
+### DateTime Extensions
+- local(Output: DateTime)
+- httpFormat, toUtcIso, toIso(Output: String)
+- +(Input: Duration duration, Output: DateTime)
+- -(Input: Duration duration, Output: DateTime)
+- passedDuration, remainingDuration(Output: Duration)
+- passedDays, remainingDays(Output: int)
+- isAtSameYearAs, isAtSameMonthAs, isAtSameDayAs, isAtSameHourAs, isAtSameMinuteAs, isAtSameSecondAs, isAtSameMillisecondAs, isAtSameMicrosecondAs(Input: DateTime other, Output: bool)
+- startOfDay, startOfMonth, startOfYear, tomorrow, yesterday, dateOnly, previousDay, nextDay, previousWeek, nextWeek, firstDayOfMonth, lastDayOfMonth(Output: DateTime)
+- daysInMonth(Output: List<DateTime>)
+- firstDayOfWeek, lastDayOfWeek(Input: int startOfWeek = DateTime.monday, Output: DateTime)
+- previousMonth, nextMonth(Output: DateTime)
+- addOrRemoveYears, addOrRemoveMonths, addOrRemoveDays, addOrRemoveMinutes, addOrRemoveSeconds(Input: int amount, Output: DateTime)
+- min, max(Input: DateTime that, Output: DateTime)
+- addDays, addHours(Input: int amount, Output: DateTime)
+- isSameHourAs, isSameDayAs, isSameWeekAs(Input: DateTime other, Output: bool)
+- isBetween(Input: DateTime start, DateTime end, bool inclusiveStart = true, bool inclusiveEnd = false, bool ignoreTime = false, bool normalize = false, Output: bool)
+- daysDifferenceTo(Input: DateTime? other, Output: int)
+- daysUpTo(Input: DateTime end, Output: Iterable<DateTime>)
+- calculateAge(Output: (years: int, months: int, days: int))
+### DatesHelper Static Methods
+- isSameHour, isSameDay, isSameWeek(Input: DateTime a, DateTime b, Output: bool)
+- diffInDays(Input: DateTime to, DateTime? from, Output: int)
+- daysInRange(Input: DateTime start, DateTime end, Output: Iterable<DateTime>)

@@ -1,0 +1,84 @@
+file: extensions/mime_checks.dart
+dependencies: import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+DHUMimeChecksExtensions: (Extension on `String?`)
+  Define: Provides MIME type checks, using the `mime` package.
+  Methods:
+    mimeType({List<int>? headerBytes}): (String?, get) - Looks up the MIME type. Uses `headerBytes` for more accurate detection if provided.
+  Operational Notes:
+    Dependencies: `package:mime/mime.dart`.
+
+DHUVideoMimeChecksExtensions: (Extension on `String?`)
+  Define: Checks if a string (file path/URL) is a video file.  Uses MIME types.
+  Methods:
+    isVideo: (bool, get) - If MIME type starts with "video/".
+    isMP4, isMOV, isAVI, isWMV, isMKV, isWebM, isFLV: (bool, get) - Check for specific video MIME types.
+  Operational Notes:
+    Dependencies:  Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUImageMimeChecksExtensions: (Extension on `String?`)
+  Define: Checks if a string (file path/URL) is an image file. Uses MIME types.
+  Methods:
+    isImage: (bool, get) - If MIME type starts with "image/".
+    isPNG, isJPEG, isJPG, isSVG, isGIF, isWebP, isBMP, isTIFF, isTIF, isICO, isICNS, isHEIF, isHEIC, isIcon: (bool, get) - Check for specific image MIME types.
+  Operational Notes:
+    Dependencies: Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUDocumentMimeChecksExtensions: (Extension on `String?`)
+    Define: Checks if a string (file path/URL) represents a document file.  Uses MIME types.
+    Methods:
+      isPDF: (bool, get) - Checks for PDF MIME type.
+      isDOCX, isDOC: (bool, get) - Checks for DOCX and DOC MIME types.
+      isExcel: (bool, get) - check for any excel files.
+      isXLSX: (bool, get) - Checks for XLSX MIME type.
+      isXLS: (bool, get) - Checks for XLS MIME type.
+      isPowerPoint: (bool, get) - check for any powerpoint file.
+      isPPTX: (bool, get) - Checks for PPTX MIME type.
+      isPPT: (bool, get) - Checks for PPT MIME type.
+      isTXT: (bool, get) - Checks for TXT MIME type.
+      isMarkdown: (bool, get) - Checks for Markdown MIME type.
+      isRTF: (bool, get) - Checks for RTF MIME type.
+    Operational Notes:
+        Dependencies:  Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUAudioMimeChecksExtensions: (Extension on `String?`)
+  Define: Checks if a string (file path/URL) is an audio file. Uses MIME types.
+  Methods:
+    isAudio: (bool, get) - If MIME type starts with "audio/".
+    isMP3, isWAV, isAAC, isFLAC, isOGG, isAIFF: (bool, get) - Check for specific audio MIME types.
+  Operational Notes:
+    Dependencies: Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUArchiveMimeChecksExtensions: (Extension on `String?`)
+   Define: Checks if a string (file path/URL) is an archive file.  Uses MIME types.
+   Methods:
+      isArchive: (bool, get) general check for archive files.
+      isZIP, isDeb, isRAR, is7Z, isTAR, isGZIP, isGZ, isISO: (bool, get) Checks for specific archive formats.
+   Operational Notes:
+      Dependencies:  Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUProgrammingMimeChecksExtensions: (Extension on `String?`)
+  Define: Checks if a string (file path/URL) represents source code/programming files. Uses MIME types.
+  Methods:
+    isHTML, isCSS, isPython, isJAVA, isPHP, isXML, isJSON, isJavaScript, isTypeScript, isCSharp, isCpp, isC, isGo, isRuby, isSwift, isKotlin: (bool, get) - Checks for specific programming language file MIME types.
+  Operational Notes:
+    Dependencies: Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUContactMimeChecksExtensions: (Extension on `String?`)
+    Define: Checks if a string (file path/URL) is a contact file. Uses MIME type.
+    Methods:
+        isContact: (bool, get) check for contact files.
+    Operational Notes:
+        Dependencies: Relies on `DHUMimeChecksExtensions.mimeType`.
+
+DHUFontMimeChecksExtensions: (Extension on String?)
+  Define: Provides extension methods to check if a string represents font files.
+    Methods:
+        isFont: (bool, get) Checks if MIME type contains 'font' or is a known font type.
+        isTTF: (bool, get) Checks for TrueType Font files.
+        isOTF: (bool, get) Checks for OpenType Font files.
+        isWOFF: (bool, get) Checks for Web Open Font Format files.
+        isWOFF2: (bool, get) Checks for Web Open Font Format 2 files.
+        isEOT: (bool, get) Checks for Embedded OpenType files.
+  Operational Notes:
+    Dependencies: Relies on `DHUMimeChecksExtensions.mimeType`.

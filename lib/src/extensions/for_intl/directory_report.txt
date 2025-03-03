@@ -1,0 +1,1070 @@
+# Directory Analysis Report
+
+Generated: 2025-02-27 11:49:53
+Source: /Users/omarhanafy/Development/MyProjects/dart_helper_utils/lib/src/extensions/for_intl
+Processing time: 0.00 seconds
+
+## Directory Structure
+
+```
+└── for_intl
+    ├── bidi.dart
+    ├── date_format.dart
+    ├── for_intl.dart
+    ├── intl.dart
+    └── number_format.dart
+```
+
+## File Contents
+
+### bidi.dart
+- Language: dart
+```dart
+import 'package:intl/intl.dart';
+
+/// Provides extensions for [TextDirection] to support bidirectional text formatting.
+extension DHUBidiTDExtensions on TextDirection? {
+  /// Creates a BidiFormatter object based on the directionality.
+  ///
+  /// If [alwaysSpan] is true, a `span` tag is always used, ensuring consistent DOM structure.
+  BidiFormatter toBidiFormatter([bool alwaysSpan = false]) =>
+      switch (this?.value ?? 'UNKNOWN') {
+        'LTR' => BidiFormatter.LTR(alwaysSpan),
+        'RTL' => BidiFormatter.RTL(alwaysSpan),
+        _ => BidiFormatter.UNKNOWN(alwaysSpan),
+      };
+}
+
+/// Provides extensions for [String] to support bidirectional text handling and manipulation.
+extension DHUBidiStringExtensions on String {
+  /// Strips HTML tags from the string if needed, preserving bidirectional text direction.
+  String stripHtmlIfNeeded() => Bidi.stripHtmlIfNeeded(this);
+
+  /// Checks if the string starts with left-to-right (LTR) text, optionally considering HTML markup.
+  bool startsWithLtr([bool isHtml = false]) => Bidi.startsWithLtr(this, isHtml);
+
+  /// Checks if the string starts with right-to-left (RTL) text, optionally considering HTML markup.
+  bool startsWithRtl([bool isHtml = false]) => Bidi.startsWithRtl(this, isHtml);
+
+  /// Checks if the string ends with left-to-right (LTR) text, optionally considering HTML markup.
+  bool endsWithLtr([bool isHtml = false]) => Bidi.endsWithLtr(this, isHtml);
+
+  /// Checks if the string ends with right-to-left (RTL) text, optionally considering HTML markup.
+  bool endsWithRtl([bool isHtml = false]) => Bidi.endsWithRtl(this, isHtml);
+
+  /// Checks if the string contains any left-to-right (LTR) characters, optionally considering HTML markup.
+  bool hasAnyLtr([bool isHtml = false]) => Bidi.hasAnyLtr(this, isHtml);
+
+  /// Checks if the string contains any right-to-left (RTL) characters, optionally considering HTML markup.
+  bool hasAnyRtl([bool isHtml = false]) => Bidi.hasAnyRtl(this, isHtml);
+
+  /// Checks if the string represents a right-to-left (RTL) language text.
+  bool isRtlLanguage([String? languageString]) => Bidi.isRtlLanguage(this);
+
+  /// Enforces right-to-left (RTL) directionality in HTML markup.
+  String enforceRtlInHtml() => Bidi.enforceRtlInHtml(this);
+
+  /// Enforces right-to-left (RTL) directionality in plain text.
+  String enforceRtlIn() => Bidi.enforceRtlInText(this);
+
+  /// Enforces left-to-right (LTR) directionality in HTML markup.
+  String enforceLtrInHtml() => Bidi.enforceLtrInHtml(this);
+
+  /// Enforces left-to-right (LTR) directionality in plain text.
+  String enforceLtr() => Bidi.enforceLtrInText(this);
+
+  /// Guards brackets in HTML markup to maintain bidirectional text support.
+  String guardBracketInHtml([bool? isRtlContext]) =>
+      Bidi.guardBracketInHtml(this, isRtlContext);
+
+  /// Guards brackets in plain text to maintain bidirectional text support.
+  String guardBracket([bool? isRtlContext]) =>
+      Bidi.guardBracketInText(this, isRtlContext);
+
+  /// Guesses the text directionality based on its content, optionally considering HTML markup.
+  TextDirection guessDirection({bool isHtml = false}) =>
+      Bidi.estimateDirectionOfText(this, isHtml: isHtml);
+
+  /// Detects the predominant text directionality in the string, optionally considering HTML markup.
+  bool detectRtlDirectionality({bool isHtml = false}) =>
+      Bidi.detectRtlDirectionality(this, isHtml: isHtml);
+
+  /// Wraps the text with a `span` tag and sets the direction attribute (dir) based on the provided or estimated direction.
+  ///
+  /// If [textDirection] is not provided, it estimates the text direction.
+  ///
+  /// If [isHtml] is false, the text is HTML-escaped.
+  ///
+  /// If [resetDir] is true and the overall directionality or the exit directionality of the text is opposite to the context directionality,
+  /// a trailing unicode BiDi mark matching the context directionality is appended (LRM or RLM).
+  String wrapWithSpan({
+    TextDirection textDirection = textDirectionUNKNOWN,
+    bool isHtml = false,
+    bool resetDir = true,
+  }) {
+    return textDirection.toBidiFormatter().wrapWithSpan(
+          this,
+          isHtml: isHtml,
+          resetDir: resetDir,
+          direction: textDirection,
+        );
+  }
+
+  /// Wraps the text with unicode BiDi formatting characters based on the provided or estimated direction.
+  ///
+  /// If [textDirection] is not provided, it estimates the text direction.
+  ///
+  /// If [isHtml] is false, the text is HTML-escaped.
+  ///
+  /// If [resetDir] is true and the overall directionality or the exit directionality of the text is opposite to the context directionality,
+  /// a trailing unicode BiDi mark matching the context directionality is appended (LRM or RLM).
+  String wrapWithUnicode({
+    TextDirection textDirection = textDirectionUNKNOWN,
+    bool isHtml = false,
+    bool resetDir = true,
+  }) =>
+      textDirection.toBidiFormatter().wrapWithUnicode(
+            this,
+            isHtml: isHtml,
+            resetDir: resetDir,
+            direction: textDirection,
+          );
+}
+
+const textDirectionLTR = TextDirection.LTR;
+const textDirectionRTL = TextDirection.RTL;
+const textDirectionUNKNOWN = TextDirection.UNKNOWN;
+```
+
+### date_format.dart
+- Language: dart
+```dart
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+/// extension DHUNDateFormatExtension on DateTime?
+extension DHUNDateFormatExtension on DateTime? {
+  /// Formats the DateTime object using the provided pattern and optional locale.
+  /// respects null dates.
+  String? tryFormat(String format) =>
+      isNull ? null : format.dateFormat().format(this!);
+
+  /// Formats the DateTime object in UTC using the provided pattern and optional locale.
+  String? tryDateFormatUtc(String pattern, [String? locale]) =>
+      isNull ? null : DateFormat(pattern, locale).format(this!.toUtc());
+}
+
+/// extension DHUDateFormatExtension on DateTime
+extension DHUDateFormatExtension on DateTime {
+  /// Formats the DateTime object using the provided pattern and optional locale.
+  String format(String pattern, [String? locale]) =>
+      DateFormat(pattern, locale).format(this);
+
+  /// Formats the DateTime object in UTC using the provided pattern and optional locale.
+  String dateFormatUtc(String pattern, [String? locale]) =>
+      DateFormat(pattern, locale).format(toUtc());
+
+  /// Formats the DateTime object using the yMMMMd format and optional locale.
+  String formatAsyMMMMd([String? locale]) =>
+      DateFormat.yMMMMd(locale).format(this);
+
+  /// Formats the DateTime object using the EEEE format and optional locale.
+  String formatAsEEEE([String? locale]) => DateFormat.EEEE(locale).format(this);
+
+  /// Formats the DateTime object using the EEEEE format and optional locale.
+  String formatAsEEEEE([String? locale]) =>
+      DateFormat.EEEEE(locale).format(this);
+
+  /// Formats the DateTime object using the LLL format and optional locale.
+  String formatAsLLL([String? locale]) => DateFormat.LLL(locale).format(this);
+
+  /// Formats the DateTime object using the LLLL format and optional locale.
+  String formatAsLLLL([String? locale]) => DateFormat.LLLL(locale).format(this);
+
+  /// Formats the DateTime object using the M format and optional locale.
+  String formatAsM([String? locale]) => DateFormat.M(locale).format(this);
+
+  /// Formats the DateTime object using the Md format and optional locale.
+  String formatAsMd([String? locale]) => DateFormat.Md(locale).format(this);
+
+  /// Formats the DateTime object using the MEd format and optional locale.
+  String formatAsMEd([String? locale]) => DateFormat.MEd(locale).format(this);
+
+  /// Formats the DateTime object using the MMM format and optional locale.
+  String formatAsMMM([String? locale]) => DateFormat.MMM(locale).format(this);
+
+  /// Formats the DateTime object using the MMMd format and optional locale.
+  String formatAsMMMd([String? locale]) => DateFormat.MMMd(locale).format(this);
+
+  /// Formats the DateTime object using the MMMEd format and optional locale.
+  String formatAsMMMEd([String? locale]) =>
+      DateFormat.MMMEd(locale).format(this);
+
+  /// Formats the DateTime object using the MMMM format and optional locale.
+  String formatAsMMMM([String? locale]) => DateFormat.MMMM(locale).format(this);
+
+  /// Formats the DateTime object using the MMMMd format and optional locale.
+  String formatAsMMMMd([String? locale]) =>
+      DateFormat.MMMMd(locale).format(this);
+
+  /// Formats the DateTime object using the MMMMEEEEd format and optional locale.
+  String formatAsMMMMEEEEd([String? locale]) =>
+      DateFormat.MMMMEEEEd(locale).format(this);
+
+  /// Formats the DateTime object using the QQQ format and optional locale.
+  String formatAsQQQ([String? locale]) => DateFormat.QQQ(locale).format(this);
+
+  /// Formats the DateTime object using the QQQQ format and optional locale.
+  String formatAsQQQQ([String? locale]) => DateFormat.QQQQ(locale).format(this);
+
+  /// Formats the DateTime object using the yM format and optional locale.
+  String formatAsyM([String? locale]) => DateFormat.yM(locale).format(this);
+
+  /// Formats the DateTime object using the yMd format and optional locale.
+  String formatAsyMd([String? locale]) => DateFormat.yMd(locale).format(this);
+
+  /// Formats the DateTime object using the yMEd format and optional locale.
+  String formatAsyMEd([String? locale]) => DateFormat.yMEd(locale).format(this);
+
+  /// Formats the DateTime object using the yMMM format and optional locale.
+  String formatAsyMMM([String? locale]) => DateFormat.yMMM(locale).format(this);
+
+  /// Formats the DateTime object using the yMMMd format and optional locale.
+  String formatAsyMMMd([String? locale]) =>
+      DateFormat.yMMMd(locale).format(this);
+
+  /// Formats the DateTime object using the yMMMEd format and optional locale.
+  String formatAsyMMMEd([String? locale]) =>
+      DateFormat.yMMMEd(locale).format(this);
+
+  /// Formats the DateTime object using the yMMMM format and optional locale.
+  String formatAsyMMMM([String? locale]) =>
+      DateFormat.yMMMM(locale).format(this);
+
+  /// Formats the DateTime object using the yMMMMEEEEd format and optional locale.
+  String formatAsyMMMMEEEEd([String? locale]) =>
+      DateFormat.yMMMMEEEEd(locale).format(this);
+
+  /// Formats the DateTime object using the yQQQ format and optional locale.
+  String formatASyQQQ([String? locale]) => DateFormat.yQQQ(locale).format(this);
+
+  /// Formats the DateTime object using the yQQQQ format and optional locale.
+  String formatAsyQQQQ([String? locale]) =>
+      DateFormat.yQQQQ(locale).format(this);
+
+  /// Formats the DateTime object using the H format and optional locale.
+  String formatAsH([String? locale]) => DateFormat.H(locale).format(this);
+
+  /// Formats the DateTime object using the Hm format and optional locale.
+  String formatAsHm([String? locale]) => DateFormat.Hm(locale).format(this);
+
+  /// Formats the DateTime object using the Hms format and optional locale.
+  String formatAsHms([String? locale]) => DateFormat.Hms(locale).format(this);
+}
+
+/// extension DHUDateFormatStringExtension on String
+extension DHUDateFormatStringExtension on String {
+  /// Parses a date string in either of the formats RFC-1123, RFC-850, or ANSI C's asctime().
+  ///
+  /// - **RFC-1123**: Commonly used in HTTP headers. Example: `Thu, 30 Aug 2024 12:00:00 GMT`.
+  /// - **RFC-850**: An older format, less commonly used today. Example: `Thursday, 30-Aug-24 12:00:00 GMT`.
+  /// - **ANSI C's `asctime()`**: A format used by the C programming language's standard library. Example: `Thu Aug 30 12:00:00 2024`.
+  ///
+  ///  Usage:
+  /// ```dart
+  /// String rfc1123Date = "Thu, 30 Aug 2024 12:00:00 GMT";
+  /// DateTime? parsedDate = rfc1123Date.parseHttpDate();
+  /// print(parsedDate?.toIso8601String()); // Outputs: 2024-08-30T12:00:00.000Z
+  ///
+  /// String asctimeDate = "Thu Aug 30 12:00:00 2024";
+  /// DateTime? parsedDate2 = asctimeDate.parseHttpDate();
+  /// print(parsedDate2?.toIso8601String()); // Outputs: 2024-08-30T12:00:00.000Z or null if parsing fails
+  /// ```
+  ///
+  /// This method tries to parse the date string using the appropriate format. If parsing fails,
+  /// it returns `null` instead of throwing an exception.
+  DateTime? parseHttpDate([bool utc = false]) {
+    final formats = [
+      DateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", 'en_US'), // RFC-1123
+      DateFormat("EEEE, dd-MMM-yy HH:mm:ss 'GMT'", 'en_US'), // RFC-850
+      DateFormat('EEE MMM d HH:mm:ss yyyy', 'en_US'), // ANSI C's asctime()
+    ];
+
+    for (final format in formats) {
+      try {
+        return utc ? format.parseUtc(this) : format.parse(this);
+      } catch (_) {
+        // Continue to the next format if parsing fails.
+      }
+    }
+
+    return null;
+  }
+
+  /// Parses a date-time string into a `DateTime` object, automatically trying
+  /// various formats to handle diverse inputs.
+  ///
+  /// This function intelligently handles a wide range of date and time formats,
+  /// from ISO 8601 to more casual expressions. It prioritizes formats that are
+  /// less ambiguous (e.g., 'yyyy-MM-dd') over those that might vary by locale or
+  /// interpretation (e.g., 'MM/dd/yyyy').
+  ///
+  /// **Parameters:**
+  ///
+  /// - `locale` (optional): A locale string (e.g., 'en_US') to customize the
+  ///    parsing behavior for region-specific formats. If `null`, uses the default
+  ///    locale or the current locale if `useCurrentLocale` is true.
+  /// - `useCurrentLocale` (optional, default: `false`): If `true` and `locale` is
+  ///    null, the current system locale will be used.
+  /// - `utc` (optional, default: `false`): If `true`, the returned `DateTime`
+  ///    object will be in UTC timezone. Otherwise, it will be in the local timezone.
+  ///
+  /// **Returns:**
+  ///
+  /// - A `DateTime` object representing the parsed date and time.
+  ///
+  /// **Exceptions:**
+  ///
+  /// - Throws a `FormatException` if the input string cannot be parsed successfully
+  ///   using any of the supported formats.
+  ///
+  /// **Example Usage:**
+  ///
+  /// ```dart
+  /// // Simple ISO 8601
+  /// DateTime date1 = "2024-06-10T10:30:00Z".toDateAutoFormat();
+  /// print(date1); // 2024-06-10 10:30:00.000Z
+  ///
+  /// // Compact file name format
+  /// DateTime date2 = "20240610_1545".toDateAutoFormat();
+  /// print(date2); // 2024-06-10 15:45:00.000
+  ///
+  /// // Casual format with locale
+  /// DateTime date3 = "Tuesday, June 11th, 2024 at 2:15 PM".toDateAutoFormat(locale: 'en_US');
+  /// print(date3); // 2024-06-11 14:15:00.000
+  /// ```
+  DateTime toDateAutoFormat({
+    String? locale,
+    bool useCurrentLocale = false,
+    bool utc = false,
+  }) {
+    // Determine the locale to use
+    final effectiveLocale =
+        locale ?? (useCurrentLocale ? Intl.getCurrentLocale() : null);
+
+    // 2. Common Format Parsing (without explicit format)
+    try {
+      final parsedDate = DateTime.parse(
+        this,
+      ); // ISO 8601 (with or without time, 'Z' or offset)
+      return utc ? parsedDate.toUtc() : parsedDate;
+    } catch (_) {}
+
+    final httpDate = parseHttpDate(utc);
+    if (httpDate != null) return httpDate;
+
+    final formats = {
+      // ISO 8601-like (most standard, unambiguous)
+      'yyyy-MM-ddTHH:mm:ss.SSSZ',
+      'yyyy-MM-ddTHH:mm:ssZ',
+      'yyyy-MM-dd HH:mm:ss',
+      "EEEE, MMMM d'th', yyyy 'at' h:mm a",
+      "EEEE, MMMM d'th', yyyy 'at' h:mm",
+      "EEEE, MMMM d'th', yyyy",
+
+      // Unambiguous Month and Day Formats
+      'MMMM d, yyyy HH:mm:ss',
+      'd MMMM yyyy HH:mm:ss',
+      'MMMM d, yyyy',
+      'd MMMM yyyy',
+      'DAY, DD MON YYYY hh:mm:ss GMT',
+
+      // Compact (often used in file names)
+      'yyyyMMddHHmmss',
+      'yyyyMMdd',
+
+      // Other Unambiguous Formats
+      'EEEE, MMMM d, yyyy',
+      'EEEE d MMMM yyyy',
+      'MMMM d, yyyy h:mm a',
+      'dd/MM/yyyy HH:mm Z',
+
+      // Potentially Ambiguous Formats (place these lower in the list)
+      'ddMMyyyy HH:mm:ss',
+      'ddMMyyyy',
+      'MM/dd/yyyy HH:mm:ss',
+      'dd/MM/yyyy HH:mm:ss',
+      'MM/dd/yyyy',
+      'dd/MM/yyyy',
+
+      // Time Only
+      'HH:mm:ss',
+      'hh:mm:ss a',
+      'HH:mm',
+      'hh:mm a',
+
+      // Individual Components (least specific)
+      'yyyy',
+      'MM',
+      'MMM',
+      'MMMM',
+      'dd',
+      'EEEE',
+      'EEE',
+    };
+
+    for (final format in formats) {
+      try {
+        final parsedDate =
+            DateFormat(format, effectiveLocale).parseStrict(this);
+        return utc ? parsedDate.toUtc() : parsedDate;
+      } catch (_) {}
+    }
+
+    throw FormatException('Invalid or unsupported date format', this);
+  }
+
+  /// Parses the string to [DateTime] using the provided format, locale, and UTC option.
+  DateTime toDateFormatted([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      DateFormat(format, locale).parse(this, utc);
+
+  /// Parses the string to [DateTime] using the provided format, locale, and UTC option, with loose parsing.
+  DateTime toDateFormattedLoose([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      DateFormat(format, locale).parseLoose(this, utc);
+
+  /// Parses the string to [DateTime] using the provided format, locale, and UTC option, with strict parsing.
+  DateTime toDateFormattedStrict([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      DateFormat(format, locale).parseStrict(this, utc);
+
+  /// Parses the string to [DateTime] in UTC using the provided format and locale.
+  DateTime toDateFormattedUtc([
+    String? format,
+    String? locale,
+  ]) =>
+      DateFormat(format, locale).parseUtc(this);
+}
+
+/// extension DHUDateFormatNStringExtension on String?
+extension DHUDateFormatNStringExtension on String? {
+  /// Creates a DateFormat object using the string as the pattern and optional locale.
+  DateFormat dateFormat([String? locale]) => DateFormat(this, locale);
+
+  /// uses the original `toDateFormatted] but returns null on any errors.
+  DateTime? tryToDateAutoFormat({
+    String? locale,
+    bool useCurrentLocale = false,
+    bool utc = false,
+  }) {
+    if (isBlank) return null;
+    try {
+      this!.toDateAutoFormat(
+        locale: locale,
+        useCurrentLocale: useCurrentLocale,
+        utc: utc,
+      );
+    } catch (_) {}
+    return null;
+  }
+
+  /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option.
+  DateTime? tryToDateFormatted([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      isBlank ? null : DateFormat(format, locale).tryParse(this!, utc);
+
+  /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option, with loose parsing.
+  DateTime? tryToDateFormattedLoose([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      isBlank ? null : DateFormat(format, locale).tryParseLoose(this!, utc);
+
+  /// Attempts to parse the nullable string to [DateTime] using the provided format, locale, and UTC option, with strict parsing.
+  DateTime? tryToDateFormattedStrict([
+    String? format,
+    String? locale,
+    bool utc = false,
+  ]) =>
+      isBlank ? null : DateFormat(format, locale).tryParseStrict(this!, utc);
+
+  /// Attempts to parse the nullable string to [DateTime] in UTC using the provided format and locale.
+  DateTime? tryToDateFormattedUtc([
+    String? format,
+    String? locale,
+  ]) =>
+      isBlank ? null : DateFormat(format, locale).tryParseUtc(this!);
+
+  /// Checks if the locale exists in DateFormat.
+  bool get localeExists => DateFormat.localeExists(this);
+}
+```
+
+### for_intl.dart
+- Language: dart
+```dart
+export 'bidi.dart';
+export 'date_format.dart';
+export 'for_intl.dart';
+export 'intl.dart';
+export 'number_format.dart';
+```
+
+### intl.dart
+- Language: dart
+```dart
+import 'package:intl/intl.dart';
+
+/// Provides extensions for [Map<Object, T>] to support internationalization (i18n) message formatting.
+/// IntlMapExtension
+extension IntlMapExtension<T> on Map<Object, T> {
+  /// Internal: Implements the logic for `select` - use [intlSelect] for
+  /// normal messages.
+  ///
+  /// [choice]: The choice used to select the appropriate message.
+  ///
+  /// Returns the selected value from the map based on the provided [choice].
+  ///
+  /// This method is typically used internally for implementing `select` logic.
+  T intlSelectLogic(Object choice) => Intl.selectLogic(choice, this);
+}
+
+/// Provides extensions for [Map<Object, String>] to support internationalization (i18n) message formatting.
+/// IntlMapStringExtension
+extension IntlMapStringExtension on Map<Object, String> {
+  /// Format a message differently depending on [choice].
+  ///
+  /// We look up the value
+  /// of [choice] in [cases] and return the result, or an empty string if
+  /// it is not found. Normally used as part
+  /// of an Intl.message message that is to be translated.
+  ///
+  /// It is possible to use a Dart enum as the choice and as the
+  /// key in cases, but note that we will process this by truncating
+  /// `toString()` of the enum and using just the name part. We will
+  /// do this for any class or strings that are passed, since we
+  /// can't actually identify if something is an enum or not.
+  ///
+  /// [choice]: The choice used to select the appropriate message.
+  ///
+  /// [desc]: A description of the message for translators.
+  ///
+  /// [examples]: Map of example values for each possible choice to aid translators.
+  ///
+  /// [locale]: The locale in which the message should be formatted.
+  ///
+  /// [name]: An optional name to identify this message.
+  ///
+  /// [args]: Optional list of arguments to be inserted into the message.
+  ///
+  /// [meaning]: An optional meaning to disambiguate different usages of the same message.
+  ///
+  /// [skip]: Whether the message should be skipped for translation.
+  ///
+  /// Returns the formatted message corresponding to the provided [choice], or an empty string if not found.
+  ///
+  /// Example:
+  /// ```dart
+  /// final messages = {
+  ///   'apples': 'You have $apples apples',
+  ///   'oranges': 'You have $oranges oranges',
+  ///   'bananas': 'You have $bananas bananas',
+  /// };
+  ///
+  /// final fruitCount = {'apples': 5, 'oranges': 2, 'bananas': 3};
+  ///
+  /// print(messages.intlSelect('apples', args: [fruitCount['apples']])); // Output: "You have 5 apples"
+  /// print(messages.intlSelect('pears')); // Output: ""
+  /// ```
+  String intlSelect(
+    Object choice, {
+    String? desc,
+    Map<String, Object>? examples,
+    String? locale,
+    String? name,
+    List<Object>? args,
+    String? meaning,
+    bool? skip,
+  }) {
+    return Intl.select(
+      choice,
+      this,
+      desc: desc,
+      examples: examples,
+      locale: locale,
+      name: name,
+      args: args,
+      meaning: meaning,
+      skip: skip,
+    );
+  }
+}
+
+/// on
+extension DHUIntlNumExtensions on num {
+  /// Returns a localized string based on the plural category of this number.
+  ///
+  /// This uses the `Intl.plural` function to determine the appropriate
+  /// plural form for the current locale and number.
+  ///
+  /// Arguments:
+  ///   - `other`: The string to return for plural forms other than zero, one, two, few, or many.
+  ///   - `zero`, `one`, `two`, `few`, `many`: Strings for specific plural forms (optional).
+  ///   - `desc`, `examples`, `locale`, `name`, `args`, `meaning`, `skip`:
+  ///     Optional parameters for fine-tuning the pluralization logic
+  ///     (see `Intl.plural` documentation).
+  String pluralize({
+    required String other,
+    String? zero,
+    String? one,
+    String? two,
+    String? few,
+    String? many,
+    String? desc,
+    Map<String, Object>? examples,
+    String? locale,
+    int? precision,
+    String? name,
+    List<Object>? args,
+    String? meaning,
+    bool? skip,
+  }) =>
+      Intl.plural(
+        this,
+        other: other,
+        zero: zero,
+        one: one,
+        two: two,
+        few: few,
+        many: many,
+        desc: desc,
+        examples: examples,
+        locale: locale,
+        precision: precision,
+        name: name,
+        args: args,
+        meaning: meaning,
+        skip: skip,
+      );
+
+  /// Determines the plural category of this number based on the current locale.
+  ///
+  /// This uses the `Intl.pluralLogic` function to categorize the number into
+  /// one of the following: 'zero', 'one', 'two', 'few', 'many', or 'other'.
+  ///
+  /// Arguments:
+  ///   - `other`: A default value to return if none of the specific plural forms match.
+  ///   - `zero`, `one`, `two`, `few`, `many`: Values to return for specific plural forms (optional).
+  ///   - `locale`, `precision`, `meaning`:
+  ///     Optional parameters to customize the pluralization rules
+  ///     (see `Intl.pluralLogic` documentation).
+  ///   - `useExplicitNumberCases`:  If `true`, number cases (e.g., "1") are passed to `Intl.pluralLogic`.
+  ///     If `false`, only the number's value is passed.
+  T getPluralCategory<T>({
+    required T other,
+    T? zero,
+    T? one,
+    T? two,
+    T? few,
+    T? many,
+    String? locale,
+    int? precision,
+    String? meaning,
+    bool useExplicitNumberCases = true,
+  }) =>
+      Intl.pluralLogic(
+        this,
+        zero: zero,
+        one: one,
+        two: two,
+        few: few,
+        many: many,
+        other: other,
+        locale: locale,
+        precision: precision,
+        meaning: meaning,
+        useExplicitNumberCases: useExplicitNumberCases,
+      );
+}
+
+/// DHUIntlNumExtensions
+extension DHUIntlExtensions on String {
+  /// Sets this string as the default locale for subsequent `Intl` operations.
+  ///
+  /// This overrides the locale used for new `Intl` instances where the
+  /// locale isn't explicitly specified.
+  ///
+  /// Note: Using `Intl.withLocale` is often preferable for setting locales
+  /// temporarily within specific blocks of code.
+  void setAsDefaultLocale() => Intl.defaultLocale = this;
+
+  /// Sets this string as the system locale, typically obtained from
+  /// browser settings or the operating system.
+  ///
+  /// This should generally be called after importing `intl_browser.dart` or
+  /// `intl_standalone.dart` and using `findSystemLocale()` to determine the
+  /// actual system locale value.
+  void setAsSystemLocale() => Intl.systemLocale = this;
+
+  /// Translates this string using `Intl.message`, returning the localized version.
+  ///
+  /// Arguments:
+  ///   - `desc`: A description of the message for translators (optional).
+  ///   - `examples`: Examples of how the message is used (optional).
+  ///   - `locale`: The specific locale to use for translation (optional).
+  ///   - `name`: A name for the message (optional).
+  ///   - `args`: Arguments to substitute into the message (optional).
+  ///   - `meaning`: An additional meaning for disambiguation (optional).
+  ///   - `skip`: If `true`, the message is not extracted for translation (optional).
+  String translate({
+    String? desc = '',
+    Map<String, Object>? examples,
+    String? locale,
+    String? name,
+    List<Object>? args,
+    String? meaning,
+    bool? skip,
+  }) =>
+      Intl.message(
+        this,
+        desc: desc,
+        examples: examples,
+        locale: locale,
+        name: name,
+        args: args,
+        meaning: meaning,
+        skip: skip,
+      );
+
+  /// Selects a localized string based on the gender associated with this string,
+  /// using `Intl.gender`.
+  ///
+  /// Arguments:
+  ///   - `other`: The string to return for genders other than "female" or "male".
+  ///   - `female`, `male`: Strings for specific genders (optional).
+  ///   - `desc`, `examples`, `locale`, `name`, `args`, `meaning`, `skip`:
+  ///     Optional parameters for customizing the gender-based selection
+  ///     (see `Intl.gender` documentation).
+  String genderSelect({
+    required String other,
+    String? female,
+    String? male,
+    String? desc,
+    Map<String, Object>? examples,
+    String? locale,
+    String? name,
+    List<Object>? args,
+    String? meaning,
+    bool? skip,
+  }) =>
+      Intl.gender(
+        this,
+        female: female,
+        male: male,
+        other: other,
+        desc: desc,
+        examples: examples,
+        locale: locale,
+        name: name,
+        args: args,
+        meaning: meaning,
+        skip: skip,
+      );
+
+  /// Determines the gender category of this string (e.g., 'female', 'male', or 'other')
+  /// based on the current locale, using `Intl.genderLogic`.
+  ///
+  /// Arguments:
+  ///   - `other`: A default value to return if none of the specific gender values match.
+  ///   - `female`, `male`: Values to return for specific genders (optional).
+  ///   - `locale`: The specific locale to use for gender determination (optional).
+  T getGenderCategory<T>({
+    required T other,
+    T? female,
+    T? male,
+    String? locale,
+  }) =>
+      Intl.genderLogic(
+        this,
+        female: female,
+        male: male,
+        other: other,
+        locale: locale,
+      );
+}
+```
+
+### number_format.dart
+- Language: dart
+```dart
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+extension DHUNumberFormatNullableStringExtensions on String? {
+  /// Creates a [NumberFormat] object using the string as the pattern, along with the given [locale].
+  NumberFormat numberFormat({String? locale}) => NumberFormat(this, locale);
+
+  /// Tries to parse the string to a number with the given [newPattern] and [locale].
+  /// Returns null if the string is null or empty.
+  num? tryToNumFormatted([String? newPattern, String? locale]) =>
+      isBlank ? null : NumberFormat(newPattern, locale).tryParse(this!);
+
+  /// Tries to parse the string to an integer with the given [newPattern] and [locale].
+  /// Returns null if the string is null or empty.
+  int? tryToIntFormatted([String? newPattern, String? locale]) =>
+      tryToNumFormatted(newPattern, locale)?.toInt();
+
+  /// Tries to parse the string to a double with the given [newPattern] and [locale].
+  /// Returns null if the string is null or empty.
+  double? tryToDoubleFormatted([String? newPattern, String? locale]) =>
+      tryToNumFormatted(newPattern, locale)?.toDouble();
+}
+
+extension DHUNumberFormatStringExtensions on String {
+  /// Parses the string to a number with the given [newPattern] and [locale].
+  num toNumFormatted([String? newPattern, String? locale]) =>
+      NumberFormat(newPattern, locale).parse(this);
+
+  /// Parses the string to an integer with the given [newPattern] and [locale].
+  int toIntFormatted([String? newPattern, String? locale]) =>
+      toNumFormatted(newPattern, locale).toInt();
+
+  /// Parses the string to a double with the given [newPattern] and [locale].
+  double toDoubleFormatted([String? newPattern, String? locale]) =>
+      toNumFormatted(newPattern, locale).toDouble();
+
+  /// Creates a [NumberFormat] object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
+  NumberFormat symbolCurrencyFormat({
+    String? locale,
+    String? name,
+    int? decimalDigits,
+    String? customPattern,
+  }) {
+    return NumberFormat.currency(
+      symbol: this,
+      name: name,
+      customPattern: customPattern,
+      locale: locale,
+      decimalDigits: decimalDigits,
+    );
+  }
+
+  ///  Creates a [NumberFormat] object as simple currency using the string as the currency name, along with the given locale.
+  NumberFormat simpleCurrencyFormat({String? locale, int? decimalDigits}) {
+    return NumberFormat.simpleCurrency(
+      name: this,
+      locale: locale,
+      decimalDigits: decimalDigits,
+    );
+  }
+
+  /// Creates a [NumberFormat] object as compact simple currency using the string as the currency name, along with the given locale.
+  NumberFormat compactCurrencyFormat({String? locale, int? decimalDigits}) {
+    return NumberFormat.compactSimpleCurrency(
+      name: this,
+      locale: locale,
+      decimalDigits: decimalDigits,
+    );
+  }
+}
+
+extension DHUNumberFormatExtensions on num {
+  /// Formats the number as currency with the given [locale], [symbol], and [decimalDigits].
+  String formatAsCurrency({
+    String? locale,
+    String symbol = r'$',
+    int decimalDigits = 2,
+    String? customPattern,
+  }) {
+    return NumberFormat.currency(
+      locale: locale,
+      symbol: symbol,
+      decimalDigits: decimalDigits,
+      customPattern: customPattern,
+    ).format(this);
+  }
+
+  /// Formats the number as simple currency with the given [locale] and [name].
+  String formatAsSimpleCurrency({
+    String? locale,
+    String? name,
+    int? decimalDigits,
+  }) {
+    return NumberFormat.simpleCurrency(
+      locale: locale,
+      name: name,
+      decimalDigits: decimalDigits,
+    ).format(this);
+  }
+
+  /// Formats the number in a compact form with the given [locale].
+  String formatAsCompact({String? locale}) {
+    return NumberFormat.compact(
+      locale: locale,
+    ).format(this);
+  }
+
+  /// Formats the number in a long compact form with the given [locale].
+  String formatAsCompactLong({String? locale, bool explicitSign = false}) {
+    return NumberFormat.compactLong(
+      locale: locale,
+      explicitSign: explicitSign,
+    ).format(this);
+  }
+
+  /// Formats the number as compact simple currency with the given [locale] and [name].
+  String formatAsCompactCurrency({
+    String? locale,
+    String? name,
+    int? decimalDigits,
+  }) {
+    return NumberFormat.compactSimpleCurrency(
+      locale: locale,
+      name: name,
+      decimalDigits: decimalDigits,
+    ).format(this);
+  }
+
+  /// Formats the number as a decimal with the given [locale] and [decimalDigits].
+  String formatAsDecimal({String? locale}) {
+    return NumberFormat.decimalPattern(locale).format(this);
+  }
+
+  /// Formats the number as a percentage with the given [locale].
+  String formatAsPercentage({String? locale}) {
+    return NumberFormat.percentPattern(locale).format(this);
+  }
+
+  /// Formats the number as a decimal percentage with the given [locale] and [decimalDigits].
+  String formatAsDecimalPercent({String? locale, int? decimalDigits}) {
+    return NumberFormat.decimalPercentPattern(
+      locale: locale,
+      decimalDigits: decimalDigits,
+    ).format(this);
+  }
+
+  /// Formats the number as a scientific value with the given [locale].
+  String formatAsScientific({String? locale}) {
+    return NumberFormat.scientificPattern(locale).format(this);
+  }
+
+  /// Formats the number using a custom [pattern] with the given [locale].
+  String formatWithCustomPattern(String pattern, {String? locale}) {
+    return NumberFormat(pattern, locale).format(this);
+  }
+
+  /// Formats this number into a readable string with customizable options.
+  ///
+  /// - [locale] specifies the locale to use for formatting (e.g., `'en_US'`, `'de_DE'`).
+  ///   If not provided, the default locale of the system will be used.
+  ///
+  /// - [decimalDigits] determines the maximum number of decimal places to display.
+  ///   Must be a non-negative integer. Defaults to `2`.
+  ///
+  /// - [groupingSeparator] sets the character used for grouping digits (e.g., `','`, `'.'`, `' '`).
+  ///   If not provided, the locale's default grouping separator will be used.
+  ///
+  /// - [decimalSeparator] sets the character used for the decimal point (e.g., `'.'`, `','`).
+  ///   If not provided, the locale's default decimal separator will be used.
+  ///
+  /// - [trimTrailingZeros] if set to `true`, trailing zeros after the decimal point
+  ///   will be removed. Defaults to `false`.
+  ///
+  /// **Example usage:**
+  /// ```dart
+  /// double number = 1000000.50;
+  ///
+  /// // Default formatting
+  /// String formattedNumber = number.formatAsReadableNumber();
+  /// // Output: '1,000,000.50'
+  ///
+  /// // Indian-style formatting with no decimals and trimmed zeros
+  /// formattedNumber = number.formatAsReadableNumber(
+  ///   locale: 'en_IN',
+  ///   decimalDigits: 0,
+  ///   trimTrailingZeros: true,
+  /// );
+  /// // Output: '10,00,000'
+  ///
+  /// // European-style formatting
+  /// formattedNumber = number.formatAsReadableNumber(
+  ///   locale: 'de_DE',
+  ///   groupingSeparator: '.',
+  ///   decimalSeparator: ',',
+  /// );
+  /// // Output: '1.000.000,50'
+  ///
+  /// // Custom separators
+  /// formattedNumber = number.formatAsReadableNumber(
+  ///   groupingSeparator: ' ',
+  ///   decimalSeparator: ',',
+  /// );
+  /// // Output: '1 000 000,50'
+  /// ```
+  String formatAsReadableNumber({
+    String? locale,
+    int decimalDigits = 2,
+    String? groupingSeparator,
+    String? decimalSeparator,
+    bool trimTrailingZeros = false,
+  }) {
+    // Validate input parameters
+    if (decimalDigits < 0) {
+      throw ArgumentError('decimalDigits must be non-negative');
+    }
+
+    // Create a NumberFormat instance with the specified locale
+    final formatter = NumberFormat.decimalPattern(locale)
+      // Set the maximum and minimum number of decimal digits
+      ..maximumFractionDigits = decimalDigits
+      ..minimumFractionDigits = trimTrailingZeros ? 0 : decimalDigits;
+
+    // Store the default separators from the locale
+    final defaultGroupingSeparator = formatter.symbols.GROUP_SEP;
+    final defaultDecimalSeparator = formatter.symbols.DECIMAL_SEP;
+
+    // Format the number
+    var formatted = formatter.format(this);
+
+    // Use a unique placeholder for the decimal separator
+    const decimalPlaceholder = '{DECIMAL_PLACEHOLDER}';
+    formatted =
+        formatted.replaceFirst(defaultDecimalSeparator, decimalPlaceholder);
+
+    // Replace grouping separator if a custom one is provided
+    if (groupingSeparator != null && groupingSeparator.isNotEmpty) {
+      formatted =
+          formatted.replaceAll(defaultGroupingSeparator, groupingSeparator);
+    }
+
+    // Replace the decimal placeholder with the custom decimal separator
+    if (decimalSeparator != null && decimalSeparator.isNotEmpty) {
+      formatted = formatted.replaceFirst(
+        decimalPlaceholder,
+        decimalSeparator,
+      );
+    } else {
+      // Replace placeholder back to default decimal separator
+      formatted = formatted.replaceFirst(
+        decimalPlaceholder,
+        defaultDecimalSeparator,
+      );
+    }
+
+    return formatted;
+  }
+}
+```
+

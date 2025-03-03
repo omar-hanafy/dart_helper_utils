@@ -1,0 +1,106 @@
+file: convert_types.dart
+dependencies: import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+ElementConverter: (typedef)
+  Define: Defines a callback function type for converting an element to type `T`.
+  Signature: `T Function(Object? element)`
+
+ConvertObject: (abstract class)
+  Define: Provides static methods for converting objects between various types.
+  Methods:
+    _convertObject<T>(...): (Private) Core conversion logic.  Handles nulls, type checks, and delegation to specific converters.
+    toString1(...): Converts an object to a String. Throws `ParsingException` on failure or null input.
+    tryToString(...): Converts an object to a String, returning null on failure or null input.
+    toNum(...): Converts an object to a `num`. Throws `ParsingException` on failure or null input.
+    tryToNum(...): Converts an object to a `num`, returning null on failure or null input.
+    toInt(...): Converts an object to an `int`. Throws `ParsingException` on failure or null input.
+    tryToInt(...): Converts an object to an `int`, returning null on failure or null input.
+    toBigInt(...): Converts an object to a `BigInt`. Throws `ParsingException` on failure or null input.  Notes: BigInt operations can be expensive.
+    tryToBigInt(...): Converts an object to a `BigInt`, returning null on failure or null input. Notes: BigInt operations can be expensive.
+    toDouble(...): Converts an object to a `double`. Throws `ParsingException` on failure or null input.
+    tryToDouble(...): Converts an object to a `double`, returning null on failure or null input.
+    toBool(...): Converts an object to a `bool`.  Returns false for null input.
+    tryToBool(...): Converts an object to a `bool`, returning null on failure or null input.
+    toDateTime(...): Converts an object to a `DateTime`. Throws `ParsingException` on failure or null input.
+    tryToDateTime(...): Converts an object to a `DateTime`, returning null on failure or null input.
+    toUri(...): Converts an object to a `Uri`. Throws `ParsingException` on failure or null input.
+    tryToUri(...): Converts an object to a `Uri`, returning null on failure or null input.
+    toMap<K, V>(...): Converts an object to a `Map<K, V>`. Throws `ParsingException` on failure or null input.
+    tryToMap<K, V>(...): Converts an object to a `Map<K, V>`, returning null on failure or null input.
+    toSet<T>(...): Converts an object to a `Set<T>`. Throws `ParsingException` on failure or null input.
+    tryToSet<T>(...): Converts an object to a `Set<T>`, returning null on failure or null input.
+    toList<T>(...): Converts an object to a `List<T>`. Throws `ParsingException` on failure or null input.
+    tryToList<T>(...): Converts an object to a `List<T>`, returning null on failure or null input.
+  Common Parameters (across methods):
+    object: (dynamic) - The object to convert.
+    mapKey: (dynamic?) - Optional key to extract values from a `Map`.
+    listIndex: (int?) - Optional index to extract elements from a `List`.
+    defaultValue: (T?) - Optional value to return on failure (for `tryTo...` methods).
+    format: (String?) - Optional format string for numeric and date/time conversions.
+    locale: (String?) -  Optional locale string for numeric and date/time conversions.
+    autoDetectFormat: (bool, default: false)- toDateTime format.
+    useCurrentLocale: (bool, default: false)- toDateTime format.
+    utc: (bool, default: false)- toDateTime format.
+    converter: (ElementConverter<T>?) - Optional custom conversion callback.
+    keyConverter:(ElementConverter<K>?) Optional custom key conversion callback for toMap and tryToMap.
+    valueConverter:(ElementConverter<V>?) Optional custom value conversion callback for toMap and tryToMap.
+    elementConverter: (ElementConverter<T>?) - Optional custom conversion callback for list, set related ones.
+
+Extension on `Iterable<E>`
+  Define: Provides methods to convert elements within an `Iterable` using `ConvertObject`.
+  Methods (all mirror `ConvertObject` methods, but operate on elements within the `Iterable`):
+   getString, getNum, getInt, getBigInt, getDouble, getBool, getDateTime, getUri, getMap, getSet, getList.
+  Common Parameters:
+   index: (int) - Index of the element to convert.
+   innerMapKey, innerIndex, defaultValue, converter:  Same as corresponding `ConvertObject` methods.
+  Operational Notes:
+    Dependencies:  `ConvertObject`.
+    Error Handling: Uses the underlying error handling of `ConvertObject` methods (either throwing exceptions or returning null).
+
+Extension on `Iterable<E>?`
+    Define: Extension on nullable `Iterable`. Methods handle null-safety when accessing elements. Includes fallback indexes.
+    Methods (tryGetString, tryGetNum, tryGetInt, tryGetBigInt, tryGetDouble, tryGetBool, tryGetDateTime, tryGetUri, tryGetMap, tryGetSet, tryGetList):
+        Mirrors ConvertObjectIterableEx methods, but return nullable results and handle potential IndexErrors gracefully.
+    Common Parameters:
+        index: (int) Primary index to access.
+        altIndexes: (List<int>?) List of alternative indexes to try if primary index is out of bounds.
+        innerMapKey, innerIndex, defaultValue, converter: Same as corresponding ConvertObject methods.
+    Operational Notes:
+     Dependencies:  `ConvertObject`.
+     Error Handling: Uses the underlying error handling of `ConvertObject` methods (returning null). Handles potential `RangeError` if the index is out of bounds by trying alternative indexes or returning null.
+
+Extension on `Set<E>?`
+    Define: Provides a `convertTo<R>()` method on a nullable `Set`, attempting element-wise conversion using `ConvertObject.toSet`.
+
+Extension on `List<E>?`
+  Define: Provides a `convertTo<R>()` method on a nullable `List`, attempting element-wise conversion using `ConvertObject.toList`.
+
+Extension on `Map<K, V>`
+  Define: Provides methods to access and convert map values using `ConvertObject` methods. Includes support for alternate keys.
+  Methods (getString, getNum, getInt, getBigInt, getDouble, getBool, getDateTime, getUri, getMap, getSet, getList):
+    Access and convert map values.
+  tryParse<T, K2, V2>(Input: K key, T Function(Map<K2, V2> json) converter, Output: T?)
+  Common Parameters:
+    key: (K) - The primary key.
+    altKeys: (List<K>?) - Alternative keys to try if the primary key is not found.
+    innerKey, innerListIndex, defaultValue, converter: Same as `ConvertObject`.
+
+Extension on `Map<K, V>?`
+  Define: Provides nullable versions of the `ConvertObjectMapEx` methods, handling null maps gracefully.  Includes an internal helper `_getObjectFromMap`.
+  Methods:  tryGetString, tryGetNum, tryGetInt, tryGetBigInt, tryGetDouble, tryGetBool, tryGetDateTime, tryGetUri, tryGetMap, tryGetSet, tryGetList.
+  tryParse<T, K2, V2>(Input: K key, T Function(Map<K2, V2> json) converter, Output: T?)
+  Common Parameters: Same as `ConvertObjectMapEx`.
+
+Extension on `Object`
+  Define: Provides conversion methods (e.g., `convertToString`, `convertToInt`) directly on `Object` instances.
+  Methods (convertToString, convertToNum, convertToInt, convertToBigInt, convertToDouble, convertToBool, convertToDateTime, convertToUri, convertToMap, convertToSet, convertToList):
+    Call corresponding `ConvertObject` methods.
+
+Extension on `Object?`
+  Define: Provides nullable conversion methods (e.g., `tryConvertToString`, `tryConvertToInt`) directly on nullable `Object?` instances.
+  Methods: (tryConvertToString, tryConvertToNum, tryConvertToInt, tryConvertToBigInt, tryConvertToDouble, tryConvertToBool, tryConvertToDateTime, tryConvertToUri, tryConvertToMap, tryConvertToSet, tryConvertToList).
+    Call the corresponding `ConvertObject.tryTo...` methods.
+
+Global Functions toString1, tryToString, toNum, etc
+ Define: These functions mirror all the static methods of the ConvertObject class, providing top-level access for object conversions.
+ Parameters: Same as the corresponding ConvertObject methods.

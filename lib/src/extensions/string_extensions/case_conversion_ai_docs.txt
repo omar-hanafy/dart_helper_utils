@@ -1,0 +1,38 @@
+file: extensions/case_conversion.dart
+dependencies: import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+DHUNullSafeCaseConversionExtensions: (Extension on `String?`)
+  Define: Provides extension methods for nullable strings to perform case conversions, handling null safely.
+  Methods:
+    tryToLowerCase: (String?, get) - Converts the string to lowercase if it's not null; otherwise, returns null.
+    tryToUpperCase: (String?, get) - Converts the string to uppercase if it's not null; otherwise, returns null.
+
+DHUCaseConversionExtensions: (Extension on `String`)
+  Define: Provides extension methods for case conversions and string manipulations on non-nullable strings.
+  Methods:
+    toWords: (List<String>, get) - Splits the string into a list of words based on camel case, underscores, hyphens, and spaces.
+    toPascalCase: (String, get) - Converts the string to PascalCase (UpperCamelCase).
+    toTitleCase: (String, get) - Converts the string to Title Case, handling common lowercase words and special characters appropriately.
+    toCamelCase: (String, get) - Converts the string to camelCase (dromedaryCase).
+    toSnakeCase: (String, get) - Converts the string to snake_case.
+    toKebabCase: (String, get) - Converts the string to kebab-case.
+    toScreamingSnakeCase: (String, get) - Converts the string to SCREAMING_SNAKE_CASE (all caps with underscores).
+    toScreamingKebabCase: (String, get) - Converts the string to SCREAMING-KEBAB-CASE (all caps with hyphens).
+    toPascalSnakeCase: (String, get) - Converts the string to Pascal_Snake_Case.
+    toPascalKebabCase: (String, get) - Converts the string to Pascal-Kebab-Case.
+    toTrainCase: (String, get) - Converts the string to Train-Case (same as Pascal-Kebab-Case).
+    toCamelSnakeCase: (String, get) - Converts the string to camel_Snake_Case.
+    toCamelKebabCase: (String, get) - Converts the string to camel-Kebab-Case.
+    toDotCase: (String, get) - Converts the string to dot.case.
+    toFlatCase: (String, get) - Converts the string to flatcase (all lowercase, no separators).
+    toScreamingCase: (String, get) - Converts the string to SCREAMINGCASE (all uppercase, no separators).
+    capitalizeFirstLetter: (String, get) - Capitalizes only the first letter of the string.
+    lowercaseFirstLetter: (String, get) - Lowercases only the first letter of the string.
+    capitalizeFirstLowerRest: (String, get) - Capitalizes the first letter and converts the rest to lowercase.
+    toTitle: (String, get) - Capitalizes first letter of each word, but maintains the separators `-` and `_`.
+    shouldIgnoreCapitalization: (bool, get) Determines if capitalization rules should be ignored (starts with a number or in a pre-defined list of exceptions)
+  Operational Notes:
+    Dependencies: Uses `isBlank` extension, `startsWithNumber` getter, and `_titleCaseExceptions` list (defined elsewhere in the library).
+
+_titleCaseExceptions: (List<String>) *Private*
+    Define: A list of common lowercase words that should not be capitalized in title case.

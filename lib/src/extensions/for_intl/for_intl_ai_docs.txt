@@ -1,0 +1,52 @@
+source: dart_helper_utils
+
+## bidi.dart
+### TextDirection Extensions
+- toBidiFormatter(Input: bool alwaysSpan = false, Output: BidiFormatter)
+### String Extensions
+- stripHtmlIfNeeded(Output: String)
+- startsWithLtr, startsWithRtl, endsWithLtr, endsWithRtl, hasAnyLtr, hasAnyRtl(Input: bool isHtml = false, Output: bool)
+- isRtlLanguage(Input: String? languageString, Output: bool)
+- enforceRtlInHtml, enforceRtlIn, enforceLtrInHtml, enforceLtr(Output: String)
+- guardBracketInHtml, guardBracket(Input: bool? isRtlContext, Output: String)
+- guessDirection(Input: bool isHtml = false, Output: TextDirection)
+- detectRtlDirectionality(Input: bool isHtml = false, Output: bool)
+- wrapWithSpan, wrapWithUnicode(Input: TextDirection textDirection = textDirectionUNKNOWN, bool isHtml = false, bool resetDir = true, Output: String)
+
+## date_format.dart
+### DateTime? Extensions
+- tryFormat(Input: String format, Output: String?)
+- tryDateFormatUtc(Input: String pattern, String? locale, Output: String?)
+### DateTime Extensions
+- format, dateFormatUtc(Input: String pattern, String? locale, Output: String)
+- formatAsyMMMMd, formatAsEEEE, formatAsEEEEE, formatAsLLL, formatAsLLLL, formatAsM, formatAsMd, formatAsMEd, formatAsMMM, formatAsMMMd, formatAsMMMEd, formatAsMMMM, formatAsMMMMd, formatAsMMMMEEEEd, formatAsQQQ, formatAsQQQQ, formatAsyM, formatAsyMd, formatAsyMEd, formatAsyMMM, formatAsyMMMd, formatAsyMMMEd, formatAsyMMMM, formatAsyMMMMEEEEd, formatASyQQQ, formatAsyQQQQ, formatAsH, formatAsHm, formatAsHms(Input: String? locale, Output: String)
+### String Extensions
+- parseHttpDate(Input: bool utc = false, Output: DateTime?)
+- toDateAutoFormat(Input: String? locale, bool useCurrentLocale = false, bool utc = false, Output: DateTime)
+- toDateFormatted, toDateFormattedLoose, toDateFormattedStrict, toDateFormattedUtc(Input: String? format, String? locale, bool utc = false (except utc method), Output: DateTime)
+### String? Extensions
+- dateFormat(Input: String? locale, Output: DateFormat)
+- tryToDateAutoFormat(Input: String? locale, bool useCurrentLocale = false, bool utc = false, Output: DateTime?)
+- tryToDateFormatted, tryToDateFormattedLoose, tryToDateFormattedStrict, tryToDateFormattedUtc(Input: String? format, String? locale, bool utc = false (except utc method), Output: DateTime?)
+- localeExists(Output: bool)
+
+## intl.dart
+### Map<Object, T> Extensions
+- intlSelectLogic(Input: Object choice, Output: T)
+### Map<Object, String> Extensions
+- intlSelect(Input: Object choice, String? desc, Map<String, Object>? examples, String? locale, String? name, List<Object>? args, String? meaning, bool? skip, Output: String)
+### num Extensions
+- pluralize(Input: String other, String? zero, String? one, String? two, String? few, String? many, String? desc, Map<String, Object>? examples, String? locale, int? precision, String? name, List<Object>? args, String? meaning, bool? skip, Output: String)
+- getPluralCategory(Input: T other, T? zero, T? one, T? two, T? few, T? many, String? locale, int? precision, String? meaning, bool useExplicitNumberCases = true, Output: T)
+
+## number_format.dart
+### String? Extensions
+- numberFormat(Input: String? locale, Output: NumberFormat)
+- tryToNumFormatted, tryToIntFormatted, tryToDoubleFormatted(Input: String? newPattern, String? locale, Output: num?, int?, double?)
+### String Extensions
+- toNumFormatted, toIntFormatted, toDoubleFormatted(Input: String? newPattern, String? locale, Output: num, int, double)
+- symbolCurrencyFormat(Input: String? locale, String? name, int? decimalDigits, String? customPattern, Output: NumberFormat)
+- simpleCurrencyFormat, compactCurrencyFormat(Input: String? locale, int? decimalDigits, Output: NumberFormat)
+### num Extensions
+- formatAsCurrency, formatAsSimpleCurrency, formatAsCompactCurrency, formatAsCompact, formatAsCompactLong, formatAsDecimal, formatAsPercentage, formatAsDecimalPercent, formatAsScientific, formatWithCustomPattern(Input: String? locale (all), String symbol = r'$' (currency), int decimalDigits = 2 (currency), String? customPattern (currency), String? name (simple/compact currency), bool explicitSign = false (compactLong), String pattern (customPattern), Output: String)
+- formatAsReadableNumber(Input: String? locale, int decimalDigits = 2, String? groupingSeparator, String? decimalSeparator, bool trimTrailingZeros = false, Output: String)

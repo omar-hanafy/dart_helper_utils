@@ -1,0 +1,64 @@
+DoublyLinkedList: A doubly linked list implementation, extending ListBase<E>.
+
+  Classes:
+    - Node<E>: Represents a node in the list.
+      Constructors:
+        Node._(E data, {Node<E>? next, Node<E>? prev});
+      Properties:
+        data (Type: E): The data stored in this node.
+        next (Type: Node<E>?): The next node in the list.
+        prev (Type: Node<E>?): The previous node in the list.
+
+  Constructors:
+    - DoublyLinkedList([Iterable<E>? elements = const []])
+    - DoublyLinkedList.filled(int length, E fill)
+    - DoublyLinkedList.generate(int length, E Function(int index) generator): (Input index: int, Output: E)
+
+  Properties:
+    - tail (Output: Node<E>?): Last node.
+    - head (Output: Node<E>?): First node.
+    - nodes (Output: Iterable<Node<E>>): Iterable of all nodes.
+    - iterator (Output: Iterator<E>): Returns an iterator for the list's elements.
+    - length (Output: int): Get list length.
+
+  Methods:
+   - _swapAdjacentNodes(Input:Node<E> first, Node<E> second)
+   - _swapNonAdjacentNodes(Input:Node<E> node1, Node<E> node2)
+    - append(Input: E data): Adds to end.
+    - prepend(Input: E data): Adds to start.
+    - removeNode(Input: Node<E> node, Output: bool): Removes node, returns true if successful.
+    - removeByValue(Input: E value, Output: bool): Removes first node with value, true if found.
+    - findNodeByElement(Input: E data, {Node<E> Function()? orElse}, Output: Node<E>?): Finds first node with data, orElse result if provided.
+    - insertAfter(Input: Node<E> node, E data): Inserts after node.
+    - insertBefore(Input: Node<E> node, E data): Inserts before node.
+    - findNode(Input: int index, Output: Node<E>): Finds node at index, or throws.
+    - tryFindNode(Input: int index, Output: Node<E>?): Finds node at index, or null.
+    - ^(Input: int index, Output: Node<E>): Operator, finds node at index or throws.
+    - nodesWhere(Input: bool Function(Node<E>) test, Output: Iterable<Node<E>>): (Input node: Node<E>, Output: bool) Returns nodes satisfying test.
+    - firstNodeWhere(Input: bool Function(Node<E>) test, {Node<E> Function()? orElse}, Output: Node<E>): (Input node: Node<E>, Output: bool) First node satisfying test, throws if none and orElse is null.
+    - firstNodeWhereOrNull(Input: bool Function(Node<E>) test, {Node<E> Function()? orElse}, Output: Node<E>?): (Input node: Node<E>, Output: bool)First node satisfying test, null if none.
+    - lastNodeWhere(Input: bool Function(Node<E>) test, {Node<E> Function()? orElse}, Output: Node<E>):(Input node: Node<E>, Output: bool) Last node satisfying test, throws if none and orElse is null.
+    - lastNodeWhereOrNull(Input: bool Function(Node<E>) test, {Node<E> Function()? orElse}, Output: Node<E>?): (Input node: Node<E>, Output: bool) Last node satisfying test, null if none.
+    - singleNodeWhere(Input: bool Function(Node<E>) test, {Node<E> Function()? orElse}, Output: Node<E>): (Input node: Node<E>, Output: bool) Single node satisfying test, throws if none/multiple and orElse is null.
+    - singleNodeWhereOrNull(Input: bool Function(Node<E>) test, {Node<E> Function()? orElse}, Output: Node<E>?): (Input node: Node<E>, Output: bool) Single node satisfying test, null if none/multiple.
+    - replaceNode(Input: Node<E> node, E newData): Replaces node data.
+    - removeNodesWhere(Input: bool Function(E) test): (Input data: E, Output: bool) Removes nodes where data satisfies test.
+    - swapNodes(Input: Node<E> node1, Node<E> node2): Swaps two nodes.
+    - reverse(): Reverses list order.
+    - add(Input: E element): Overrides, appends element.
+    - length(Input: int newLength): Set list length.
+    - [](Input: int index, Output: E): Overrides, gets element at index.
+    - []=(Input: int index, E value): Overrides, sets element at index.
+    - remove(Input: Object? element, Output: bool): Overrides, removes element by value, true if found.
+    - clear(): Overrides, clears the list.
+    - insert(Input: int index, E element): Overrides, inserts element at index.
+    - removeAt(Input: int index, Output: E): Overrides, removes and returns element at index.
+    - first (Output: E): Overrides, gets first element.
+    - last (Output: E): Overrides, gets last element.
+    - single (Output: E): Overrides, gets single element, throws if not single.
+    - contains(Input: Object? element, Output: bool): Overrides, true if element found.
+    - indexOf(Input: Object? element, [int start = 0], Output: int): Overrides, index of element, -1 if not found.
+    - lastIndexOf(Input: Object? element, [int? start], Output: int): Overrides, last index of element, -1 if not found.
+
+  _DoublyLinkedListIterator<E>: Iterator implementation.
+    - current, moveNext()

@@ -39,16 +39,6 @@ typedef Predicate<T> = bool Function(T);
 /// nullableSet.someUtilityMethod();
 /// ```
 extension DHUNullableSetExtensions<E> on Set<E>? {
-  /// If a direct conversion fails, it attempts element-wise conversion using `toType`, ensuring
-  /// a smooth conversion process without the risk of runtime errors.
-  ///
-  /// Example usage:
-  /// ```dart
-  /// Set<dynamic> set = {1, 2, '3'};
-  /// Set<int> intSet = set.convertTo<int>(); // Tries to convert all elements to int.
-  /// ```
-  Set<R> convertTo<R>() => ConvertObject.toSet<R>(this);
-
   /// Checks if the iterable is either `null` or empty.
   ///
   /// Returns `true` if the iterable is `null` or empty, otherwise `false`.
@@ -116,15 +106,6 @@ extension DHUNullableListExtensions<E> on List<E>? {
   /// Note: The parameter [element] is used only to match the method signature.
   void tryRemoveWhere(int element) =>
       isEmptyOrNull ? null : this!.removeWhere((element) => false);
-
-  /// Converts the list to a different type [R] using custom conversion logic.
-  ///
-  /// Example:
-  /// ```dart
-  /// List <dynamic> list = [1, 2, '3'];
-  /// List <int> intList = list.convertTo<int>();
-  /// ```
-  List<R> convertTo<R>() => ConvertObject.toList<R>(this);
 }
 
 /// Enhanced documentation for nullable Iterable extensions.
@@ -216,226 +197,6 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     }
     return sum;
   }
-
-  /// Helper function to get the element from the list using the provided primary index or alternative indexes.
-  E? _getElementAtIndex(
-    int index, {
-    List<int>? altIndexes,
-  }) {
-    if (this == null || index < 0) return null;
-
-    try {
-      return this!.elementAt(index);
-    } catch (_) {}
-
-    if (altIndexes != null) {
-      for (final altIndex in altIndexes) {
-        try {
-          return this!.elementAt(altIndex);
-        } catch (_) {}
-      }
-    }
-
-    return null;
-  }
-
-  /// uses the [tryToString] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [String] or return null.
-  String? tryGetString(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? defaultValue,
-  }) =>
-      ConvertObject.tryToString(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [num] or return null.
-  num? tryGetNum(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    num? defaultValue,
-  }) =>
-      ConvertObject.tryToNum(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-      );
-
-  /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [int] or return null.
-  int? tryGetInt(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    int? defaultValue,
-  }) =>
-      ConvertObject.tryToInt(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-      );
-
-  /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [BigInt] or return null.
-  BigInt? tryGetBigInt(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    BigInt? defaultValue,
-  }) =>
-      ConvertObject.tryToBigInt(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [double] or return null.
-  double? tryGetDouble(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    double? defaultValue,
-  }) =>
-      ConvertObject.tryToDouble(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-      );
-
-  /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [bool] or return null.
-  bool? tryGetBool(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    bool? defaultValue,
-  }) =>
-      ConvertObject.tryToBool(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [DateTime] or return null.
-  DateTime? tryGetDateTime(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    bool autoDetectFormat = false,
-    bool useCurrentLocale = false,
-    bool utc = false,
-    DateTime? defaultValue,
-  }) =>
-      ConvertObject.tryToDateTime(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-        autoDetectFormat: autoDetectFormat,
-        useCurrentLocale: useCurrentLocale,
-        utc: utc,
-      );
-
-  /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [Uri] or return null.
-  Uri? tryGetUri(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    Uri? defaultValue,
-  }) =>
-      ConvertObject.tryToUri(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [Map] or return null.
-  Map<K2, V2>? tryGetMap<K2, V2>(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    Map<K2, V2>? defaultValue,
-  }) =>
-      ConvertObject.tryToMap(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [Set] or return null.
-  Set<T>? tryGetSet<T>(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    Set<T>? defaultValue,
-  }) =>
-      ConvertObject.tryToSet(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [tryToList] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [List] or return null.
-  List<T>? tryGetList<T>(
-    int index, {
-    List<int>? altIndexes,
-    dynamic innerMapKey,
-    int? innerIndex,
-    List<T>? defaultValue,
-  }) =>
-      ConvertObject.tryToList(
-        _getElementAtIndex(index, altIndexes: altIndexes),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
 }
 
 /// Enhanced documentation for non-nullable Iterable extensions.
@@ -560,6 +321,29 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
   /// Takes the second half of a list
   List<E> secondHalf() => drop(halfLength).toList();
+
+  /// Applies the function [f] to each element and its index,
+  /// returning a new list with the results.
+  List<E2> mapIndexed<E2>(E2 Function(int index, E element) f) {
+    final result = <E2>[];
+    var index = 0;
+    for (final element in this) {
+      result.add(f(index, element));
+      index++;
+    }
+    return result;
+  }
+
+  /// Applies the function [f] to each element and its index,
+  /// returning a new list with the results. uses map under the hood.
+  List<E2> mapIndexedList<E2>(E2 Function(int index, E element) f) {
+    var index = 0;
+    return map((element) {
+      final result = f(index, element);
+      index++;
+      return result;
+    }).toList();
+  }
 
   /// returns a list with two swapped items
   /// [i] first item
@@ -735,193 +519,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
   ///
   String get encodedJson => json.encode(this);
-
-  /// uses the [toString] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [String].
-  String getString(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? defaultValue,
-  }) =>
-      ConvertObject.toString1(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [toNum] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [num].
-  num getNum(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    num? defaultValue,
-  }) =>
-      ConvertObject.toNum(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-      );
-
-  /// uses the [toInt] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [int].
-  int getInt(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    int? defaultValue,
-  }) =>
-      ConvertObject.toInt(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-      );
-
-  /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [BigInt].
-  BigInt getBigInt(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    BigInt? defaultValue,
-  }) =>
-      ConvertObject.toBigInt(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [toDouble] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [double].
-  double getDouble(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    double? defaultValue,
-  }) =>
-      ConvertObject.toDouble(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-      );
-
-  /// uses the [toBool] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [bool].
-  bool getBool(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    bool? defaultValue,
-  }) =>
-      ConvertObject.toBool(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [DateTime].
-  DateTime getDateTime(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    String? format,
-    String? locale,
-    bool autoDetectFormat = false,
-    bool useCurrentLocale = false,
-    bool utc = false,
-    DateTime? defaultValue,
-  }) =>
-      ConvertObject.toDateTime(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-        format: format,
-        locale: locale,
-        autoDetectFormat: autoDetectFormat,
-        useCurrentLocale: useCurrentLocale,
-        utc: utc,
-      );
-
-  /// uses the [toUri] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [Uri].
-  Uri getUri(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    Uri? defaultValue,
-  }) =>
-      ConvertObject.toUri(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [toMap] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [Map].
-  Map<K2, V2> getMap<K2, V2>(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    Map<K2, V2>? defaultValue,
-  }) =>
-      ConvertObject.toMap(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [toSet] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [Set].
-  Set<T> getSet<T>(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    Set<T>? defaultValue,
-  }) =>
-      ConvertObject.toSet(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
-
-  /// uses the [toList] defined in the [ConvertObject] class to convert a
-  /// specific element by [index] in that Iterable to [List].
-  List<T> getList<T>(
-    int index, {
-    dynamic innerMapKey,
-    int? innerIndex,
-    List<T>? defaultValue,
-  }) =>
-      ConvertObject.toList(
-        elementAt(index),
-        defaultValue: defaultValue,
-        mapKey: innerMapKey,
-        listIndex: innerIndex,
-      );
 }
 
 // A lazy [Iterable] skip elements do **NOT** match the predicate [_f].

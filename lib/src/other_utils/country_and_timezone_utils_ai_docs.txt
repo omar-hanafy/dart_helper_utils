@@ -1,0 +1,92 @@
+file: country_and_timezone_utils.dart
+dependencies: import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+Currency: (typedef)
+  Define: Defines a record type representing a currency.
+  Signature: ({String code, String name, String symbol})
+
+NativeName: (typedef)
+  Define: Defines a record type representing a country's native name.
+  Signature: ({String language, String official, String common})
+
+Coordinates: (typedef)
+  Define: Defines a record type representing geographic coordinates.
+  Signature: ({double latitude, double longitude})
+
+Language: (typedef)
+  Define: Defines a record type representing a language.
+  Signature: ({String code, String name})
+
+CountrySearchAlgorithm: (typedef)
+  Define: Defines a function type for country search algorithms.
+  Signature: List<DHUCountry> Function(List<DHUCountry> countries, String query)
+
+DHUCountry: (Class)
+  Construct: Creates a [DHUCountry] object representing country information.
+  Parameters:
+    commonName: (String) - The common name of the country.
+    officialName: (String) - The official name of the country.
+    nativeNames: (List<NativeName>) -  Native names in different languages.
+    iso2: (String) - ISO 3166-1 alpha-2 code.
+    iso3: (String) - ISO 3166-1 alpha-3 code.
+    phoneCode: (String) - International phone code.
+    region: (String) - Geographic region.
+    subregion: (String) - Geographic subregion.
+    coordinates: (Coordinates) - Latitude and longitude.
+    capital: (String?) - Capital city.
+    currencies: (List<Currency>) - Currencies used.
+    languages: (List<Language>) - Languages spoken.
+    flagEmoji: (String) - Flag emoji.
+    borders: (List<String>) - ISO3 codes of bordering countries.
+    tld: (String) - Top-level domain.
+    area: (double) - Area in square kilometers.
+    timezones: (List<String>) - List of timezones.
+  Factories:
+     fromMap(Map<String, dynamic> map): Creates a `DHUCountry` from a Map, uses [ConvertObject] methods to handle multiple input types.
+  Methods:
+    getTimezonesDetails():  Returns a list of `DHUTimezone` objects for the country, uses [getTimezonesRawData] function defined else where.
+    generate([List<Map<String, dynamic>>? rawData]):  (Static) Creates a list of `DHUCountry` objects from raw data. If `rawData` is null, it uses `getRawCountriesData()` defined else where.
+    getByName(String name, [List<Map<String, dynamic>>? rawData]): (Static) Finds a country by its common, official, or native name (case-insensitive).  If `rawData` is null, uses `getRawCountriesData()`.  Returns null if not found.
+    getByCode(String iso, [List<Map<String, dynamic>>? rawData]): (Static) Finds a country by its ISO2 or ISO3 code (case-insensitive). If `rawData` is null, uses `getRawCountriesData()`. Returns null if not found.
+    operator ==(Object other): check equality between this instance and other based on iso2 and iso3.
+  Operational Notes:
+    Immutability: Marked with `@immutable`.
+    Dependencies:  Uses `ConvertObject` for type conversions, `getTimezonesRawData()` and `getRawCountriesData()` for data access.
+    Equality:  Equality (`==`) is based on `iso2` and `iso3` codes.
+
+DHUTimezone: (Class)
+  Construct: Creates a [DHUTimezone] object representing timezone information.
+  Parameters:
+    timezone: (String) - IANA timezone name (e.g., "Africa/Cairo").
+    rawOffset: (int) - Raw offset from UTC in seconds.
+    abbreviation: (String) - Timezone abbreviation (e.g., "EET").
+    dstOffset: (int) - Daylight saving time offset in seconds.
+  Factories:
+    fromMap(Map<String, dynamic> map): Creates a `DHUTimezone` from a Map, uses [ConvertObject] to handle multiple types.
+  Methods:
+     getCountries(): Returns a list of `DHUCountry` objects that use this timezone, uses `getRawCountriesData()` function.
+     generate([Map<String, Map<String, dynamic>>? rawData]): (Static) creates a list of [DHUTimezone] instances, if rawData is null, it uses [getTimezonesRawData] defined else where.
+     byIdentifier(String timezone, [Map<String, Map<String, dynamic>>? rawData]): (Static) Gets a `DHUTimezone` by its identifier (e.g., "Africa/Cairo"), if rawData is null it uses [getTimezonesRawData] defined else where. Returns `null` if not found.
+      operator ==(Object other): check for equality based on timezone.
+  Operational Notes:
+      Immutability: Marked with `@immutable`.
+      Dependencies: Uses `ConvertObject` for type conversions, `getTimezonesRawData()` and `getRawCountriesData()` for data access.
+
+CountrySearchService: (Class)
+    Construct: Creates a service for performing country searches.
+    Parameters:
+      countries: (List<DHUCountry>) - The list of countries to search.
+      similarityFunction: (double Function(String, String)?) - Optional custom string similarity function.  Defaults to `StringSimilarity.diceCoefficient`.
+    Methods:
+        search(String query): Performs a search, returns a list of matching `DHUCountry` objects, sorted by relevance. Uses provided `similarityFunction` or defaults to Dice Coefficient.
+    Operational Notes:
+      Algorithm: Uses a weighted scoring system based on various country fields (name, capital, ISO codes, etc.).  Higher weights for more important fields.
+      Dependencies:  `StringSimilarity` (if the default similarity function is used).
+
+_ScoredCountry: (Class) *Private*
+  Construct: Creates an object to hold a country and its search score.
+  Parameters:
+    country: (DHUCountry) - The country object.
+    score: (int) - The calculated search score.
+  Operational Notes:
+    Immutability: Implicitly immutable (fields are `final`). Used internally by `CountrySearchService`.
