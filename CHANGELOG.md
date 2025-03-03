@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 4.1.2
+
+- Updated docs
+
 ## 4.1.1
 
 - Fixed `rebuild` method in the `Uri` extension to pass either path or pathSegments not both.
