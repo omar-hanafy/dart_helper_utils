@@ -56,23 +56,81 @@ extension DHUUriEx on Uri {
         queryParametersBuilder,
     String? Function(String current)? fragmentBuilder,
   }) {
-    // Determine which path-related parameter to use
-    final usePathSegments = pathSegmentsBuilder != null;
-    final usePath = pathBuilder != null && !usePathSegments;
+    // Initialize replacement variables with null to indicate "no change"
+    String? newScheme;
+    String? newUserInfo;
+    String? newHost;
+    int? newPort;
+    String? newPath;
+    List<String>? newPathSegments;
+    String? newQuery;
+    Map<String, String>? newQueryParameters;
+    String? newFragment;
 
-    return Uri(
-      scheme: schemeBuilder?.call(scheme) ?? scheme,
-      userInfo: userInfoBuilder?.call(userInfo) ?? userInfo,
-      host: hostBuilder?.call(host) ?? host,
-      port: portBuilder?.call(port) ?? port,
-      path: usePath ? (pathBuilder.call(path) ?? path) : null,
-      pathSegments: usePathSegments
-          ? (pathSegmentsBuilder.call(pathSegments) ?? pathSegments)
-          : (usePath ? null : pathSegments),
-      query: queryBuilder?.call(query) ?? query,
-      queryParameters:
-          queryParametersBuilder?.call(queryParameters) ?? queryParameters,
-      fragment: fragmentBuilder?.call(fragment) ?? fragment,
+    // Apply builder functions if provided
+    if (schemeBuilder != null) {
+      newScheme = schemeBuilder(scheme);
+    }
+
+    if (userInfoBuilder != null) {
+      newUserInfo = userInfoBuilder(userInfo);
+    }
+
+    if (hostBuilder != null) {
+      newHost = hostBuilder(host);
+    }
+
+    if (portBuilder != null) {
+      newPort = portBuilder(port);
+    }
+
+    if (pathBuilder != null) {
+      newPath = pathBuilder(path);
+    }
+
+    if (pathSegmentsBuilder != null) {
+      final segments = pathSegmentsBuilder(pathSegments);
+      if (segments != null) {
+        newPathSegments = segments.toList();
+      }
+    }
+
+    if (queryBuilder != null) {
+      newQuery = queryBuilder(query);
+    }
+
+    if (queryParametersBuilder != null) {
+      // Convert Map<String, String> to Map<String, dynamic>
+      final dynamicQueryParams = Map<String, dynamic>.from(queryParameters);
+
+      // Apply the builder
+      final resultParams = queryParametersBuilder(dynamicQueryParams);
+
+      // Convert back to Map<String, String> if a new value was returned
+      if (resultParams != null) {
+        newQueryParameters = {};
+        resultParams.forEach((key, value) {
+          // Convert value to string (if not null)
+          newQueryParameters![key] = value?.toString() ?? '';
+        });
+      }
+    }
+
+    if (fragmentBuilder != null) {
+      newFragment = fragmentBuilder(fragment);
+    }
+
+    // Create a new Uri with the modified components
+    return replace(
+      scheme: newScheme,
+      userInfo: newUserInfo,
+      host: newHost,
+      port: newPort,
+      path: newPath,
+      pathSegments: newPathSegments,
+      query: newQuery,
+      queryParameters: newQueryParameters,
+      fragment: newFragment,
     );
   }
 }
