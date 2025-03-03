@@ -56,13 +56,19 @@ extension DHUUriEx on Uri {
         queryParametersBuilder,
     String? Function(String current)? fragmentBuilder,
   }) {
+    // Determine which path-related parameter to use
+    final usePathSegments = pathSegmentsBuilder != null;
+    final usePath = pathBuilder != null && !usePathSegments;
+
     return Uri(
       scheme: schemeBuilder?.call(scheme) ?? scheme,
       userInfo: userInfoBuilder?.call(userInfo) ?? userInfo,
       host: hostBuilder?.call(host) ?? host,
       port: portBuilder?.call(port) ?? port,
-      path: pathBuilder?.call(path) ?? path,
-      pathSegments: pathSegmentsBuilder?.call(pathSegments) ?? pathSegments,
+      path: usePath ? (pathBuilder.call(path) ?? path) : null,
+      pathSegments: usePathSegments
+          ? (pathSegmentsBuilder.call(pathSegments) ?? pathSegments)
+          : (usePath ? null : pathSegments),
       query: queryBuilder?.call(query) ?? query,
       queryParameters:
           queryParametersBuilder?.call(queryParameters) ?? queryParameters,
