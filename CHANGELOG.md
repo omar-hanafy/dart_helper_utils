@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 5.0.0
+
+- Breaking change in this version we removed any conversion helpers on `Object` cuz it cuases many confution to IDE suggestions.
+- added AI docs to the source code, now u can easily add them as knowledge to your ai so it can use these utils while crafting snippets for you.
+
 ## 4.1.2
 
 - Updated docs
