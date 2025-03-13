@@ -209,37 +209,37 @@ void main() {
       expect(testDate.lastDayOfMonth, lastDayOfMonth);
     });
 
-    test('addOrRemoveYears', () {
-      final nextYear = testDate.addOrRemoveYears(1);
-      final previousYear = testDate.addOrRemoveYears(-1);
+    test('addOrSubtractYears', () {
+      final nextYear = testDate.addOrSubtractYears(1);
+      final previousYear = testDate.addOrSubtractYears(-1);
       expect(nextYear, DateTime(2023, 5, 10, 10, 30));
       expect(previousYear, DateTime(2021, 5, 10, 10, 30));
     });
 
-    test('addOrRemoveMonths', () {
-      final nextMonth = testDate.addOrRemoveMonths(1);
-      final previousMonth = testDate.addOrRemoveMonths(-1);
+    test('addOrSubtractMonths', () {
+      final nextMonth = testDate.addOrSubtractMonths(1);
+      final previousMonth = testDate.addOrSubtractMonths(-1);
       expect(nextMonth, DateTime(2022, 6, 10, 10, 30));
       expect(previousMonth, DateTime(2022, 4, 10, 10, 30));
     });
 
-    test('addOrRemoveDays', () {
-      final nextDay = testDate.addOrRemoveDays(1);
-      final previousDay = testDate.addOrRemoveDays(-1);
+    test('addOrSubtractDays', () {
+      final nextDay = testDate.addOrSubtractDays(1);
+      final previousDay = testDate.addOrSubtractDays(-1);
       expect(nextDay, DateTime(2022, 5, 11, 10, 30));
       expect(previousDay, DateTime(2022, 5, 9, 10, 30));
     });
 
-    test('addOrRemoveMinutes', () {
-      final nextMinute = testDate.addOrRemoveMinutes(1);
-      final previousMinute = testDate.addOrRemoveMinutes(-1);
+    test('addOrSubtractMinutes', () {
+      final nextMinute = testDate.addOrSubtractMinutes(1);
+      final previousMinute = testDate.addOrSubtractMinutes(-1);
       expect(nextMinute, DateTime(2022, 5, 10, 10, 31));
       expect(previousMinute, DateTime(2022, 5, 10, 10, 29));
     });
 
-    test('addOrRemoveSeconds', () {
-      final nextSecond = testDate.addOrRemoveSeconds(1);
-      final previousSecond = testDate.addOrRemoveSeconds(-1);
+    test('addOrSubtractSeconds', () {
+      final nextSecond = testDate.addOrSubtractSeconds(1);
+      final previousSecond = testDate.addOrSubtractSeconds(-1);
       expect(nextSecond, DateTime(2022, 5, 10, 10, 30, 1));
       expect(previousSecond, DateTime(2022, 5, 10, 10, 29, 59));
     });

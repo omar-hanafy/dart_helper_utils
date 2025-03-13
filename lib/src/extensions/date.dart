@@ -512,39 +512,64 @@ extension DHUDateExtensions on DateTime {
     return beginningNextMonth.subtract(const Duration(days: 1));
   }
 
-  /// Adds or removes the specified number of years from this DateTime.
-  DateTime addOrRemoveYears(int years) {
+  /// Adds or subtracts the specified number of years from this DateTime.
+  /// Using a positive value (e.g., 1) adds years, while a negative value (e.g., -1) subtracts years.
+  DateTime addOrSubtractYears(int years) {
     final newYear = year + years;
     final newMonth = month;
     var newDay = day;
-// Adjust the day if it exceeds the number of days in the new month
+    // Adjust the day if it exceeds the number of days in the new month
     while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
       newDay--;
     }
-    return DateTime(newYear, newMonth, newDay, hour, minute, second);
+    return DateTime(newYear, newMonth, newDay, hour, minute, second,
+        millisecond, microsecond);
   }
 
-  /// Adds or removes the specified number of months from this DateTime.
-  DateTime addOrRemoveMonths(int months) {
+  /// Adds or subtracts the specified number of months from this DateTime.
+  /// Using a positive value (e.g., 1) adds months, while a negative value (e.g., -1) subtracts months.
+  DateTime addOrSubtractMonths(int months) {
     final totalMonths = month + months;
-    final newYear = year + (totalMonths ~/ 12);
-    final newMonth = totalMonths % 12 == 0 ? 12 : totalMonths % 12;
+    var newYear = year + (totalMonths ~/ 12);
+    var newMonth = totalMonths % 12;
+
+    // Handle the case where totalMonths is a multiple of 12 (e.g., adding/subtracting 12, 24, etc. months)
+    if (newMonth == 0) {
+      newMonth = 12;
+      newYear -=
+          1; // Adjust the year if we "wrapped around" to December of the previous year
+    }
+
     var newDay = day;
-// Adjust the day if it exceeds the number of days in the new month
+    // Adjust the day if it exceeds the number of days in the new month
     while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
       newDay--;
     }
-    return DateTime(newYear, newMonth, newDay, hour, minute, second);
+    return DateTime(newYear, newMonth, newDay, hour, minute, second,
+        millisecond, microsecond);
   }
 
-  /// Adds or removes the specified number of days from this DateTime.
-  DateTime addOrRemoveDays(int days) => add(Duration(days: days));
+  /// Adds or subtracts the specified number of days from this DateTime.
+  /// Using a positive value (e.g., 1) adds days, while a negative value (e.g., -1) subtracts days.
+  DateTime addOrSubtractDays(int days) => add(Duration(days: days));
 
-  /// Adds or removes the specified number of minutes from this DateTime.
-  DateTime addOrRemoveMinutes(int minutes) => add(Duration(minutes: minutes));
+  /// Adds or subtracts the specified number of minutes from this DateTime.
+  /// Using a positive value (e.g., 1) adds minutes, while a negative value (e.g., -1) subtracts minutes.
+  DateTime addOrSubtractMinutes(int minutes) => add(Duration(minutes: minutes));
 
-  /// Adds or removes the specified number of seconds from this DateTime.
-  DateTime addOrRemoveSeconds(int seconds) => add(Duration(seconds: seconds));
+  /// Adds or subtracts the specified number of seconds from this DateTime.
+  /// Using a positive value (e.g., 1) adds seconds, while a negative value (e.g., -1) subtracts seconds.
+  DateTime addOrSubtractSeconds(int seconds) => add(Duration(seconds: seconds));
+
+  /// Adds or subtracts the specified number of milliseconds from this DateTime.
+  /// Using a positive value (e.g., 1) adds milliseconds, while a negative value (e.g., -1) subtracts milliseconds.
+  DateTime addOrSubtractMilliseconds(int milliseconds) =>
+      add(Duration(milliseconds: milliseconds));
+
+  /// Adds or subtracts the specified number of microseconds from this DateTime.
+  /// Using a positive value (e.g., 1) adds microseconds, while a negative value (e.g., -1) subtracts microseconds.
+  DateTime addOrSubtractMicroseconds(int microseconds) =>
+      add(Duration(microseconds: microseconds));
 
   /// Returns the minimum of this DateTime and [that].
   DateTime min(DateTime that) =>
@@ -559,6 +584,38 @@ extension DHUDateExtensions on DateTime {
 
   /// Adds the specified number of hours to this DateTime.
   DateTime addHours(int amount) => add(Duration(hours: amount));
+
+  /// Adds the specified number of minutes to this DateTime.
+  DateTime addMinutes(int amount) => add(Duration(minutes: amount));
+
+  /// Adds the specified number of seconds to this DateTime.
+  DateTime addSeconds(int amount) => add(Duration(seconds: amount));
+
+  /// Adds the specified number of milliseconds to this DateTime.
+  DateTime addMilliseconds(int amount) => add(Duration(milliseconds: amount));
+
+  /// Adds the specified number of microseconds to this DateTime.
+  DateTime addMicroseconds(int amount) => add(Duration(microseconds: amount));
+
+  /// Subtracts the specified number of days from this DateTime.
+  DateTime subtractDays(int amount) => subtract(Duration(days: amount));
+
+  /// Subtracts the specified number of hours from this DateTime.
+  DateTime subtractHours(int amount) => subtract(Duration(hours: amount));
+
+  /// Subtracts the specified number of minutes from this DateTime.
+  DateTime subtractMinutes(int amount) => subtract(Duration(minutes: amount));
+
+  /// Subtracts the specified number of seconds from this DateTime.
+  DateTime subtractSeconds(int amount) => subtract(Duration(seconds: amount));
+
+  /// Subtracts the specified number of milliseconds from this DateTime.
+  DateTime subtractMilliseconds(int amount) =>
+      subtract(Duration(milliseconds: amount));
+
+  /// Subtracts the specified number of microseconds from this DateTime.
+  DateTime subtractMicroseconds(int amount) =>
+      subtract(Duration(microseconds: amount));
 
   /// Checks if this DateTime occurs on the same hour as another DateTime,
   /// regardless of time zone.

@@ -109,6 +109,11 @@ extension DHUBidiStringExtensions on String {
           );
 }
 
+///
 const textDirectionLTR = TextDirection.LTR;
+
+///
 const textDirectionRTL = TextDirection.RTL;
+
+///
 const textDirectionUNKNOWN = TextDirection.UNKNOWN;

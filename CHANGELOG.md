@@ -2,8 +2,33 @@
 
 ## 5.0.0
 
-- Breaking change in this version we removed any conversion helpers on `Object` cuz it cuases many confution to IDE suggestions.
-- added AI docs to the source code, now u can easily add them as knowledge to your ai so it can use these utils while crafting snippets for you.
+- **Breaking changes:**
+  - Removed conversion helpers on `Object` to prevent confusion in IDE suggestions.
+  - Updated DateTime extension methods:
+    - Renamed the following methods for clarity:
+      - `addOrRemoveYears` to `addOrSubtractYears`
+      - `addOrRemoveMonths` to `addOrSubtractMonths`
+      - `addOrRemoveDays` to `addOrSubtractDays`
+      - `addOrRemoveMinutes` to `addOrSubtractMinutes`
+      - `addOrRemoveSeconds` to `addOrSubtractSeconds`
+    - Fixed a bug in `addOrSubtractMonths` to correctly handle negative month adjustments (previously, subtracting months could result in incorrect years).
+    - Improved `addOrSubtractYears` and `addOrSubtractMonths` to preserve millisecond and microsecond components (previously, these were reset to zero).
+
+- **New features:**
+  - Added new methods to DateTime:
+    - `addOrSubtractMilliseconds`
+    - `addOrSubtractMicroseconds`
+    - `addMinutes`
+    - `addSeconds`
+    - `addMilliseconds`
+    - `addMicroseconds`
+    - `subtractDays`
+    - `subtractHours`
+    - `subtractMinutes`
+    - `subtractSeconds`
+    - `subtractMilliseconds`
+    - `subtractMicroseconds`
+  - Add AI documentation to the source code, enabling AI to use these utilities when crafting snippets.
 
 ## 4.1.2
 
