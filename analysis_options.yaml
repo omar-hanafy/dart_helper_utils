@@ -14,5 +14,6 @@ linter:
     avoid_catches_without_on_clauses: false
     document_ignores: false
     avoid_redundant_argument_values: false
+    no_default_cases: false
     # avoid_dynamic_calls: false
     # use_build_context_synchronously: false

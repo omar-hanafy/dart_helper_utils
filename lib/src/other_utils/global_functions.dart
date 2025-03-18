@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 /// Determines whether a given value is of a primitive type for JSON serialization.
@@ -44,3 +46,12 @@ int get currentMillisecondsSinceEpoch => DateTime.now().millisecondsSinceEpoch;
 
 /// Returns the current time.
 DateTime get now => DateTime.now();
+
+/// returns random bool.
+bool randomBool([int? seed]) => Random(seed).nextBool();
+
+/// returns random int.
+int randomInt(int max, [int? seed]) => Random(seed).nextInt(max);
+
+/// returns random double.
+double randomDouble([int? seed]) => Random(seed).nextDouble();

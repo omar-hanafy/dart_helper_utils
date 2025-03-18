@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 5.1.0
+
+- Added new global randomBool, randomInt, and randomDouble
+- Updated the StringSimilarity: 
+  - Focused on six key algorithms with enhanced accuracy (to see demo, you can view my [enefty_icons_preview website](https://omar-hanafy.github.io/enefty-icons/#/) for the [enefty_icons](https://pub.dev/packages/enefty_icons) package).
+  - Improved caching and performance for large strings.
+  - New extension methods and advanced ranking features.
+  - Richer Unicode support, and more flexible configurations.
+  - Better documentation included.
+
 ## 5.0.0
 
 - **Breaking changes:**
