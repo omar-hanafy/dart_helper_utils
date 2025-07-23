@@ -1,5 +1,6 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
+/// This file contains extensions for the [NumberFormat] class from the intl package.
 extension DHUNumberFormatNullableStringExtensions on String? {
   /// Creates a [NumberFormat] object using the string as the pattern, along with the given [locale].
   NumberFormat numberFormat({String? locale}) => NumberFormat(this, locale);
@@ -20,6 +21,7 @@ extension DHUNumberFormatNullableStringExtensions on String? {
       tryToNumFormatted(newPattern, locale)?.toDouble();
 }
 
+/// Extension methods for the [String] type to format numbers using the [intl] package.
 extension DHUNumberFormatStringExtensions on String {
   /// Parses the string to a number with the given [newPattern] and [locale].
   num toNumFormatted([String? newPattern, String? locale]) =>
@@ -68,6 +70,7 @@ extension DHUNumberFormatStringExtensions on String {
   }
 }
 
+/// Extension methods for the [num] type to format numbers using the [intl] package.
 extension DHUNumberFormatExtensions on num {
   /// Formats the number as currency with the given [locale], [symbol], and [decimalDigits].
   String formatAsCurrency({

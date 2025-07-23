@@ -13,6 +13,7 @@ Future<void> main() async {
   print(list.convertTo<int>()); // [1, 2, 3, 3, 22]
   print(list.convertTo<double>()); // [1.0, 2.0, 3.0, 3.1, 22.3]
   print(list.convertTo<String>()); // ['1', '2', '3', '3.1', '22.3']
+
   // parsing raw Json to Map<String, dynamic>
   // note: you can also use the ConvertObject.toMap to avoid ambiguity.
   final userMap = toMap<String, dynamic>('''

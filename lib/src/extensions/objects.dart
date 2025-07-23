@@ -40,11 +40,13 @@ extension DHUObjectNullableExtensions on Object? {
   /// Note:
   /// The `toEncodable` function is crucial for encoding custom objects that do not have a direct representation
   /// in JSON. Without it, attempting to encode such objects will result in a `TypeError`.
-  dynamic encode({Object? Function(dynamic object)? toEncodable}) =>
+  String encode({Object? Function(dynamic object)? toEncodable}) =>
       json.encode(this, toEncodable: toEncodable);
 
+  /// Checks if this object is null.
   bool get isNull => this == null;
 
+  /// Checks if this object is not null.
   bool get isNotNull => this != null;
 
   /// *Rules*:
@@ -61,6 +63,7 @@ extension DHUObjectNullableExtensions on Object? {
     return self.toString().asBool;
   }
 
+  /// Checks if this object is a primitive type.
   bool isPrimitive() {
     final value = this;
     if (value is Iterable) return value.isPrimitive();

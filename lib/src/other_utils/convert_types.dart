@@ -1986,6 +1986,35 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
   }
 }
 
+/// A pair of Kotlin-inspired `let` helpers for fluent, functional pipelines.
+///
+/// ## Examples
+/// ```dart
+/// // Non-nullable:
+/// final doubled = '123'.let((s) => int.parse(s) * 2); // 246
+///
+/// // Null-aware:
+/// final wrap = json.tryGetString('wordWrap')
+///     ?.let((w) => WordWrap.values.firstWhere(
+///           (e) => e.name == w,
+///           orElse: () => WordWrap.off,
+///         ))                     // returns WordWrap?
+///     ?? WordWrap.off;           // provide fallback
+/// ```
+extension LetExtension<T extends Object> on T {
+  /// Executes [block] with `this` as its argument and returns the result.
+  ///
+  /// Think of it as a lightweight map/transform that works on any object.
+  R let<R>(R Function(T it) block) => block(this);
+}
+
+/// A null-aware version: the callback only runs when the value isn’t `null`.
+extension LetExtensionNullable<T extends Object> on T? {
+  /// If `this` is non-null, calls [block] with the non-null value and returns
+  /// its result; otherwise returns `null`.
+  R? let<R>(R? Function(T? it) block) => this == null ? null : block(this);
+}
+
 /// Converts any object to a string if the object is not `null`.
 /// mirroring the same static method in the [ConvertObject], providing alternative easy less code usage options.
 ///

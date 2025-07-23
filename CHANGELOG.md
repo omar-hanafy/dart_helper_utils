@@ -1,7 +1,10 @@
 # CHANGELOG
 
-## 5.1.0
+## 5.2.0
+- Made the encode on object returns String instead of dynamic, to prevent confusion.
+- Added Kotlin-style `let` extension for `T` and `T?` types to simplify value transformations and null-safe chaining.
 
+## 5.1.0
 - Added new global randomBool, randomInt, and randomDouble
 - Updated the StringSimilarity: 
   - Focused on six key algorithms with enhanced accuracy (to see demo, you can view my [enefty_icons_preview website](https://omar-hanafy.github.io/enefty-icons/#/) for the [enefty_icons](https://pub.dev/packages/enefty_icons) package).
