@@ -511,10 +511,6 @@ class Debouncer {
       isRunning: false,
       isDisposed: true,
       executionCount: 0,
-      lastExecutionTime: null,
-      remainingTime: null,
-      remainingMaxWait: null,
-      isPaused: false,
     );
 
     _stateController

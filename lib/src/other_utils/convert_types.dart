@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 import 'package:dart_helper_utils/src/src.dart';
 import 'package:meta/meta.dart';
 

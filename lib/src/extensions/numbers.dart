@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:dart_helper_utils/src/exceptions/exceptions.dart';
 import 'package:dart_helper_utils/src/src.dart';
 import 'package:meta/meta.dart';
 

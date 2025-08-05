@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 5.2.1
+
+- exported exception classes.
+
 ## 5.2.0
 - Made the encode on object returns String instead of dynamic, to prevent confusion.
 - Added Kotlin-style `let` extension for `T` and `T?` types to simplify value transformations and null-safe chaining.

@@ -123,13 +123,13 @@ const Duration oneDay = Duration(days: 1);
 const millisecondsPerSecond = 1000;
 
 /// millisecondsPerMinute
-const millisecondsPerMinute = 60 * millisecondsPerSecond;
+const int millisecondsPerMinute = 60 * millisecondsPerSecond;
 
 /// millisecondsPerHour
-const millisecondsPerHour = 60 * millisecondsPerMinute;
+const int millisecondsPerHour = 60 * millisecondsPerMinute;
 
 /// millisecondsPerDay
-const millisecondsPerDay = 24 * millisecondsPerHour;
+const int millisecondsPerDay = 24 * millisecondsPerHour;
 
 /// Common regex patterns used for validation and parsing.
 /// regexAlphanumeric

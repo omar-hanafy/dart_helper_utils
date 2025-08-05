@@ -110,10 +110,10 @@ extension DHUBidiStringExtensions on String {
 }
 
 ///
-const textDirectionLTR = TextDirection.LTR;
+const TextDirection textDirectionLTR = TextDirection.LTR;
 
 ///
-const textDirectionRTL = TextDirection.RTL;
+const TextDirection textDirectionRTL = TextDirection.RTL;
 
 ///
-const textDirectionUNKNOWN = TextDirection.UNKNOWN;
+const TextDirection textDirectionUNKNOWN = TextDirection.UNKNOWN;

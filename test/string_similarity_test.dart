@@ -92,11 +92,11 @@ void main() {
       expect(StringSimilarity.ngramSimilarity('abc', ''), equals(0.0));
 
       // Test with different n-gram sizes
-      const config3 = StringSimilarityConfig(ngramSize: 3);
+      const config3 = StringSimilarityConfig();
       const config2 = StringSimilarityConfig(ngramSize: 2);
 
-      expect(StringSimilarity.ngramSimilarity('testing', 'testing', config3),
-          equals(1.0));
+      expect(
+          StringSimilarity.ngramSimilarity('testing', 'testing'), equals(1.0));
       expect(
           StringSimilarity.ngramSimilarity(
               'hello world', 'world hello', config2),
@@ -213,7 +213,6 @@ void main() {
       final matches = StringSimilarity.fuzzySearch(
           'aple', // Missing 'p'
           candidates,
-          maxTypos: 2,
           minSimilarity: 0.7);
 
       expect(matches, contains('apple'));
@@ -223,8 +222,7 @@ void main() {
     test('String extension fuzzyMatches', () {
       final candidates = ['hello', 'hallo', 'hullo', 'hi', 'hey'];
 
-      final matches =
-          'helo'.fuzzyMatches(candidates, maxTypos: 1, minSimilarity: 0.8);
+      final matches = 'helo'.fuzzyMatches(candidates, maxTypos: 1);
 
       expect(matches, contains('hello'));
       expect(matches, isNot(contains('hi'))); // Too different
@@ -235,8 +233,7 @@ void main() {
     test('Case sensitivity', () {
       // Default is case-insensitive (toLowerCase=true)
       const defaultConfig = StringSimilarityConfig();
-      expect(StringSimilarity.diceCoefficient('HELLO', 'hello', defaultConfig),
-          equals(1.0));
+      expect(StringSimilarity.diceCoefficient('HELLO', 'hello'), equals(1.0));
 
       // Case-sensitive configuration
       const caseSensitiveConfig = StringSimilarityConfig(toLowerCase: false);
@@ -248,9 +245,7 @@ void main() {
 
     test('Remove spaces configuration', () {
       const defaultConfig = StringSimilarityConfig();
-      expect(
-          StringSimilarity.diceCoefficient(
-              'hello world', 'helloworld', defaultConfig),
+      expect(StringSimilarity.diceCoefficient('hello world', 'helloworld'),
           lessThan(1.0));
 
       const removeSpacesConfig = StringSimilarityConfig(removeSpaces: true);
@@ -262,8 +257,7 @@ void main() {
 
     test('Remove accents configuration', () {
       const defaultConfig = StringSimilarityConfig();
-      expect(StringSimilarity.diceCoefficient('café', 'cafe', defaultConfig),
-          lessThan(1.0));
+      expect(StringSimilarity.diceCoefficient('café', 'cafe'), lessThan(1.0));
 
       const removeAccentsConfig = StringSimilarityConfig(removeAccents: true);
       expect(
@@ -308,9 +302,9 @@ void main() {
       final withStemming =
           StringSimilarity.cosine('running quickly', 'runs quick', config);
 
-      const noStemConfig = StringSimilarityConfig(stemTokens: false);
-      final withoutStemming = StringSimilarity.cosine(
-          'running quickly', 'runs quick', noStemConfig);
+      const noStemConfig = StringSimilarityConfig();
+      final withoutStemming =
+          StringSimilarity.cosine('running quickly', 'runs quick');
 
       expect(withStemming, greaterThanOrEqualTo(withoutStemming));
     });
@@ -528,11 +522,10 @@ void main() {
 
     test('Cache behavior', () {
       // Enable caching
-      const config = StringSimilarityConfig(enableCache: true);
+      const config = StringSimilarityConfig();
 
       // First call should populate cache
-      StringSimilarity.diceCoefficient(
-          'performance test', 'caching test', config);
+      StringSimilarity.diceCoefficient('performance test', 'caching test');
 
       // Get cache stats
       final stats = StringSimilarity.getCacheStats();
@@ -572,7 +565,6 @@ void main() {
     test('Cache capacity management', () {
       // Small cache capacity
       const config = StringSimilarityConfig(
-        enableCache: true,
         bigramCacheCapacity: 2,
       );
 
@@ -676,8 +668,8 @@ void main() {
 
   group('Type Aliases Tests', () {
     test('Type aliases work correctly', () {
-      SimilarityScore score = 0.95;
-      Distance distance = 5;
+      const score = 0.95;
+      const distance = 5;
 
       expect(score, isA<double>());
       expect(distance, isA<int>());
@@ -703,21 +695,18 @@ void main() {
     });
 
     test('N-gram caching performance', () {
-      const config = StringSimilarityConfig(
-        enableCache: true,
-        ngramSize: 3,
-      );
+      const config = StringSimilarityConfig();
 
       const text = 'This is a test string for n-gram caching';
 
       // First call - no cache
       final stopwatch1 = Stopwatch()..start();
-      StringSimilarity.ngramSimilarity(text, text, config);
+      StringSimilarity.ngramSimilarity(text, text);
       stopwatch1.stop();
 
       // Second call - should use cache
       final stopwatch2 = Stopwatch()..start();
-      StringSimilarity.ngramSimilarity(text, text, config);
+      StringSimilarity.ngramSimilarity(text, text);
       stopwatch2.stop();
 
       // Cached call should be faster (allowing for timing variations)
