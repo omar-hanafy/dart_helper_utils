@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 5.2.2
+
+- Added public methods `firstValueForKeys` and `firstElementForIndices` to Map and Iterable extensions for accessing values with fallback options.
+
 ## 5.2.1
 
 - exported exception classes.

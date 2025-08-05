@@ -1174,9 +1174,9 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
 @optionalTypeArgs
 extension ConvertObjectIterableNEx<E> on Iterable<E>? {
   /// Helper function to get the element from the list using the provided primary index or alternative indexes.
-  E? _getElementAtIndex(
+  E? firstElementForIndices(
     int index, {
-    List<int>? altIndexes,
+    List<int>? alternativeIndices,
   }) {
     if (this == null || index < 0) return null;
 
@@ -1184,8 +1184,8 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
       return this!.elementAt(index);
     } catch (_) {}
 
-    if (altIndexes != null) {
-      for (final altIndex in altIndexes) {
+    if (alternativeIndices != null) {
+      for (final altIndex in alternativeIndices) {
         try {
           return this!.elementAt(altIndex);
         } catch (_) {}
@@ -1207,7 +1207,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<String>? converter,
   }) =>
       ConvertObject.tryToString(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1228,7 +1228,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<num>? converter,
   }) =>
       ConvertObject.tryToNum(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1251,7 +1251,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<int>? converter,
   }) =>
       ConvertObject.tryToInt(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1272,7 +1272,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<BigInt>? converter,
   }) =>
       ConvertObject.tryToBigInt(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1293,7 +1293,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<double>? converter,
   }) =>
       ConvertObject.tryToDouble(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1314,7 +1314,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<bool>? converter,
   }) =>
       ConvertObject.tryToBool(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1338,7 +1338,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<DateTime>? converter,
   }) =>
       ConvertObject.tryToDateTime(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1362,7 +1362,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<Uri>? converter,
   }) =>
       ConvertObject.tryToUri(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1382,7 +1382,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<V2>? valueConverter,
   }) =>
       ConvertObject.tryToMap(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1402,7 +1402,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<T>? elementConverter,
   }) =>
       ConvertObject.tryToSet(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1421,7 +1421,7 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
     ElementConverter<T>? elementConverter,
   }) =>
       ConvertObject.tryToList(
-        _getElementAtIndex(index, altIndexes: altIndexes),
+        firstElementForIndices(index, alternativeIndices: altIndexes),
         defaultValue: defaultValue,
         mapKey: innerMapKey,
         listIndex: innerIndex,
@@ -1473,7 +1473,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<String>? converter,
   }) =>
       ConvertObject.toString1(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1495,7 +1495,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<num>? converter,
   }) =>
       ConvertObject.toNum(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1519,7 +1519,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<int>? converter,
   }) =>
       ConvertObject.toInt(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1541,7 +1541,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<BigInt>? converter,
   }) =>
       ConvertObject.toBigInt(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1563,7 +1563,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<double>? converter,
   }) =>
       ConvertObject.toDouble(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1585,7 +1585,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<bool>? converter,
   }) =>
       ConvertObject.toBool(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1610,7 +1610,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<DateTime>? converter,
   }) =>
       ConvertObject.toDateTime(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1635,7 +1635,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<Uri>? converter,
   }) =>
       ConvertObject.toUri(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1656,7 +1656,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<V2>? valueConverter,
   }) =>
       ConvertObject.toMap(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1677,7 +1677,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<T>? elementConverter,
   }) =>
       ConvertObject.toSet(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1697,7 +1697,7 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
     ElementConverter<T>? elementConverter,
   }) =>
       ConvertObject.toList(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1718,12 +1718,12 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
   /// Retrieves a value from the map using the provided primary key or alternative keys.
   ///
   /// [key] The primary key to search for.
-  /// [altKeys] An optional list of alternative keys to search if the primary key is not found.
+  /// [alternativeKeys] An optional list of alternative keys to search if the primary key is not found.
   ///
   /// Returns the value associated with the first found key, or null if no key is found.
-  V? _getObjectFromMap(
+  V? firstValueForKeys(
     K key, {
-    List<K>? altKeys,
+    List<K>? alternativeKeys,
   }) {
     final map = this;
     if (map == null) return null;
@@ -1732,8 +1732,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     var value = map[key];
 
     // If value is not found and alternative keys are provided, search in them
-    if (value == null && altKeys != null && altKeys.isNotEmpty) {
-      final altKey = altKeys.firstWhereOrNull(map.containsKey);
+    if (value == null &&
+        alternativeKeys != null &&
+        alternativeKeys.isNotEmpty) {
+      final altKey = alternativeKeys.firstWhereOrNull(map.containsKey);
       if (altKey != null) value = map[altKey];
     }
 
@@ -1752,7 +1754,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<String>? converter,
   }) =>
       ConvertObject.tryToString(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1773,7 +1775,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<num>? converter,
   }) =>
       ConvertObject.tryToNum(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1796,7 +1798,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<int>? converter,
   }) =>
       ConvertObject.tryToInt(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1817,7 +1819,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<BigInt>? converter,
   }) =>
       ConvertObject.tryToBigInt(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1838,7 +1840,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<double>? converter,
   }) =>
       ConvertObject.tryToDouble(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1859,7 +1861,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<bool>? converter,
   }) =>
       ConvertObject.tryToBool(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1883,7 +1885,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<DateTime>? converter,
   }) =>
       ConvertObject.tryToDateTime(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1907,7 +1909,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<Uri>? converter,
   }) =>
       ConvertObject.tryToUri(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1927,7 +1929,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<V2>? valueConverter,
   }) =>
       ConvertObject.tryToMap(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1947,7 +1949,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<T>? elementConverter,
   }) =>
       ConvertObject.tryToSet(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
@@ -1966,7 +1968,7 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
     ElementConverter<T>? elementConverter,
   }) =>
       ConvertObject.tryToList(
-        _getObjectFromMap(key, altKeys: altKeys),
+        firstValueForKeys(key, alternativeKeys: altKeys),
         defaultValue: defaultValue,
         mapKey: innerKey,
         listIndex: innerListIndex,
