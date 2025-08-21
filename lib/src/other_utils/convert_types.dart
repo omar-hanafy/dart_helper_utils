@@ -8,6 +8,45 @@ typedef ElementConverter<T> = T Function(Object? element);
 
 /// A utility class for converting objects to different types.
 abstract class ConvertObject {
+  /// Helper method to build standardized argument maps for ParsingException.
+  ///
+  /// Collects all arguments passed to conversion methods for comprehensive
+  /// error reporting. Includes method name, target type, and all parameters.
+  static Map<String, dynamic> _args({
+    required String method,
+    dynamic object,
+    dynamic mapKey,
+    int? listIndex,
+    String? format,
+    String? locale,
+    bool? autoDetectFormat,
+    bool? useCurrentLocale,
+    bool? utc,
+    dynamic defaultValue,
+    dynamic converter,
+    Type? targetType,
+  }) {
+    final args = <String, dynamic>{
+      'method': method,
+      'object': object,
+      'objectType': object?.runtimeType.toString(),
+    };
+
+    // Add optional parameters only if they're provided
+    if (targetType != null) args['targetType'] = targetType.toString();
+    if (mapKey != null) args['mapKey'] = mapKey;
+    if (listIndex != null) args['listIndex'] = listIndex;
+    if (format != null) args['format'] = format;
+    if (locale != null) args['locale'] = locale;
+    if (autoDetectFormat != null) args['autoDetectFormat'] = autoDetectFormat;
+    if (useCurrentLocale != null) args['useCurrentLocale'] = useCurrentLocale;
+    if (utc != null) args['utc'] = utc;
+    if (defaultValue != null) args['defaultValue'] = defaultValue;
+    if (converter != null) args['converter'] = converter.runtimeType.toString();
+
+    return args;
+  }
+
   @optionalTypeArgs
   static T? _convertObject<T>(
     dynamic object, {
@@ -73,7 +112,14 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toString',
+        parsingInfo: _args(
+          method: 'toString1',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -145,7 +191,16 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toNum',
+        parsingInfo: _args(
+          method: 'toNum',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          format: format,
+          locale: locale,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -223,7 +278,16 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toInt',
+        parsingInfo: _args(
+          method: 'toInt',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          format: format,
+          locale: locale,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -300,7 +364,14 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toBigInt',
+        parsingInfo: _args(
+          method: 'toBigInt',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -377,7 +448,16 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toNum',
+        parsingInfo: _args(
+          method: 'toDouble',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          format: format,
+          locale: locale,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -526,7 +606,19 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toDateTime',
+        parsingInfo: _args(
+          method: 'toDateTime',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          format: format,
+          locale: locale,
+          autoDetectFormat: autoDetectFormat,
+          useCurrentLocale: useCurrentLocale,
+          utc: utc,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -614,7 +706,14 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toUri',
+        parsingInfo: _args(
+          method: 'toUri',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          defaultValue: defaultValue,
+          converter: converter,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -698,7 +797,16 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toMap',
+        parsingInfo: _args(
+          method: 'toMap<$K, $V>',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          defaultValue: defaultValue,
+          converter:
+              keyConverter != null || valueConverter != null ? 'custom' : null,
+          targetType: Map<K, V>,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -790,7 +898,15 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toSet',
+        parsingInfo: _args(
+          method: 'toSet<$T>',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          defaultValue: defaultValue,
+          converter: elementConverter,
+          targetType: Set<T>,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -883,7 +999,15 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: 'toList',
+        parsingInfo: _args(
+          method: 'toList<$T>',
+          object: object,
+          mapKey: mapKey,
+          listIndex: listIndex,
+          defaultValue: defaultValue,
+          converter: elementConverter,
+          targetType: List<T>,
+        ),
         stackTrace: StackTrace.current,
       );
     }
@@ -2719,7 +2843,12 @@ T toType<T>(dynamic object) {
   if (object is T) return object;
   if (object == null) {
     throw ParsingException.nullObject(
-      parsingInfo: 'toType',
+      parsingInfo: {
+        'method': 'toType<$T>',
+        'object': object,
+        'objectType': 'null',
+        'targetType': '$T',
+      },
       stackTrace: StackTrace.current,
     );
   }
@@ -2734,7 +2863,12 @@ T toType<T>(dynamic object) {
   } catch (e, s) {
     throw ParsingException(
       error: e,
-      parsingInfo: 'toType',
+      parsingInfo: {
+        'method': 'toType<$T>',
+        'object': object,
+        'objectType': object.runtimeType.toString(),
+        'targetType': '$T',
+      },
       stackTrace: s,
     );
   }
@@ -2742,7 +2876,12 @@ T toType<T>(dynamic object) {
     return object as T;
   } catch (_) {}
   throw ParsingException(
-    parsingInfo: 'toType',
+    parsingInfo: {
+      'method': 'toType<$T>',
+      'object': object,
+      'objectType': object.runtimeType.toString(),
+      'targetType': '$T',
+    },
     error:
         'Unsupported type detected. Please ensure that the type you are attempting to convert to is either a primitive type or a valid data type: $T.',
   );
@@ -2778,7 +2917,12 @@ T? tryToType<T>(dynamic object) {
   } catch (e, s) {
     throw ParsingException(
       error: e,
-      parsingInfo: 'tryToType',
+      parsingInfo: {
+        'method': 'tryToType<$T>',
+        'object': object,
+        'objectType': object.runtimeType.toString(),
+        'targetType': '$T',
+      },
       stackTrace: s,
     );
   }
@@ -2787,6 +2931,11 @@ T? tryToType<T>(dynamic object) {
   } catch (_) {}
   throw ParsingException(
     error: 'Unsupported type: $T',
-    parsingInfo: 'tryToType',
+    parsingInfo: {
+      'method': 'tryToType<$T>',
+      'object': object,
+      'objectType': object.runtimeType.toString(),
+      'targetType': '$T',
+    },
   );
 }
