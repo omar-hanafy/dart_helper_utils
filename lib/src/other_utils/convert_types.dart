@@ -8,11 +8,25 @@ typedef ElementConverter<T> = T Function(Object? element);
 
 /// A utility class for converting objects to different types.
 abstract class ConvertObject {
-  /// Helper method to build standardized argument maps for ParsingException.
+  /// Builds standardized argument maps for ParsingException.
   ///
   /// Collects all arguments passed to conversion methods for comprehensive
-  /// error reporting. Includes method name, target type, and all parameters.
-  static Map<String, dynamic> _args({
+  /// error reporting. Merges standard parameters with optional debug info.
+  ///
+  /// The [debugInfo] parameter allows passing additional context without
+  /// breaking the API. Extension methods can use this to provide context
+  /// like which map key or list index was being accessed.
+  ///
+  /// Example:
+  /// ```dart
+  /// // From a Map extension method:
+  /// ConvertObject.toInt(
+  ///   someValue,
+  ///   debugInfo: {'key': 'userId', 'altKeys': ['user_id', 'uid']},
+  /// );
+  /// ```
+  @visibleForTesting
+  static Map<String, dynamic> buildParsingInfo({
     required String method,
     dynamic object,
     dynamic mapKey,
@@ -25,6 +39,7 @@ abstract class ConvertObject {
     dynamic defaultValue,
     dynamic converter,
     Type? targetType,
+    Map<String, dynamic>? debugInfo,
   }) {
     final args = <String, dynamic>{
       'method': method,
@@ -43,6 +58,11 @@ abstract class ConvertObject {
     if (utc != null) args['utc'] = utc;
     if (defaultValue != null) args['defaultValue'] = defaultValue;
     if (converter != null) args['converter'] = converter.runtimeType.toString();
+
+    // Merge any additional debug info
+    if (debugInfo != null && debugInfo.isNotEmpty) {
+      args.addAll(debugInfo);
+    }
 
     return args;
   }
@@ -101,6 +121,7 @@ abstract class ConvertObject {
     int? listIndex,
     String? defaultValue,
     ElementConverter<String>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<String>(
       object,
@@ -112,13 +133,14 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toString1',
           object: object,
           mapKey: mapKey,
           listIndex: listIndex,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -144,6 +166,7 @@ abstract class ConvertObject {
     int? listIndex,
     String? defaultValue,
     ElementConverter<String>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<String>(
           object,
@@ -175,6 +198,7 @@ abstract class ConvertObject {
     String? locale,
     num? defaultValue,
     ElementConverter<num>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<num>(
       object,
@@ -191,7 +215,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toNum',
           object: object,
           mapKey: mapKey,
@@ -200,6 +224,7 @@ abstract class ConvertObject {
           locale: locale,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -226,6 +251,7 @@ abstract class ConvertObject {
     int? listIndex,
     num? defaultValue,
     ElementConverter<num>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<num?>(
       object,
@@ -261,6 +287,7 @@ abstract class ConvertObject {
     String? locale,
     int? defaultValue,
     ElementConverter<int>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<int>(
       object,
@@ -278,7 +305,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toInt',
           object: object,
           mapKey: mapKey,
@@ -287,6 +314,7 @@ abstract class ConvertObject {
           locale: locale,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -313,6 +341,7 @@ abstract class ConvertObject {
     int? listIndex,
     int? defaultValue,
     ElementConverter<int>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<int?>(
           object,
@@ -350,6 +379,7 @@ abstract class ConvertObject {
     int? listIndex,
     BigInt? defaultValue,
     ElementConverter<BigInt>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<BigInt>(
       object,
@@ -364,13 +394,14 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toBigInt',
           object: object,
           mapKey: mapKey,
           listIndex: listIndex,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -397,6 +428,7 @@ abstract class ConvertObject {
     int? listIndex,
     BigInt? defaultValue,
     ElementConverter<BigInt>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<BigInt?>(
           object,
@@ -431,6 +463,7 @@ abstract class ConvertObject {
     String? locale,
     double? defaultValue,
     ElementConverter<double>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<double>(
       object,
@@ -448,7 +481,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toDouble',
           object: object,
           mapKey: mapKey,
@@ -457,6 +490,7 @@ abstract class ConvertObject {
           locale: locale,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -483,6 +517,7 @@ abstract class ConvertObject {
     String? locale,
     double? defaultValue,
     ElementConverter<double>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<double?>(
           object,
@@ -519,6 +554,7 @@ abstract class ConvertObject {
     int? listIndex,
     bool? defaultValue,
     ElementConverter<bool>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<bool?>(
       object,
@@ -547,6 +583,7 @@ abstract class ConvertObject {
     int? listIndex,
     bool? defaultValue,
     ElementConverter<bool>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<bool?>(
           object,
@@ -583,6 +620,7 @@ abstract class ConvertObject {
     bool utc = false,
     DateTime? defaultValue,
     ElementConverter<DateTime>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<DateTime>(
       object,
@@ -606,7 +644,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toDateTime',
           object: object,
           mapKey: mapKey,
@@ -618,6 +656,7 @@ abstract class ConvertObject {
           utc: utc,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -649,6 +688,7 @@ abstract class ConvertObject {
     bool utc = false,
     DateTime? defaultValue,
     ElementConverter<DateTime>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<DateTime?>(
           object,
@@ -691,6 +731,7 @@ abstract class ConvertObject {
     int? listIndex,
     Uri? defaultValue,
     ElementConverter<Uri>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<Uri>(
       object,
@@ -706,13 +747,14 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toUri',
           object: object,
           mapKey: mapKey,
           listIndex: listIndex,
           defaultValue: defaultValue,
           converter: converter,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -738,6 +780,7 @@ abstract class ConvertObject {
     int? listIndex,
     Uri? defaultValue,
     ElementConverter<Uri>? converter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<Uri?>(
           object,
@@ -774,6 +817,7 @@ abstract class ConvertObject {
     Map<K, V>? defaultValue,
     ElementConverter<K>? keyConverter,
     ElementConverter<V>? valueConverter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<Map<K, V>>(
       object,
@@ -797,7 +841,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toMap<$K, $V>',
           object: object,
           mapKey: mapKey,
@@ -806,6 +850,7 @@ abstract class ConvertObject {
           converter:
               keyConverter != null || valueConverter != null ? 'custom' : null,
           targetType: Map<K, V>,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -833,6 +878,7 @@ abstract class ConvertObject {
     Map<K, V>? defaultValue,
     ElementConverter<K>? keyConverter,
     ElementConverter<V>? valueConverter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<Map<K, V>?>(
           object,
@@ -876,6 +922,7 @@ abstract class ConvertObject {
     int? listIndex,
     Set<T>? defaultValue,
     ElementConverter<T>? elementConverter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<Set<T>>(
       object,
@@ -898,7 +945,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toSet<$T>',
           object: object,
           mapKey: mapKey,
@@ -906,6 +953,7 @@ abstract class ConvertObject {
           defaultValue: defaultValue,
           converter: elementConverter,
           targetType: Set<T>,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -932,6 +980,7 @@ abstract class ConvertObject {
     int? listIndex,
     Set<T>? defaultValue,
     ElementConverter<T>? elementConverter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<Set<T>?>(
           object,
@@ -976,6 +1025,7 @@ abstract class ConvertObject {
     int? listIndex,
     List<T>? defaultValue,
     ElementConverter<T>? elementConverter,
+    Map<String, dynamic>? debugInfo,
   }) {
     final data = _convertObject<List<T>?>(
       object,
@@ -999,7 +1049,7 @@ abstract class ConvertObject {
     if (data == null) {
       if (defaultValue != null) return defaultValue;
       throw ParsingException.nullObject(
-        parsingInfo: _args(
+        parsingInfo: buildParsingInfo(
           method: 'toList<$T>',
           object: object,
           mapKey: mapKey,
@@ -1007,6 +1057,7 @@ abstract class ConvertObject {
           defaultValue: defaultValue,
           converter: elementConverter,
           targetType: List<T>,
+          debugInfo: debugInfo,
         ),
         stackTrace: StackTrace.current,
       );
@@ -1035,6 +1086,7 @@ abstract class ConvertObject {
     int? listIndex,
     List<T>? defaultValue,
     ElementConverter<T>? elementConverter,
+    Map<String, dynamic>? debugInfo,
   }) {
     return _convertObject<List<T>?>(
           object,
@@ -1077,6 +1129,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toNum] defined in the [ConvertObject] class to convert a
@@ -1100,6 +1153,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toInt] defined in the [ConvertObject] class to convert a
@@ -1123,6 +1177,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
@@ -1142,6 +1197,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toDouble] defined in the [ConvertObject] class to convert a
@@ -1165,6 +1221,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toBool] defined in the [ConvertObject] class to convert a
@@ -1184,6 +1241,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
@@ -1213,6 +1271,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         useCurrentLocale: useCurrentLocale,
         utc: utc,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toUri] defined in the [ConvertObject] class to convert a
@@ -1232,6 +1291,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toMap] defined in the [ConvertObject] class to convert a
@@ -1253,6 +1313,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         listIndex: innerIndex,
         keyConverter: keyConverter,
         valueConverter: valueConverter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toSet] defined in the [ConvertObject] class to convert a
@@ -1272,6 +1333,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         elementConverter: elementConverter,
+        debugInfo: {'index': index},
       );
 
   /// uses the [toList] defined in the [ConvertObject] class to convert a
@@ -1291,6 +1353,7 @@ extension ConvertObjectIterableEx<E> on Iterable<E> {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         elementConverter: elementConverter,
+        debugInfo: {'index': index},
       );
 }
 
@@ -1336,6 +1399,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
@@ -1359,6 +1427,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
@@ -1382,6 +1455,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
@@ -1401,6 +1479,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
@@ -1424,6 +1507,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
@@ -1443,6 +1531,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
@@ -1472,6 +1565,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         useCurrentLocale: useCurrentLocale,
         utc: utc,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
@@ -1491,6 +1589,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         converter: converter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
@@ -1512,6 +1615,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         listIndex: innerIndex,
         keyConverter: keyConverter,
         valueConverter: valueConverter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
@@ -1531,6 +1639,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         elementConverter: elementConverter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 
   /// uses the [tryToList] defined in the [ConvertObject] class to convert a
@@ -1550,6 +1663,11 @@ extension ConvertObjectIterableNEx<E> on Iterable<E>? {
         mapKey: innerMapKey,
         listIndex: innerIndex,
         elementConverter: elementConverter,
+        debugInfo: {
+          'index': index,
+          if (altIndexes != null && altIndexes.isNotEmpty)
+            'altIndexes': altIndexes,
+        },
       );
 }
 
@@ -1602,6 +1720,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toNum] defined in the [ConvertObject] class to convert a
@@ -1626,6 +1748,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toInt] defined in the [ConvertObject] class to convert a
@@ -1650,6 +1776,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toBigInt] defined in the [ConvertObject] class to convert a
@@ -1670,6 +1800,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toDouble] defined in the [ConvertObject] class to convert a
@@ -1694,6 +1828,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toBool] defined in the [ConvertObject] class to convert a
@@ -1714,6 +1852,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toDateTime] defined in the [ConvertObject] class to convert a
@@ -1744,6 +1886,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         useCurrentLocale: useCurrentLocale,
         utc: utc,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toUri] defined in the [ConvertObject] class to convert a
@@ -1764,6 +1910,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toMap] defined in the [ConvertObject] class to convert a
@@ -1786,6 +1936,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         listIndex: innerListIndex,
         keyConverter: keyConverter,
         valueConverter: valueConverter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toSet] defined in the [ConvertObject] class to convert a
@@ -1806,6 +1960,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         mapKey: innerKey,
         listIndex: innerListIndex,
         elementConverter: elementConverter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [toList] defined in the [ConvertObject] class to convert a
@@ -1826,6 +1984,10 @@ extension ConvertObjectMapEx<K, V> on Map<K, V> {
         mapKey: innerKey,
         listIndex: innerListIndex,
         elementConverter: elementConverter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// Extracts a value from the map by the given [key] and attempts to
@@ -1883,6 +2045,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToNum] defined in the [ConvertObject] class to convert a
@@ -1906,6 +2072,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToInt] defined in the [ConvertObject] class to convert a
@@ -1929,6 +2099,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToBigInt] defined in the [ConvertObject] class to convert a
@@ -1948,6 +2122,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToDouble] defined in the [ConvertObject] class to convert a
@@ -1971,6 +2149,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         format: format,
         locale: locale,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToBool] defined in the [ConvertObject] class to convert a
@@ -1990,6 +2172,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToDateTime] defined in the [ConvertObject] class to convert a
@@ -2019,6 +2205,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         useCurrentLocale: useCurrentLocale,
         utc: utc,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToUri] defined in the [ConvertObject] class to convert a
@@ -2038,6 +2228,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         mapKey: innerKey,
         listIndex: innerListIndex,
         converter: converter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToMap] defined in the [ConvertObject] class to convert a
@@ -2059,6 +2253,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         listIndex: innerListIndex,
         keyConverter: keyConverter,
         valueConverter: valueConverter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToSet] defined in the [ConvertObject] class to convert a
@@ -2078,6 +2276,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         mapKey: innerKey,
         listIndex: innerListIndex,
         elementConverter: elementConverter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// uses the [tryToList] defined in the [ConvertObject] class to convert a
@@ -2097,6 +2299,10 @@ extension ConvertObjectMapNEx<K, V> on Map<K, V>? {
         mapKey: innerKey,
         listIndex: innerListIndex,
         elementConverter: elementConverter,
+        debugInfo: {
+          'key': key,
+          if (altKeys != null && altKeys.isNotEmpty) 'altKeys': altKeys,
+        },
       );
 
   /// Tries to extracts a value from the map by the given [key] and attempts to

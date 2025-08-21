@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 5.4.0
+
+- Enhanced ParsingException to provide comprehensive debugging information with structured argument maps and filtered output.
+
 ## 5.3.0
 
 - Reintroduced `Coordinates` typedef with serialization support (to/from JSON)
