@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 5.3.0
+
+- Reintroduced `Coordinates` typedef with serialization support (to/from JSON)
+
 ## 5.2.2
 
 - Added public methods `firstValueForKeys` and `firstElementForIndices` to Map and Iterable extensions for accessing values with fallback options.
