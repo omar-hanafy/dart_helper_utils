@@ -15,10 +15,6 @@ typedef Currency = ({String code, String name, String symbol});
 /// For example, (language: "eng", official: "Republic of Zimbabwe", common: "Zimbabwe").
 typedef NativeName = ({String language, String official, String common});
 
-/// Represents geographical coordinates with latitude and longitude.
-/// For example, (latitude: -20.0, longitude: 30.0).
-typedef Coordinates = ({double latitude, double longitude});
-
 /// Represents a language with its code and name.
 /// For example, (code: "en", name: "English").
 typedef Language = ({String code, String name});
@@ -29,6 +25,29 @@ typedef CountrySearchAlgorithm = List<DHUCountry> Function(
   List<DHUCountry> countries,
   String query,
 );
+
+/// Represents geographical coordinates with latitude and longitude.
+/// For example, (latitude: -20.0, longitude: 30.0).
+typedef Coordinates = ({double latitude, double longitude});
+
+/// Top-level codec helpers
+Coordinates coordinatesFromJson(Map<String, dynamic> json) {
+  final lat = json.getDouble('latitude', altKeys: ['lat']);
+  final lon = json.getDouble('longitude', altKeys: ['lon']);
+  return (latitude: lat, longitude: lon);
+}
+
+/// toJson methods on the Coordinates record via an extension
+extension CoordinatesOps on Coordinates {
+  /// Converts the [Coordinates] object to a JSON map representation.
+  ///
+  /// Returns a [Map] containing the latitude and longitude values.
+  /// For example: {'latitude': -20.0, 'longitude': 30.0}
+  Map<String, dynamic> toJson() => {
+        'latitude': latitude,
+        'longitude': longitude,
+      };
+}
 
 /// A class representing country information including names, codes, region, and other details.
 @immutable
