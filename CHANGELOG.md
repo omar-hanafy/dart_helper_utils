@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 5.4.1
+
+Improved String.toDateAutoFormat docs (parsing order, locale, time zones) with examples. Refactored implementation for
+better normalization and locale-aware disambiguation.
+Added documentation_rules.md for module docs standards.
+
 ## 5.4.0
 
 - Enhanced ParsingException to provide comprehensive debugging information with structured argument maps and filtered output.
