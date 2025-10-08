@@ -285,24 +285,8 @@ extension DHUNullSafeStringExtensions on String? {
     return this![this!.length - 1];
   }
 
-  /// Parses the string as a num or returns null if it is not a number.
-  num? get tryToNum => this == null ? null : num.tryParse(this!);
-
-  /// Parses the string as a double or returns null if it is not a number.
-  double? get tryToDouble =>
-      this == null ? null : num.tryParse(this!).tryToDouble;
-
-  /// Parses the string as an int or returns null if it is not a number.
-  int? get tryToInt => this == null ? null : num.tryParse(this!).tryToInt;
-
-  /// Parses the string as a num or returns null if it is not a number.
-  num get toNum => num.parse(this!);
-
-  /// Parses the string as a double or returns null if it is not a number.
-  double get toDouble => num.parse(this!).toDouble();
-
-  /// Parses the string as an int or returns null if it is not a number.
-  int get toInt => num.parse(this!).toInt();
+  // Numeric conversions moved to convert_object. Use:
+  //   toNum(this), toDouble(this), toInt(this), tryToNum(this), tryToDouble(this), tryToInt(this)
 
   /// Indicates whether the string is null, empty, or consists only of whitespace characters.
   bool get isNullOrWhiteSpace {
@@ -320,37 +304,6 @@ extension DHUNullSafeStringExtensions on String? {
   /// Example: In a string with 10 characters, a [maxSize] of 3 would return the first 3 characters.
   String? limitFromStart(int maxSize) =>
       (this?.length ?? 0) < maxSize ? this : this!.substring(0, maxSize);
-
-  /// Converts the string into a boolean.
-  /// Returns true if the string is any of these values: "true", "yes", "1", or if the string is a number and greater than 0, false if less than 1. This is also case insensitive.
-  bool get asBool {
-    try {
-      final s = clean.tryToLowerCase ?? 'false';
-      return s == 'true' ||
-          s == 'yes' ||
-          s == '1' ||
-          s == 'ok' ||
-          s.tryToNum.asBool;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  /// Decodes the JSON string into a dynamic data structure.
-  /// Returns the decoded dynamic data structure if the string is non-empty and valid JSON.
-  /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
-  dynamic decode({Object? Function(Object? key, Object? value)? reviver}) =>
-      isEmptyOrNull ? null : json.decode(this!, reviver: reviver);
-
-  /// Decodes the JSON string into a dynamic data structure.
-  /// Returns the decoded dynamic data structure if the string is non-empty and valid JSON.
-  /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
-  dynamic tryDecode({Object? Function(Object? key, Object? value)? reviver}) {
-    try {
-      return decode(reviver: reviver);
-    } catch (_) {}
-    return null;
-  }
 
   /// property returns the integer value of the Roman numeral string.
   int? get asRomanNumeralToInt =>

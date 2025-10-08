@@ -1,7 +1,7 @@
 name: dart_helper_utils
 description: This package offers a collection of Dart utilities, tools for converting dynamic objects to various types, and extending core Dart classes with extensions.
 repository: https://github.com/omar-hanafy/dart_helper_utils
-version: 5.4.0
+version: 6.0.0-dev.1
 
 topics:
   - utils
@@ -17,10 +17,11 @@ environment:
 dependencies:
   intl: ">=0.19.0 <1.0.0"
   mime: ^2.0.0
-  meta: ^1.15.0
-  async: ^2.11.0
+  meta: ^1.17.0
+  async: ^2.13.0
   equatable: ^2.0.7
-
+  convert_object:
+    path: packages/convert_object
 dev_dependencies:
-  very_good_analysis: ^9.0.0
-  test: ^1.25.14
+  very_good_analysis: ^10.0.0
+  test: ^1.26.3

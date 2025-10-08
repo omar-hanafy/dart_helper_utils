@@ -9,10 +9,10 @@ Future<void> main() async {
 
   final list = <dynamic>[1, 2, '3', '3.1', 22.3];
 
-  print(list.convertTo<num>()); // [1, 2, 3, 3.1, 22.3]
-  print(list.convertTo<int>()); // [1, 2, 3, 3, 22]
-  print(list.convertTo<double>()); // [1.0, 2.0, 3.0, 3.1, 22.3]
-  print(list.convertTo<String>()); // ['1', '2', '3', '3.1', '22.3']
+  print(toList<num>(list)); // [1, 2, 3, 3.1, 22.3]
+  print(toList<int>(list)); // [1, 2, 3, 3, 22]
+  print(toList<double>(list)); // [1.0, 2.0, 3.0, 3.1, 22.3]
+  print(toList<String>(list)); // ['1', '2', '3', '3.1', '22.3']
 
   // parsing raw Json to Map<String, dynamic>
   // note: you can also use the ConvertObject.toMap to avoid ambiguity.
@@ -49,17 +49,17 @@ Future<void> main() async {
   print('Is Success: ${httpStatusCode.isSuccessCode}');
   print('Is Client Error: ${httpStatusCode.isClientErrorCode}');
 
-  // quickly use normal date parsing.
-  print('1997-08-12 00:00:00.000'.toDateTime);
+  // quickly use normal date parsing via convert_object
+  print('1997-08-12 00:00:00.000'.convert.toDateTime());
 
   // parsing complex datetime formats.
   const dateStr1 = '2024-06-09T15:30:00Z';
   const dateStr2 = 'June 9, 2024 3:30 PM';
   const dateStr3 = 'Tuesday, June 11th, 2024 at 2:15 PM';
 
-  print(dateStr1.toDateAutoFormat());
-  print(dateStr2.toDateAutoFormat());
-  print(dateStr3.toDateAutoFormat());
+  print(dateStr1.convert.toDateTime());
+  print(dateStr2.convert.toDateTime());
+  print(dateStr3.convert.toDateTime());
 
   const stringToConvert =
       '123Lorem-Ipsum_is_simply 12DummyText & of THE_PRINTING AND type_setting-industry.';
@@ -208,7 +208,7 @@ Future<void> main() async {
   for (final entry in httpDateTypeTestCases.entries) {
     final dateStr = entry.key;
     final formatDescription = entry.value;
-    final parsedDate = dateStr.parseHttpDate();
+    final parsedDate = dateStr.convert.tryToDateTime();
 
     if (parsedDate != null) {
       print('Date string: "$dateStr" ($formatDescription)');

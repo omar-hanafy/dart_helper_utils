@@ -4,37 +4,10 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 extension DHUNumberFormatNullableStringExtensions on String? {
   /// Creates a [NumberFormat] object using the string as the pattern, along with the given [locale].
   NumberFormat numberFormat({String? locale}) => NumberFormat(this, locale);
-
-  /// Tries to parse the string to a number with the given [newPattern] and [locale].
-  /// Returns null if the string is null or empty.
-  num? tryToNumFormatted([String? newPattern, String? locale]) =>
-      isBlank ? null : NumberFormat(newPattern, locale).tryParse(this!);
-
-  /// Tries to parse the string to an integer with the given [newPattern] and [locale].
-  /// Returns null if the string is null or empty.
-  int? tryToIntFormatted([String? newPattern, String? locale]) =>
-      tryToNumFormatted(newPattern, locale)?.toInt();
-
-  /// Tries to parse the string to a double with the given [newPattern] and [locale].
-  /// Returns null if the string is null or empty.
-  double? tryToDoubleFormatted([String? newPattern, String? locale]) =>
-      tryToNumFormatted(newPattern, locale)?.toDouble();
 }
 
 /// Extension methods for the [String] type to format numbers using the [intl] package.
 extension DHUNumberFormatStringExtensions on String {
-  /// Parses the string to a number with the given [newPattern] and [locale].
-  num toNumFormatted([String? newPattern, String? locale]) =>
-      NumberFormat(newPattern, locale).parse(this);
-
-  /// Parses the string to an integer with the given [newPattern] and [locale].
-  int toIntFormatted([String? newPattern, String? locale]) =>
-      toNumFormatted(newPattern, locale).toInt();
-
-  /// Parses the string to a double with the given [newPattern] and [locale].
-  double toDoubleFormatted([String? newPattern, String? locale]) =>
-      toNumFormatted(newPattern, locale).toDouble();
-
   /// Creates a [NumberFormat] object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
   NumberFormat symbolCurrencyFormat({
     String? locale,

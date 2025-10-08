@@ -1,26 +1,3 @@
-import 'package:dart_helper_utils/dart_helper_utils.dart';
-
-/// Extensions for nullable [String] to convert to [Uri]
-extension DHUNullSafeURIExtensions on String? {
-  /// converts a string? to a uri
-  Uri? get toUri => this == null ? null : Uri.tryParse(this!.clean);
-
-  /// converts a string? to a phone uri
-  Uri? get toPhoneUri => this == null
-      ? null
-      : Uri.parse(this!.startsWith('tel://') ? this! : 'tel://${this!.clean}');
-}
-
-/// Extensions for [String] to convert to [Uri]
-extension DHUURIExtensions on String {
-  /// converts a string to a uri
-  Uri get toUri => Uri.parse(clean);
-
-  /// converts a string to a phone uri
-  Uri get toPhoneUri =>
-      Uri.parse(startsWith('tel://') ? clean : 'tel://$clean');
-}
-
 /// Extensions for [Uri] utils and manipulation.
 extension DHUUriEx on Uri {
   /// Extracts the domain name from a URL.

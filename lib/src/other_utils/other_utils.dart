@@ -1,9 +1,6 @@
 /// Utilities for type conversion operations
 library;
 
-/// Utilities for handling object conversion.
-export 'convert_types.dart';
-
 /// Utilities for handling country codes and timezone operations
 export 'country_and_timezone_utils.dart';
 

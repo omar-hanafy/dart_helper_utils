@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 6.0.0-dev.1
+- Enhanced all conversion functions, with a new dedicated package for conversions.
+
+## 5.5.0
+
+- Enum conversion: `ConvertObject.toEnum<T extends Enum>()` / `tryToEnum<T extends Enum>()` + top-level mirrors.
+- Collection extensions: `getEnum`/`tryGetEnum` for `Map` and `Iterable` (nullable and non-nullable).
+- Helpers: `EnumParsers` (`byName`, `fromString`, `byNameOrFallback`, `byNameCaseInsensitive`, `byIndex`) and `List<T extends Enum>` shortcuts (`.parser`, `.parserWithFallback`, `.parserCaseInsensitive`, `.parserByIndex`).
+- Safer `try*` conversions via `_convertObject` improvements; enum APIs constrained to `T extends Enum`.
+
 ## 5.4.1
 
 Improved String.toDateAutoFormat docs (parsing order, locale, time zones) with examples. Refactored implementation for

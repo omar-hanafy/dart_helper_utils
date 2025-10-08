@@ -1,0 +1,25 @@
+name: Dart CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - name: Install dependencies
+        run: dart pub get
+      - name: Format (check)
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze
+        run: dart analyze
+      - name: Test
+        run: dart test --reporter expanded
+

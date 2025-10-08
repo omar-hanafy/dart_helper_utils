@@ -1,0 +1,22 @@
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    - prefer_single_quotes
+    - unnecessary_this
+    - prefer_final_locals
+    - always_declare_return_types
+    - avoid_redundant_argument_values
+    - leading_newlines_in_multiline_strings
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - sort_constructors_first
+    - directives_ordering
+
+analyzer:
+  exclude:
+    - build/**
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:dart_helper_utils/src/src.dart';
+import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:meta/meta.dart';
 
 /// DHUHttpEx
@@ -956,7 +956,7 @@ extension DHUListIntStats on Iterable<int> {
   /// Finds the mode(s) of the integers in the iterable.
   ///
   /// Returns a list of integers that appear most frequently.
-  List<int> get mode => NumbersHelper.mode(this.toList()).convertTo<int>();
+  List<int> get mode => toList<int>(NumbersHelper.mode(this.toList()));
 
   /// Computes the variance of the integers in the iterable.
   int get variance => NumbersHelper.variance(this.toList()).toInt();
@@ -989,7 +989,7 @@ extension DHUListDoubleStats on Iterable<double> {
   ///
   /// Returns a list of doubles that appear most frequently.
   List<double> get mode =>
-      NumbersHelper.mode(this.toList()).convertTo<double>();
+      toList<double>(NumbersHelper.mode(this.toList()));
 
   /// Computes the variance of the doubles in the iterable.
   double get variance => NumbersHelper.variance(this.toList()).toDouble();

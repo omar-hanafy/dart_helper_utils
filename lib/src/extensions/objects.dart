@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:dart_helper_utils/dart_helper_utils.dart';
-
 ///
 extension DHUObjectNullableExtensions on Object? {
   /// Encodes the object into a JSON string.
@@ -48,20 +46,6 @@ extension DHUObjectNullableExtensions on Object? {
 
   /// Checks if this object is not null.
   bool get isNotNull => this != null;
-
-  /// *Rules*:
-  ///  * Object is true only if
-  ///    1. Object is bool and true.
-  ///    2. Object is num and is greater than zero.
-  ///    3. Object is string and is equal to 'yes', 'true', '1', or 'ok'.
-  /// * any other conditions including null will return false.
-  bool get asBool {
-    final self = this;
-    if (self == null) return false;
-    if (self is bool) return self;
-    if (self is num) return self.asBool;
-    return self.toString().asBool;
-  }
 
   /// Checks if this object is a primitive type.
   bool isPrimitive() {

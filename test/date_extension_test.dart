@@ -295,17 +295,17 @@ void main() {
     // Tests for DHUDateNullString extension
     group('DHUDateNullString', () {
       test('tryToDateTime', () {
-        expect('2022-05-10'.tryToDateTime, DateTime(2022, 5, 10));
-        expect('invalid-date'.tryToDateTime, null);
+        expect('2022-05-10'.convert.tryToDateTime(), DateTime(2022, 5, 10));
+        expect('invalid-date'.convert.tryToDateTime(), null);
       });
 
       test('toDateTime', () {
-        expect('2022-05-10'.toDateTime, DateTime(2022, 5, 10));
+        expect('2022-05-10'.convert.toDateTime(), DateTime(2022, 5, 10));
       });
 
       test('timestampToDate', () {
         expect(
-          '1652188800000'.timestampToDate,
+          '1652188800000'.convert.toDateTime(),
           DateTime.fromMillisecondsSinceEpoch(1652188800000),
         );
       });
@@ -339,13 +339,13 @@ void main() {
 
       test('timestampToDate', () {
         expect(
-          1652188800000.timestampToDate,
+          1652188800000.convert.toDateTime(),
           DateTime.fromMillisecondsSinceEpoch(1652188800000),
         );
       });
-      test('timestampToDate', () {
+      test('timestampToDate duplicate', () {
         expect(
-          1652188800000.timestampToDate,
+          1652188800000.convert.toDateTime(),
           DateTime.fromMillisecondsSinceEpoch(1652188800000),
         );
       });

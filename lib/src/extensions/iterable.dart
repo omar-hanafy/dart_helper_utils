@@ -201,11 +201,11 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
 
 /// Enhanced documentation for non-nullable Iterable extensions.
 extension DHUCollectionsExtensions<E> on Iterable<E> {
-  /// Converts this iterable to a list of type [R] using custom conversion logic.
-  List<R> toListConverted<R>() => this.toList().convertTo<R>();
+  /// Converts this iterable to a list of type [R] using convert_object logic.
+  List<R> toListConverted<R>() => toList<R>(this);
 
-  /// Converts this iterable to a set of type [R] using custom conversion logic.
-  Set<R> toSetConverted<R>() => this.toSet().convertTo<R>();
+  /// Converts this iterable to a set of type [R] using convert_object logic.
+  Set<R> toSetConverted<R>() => toSet<R>(this);
 
   /// Returns this iterable (as is) if it is non-null; otherwise, returns an empty iterable.
   Iterable<E> orEmpty() => this;

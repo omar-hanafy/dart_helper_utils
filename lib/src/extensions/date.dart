@@ -1,37 +1,6 @@
-import 'package:d'
-    'art_helper_utils/dart_helper_utils.dart';
+import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-/// DHUDateString
-extension DHUDateString on String {
-  /// Parse string to [DateTime] using null Safety
-  DateTime get toDateTime => DateTime.parse(this);
-
-  /// Parse string to [DateTime] using null Safety
-  DateTime get timestampToDate => this.toInt.timestampToDate;
-}
-
-/// DHUDateNullString
-extension DHUDateNullString on String? {
-  /// Parse string to [DateTime] using null Safety
-  DateTime? get tryToDateTime {
-    if (isBlank) return null;
-    try {
-      return DateTime.tryParse(this!);
-    } catch (_) {}
-    return null;
-  }
-
-  /// Attempts to parse the nullable string as a timestamp and convert it to a [DateTime].
-  ///
-  /// Returns `null` if the string is blank or if parsing fails.
-  DateTime? get tryTimestampToDate {
-    if (isBlank) return null;
-    try {
-      this.toInt.timestampToDate;
-    } catch (_) {}
-    return null;
-  }
-}
+// String→DateTime conversions moved to convert_object.
 
 /// NumberToDateUtils
 extension NumberToDateUtils on num {
@@ -89,8 +58,7 @@ extension NumberToDateUtils on num {
   /// ```dart
   /// 1609459200000.timestampToDate; // Returns DateTime for 2021-01-01 00:00:00.000
   /// ```
-  DateTime get timestampToDate =>
-      DateTime.fromMillisecondsSinceEpoch(this.toInt());
+  // Removed: prefer ConvertObject.toDateTime(this) for epoch values.
 
   /// Checks if the number (assumed to represent a month, 1-based) is within the specified range of months.
   ///

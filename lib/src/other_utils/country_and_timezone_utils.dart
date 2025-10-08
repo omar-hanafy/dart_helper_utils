@@ -32,8 +32,8 @@ typedef Coordinates = ({double latitude, double longitude});
 
 /// Top-level codec helpers
 Coordinates coordinatesFromJson(Map<String, dynamic> json) {
-  final lat = json.getDouble('latitude', altKeys: ['lat']);
-  final lon = json.getDouble('longitude', altKeys: ['lon']);
+  final lat = json.getDouble('latitude', alternativeKeys: ['lat']);
+  final lon = json.getDouble('longitude', alternativeKeys: ['lon']);
   return (latitude: lat, longitude: lon);
 }
 
