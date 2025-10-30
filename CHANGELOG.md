@@ -1,7 +1,8 @@
 # CHANGELOG
 
 ## 6.0.0-dev.1
-- Enhanced all conversion functions, with a new dedicated package for conversions.
+- Enhanced all conversion functions, with a new dedicated [package](https://pub.dev/packages/convert_object) for conversions.
+- Migration docs to be added later.
 
 ## 5.5.0
 

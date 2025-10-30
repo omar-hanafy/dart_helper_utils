@@ -1141,110 +1141,158 @@ class StringSimilarity {
     String input, [
     StringSimilarityConfig config = const StringSimilarityConfig(),
   ]) {
-    var str = _normalizeString(input, config).toUpperCase();
-    if (str.isEmpty) return '';
+    final normalized = _normalizeString(input, config);
+    if (normalized.isEmpty) return '';
 
-    // Apply initial transformations
+    // Apply initial transformations using lowercase keys, then convert to uppercase
+    var lower = normalized.toLowerCase();
     for (final entry in _metaphoneMap.entries) {
-      str = str.replaceAll(entry.key, entry.value);
+      lower = lower.replaceAll(entry.key, entry.value);
     }
+    final str = lower.toUpperCase();
 
     final result = StringBuffer();
     final vowels = {'A', 'E', 'I', 'O', 'U'};
+    const simpleConsonants = {'F', 'J', 'L', 'M', 'N', 'R'};
 
     for (var i = 0; i < str.length; i++) {
       final char = str[i];
       final prevChar = i > 0 ? str[i - 1] : '';
       final nextChar = i < str.length - 1 ? str[i + 1] : '';
+      final nextNextChar = i < str.length - 2 ? str[i + 2] : '';
 
       // Skip duplicate consonants
       if (i > 0 && char == prevChar && !vowels.contains(char)) continue;
 
-      switch (char) {
-        case 'B':
-          result.write('B');
-        case 'C':
-          if (nextChar == 'H') {
-            result.write('X');
-            i++; // Skip H
-          } else if (nextChar == 'I' || nextChar == 'E' || nextChar == 'Y') {
-            result.write('S');
-          } else {
-            result.write('K');
-          }
-        case 'D':
-          if (nextChar == 'G' &&
-              (i + 2 < str.length) &&
-              (str[i + 2] == 'E' || str[i + 2] == 'I' || str[i + 2] == 'Y')) {
-            result.write('J');
-            i++; // Skip G
-          } else {
-            result.write('T');
-          }
-        case 'F':
-        case 'J':
-        case 'L':
-        case 'M':
-        case 'N':
-        case 'R':
-          result.write(char);
-        case 'G':
-          if (nextChar == 'H') {
-            i++; // Skip H
-          } else if (nextChar == 'N' && i == str.length - 2) {
-            // Silent GN at end
-          } else if (nextChar == 'I' || nextChar == 'E' || nextChar == 'Y') {
-            result.write('J');
-          } else {
-            result.write('K');
-          }
-        case 'H':
-          if ((i == 0 || vowels.contains(prevChar)) &&
-              vowels.contains(nextChar)) {
-            result.write('H');
-          }
-        case 'K':
-          if (i == 0 || prevChar != 'C') {
-            result.write('K');
-          }
-        case 'P':
-          result.write(nextChar == 'H' ? 'F' : 'P');
-          if (nextChar == 'H') i++;
-        case 'Q':
-          result.write('K');
-        case 'S':
-          if (nextChar == 'H') {
-            result.write('X');
-            i++;
-          } else if (nextChar == 'I' &&
-              i + 2 < str.length &&
-              (str[i + 2] == 'O' || str[i + 2] == 'A')) {
-            result.write('X');
-          } else {
-            result.write('S');
-          }
-        case 'T':
-          if (nextChar == 'H') {
-            result.write('0');
-            i++;
-          } else if (nextChar == 'I' &&
-              i + 2 < str.length &&
-              (str[i + 2] == 'O' || str[i + 2] == 'A')) {
-            result.write('X');
-          } else {
-            result.write('T');
-          }
-        case 'V':
-          result.write('F');
-        case 'W':
-        case 'Y':
-          if (vowels.contains(nextChar)) {
-            result.write(char);
-          }
-        case 'X':
-          result.write('KS');
-        case 'Z':
+      if (char == '0') {
+        result.write('0');
+        continue;
+      }
+
+      if (simpleConsonants.contains(char)) {
+        result.write(char);
+        continue;
+      }
+
+      if (char == 'B') {
+        result.write('B');
+        continue;
+      }
+
+      if (char == 'C') {
+        if (nextChar == 'H') {
+          result.write('X');
+          i++; // Skip H
+        } else if (nextChar == 'I' || nextChar == 'E' || nextChar == 'Y') {
           result.write('S');
+        } else {
+          result.write('K');
+        }
+        continue;
+      }
+
+      if (char == 'D') {
+        if (nextChar == 'G' &&
+            (nextNextChar == 'E' ||
+                nextNextChar == 'I' ||
+                nextNextChar == 'Y')) {
+          result.write('J');
+          i++; // Skip G
+        } else {
+          result.write('T');
+        }
+        continue;
+      }
+
+      if (char == 'G') {
+        if (nextChar == 'H') {
+          i++; // Skip H
+        } else if (nextChar == 'N' && i == str.length - 2) {
+          // Silent GN at end
+        } else if (nextChar == 'I' || nextChar == 'E' || nextChar == 'Y') {
+          result.write('J');
+        } else {
+          result.write('K');
+        }
+        continue;
+      }
+
+      if (char == 'H') {
+        if ((i == 0 || vowels.contains(prevChar)) &&
+            vowels.contains(nextChar)) {
+          result.write('H');
+        }
+        continue;
+      }
+
+      if (char == 'K') {
+        if (i == 0 || prevChar != 'C') {
+          result.write('K');
+        }
+        continue;
+      }
+
+      if (char == 'P') {
+        if (nextChar == 'H') {
+          result.write('F');
+          i++;
+        } else {
+          result.write('P');
+        }
+        continue;
+      }
+
+      if (char == 'Q') {
+        result.write('K');
+        continue;
+      }
+
+      if (char == 'S') {
+        if (nextChar == 'H') {
+          result.write('X');
+          i++;
+        } else if (nextChar == 'I' &&
+            (nextNextChar == 'O' || nextNextChar == 'A')) {
+          result.write('X');
+        } else {
+          result.write('S');
+        }
+        continue;
+      }
+
+      if (char == 'T') {
+        if (nextChar == 'H') {
+          result.write('0');
+          i++;
+        } else if (nextChar == 'I' &&
+            (nextNextChar == 'O' || nextNextChar == 'A')) {
+          result.write('X');
+        } else {
+          result.write('T');
+        }
+        continue;
+      }
+
+      if (char == 'V') {
+        result.write('F');
+        continue;
+      }
+
+      if (char == 'W' || char == 'Y') {
+        if (vowels.contains(nextChar)) {
+          result.write(char);
+        }
+        continue;
+      }
+
+      if (char == 'X') {
+        result.write('KS');
+        continue;
+      }
+
+      if (char == 'Z') {
+        result.write('S');
+        continue;
       }
     }
 
@@ -1683,38 +1731,35 @@ class StringSimilarity {
     final metadata = <String, dynamic>{};
 
     // Add algorithm-specific metadata
-    switch (algorithm) {
-      case SimilarityAlgorithm.levenshteinDistance:
-        final distance = levenshteinDistance(first, second, config);
-        metadata['distance'] = distance;
-        metadata['maxLength'] =
-            max(normalizedFirst.length, normalizedSecond.length);
-        metadata['operations'] = distance;
-      case SimilarityAlgorithm.soundex:
-        metadata['firstCode'] = soundex(first, config);
-        metadata['secondCode'] = soundex(second, config);
-      case SimilarityAlgorithm.metaphone:
-        metadata['firstCode'] = metaphone(first, config);
-        metadata['secondCode'] = metaphone(second, config);
-      case SimilarityAlgorithm.hamming:
-        if (normalizedFirst.length == normalizedSecond.length) {
-          metadata['distance'] = hammingDistance(first, second, config);
-          metadata['length'] = normalizedFirst.length;
-        }
-      case SimilarityAlgorithm.lcs:
-        final lcsLength = longestCommonSubsequence(first, second, config);
-        metadata['lcsLength'] = lcsLength;
-        metadata['maxLength'] =
-            max(normalizedFirst.length, normalizedSecond.length);
-      case SimilarityAlgorithm.ngram:
-        metadata['ngramSize'] = config.ngramSize;
-      case SimilarityAlgorithm.jaccard:
-        metadata['tokenBased'] = true;
-      case SimilarityAlgorithm.cosine:
-        metadata['tokenBased'] = true;
-        metadata['stemming'] = config.stemTokens;
-      default:
-        break;
+    if (algorithm == SimilarityAlgorithm.levenshteinDistance) {
+      final distance = levenshteinDistance(first, second, config);
+      metadata['distance'] = distance;
+      metadata['maxLength'] =
+          max(normalizedFirst.length, normalizedSecond.length);
+      metadata['operations'] = distance;
+    } else if (algorithm == SimilarityAlgorithm.soundex) {
+      metadata['firstCode'] = soundex(first, config);
+      metadata['secondCode'] = soundex(second, config);
+    } else if (algorithm == SimilarityAlgorithm.metaphone) {
+      metadata['firstCode'] = metaphone(first, config);
+      metadata['secondCode'] = metaphone(second, config);
+    } else if (algorithm == SimilarityAlgorithm.hamming) {
+      if (normalizedFirst.length == normalizedSecond.length) {
+        metadata['distance'] = hammingDistance(first, second, config);
+        metadata['length'] = normalizedFirst.length;
+      }
+    } else if (algorithm == SimilarityAlgorithm.lcs) {
+      final lcsLength = longestCommonSubsequence(first, second, config);
+      metadata['lcsLength'] = lcsLength;
+      metadata['maxLength'] =
+          max(normalizedFirst.length, normalizedSecond.length);
+    } else if (algorithm == SimilarityAlgorithm.ngram) {
+      metadata['ngramSize'] = config.ngramSize;
+    } else if (algorithm == SimilarityAlgorithm.jaccard) {
+      metadata['tokenBased'] = true;
+    } else if (algorithm == SimilarityAlgorithm.cosine) {
+      metadata['tokenBased'] = true;
+      metadata['stemming'] = config.stemTokens;
     }
 
     stopwatch.stop();
@@ -2072,6 +2117,8 @@ class _NormalizationKey {
         config.removeAccents,
         config.trimWhitespace,
         config.locale,
+        identityHashCode(config.preProcessor),
+        identityHashCode(config.postProcessor),
       );
 }
 

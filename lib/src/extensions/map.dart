@@ -1,50 +1,11 @@
-import 'dart:convert';
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
-
-dynamic _makeValueEncodable(dynamic value) {
-  if (value is String ||
-      value is int ||
-      value is double ||
-      value is bool ||
-      value == null) {
-    return value;
-  } else if (value is Enum) {
-    return value.name;
-  } else if (value is List) {
-    return value.map(_makeValueEncodable).toList();
-  } else if (value is Set) {
-    return value.map(_makeValueEncodable).toList();
-  } else if (value is Map) {
-    return value.encodableCopy;
-  } else {
-    return value.toString();
-  }
-}
 
 ///  DHUMapExtension
 extension DHUMapExtension<K, V> on Map<K, V> {
   /// Swaps the keys with values in the map.
   /// Note: If there are duplicate values, the last key-value pair will be kept.
   Map<V, K> swapKeysWithValues() => map((key, value) => MapEntry(value, key));
-
-  /// Returns a new map with converted dynamic keys and values to a map with string keys and JSON-encodable values.
-  ///
-  /// This is useful for preparing data for JSON serialization, where keys must be strings.
-  Map<String, dynamic> get encodableCopy {
-    final result = <String, dynamic>{};
-    forEach((key, value) {
-      result[key.toString()] = _makeValueEncodable(value);
-    });
-    return result;
-  }
-
-  /// Converts a map with potentially complex data types to a formatted JSON string.
-  ///
-  /// The resulting JSON is indented for readability.
-  String get encodedJsonString =>
-      const JsonEncoder.withIndent('  ').convert(encodableCopy);
 
   /// Inserts a key-value pair into the map if the key does not already exist.
   ///
@@ -86,18 +47,6 @@ extension DHUMapExtension<K, V> on Map<K, V> {
       entries.where((entry) => predicate(entry.key, entry.value)),
     );
   }
-
-  /// Returns a list containing all the values in the map.
-  List<V> get valuesList => values.toList();
-
-  /// Returns a list containing all the keys in the map.
-  List<K> get keysList => keys.toList();
-
-  /// Returns a set containing all the values in the map.
-  Set<V> get valuesSet => values.toSet();
-
-  /// Returns a set containing all the keys in the map.
-  Set<K> get keysSet => keys.toSet();
 }
 
 /// DHUMapNullableExtension

@@ -47,7 +47,6 @@
 ///
 /// You may supply a custom [timerFactory] to override the default [Timer] creation,
 /// which is useful for testing or implementing specialized timing logic.
-library;
 
 import 'dart:async';
 import 'dart:developer';
@@ -158,7 +157,8 @@ class Debouncer {
   /// - [maxWait] sets an upper limit on how long to wait before forcing execution.
   ///   If provided, it must be greater than [delay].
   /// - When [immediate] is true, the first call in a burst executes immediately,
-  ///   and later calls during that burst are debounced.
+  ///   and later calls during that burst are debounced with no trailing execution
+  ///   until a new burst begins.
   /// - [onError] is an optional callback to handle errors thrown during the action.
   /// - [debugLabel] helps tag log messages.
   /// - [maxHistorySize] defines how many past execution records to store (0 disables history).
@@ -305,7 +305,8 @@ class Debouncer {
       );
 
   /// Schedules [action] to run after [delay]. In immediate mode, the first call
-  /// executes right away while subsequent calls during that burst are debounced.
+  /// executes right away while subsequent calls during that burst are debounced
+  /// (no trailing execution occurs until a new burst starts).
   ///
   /// Throws a [StateError] if the debouncer has been disposed.
   void run(AsyncAction action) {
@@ -322,33 +323,35 @@ class Debouncer {
     _lastAction = action;
     final now = DateTime.now();
     _lastCallTime = now;
+    final isNewBurst = _firstCallTime == null;
     _firstCallTime ??= now;
 
-    // In immediate mode, execute the first action immediately.
-    if (_immediate && _timer == null) {
+    // Leading edge for immediate mode is only triggered for a new burst.
+    if (_immediate && isNewBurst) {
       _executeAction(action);
     }
 
-    // Cancel any existing timers.
-    _cancelTimers();
-
-    // Schedule a trailing timer only if not in immediate mode (or if resuming a pending action).
-    if (!_immediate || _lastAction != null) {
-      _timer = _timerFactory(_delay, () {
-        if (!_immediate && _lastAction != null) {
-          _executeAction(_lastAction!);
-        }
-        _cancelTimers();
-      });
+    // Cancel only the trailing timer to keep maxWait tracking intact.
+    if (_timer?.isActive ?? false) {
+      _timer!.cancel();
     }
+    _timer = null;
+
+    // Always schedule a trailing timer to close the burst after inactivity.
+    _timer = _timerFactory(_delay, () {
+      if (!_immediate && _lastAction != null) {
+        _executeAction(_lastAction!);
+      }
+      _cancelTimers();
+    });
 
     // Set up a maxWait timer if specified.
     if (_maxWait != null && _maxWaitTimer == null) {
       _maxWaitTimer = _timerFactory(_maxWait!, () {
         if (_lastAction != null) {
           _executeAction(_lastAction!);
-          _cancelTimers();
         }
+        _cancelTimers();
       });
     }
 
@@ -460,13 +463,14 @@ class Debouncer {
     if (!_isPaused) return;
     _isPaused = false;
     final now = DateTime.now();
-    // Adjust timestamps to account for the paused duration.
-    if (_pauseTimestamp != null && _lastCallTime != null) {
-      final pauseDuration = now.difference(_pauseTimestamp!);
-      _lastCallTime = _lastCallTime!.add(pauseDuration);
-      if (_firstCallTime != null) {
-        _firstCallTime = _firstCallTime!.add(pauseDuration);
-      }
+    // Reconstruct timestamps so remaining getters line up with timers.
+    if (_remainingDelayOnPause != null && _lastCallTime != null) {
+      _lastCallTime = now.subtract(_delay - _remainingDelayOnPause!);
+    }
+    if (_maxWait != null &&
+        _remainingMaxWaitOnPause != null &&
+        _firstCallTime != null) {
+      _firstCallTime = now.subtract(_maxWait! - _remainingMaxWaitOnPause!);
     }
     // Re-schedule timers if a pending action exists.
     if (_lastAction != null) {
@@ -476,13 +480,12 @@ class Debouncer {
         }
         _cancelTimers();
       });
-      if (_maxWait != null) {
-        _maxWaitTimer =
-            _timerFactory(_remainingMaxWaitOnPause ?? _maxWait!, () {
+      if (_maxWait != null && _remainingMaxWaitOnPause != null) {
+        _maxWaitTimer = _timerFactory(_remainingMaxWaitOnPause!, () {
           if (_lastAction != null) {
             _executeAction(_lastAction!);
-            _cancelTimers();
           }
+          _cancelTimers();
         });
       }
     }
@@ -532,7 +535,9 @@ class Debouncer {
       if (_maxHistorySize > 0) {
         _recordExecution(startTime, _lastExecutionTime!, true);
       }
-      _lastAction = null;
+      if (identical(_lastAction, action)) {
+        _lastAction = null;
+      }
       _logDebug('Action executed successfully.');
     } catch (error, stackTrace) {
       if (_maxHistorySize > 0) {

@@ -131,6 +131,49 @@ void main() {
       expect(list.contains(2), isFalse);
     });
 
+    test('swapNodes updates head and tail for adjacent nodes', () {
+      list
+        ..add(1)
+        ..add(2)
+        ..add(3);
+
+      final headNode = list.head!;
+      final secondNode = headNode.next!;
+
+      list.swapNodes(headNode, secondNode);
+
+      expect(list.head, same(secondNode));
+      expect(list.first, equals(2));
+      expect(list[1], equals(1));
+      expect(list.tail!.data, equals(3));
+
+      final tailNode = list.tail!;
+      final beforeTail = tailNode.prev!;
+
+      list.swapNodes(beforeTail, tailNode);
+
+      expect(list.tail, same(beforeTail));
+      expect(list.last, equals(1));
+      expect(list.toList(), equals([2, 3, 1]));
+    });
+
+    test('swapNodes swaps non-adjacent endpoints', () {
+      list
+        ..add(1)
+        ..add(2)
+        ..add(3)
+        ..add(4);
+
+      final headNode = list.head!;
+      final tailNode = list.tail!;
+
+      list.swapNodes(headNode, tailNode);
+
+      expect(list.head!.data, equals(4));
+      expect(list.tail!.data, equals(1));
+      expect(list.toList(), equals([4, 2, 3, 1]));
+    });
+
     test('should throw RangeError for invalid removeAt index', () {
       list.add(1);
       expect(() => list.removeAt(-1), throwsA(isA<RangeError>()));
@@ -195,6 +238,34 @@ void main() {
       expect(() => list.length = 10, throwsA(isA<UnsupportedError>()));
     });
 
+    test('can shrink length to zero', () {
+      list
+        ..add(1)
+        ..add(2)
+        ..length = 0;
+
+      expect(list.length, equals(0));
+      expect(list.head, isNull);
+      expect(list.tail, isNull);
+    });
+
+    test('length shrink detaches truncated nodes', () {
+      list
+        ..add(1)
+        ..add(2)
+        ..add(3)
+        ..add(4);
+
+      final removedHead = list.findNode(2);
+
+      list..length = 2;
+
+      expect(list.toList(), equals([1, 2]));
+      expect(removedHead.prev, isNull);
+      expect(list.removeNode(removedHead), isFalse);
+      expect(list.tail!.data, equals(2));
+    });
+
     test('should support reverse iteration', () {
       list
         ..add(1)
@@ -209,6 +280,19 @@ void main() {
       }
 
       expect(elements, equals([3, 2, 1]));
+    });
+
+    test('reverse updates head and tail for odd length list', () {
+      list
+        ..add(1)
+        ..add(2)
+        ..add(3);
+
+      list.reverse();
+
+      expect(list.toList(), equals([3, 2, 1]));
+      expect(list.head!.data, equals(3));
+      expect(list.tail!.data, equals(1));
     });
 
     test('toString should return correct string representation', () {
@@ -227,6 +311,30 @@ void main() {
       list.add(1);
       expect(() => list.removeAt(-1), throwsRangeError);
       expect(() => list.removeAt(1), throwsRangeError);
+    });
+
+    test('removeNode ignores nodes from other lists', () {
+      list
+        ..add(1)
+        ..add(2)
+        ..add(3);
+
+      final other = DoublyLinkedList<int>([4, 5]);
+
+      expect(list.removeNode(other.head!), isFalse);
+      expect(list.toList(), equals([1, 2, 3]));
+    });
+
+    test('constructor copies nodes instead of aliasing', () {
+      final original = DoublyLinkedList<int>([1, 2, 3]);
+      final copy = DoublyLinkedList<int>(original);
+
+      expect(copy.toList(), equals([1, 2, 3]));
+
+      copy.removeAt(0);
+
+      expect(copy.toList(), equals([2, 3]));
+      expect(original.toList(), equals([1, 2, 3]));
     });
   });
 }

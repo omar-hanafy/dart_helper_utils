@@ -94,10 +94,10 @@ extension DHUHttpEx on num? {
 /// DHUNullSafeNumExtensions
 extension DHUNullSafeNumExtensions on num? {
   /// Returns the integer value of the number, or `null` if the number is `null`.
-  int? get tryToInt => this?.toInt();
+  int? tryToInt() => this?.toInt();
 
   /// Returns the double value of the number, or `null` if the number is `null`.
-  double? get tryToDouble => this?.toDouble();
+  double? tryToDouble() => this?.toDouble();
 
   /// Returns the percentage of `this` value relative to [total], optionally allowing decimals.
   num percentage(num total, {bool allowDecimals = true}) {
@@ -988,8 +988,7 @@ extension DHUListDoubleStats on Iterable<double> {
   /// Finds the mode(s) of the doubles in the iterable.
   ///
   /// Returns a list of doubles that appear most frequently.
-  List<double> get mode =>
-      toList<double>(NumbersHelper.mode(this.toList()));
+  List<double> get mode => toList<double>(NumbersHelper.mode(this.toList()));
 
   /// Computes the variance of the doubles in the iterable.
   double get variance => NumbersHelper.variance(this.toList()).toDouble();

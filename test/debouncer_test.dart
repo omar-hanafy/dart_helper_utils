@@ -183,6 +183,53 @@ void main() {
       await 100.millisecondsDelay();
       expect(count, equals(1));
     });
+
+    test('maxWait enforces execution under sustained input bursts', () async {
+      final debouncer = Debouncer(
+        delay: const Duration(milliseconds: 20),
+        maxWait: const Duration(milliseconds: 60),
+      );
+      var count = 0;
+
+      final burstDuration =
+          DateTime.now().add(const Duration(milliseconds: 160));
+      while (DateTime.now().isBefore(burstDuration)) {
+        debouncer.run(() => count++);
+        await 10.millisecondsDelay();
+      }
+
+      await 120.millisecondsDelay();
+
+      expect(count, greaterThanOrEqualTo(3),
+          reason:
+              'maxWait should trigger multiple executions during long bursts.');
+      debouncer.dispose();
+    });
+
+    test('remainingMaxWait continues counting through a burst', () async {
+      const maxWait = Duration(milliseconds: 200);
+      final debouncer = Debouncer(
+        delay: const Duration(milliseconds: 80),
+        maxWait: maxWait,
+      );
+
+      debouncer.run(() {});
+      await 50.millisecondsDelay();
+      final firstRemaining = debouncer.remainingMaxWait;
+      expect(firstRemaining, isNotNull);
+      expect(firstRemaining, lessThan(maxWait));
+
+      await 20.millisecondsDelay();
+      debouncer.run(() {});
+      await 10.millisecondsDelay();
+      final secondRemaining = debouncer.remainingMaxWait;
+      expect(secondRemaining, isNotNull);
+      expect(secondRemaining, lessThan(firstRemaining!),
+          reason:
+              'remainingMaxWait should continue decreasing despite repeated runs.');
+
+      debouncer.dispose();
+    });
   });
 
   group('Error Handling', () {
@@ -276,6 +323,33 @@ void main() {
       await 5.millisecondsDelay();
       expect(executed, isTrue);
       shortDebouncer.dispose();
+    });
+
+    test('new run scheduled during execution is preserved', () async {
+      final debouncer = Debouncer(
+        delay: const Duration(milliseconds: 40),
+      );
+      var executed = 0;
+      final completer = Completer<void>();
+
+      debouncer.run(() async {
+        executed++;
+        await completer.future;
+      });
+
+      await 60.millisecondsDelay();
+      expect(executed, equals(1));
+
+      debouncer.run(() => executed++);
+
+      await 10.millisecondsDelay();
+      completer.complete();
+      await 60.millisecondsDelay();
+
+      expect(executed, equals(2),
+          reason:
+              'Pending action scheduled during an execution should run after the burst.');
+      debouncer.dispose();
     });
 
     test('concurrent flush and scheduled execution', () async {

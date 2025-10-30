@@ -83,41 +83,41 @@ class DHUCountry {
     final currencies = toMap<String, dynamic>(map['currencies']);
     final coordinates = toList<dynamic>(map['latlng']);
     return DHUCountry(
-      commonName: toString1(map['commonName']),
-      officialName: toString1(map['officialName']),
+      commonName: toText(map['commonName']),
+      officialName: toText(map['officialName']),
       nativeNames: nativeNames.entries.map((entry) {
         final data = toMap<String, dynamic>(entry.value);
         return (
-          language: toString1(entry.key),
-          official: toString1(data['official']),
-          common: toString1(data['common']),
+          language: toText(entry.key),
+          official: toText(data['official']),
+          common: toText(data['common']),
         );
       }).toList(),
-      iso2: toString1(map['iso2']),
-      iso3: toString1(map['iso3']),
-      phoneCode: toString1(map['phoneCode']),
-      region: toString1(map['region']),
-      subregion: toString1(map['subregion']),
+      iso2: toText(map['iso2']),
+      iso3: toText(map['iso3']),
+      phoneCode: toText(map['phoneCode']),
+      region: toText(map['region']),
+      subregion: toText(map['subregion']),
       coordinates: (
         latitude: toDouble(coordinates[0]),
         longitude: toDouble(coordinates[1]),
       ),
-      capital: tryToString(map['capital']),
+      capital: tryToText(map['capital']),
       currencies: currencies.entries.map((map) {
         final currency = toMap<String, dynamic>(map.value);
         return (
-          code: toString1(map.value),
-          name: toString1(currency['name']),
-          symbol: toString1(currency['symbol']),
+          code: toText(map.value),
+          name: toText(currency['name']),
+          symbol: toText(currency['symbol']),
         );
       }).toList(),
       languages: toMap<String, String>(map['languages'])
           .entries
           .map((map) => (code: map.key, name: map.value))
           .toList(),
-      flagEmoji: toString1(map['flag']),
+      flagEmoji: toText(map['flag']),
       borders: toList<String>(map['borders']),
-      tld: toString1(map['tld']),
+      tld: toText(map['tld']),
       area: toDouble(map['area']),
       timezones: toList<String>(map['timezones']),
     );
@@ -220,15 +220,15 @@ class DHUCountry {
     // Find the first match in the country list
     final map = countries.firstWhereOrNull((country) {
       // Check commonName and officialName
-      final commonName = tryToString(country['commonName'])?.toLowerCase();
-      final officialName = tryToString(country['officialName'])?.toLowerCase();
+      final commonName = tryToText(country['commonName'])?.toLowerCase();
+      final officialName = tryToText(country['officialName'])?.toLowerCase();
 
       // Check if any native names match
       final nativeNames =
           tryToMap<String, Map<String, String>>(country['nativeNames']) ?? {};
       final nativeMatch = nativeNames.values.any((native) {
-        final nativeCommon = tryToString(native['common'])?.toLowerCase();
-        final nativeOfficial = tryToString(native['official'])?.toLowerCase();
+        final nativeCommon = tryToText(native['common'])?.toLowerCase();
+        final nativeOfficial = tryToText(native['official'])?.toLowerCase();
         return nativeCommon == cName || nativeOfficial == cName;
       });
 
@@ -249,8 +249,8 @@ class DHUCountry {
 
     // Find the first country where the ISO code matches either iso2 or iso3
     final map = countries.firstWhereOrNull((country) {
-      final iso2 = tryToString(country['iso2'])?.toUpperCase();
-      final iso3 = tryToString(country['iso3'])?.toUpperCase();
+      final iso2 = tryToText(country['iso2'])?.toUpperCase();
+      final iso3 = tryToText(country['iso3'])?.toUpperCase();
 
       return iso2 == isoCode || iso3 == isoCode;
     });
@@ -291,9 +291,9 @@ class DHUTimezone {
   /// - `dst_offset`: The DST offset in seconds.
   factory DHUTimezone.fromMap(Map<String, dynamic> map) {
     return DHUTimezone(
-      timezone: toString1(map['timezone']),
+      timezone: toText(map['timezone']),
       rawOffset: toInt(map['raw_offset']),
-      abbreviation: toString1(map['abbreviation']),
+      abbreviation: toText(map['abbreviation']),
       dstOffset: toInt(map['dst_offset']),
     );
   }

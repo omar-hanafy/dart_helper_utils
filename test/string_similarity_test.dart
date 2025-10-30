@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:dart_helper_utils/src/other_utils/string_similarity.dart';
 import 'package:test/test.dart';
 
@@ -553,13 +555,15 @@ void main() {
 
       // When caching is disabled, the caches should show 'enabled': false
       // or the caches should not exist (size should be 0 or null)
-      expect(
-          stats['bigramCache']['enabled'] ?? stats['bigramCache']['size'] == 0,
-          isTrue);
-      expect(
-          stats['normalizationCache']['enabled'] ??
-              stats['normalizationCache']['size'] == 0,
-          isTrue);
+      final bigram = stats['bigramCache'] as Map;
+      final normalization = stats['normalizationCache'] as Map;
+      final bigramDisabled = (bigram['enabled'] == false) ||
+          ((bigram['size'] ?? 0) == 0 && bigram['enabled'] == null);
+      final normalizationDisabled = (normalization['enabled'] == false) ||
+          ((normalization['size'] ?? 0) == 0 &&
+              normalization['enabled'] == null);
+      expect(bigramDisabled, isTrue);
+      expect(normalizationDisabled, isTrue);
     });
 
     test('Cache capacity management', () {

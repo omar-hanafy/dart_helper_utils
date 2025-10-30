@@ -31,15 +31,7 @@ class DoublyLinkedList<E> extends ListBase<E> {
   /// print(list); // Output: [1, 2, 3]
   /// ```
   DoublyLinkedList([Iterable<E>? elements = const []]) {
-    if (elements != null && elements.isNotEmpty) {
-      if (elements is DoublyLinkedList<E>) {
-        _head = elements._head;
-        _tail = elements._tail;
-        _length = elements._length;
-      } else {
-        addAll(elements);
-      }
-    }
+    if (elements != null) addAll(elements);
   }
 
   /// Creates a list of the given length with [fill] at each position.
@@ -130,25 +122,27 @@ class DoublyLinkedList<E> extends ListBase<E> {
   /// print(list); // Output: [1, 3]
   /// ```
   bool removeNode(Node<E> node) {
-    if (node == _head) {
+    if (!_containsNode(node)) return false;
+
+    if (identical(node, _head)) {
       _head = node.next;
       if (_head != null) {
         _head!.prev = null;
       } else {
-        // If removing the head from a single-node list, update tail
         _tail = null;
       }
-    } else if (node == _tail) {
+    } else if (identical(node, _tail)) {
       _tail = node.prev;
-      _tail?.next = null;
-    } else if (node.prev != null && node.next != null) {
+      if (_tail != null) {
+        _tail!.next = null;
+      } else {
+        _head = null;
+      }
+    } else {
       node.prev!.next = node.next;
       node.next!.prev = node.prev;
-    } else {
-      return false; // Node not in the list or it's an isolated node
     }
 
-    // Dereference the removed node to help with garbage collection
     node
       ..prev = null
       ..next = null;
@@ -255,7 +249,7 @@ class DoublyLinkedList<E> extends ListBase<E> {
   /// final node = list.findNode(1);
   /// print(node?.data); // Output: 2
   /// ```
-  Node<E> findNode(int index) => this ^ index;
+  Node<E> findNode(int index) => _nodeAt(index);
 
   /// Finds a node by its index and returns null with RangeError.
   Node<E>? tryFindNode(int index) {
@@ -272,14 +266,7 @@ class DoublyLinkedList<E> extends ListBase<E> {
   /// final node = list ^ 1;
   /// print(node?.data); // Output: 2
   /// ```
-  Node<E> operator ^(int index) {
-    if (index < 0 || index >= _length) throw RangeError.index(index, this);
-    var current = _head;
-    for (var i = 0; i < index; i++) {
-      current = current!.next;
-    }
-    return current!;
-  }
+  Node<E> operator ^(int index) => _nodeAt(index);
 
   /// Returns all nodes that satisfy the given test.
   Iterable<Node<E>> nodesWhere(bool Function(Node<E>) test) {
@@ -396,7 +383,10 @@ class DoublyLinkedList<E> extends ListBase<E> {
   void swapNodes(Node<E> node1, Node<E> node2) {
     assert(node1 != node2, 'Cannot swap the same node');
 
-    // Handle special case where nodes are adjacent
+    if (!_containsNode(node1) || !_containsNode(node2)) {
+      throw ArgumentError('Both nodes must belong to this list.');
+    }
+
     if (node1.next == node2) {
       _swapAdjacentNodes(node1, node2);
       return;
@@ -405,18 +395,16 @@ class DoublyLinkedList<E> extends ListBase<E> {
       return;
     }
 
-    // General case: Nodes are not adjacent
     _swapNonAdjacentNodes(node1, node2);
 
-    // Update head and tail if necessary
-    if (_head == node1) {
+    if (identical(_head, node1)) {
       _head = node2;
-    } else if (_head == node2) {
+    } else if (identical(_head, node2)) {
       _head = node1;
     }
-    if (_tail == node1) {
+    if (identical(_tail, node1)) {
       _tail = node2;
-    } else if (_tail == node2) {
+    } else if (identical(_tail, node2)) {
       _tail = node1;
     }
   }
@@ -434,6 +422,9 @@ class DoublyLinkedList<E> extends ListBase<E> {
     second
       ..next = first
       ..prev = prev;
+
+    if (identical(_head, first)) _head = second;
+    if (identical(_tail, second)) _tail = first;
   }
 
   void _swapNonAdjacentNodes(Node<E> node1, Node<E> node2) {
@@ -456,15 +447,16 @@ class DoublyLinkedList<E> extends ListBase<E> {
   /// Reverses the order of the nodes in the list.
   void reverse() {
     var current = _head;
+    final oldHead = _head;
     while (current != null) {
       final temp = current.next;
       current
         ..next = current.prev
         ..prev = temp;
-      _tail = _head;
       _head = current;
       current = temp;
     }
+    _tail = oldHead;
   }
 
   /// Appends a new node with the given data to the end of the list.
@@ -498,20 +490,23 @@ class DoublyLinkedList<E> extends ListBase<E> {
 
     if (newLength == _length) return;
 
-    if (newLength < _length) {
-      // Shrink the list
-      var current = _tail;
-      for (var i = _length; i > newLength; i--) {
-        current = current!.prev;
-      }
-
-      current!.next = null; // Disconnect remaining nodes
-      _tail = current;
-    } else {
-      // Grow the list (not supported for null elements)
+    if (newLength > _length) {
       throw UnsupportedError(
         'Cannot increase length of DoublyLinkedList with null elements.',
       );
+    }
+
+    if (newLength == 0) {
+      clear();
+      return;
+    }
+
+    final keep = _nodeAt(newLength - 1);
+    final firstRemoved = keep.next;
+    keep.next = null;
+    _tail = keep;
+    if (firstRemoved != null) {
+      firstRemoved.prev = null;
     }
 
     _length = newLength;
@@ -519,24 +514,12 @@ class DoublyLinkedList<E> extends ListBase<E> {
 
   /// please see the original docs of the override method
   @override
-  E operator [](int index) {
-    if (index < 0 || index >= _length) throw RangeError.index(index, this);
-    var current = _head;
-    for (var i = 0; i < index; i++) {
-      current = current!.next;
-    }
-    return current!.data;
-  }
+  E operator [](int index) => _nodeAt(index).data;
 
   /// please see the original docs of the override method
   @override
   void operator []=(int index, E value) {
-    if (index < 0 || index >= _length) throw RangeError.index(index, this);
-    var current = _head;
-    for (var i = 0; i < index; i++) {
-      current = current!.next;
-    }
-    current!.data = value;
+    _nodeAt(index).data = value;
   }
 
   /// please see the original docs of the override method
@@ -565,25 +548,47 @@ class DoublyLinkedList<E> extends ListBase<E> {
     } else if (index == _length) {
       append(element);
     } else {
-      var current = _head;
-      for (var i = 0; i < index; i++) {
-        current = current!.next;
-      }
-      insertBefore(current!, element);
+      insertBefore(_nodeAt(index), element);
     }
   }
 
   /// please see the original docs of the override method
   @override
   E removeAt(int index) {
-    if (index < 0 || index >= _length) throw RangeError.index(index, this);
-    var current = _head;
-    for (var i = 0; i < index; i++) {
-      current = current!.next;
-    }
-    final data = current!.data;
-    removeNode(current);
+    final node = _nodeAt(index);
+    final data = node.data;
+    removeNode(node);
     return data;
+  }
+
+  Node<E> _nodeAt(int index) {
+    if (index < 0 || index >= _length) {
+      throw RangeError.index(index, this);
+    }
+
+    if (index <= _length >> 1) {
+      var current = _head!;
+      for (var i = 0; i < index; i++) {
+        current = current.next!;
+      }
+      return current;
+    } else {
+      var current = _tail!;
+      for (var i = _length - 1; i > index; i--) {
+        current = current.prev!;
+      }
+      return current;
+    }
+  }
+
+  bool _containsNode(Node<E> node) {
+    if (_head == null) return false;
+
+    var current = node;
+    while (current.prev != null) {
+      current = current.prev!;
+    }
+    return identical(current, _head);
   }
 
   /// please see the original docs of the override method

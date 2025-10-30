@@ -304,9 +304,10 @@ void main() {
       });
 
       test('timestampToDate', () {
+        const timestamp = 1652188800000;
         expect(
-          '1652188800000'.convert.toDateTime(),
-          DateTime.fromMillisecondsSinceEpoch(1652188800000),
+          timestamp.convert.toDateTime(),
+          DateTime.fromMillisecondsSinceEpoch(timestamp),
         );
       });
     });

@@ -4,10 +4,10 @@ import 'package:dart_helper_utils/src/extensions/extensions.dart';
 ///
 extension DHUNullSafeCaseConversionExtensions on String? {
   /// Converts the string to lowercase if it's not null.
-  String? get tryToLowerCase => this?.toLowerCase();
+  String? tryToLowerCase() => this?.toLowerCase();
 
   /// Converts the string to uppercase if it's not null.
-  String? get tryToUpperCase => this?.toUpperCase();
+  String? tryToUpperCase() => this?.toUpperCase();
 }
 
 ///

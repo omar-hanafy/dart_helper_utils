@@ -20,8 +20,8 @@ dependencies:
   meta: ^1.17.0
   async: ^2.13.0
   equatable: ^2.0.7
-  convert_object:
-    path: packages/convert_object
+  convert_object: 1.0.0-dev.1
+
 dev_dependencies:
   very_good_analysis: ^10.0.0
   test: ^1.26.3

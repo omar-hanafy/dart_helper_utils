@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:developer' as dev;
 import 'dart:math';
 
@@ -233,13 +232,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return <E>[...orEmpty(), ...list];
   }
 
-  /// Convert iterable to set
-  Set<E> toMutableSet() => Set.from(this);
-
-  /// Returns a set containing all elements that are contained
-  /// by both this set and the specified collection.
-  Set<E> intersect(Iterable<E> other) => toMutableSet()..addAll(other);
-
   /// Groups the elements in values by the value returned by key.
   ///
   /// Returns a map from keys computed by key to a list of all values for which
@@ -313,9 +305,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return list;
   }
 
-  /// Returns map operation as a List
-  List<E2> mapList<E2>(E2 Function(E e) f) => map(f).toList();
-
   /// Takes the first half of a list
   List<E> firstHalf() => take(halfLength).toList();
 
@@ -332,17 +321,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
       index++;
     }
     return result;
-  }
-
-  /// Applies the function [f] to each element and its index,
-  /// returning a new list with the results. uses map under the hood.
-  List<E2> mapIndexedList<E2>(E2 Function(int index, E element) f) {
-    var index = 0;
-    return map((element) {
-      final result = f(index, element);
-      index++;
-      return result;
-    }).toList();
   }
 
   /// returns a list with two swapped items
@@ -516,9 +494,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
     return null;
   }
-
-  ///
-  String get encodedJson => json.encode(this);
 }
 
 // A lazy [Iterable] skip elements do **NOT** match the predicate [_f].

@@ -40,7 +40,7 @@ Future<void> main() async {
   print('user walletBalance: $walletBalance');
 
   // Example of using string extensions
-  final userMail = toString1(userMap['email']);
+  final userMail = toText(userMap['email']);
   print('Is Valid Email: ${userMail.isValidEmail}');
 
   // Example of using the global [httpStatusMessages]
@@ -115,7 +115,7 @@ Future<void> main() async {
   };
 
   // Convert the map to a formatted JSON string
-  print(exampleMap.encodedJsonString);
+  print(exampleMap.encodedJsonText);
 
   // Convert the Map into a single-level map.
   print('Flat JSON: ${exampleMap.flatMap()}');

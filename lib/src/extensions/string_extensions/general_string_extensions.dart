@@ -146,7 +146,7 @@ extension DHUNullSafeStringExtensions on String? {
   bool get isValidIp6 => hasMatch(regexValidIp6);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl => tryToLowerCase.clean.hasMatch(regexValidUrl);
+  bool get isValidUrl => tryToLowerCase().clean.hasMatch(regexValidUrl);
 
   /// Checks if the string consists only of numbers (no whitespace).
   bool get isNumeric => hasMatch(regexNumeric);
