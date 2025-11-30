@@ -76,6 +76,12 @@ abstract class ConvertObject {
     T Function(dynamic)? converter,
   }) {
     if (object == null) return null;
+    if (listIndex != null && object is List<dynamic>) {
+      return _convertObject(object[listIndex], converter: converter);
+    }
+    if (mapKey != null && object is Map<dynamic, dynamic>) {
+      return _convertObject(object[mapKey], converter: converter);
+    }
     if (object is T) return object;
     try {
       return object as T;
@@ -88,12 +94,7 @@ abstract class ConvertObject {
         converter: converter,
       );
     }
-    if (listIndex != null && object is List<dynamic>) {
-      return _convertObject(object[listIndex], converter: converter);
-    }
-    if (mapKey != null && object is Map<dynamic, dynamic>) {
-      return _convertObject(object[mapKey], converter: converter);
-    }
+
     try {
       return converter?.call(object);
     } catch (e, s) {
