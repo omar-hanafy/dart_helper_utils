@@ -4,6 +4,7 @@
 
 - Pre-release for v6.
 - Repository automation and CI/CD workflows.
+- Update convert_object dependency to ^1.0.1.
 
 ### Breaking changes
 - Conversion APIs moved to the dedicated
