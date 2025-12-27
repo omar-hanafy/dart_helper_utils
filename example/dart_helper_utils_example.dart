@@ -1,22 +1,23 @@
 // ignore_for_file: avoid_print
+import 'package:collection/collection.dart';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
   print(20.formatAsReadableNumber(trimTrailingZeros: true));
   const rawJsonList = '[1.5, 2.3, 3.4]';
-  final intList = tryToList<int>(rawJsonList, defaultValue: []);
+  final intList = tryConvertToList<int>(rawJsonList, defaultValue: []);
   print(intList); // [1, 2, 3]
 
   final list = <dynamic>[1, 2, '3', '3.1', 22.3];
 
-  print(toList<num>(list)); // [1, 2, 3, 3.1, 22.3]
-  print(toList<int>(list)); // [1, 2, 3, 3, 22]
-  print(toList<double>(list)); // [1.0, 2.0, 3.0, 3.1, 22.3]
-  print(toList<String>(list)); // ['1', '2', '3', '3.1', '22.3']
+  print(convertToList<num>(list)); // [1, 2, 3, 3.1, 22.3]
+  print(convertToList<int>(list)); // [1, 2, 3, 3, 22]
+  print(convertToList<double>(list)); // [1.0, 2.0, 3.0, 3.1, 22.3]
+  print(convertToList<String>(list)); // ['1', '2', '3', '3.1', '22.3']
 
   // parsing raw Json to Map<String, dynamic>
   // note: you can also use the ConvertObject.toMap to avoid ambiguity.
-  final userMap = toMap<String, dynamic>('''
+  final userMap = convertToMap<String, dynamic>('''
 {
     "name": "John",
     "age": 30,
@@ -33,14 +34,14 @@ Future<void> main() async {
   print('Random Code: ${codes.getRandom()}');
 
   // Example of using safe int conversions for dynamic data.
-  final walletBalance = toInt(userMap['wallet']);
+  final walletBalance = convertToInt(userMap['wallet']);
   // OR
   // final walletBalance = userMap.getInt('wallet');
   // final walletBalance = ConvertObject.toInt(userMap['wallet']);
   print('user walletBalance: $walletBalance');
 
   // Example of using string extensions
-  final userMail = toText(userMap['email']);
+  final userMail = convertToString(userMap['email']);
   print('Is Valid Email: ${userMail.isValidEmail}');
 
   // Example of using the global [httpStatusMessages]
@@ -115,7 +116,7 @@ Future<void> main() async {
   };
 
   // Convert the map to a formatted JSON string
-  print(exampleMap.encodedJsonText);
+  print(exampleMap.encodeWithIndent);
 
   // Convert the Map into a single-level map.
   print('Flat JSON: ${exampleMap.flatMap()}');
@@ -170,32 +171,6 @@ Future<void> main() async {
   );
   print('Result: $result');
 
-  final doublyLinkedList = [1, 2, 3, 4].toDoublyLinkedList()
-    ..add(5)
-    ..removeAt(3);
-
-  print(doublyLinkedList);
-
-  final node = doublyLinkedList.findNode(1);
-  print(node.data);
-
-  print(doublyLinkedList.findNode(1));
-  print(doublyLinkedList[1]); // [index] returns an element at specific index
-
-  print(doublyLinkedList.toSet());
-  print(doublyLinkedList.length);
-  print(doublyLinkedList.head?.next);
-
-  // loop over elements
-  for (final e in doublyLinkedList) {
-    print('e: $e');
-  }
-
-  // loop over nodes
-  for (final node in doublyLinkedList.nodes) {
-    print('Prev: ${node.prev}, Current: ${node.data}, Next: ${node.next}');
-  }
-
   final httpDateTypeTestCases = {
     'Thu, 30 Aug 2024 12:00:00 GMT': 'RFC-1123',
     'Thursday, 30-Aug-24 12:00:00 GMT': 'RFC-850',
@@ -226,20 +201,7 @@ Future<void> main() async {
 
   final age = DateTime(1997, 8, 12).calculateAge();
   print('I am ${age.years} years old!');
-
-  final palestine = DHUCountry.getByCode('ps');
-  print(palestine?.flagEmoji); // 🇵🇸
-  print(palestine?.nativeNames);
-  print(palestine?.timezones);
-
-  final timeZone = DHUTimezone.byIdentifier('Africa/Cairo');
-  print(timeZone!.abbreviation);
-  timeZone.getCountries().forEach((e) => print(e.flagEmoji));
 }
 
 // Example enum used in the map
-enum TimePeriod {
-  day,
-  week,
-  month,
-}
+enum TimePeriod { day, week, month }

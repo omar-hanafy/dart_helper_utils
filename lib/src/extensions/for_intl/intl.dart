@@ -113,24 +113,23 @@ extension DHUIntlNumExtensions on num {
     List<Object>? args,
     String? meaning,
     bool? skip,
-  }) =>
-      Intl.plural(
-        this,
-        other: other,
-        zero: zero,
-        one: one,
-        two: two,
-        few: few,
-        many: many,
-        desc: desc,
-        examples: examples,
-        locale: locale,
-        precision: precision,
-        name: name,
-        args: args,
-        meaning: meaning,
-        skip: skip,
-      );
+  }) => Intl.plural(
+    this,
+    other: other,
+    zero: zero,
+    one: one,
+    two: two,
+    few: few,
+    many: many,
+    desc: desc,
+    examples: examples,
+    locale: locale,
+    precision: precision,
+    name: name,
+    args: args,
+    meaning: meaning,
+    skip: skip,
+  );
 
   /// Determines the plural category of this number based on the current locale.
   ///
@@ -156,20 +155,19 @@ extension DHUIntlNumExtensions on num {
     int? precision,
     String? meaning,
     bool useExplicitNumberCases = true,
-  }) =>
-      Intl.pluralLogic(
-        this,
-        zero: zero,
-        one: one,
-        two: two,
-        few: few,
-        many: many,
-        other: other,
-        locale: locale,
-        precision: precision,
-        meaning: meaning,
-        useExplicitNumberCases: useExplicitNumberCases,
-      );
+  }) => Intl.pluralLogic(
+    this,
+    zero: zero,
+    one: one,
+    two: two,
+    few: few,
+    many: many,
+    other: other,
+    locale: locale,
+    precision: precision,
+    meaning: meaning,
+    useExplicitNumberCases: useExplicitNumberCases,
+  );
 }
 
 /// DHUIntlNumExtensions
@@ -209,17 +207,16 @@ extension DHUIntlExtensions on String {
     List<Object>? args,
     String? meaning,
     bool? skip,
-  }) =>
-      Intl.message(
-        this,
-        desc: desc,
-        examples: examples,
-        locale: locale,
-        name: name,
-        args: args,
-        meaning: meaning,
-        skip: skip,
-      );
+  }) => Intl.message(
+    this,
+    desc: desc,
+    examples: examples,
+    locale: locale,
+    name: name,
+    args: args,
+    meaning: meaning,
+    skip: skip,
+  );
 
   /// Selects a localized string based on the gender associated with this string,
   /// using `Intl.gender`.
@@ -241,20 +238,19 @@ extension DHUIntlExtensions on String {
     List<Object>? args,
     String? meaning,
     bool? skip,
-  }) =>
-      Intl.gender(
-        this,
-        female: female,
-        male: male,
-        other: other,
-        desc: desc,
-        examples: examples,
-        locale: locale,
-        name: name,
-        args: args,
-        meaning: meaning,
-        skip: skip,
-      );
+  }) => Intl.gender(
+    this,
+    female: female,
+    male: male,
+    other: other,
+    desc: desc,
+    examples: examples,
+    locale: locale,
+    name: name,
+    args: args,
+    meaning: meaning,
+    skip: skip,
+  );
 
   /// Determines the gender category of this string (e.g., 'female', 'male', or 'other')
   /// based on the current locale, using `Intl.genderLogic`.
@@ -268,12 +264,11 @@ extension DHUIntlExtensions on String {
     T? female,
     T? male,
     String? locale,
-  }) =>
-      Intl.genderLogic(
-        this,
-        female: female,
-        male: male,
-        other: other,
-        locale: locale,
-      );
+  }) => Intl.genderLogic(
+    this,
+    female: female,
+    male: male,
+    other: other,
+    locale: locale,
+  );
 }

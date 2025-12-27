@@ -1,5 +1,4 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
 
 ///  DHUMapExtension
 extension DHUMapExtension<K, V> on Map<K, V> {
@@ -14,14 +13,6 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   V setIfMissing(K key, V value) {
     if (this[key] == null) return this[key] = value;
     return this[key]!;
-  }
-
-  /// Updates the value associated with the given key if it exists.
-  ///
-  /// The `updater` function is used to modify the existing value. If the key does not exist,
-  /// the map remains unchanged.
-  void update(K key, V Function(V value) updater) {
-    if (containsKey(key)) this[key] = updater(this[key] as V);
   }
 
   /// Returns an iterable of keys where the associated values satisfy the given condition.
@@ -51,22 +42,6 @@ extension DHUMapExtension<K, V> on Map<K, V> {
 
 /// DHUMapNullableExtension
 extension DHUMapNullableExtension<K, V> on Map<K, V>? {
-  /// Compares two maps for element-by-element equality.
-  ///
-  /// Returns true if the maps are both null, or if they are both non-null, have
-  /// the same length, and contain the same keys associated with the same values.
-  /// Returns false otherwise.
-  bool isEqual(Map<K, V>? b) {
-    final a = this;
-    if (identical(a, b)) return true;
-    if (a == null || b == null) return a == b;
-    if (a.length != b.length) return false;
-    for (final key in a.keys) {
-      if (!b.containsKey(key) || !gf.isEqual(a[key], b[key])) return false;
-    }
-    return true;
-  }
-
   /// checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
   bool isPrimitive() {
     if (this == null) return false;

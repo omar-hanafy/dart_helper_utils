@@ -70,8 +70,10 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// duration to help avoid overwhelming downstream listeners.
   ///
   /// Returns the number of events successfully added.
-  Future<int> safeAddAll(Iterable<T> events,
-      {Duration? throttleDuration}) async {
+  Future<int> safeAddAll(
+    Iterable<T> events, {
+    Duration? throttleDuration,
+  }) async {
     var count = 0;
     for (final event in events) {
       if (safeAdd(event)) {
@@ -237,8 +239,10 @@ extension StreamTransformations<T> on Stream<T> {
   ///   .listen((events) => print('Window contained ${events.length} items'));
   /// ```
   Stream<List<T>> window(Duration windowDuration) {
-    assert(windowDuration.inMilliseconds > 0,
-        'Window duration must be greater than zero');
+    assert(
+      windowDuration.inMilliseconds > 0,
+      'Window duration must be greater than zero',
+    );
     StreamController<List<T>>? controller;
     final buffer = <T>[];
     Timer? timer;
@@ -413,8 +417,10 @@ extension StreamErrorRecovery<T> on Stream<T> {
     bool Function(Object error)? shouldRetry,
   }) async* {
     assert(retryCount >= 0, 'retryCount must be non-negative');
-    assert(delayFactor.inMilliseconds > 0,
-        'delayFactor must be greater than zero');
+    assert(
+      delayFactor.inMilliseconds > 0,
+      'delayFactor must be greater than zero',
+    );
 
     var attempts = 0;
     while (true) {

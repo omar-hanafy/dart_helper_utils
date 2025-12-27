@@ -30,7 +30,7 @@ extension DHUUriEx on Uri {
     Iterable<String>? Function(Iterable<String> current)? pathSegmentsBuilder,
     String? Function(String current)? queryBuilder,
     Map<String, dynamic>? Function(Map<String, dynamic> current)?
-        queryParametersBuilder,
+    queryParametersBuilder,
     String? Function(String current)? fragmentBuilder,
   }) {
     // Initialize replacement variables with null to indicate "no change"

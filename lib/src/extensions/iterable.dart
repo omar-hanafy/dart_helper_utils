@@ -5,17 +5,6 @@ import 'dart:math';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
 
-/// A type alias representing a predicate function that takes an index and a value of type [T]
-/// and returns a boolean value.
-///
-/// Used for filtering and testing conditions on elements with their indices.
-///
-/// Example:
-/// ```dart
-/// IndexedPredicate<int> isEvenIndex = (int index, int n) => index % 2 == 0 && n % 2 == 0;
-/// ```
-typedef IndexedPredicate<T> = bool Function(int index, T);
-
 /// A type alias representing a predicate function that takes a value of type [T]
 /// and returns a boolean value.
 ///
@@ -109,9 +98,6 @@ extension DHUNullableListExtensions<E> on List<E>? {
 
 /// Enhanced documentation for nullable Iterable extensions.
 extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
-  /// Creates a [DoublyLinkedList] from this iterable if it's non-null; otherwise returns an empty one.
-  DoublyLinkedList<E> toDoublyLinkedList() => DoublyLinkedList(this);
-
   /// similar to list[index] but it is null safe.
   E? of(int index) {
     if (isNotEmptyOrNull && index >= 0 && this!.length > index) {
@@ -121,31 +107,18 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   }
 
   ///Returns [true] if this nullable iterable is either null or empty.
-  bool get isEmptyOrNull => isNull || this!.isEmpty;
+  bool get isEmptyOrNull => this == null || this!.isEmpty;
 
   ///Returns [false] if this nullable iterable is either null or empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 
-  /// Returns the first element if available; otherwise, returns null.
-  E? get firstOrNull => of(0);
-
-  /// Returns the last element if the iterable is not empty; otherwise, returns null.
-  E? get lastOrNull => isNotEmptyOrNull ? this!.last : null;
-
-  ///
-  E? firstWhereOrNull(Predicate<E> predicate) {
-    if (isEmptyOrNull) return null;
-    for (final element in this!) {
-      if (predicate(element)) return element;
-    }
-    return null;
-  }
-
   /// Returns the last element or provides [defaultValue] if the iterable is empty or null.
-  E? lastOrDefault(E defaultValue) => lastOrNull ?? defaultValue;
+  E? lastOrDefault(E defaultValue) =>
+      isNotEmptyOrNull ? this!.last : defaultValue;
 
   /// Returns the first element or provides [defaultValue] if no element exists.
-  E firstOrDefault(E defaultValue) => firstOrNull ?? defaultValue;
+  E firstOrDefault(E defaultValue) =>
+      isNotEmptyOrNull ? this!.first : defaultValue;
 
   /// Retrieves a random element or null if the iterable is null.
   ///
@@ -201,22 +174,13 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
 /// Enhanced documentation for non-nullable Iterable extensions.
 extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Converts this iterable to a list of type [R] using convert_object logic.
-  List<R> toListConverted<R>() => toList<R>(this);
+  List<R> toListConverted<R>() => convertToList<R>(this);
 
   /// Converts this iterable to a set of type [R] using convert_object logic.
-  Set<R> toSetConverted<R>() => toSet<R>(this);
+  Set<R> toSetConverted<R>() => convertToSet<R>(this);
 
   /// Returns this iterable (as is) if it is non-null; otherwise, returns an empty iterable.
   Iterable<E> orEmpty() => this;
-
-  /// Returns `true` if at least one element matches the given [predicate].
-  bool any(Predicate<E> predicate) {
-    if (isEmptyOrNull) return false;
-    for (final element in orEmpty()) {
-      if (predicate(element)) return true;
-    }
-    return false;
-  }
 
   /// Return a list concatenates the output of the current list and another [iterable]
   List<E> concatWithSingleList(Iterable<E> iterable) {
@@ -230,20 +194,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     if (isEmptyOrNull || iterables.isEmptyOrNull) return [];
     final list = iterables.toList(growable: false).expand((i) => i);
     return <E>[...orEmpty(), ...list];
-  }
-
-  /// Groups the elements in values by the value returned by key.
-  ///
-  /// Returns a map from keys computed by key to a list of all values for which
-  /// key returns that key. The values appear in the list in the same
-  /// relative order as in values.
-  // ignore: avoid_shadowing_type_parameters
-  Map<K, List<T>> groupBy<T, K>(K Function(T e) key) {
-    final map = <K, List<T>>{};
-    for (final element in this) {
-      map.putIfAbsent(key(element as T), () => []).add(element);
-    }
-    return map;
   }
 
   /// Returns a list containing only elements matching the given [predicate].
@@ -276,7 +226,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     if (n == 0) return [];
 
     final list = List<E>.empty();
-    final thisList = this.toList();
+    final thisList = toList();
     final resultSize = length - n;
     if (resultSize <= 0) return [];
     if (resultSize == 1) return [last];
@@ -293,7 +243,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     if (n == 0) return [];
 
     final list = List<E>.empty();
-    final originalList = this.toList();
+    final originalList = toList();
     final resultSize = length - n;
     if (resultSize <= 0) return [];
     if (resultSize == 1) return [last];
@@ -311,23 +261,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Takes the second half of a list
   List<E> secondHalf() => drop(halfLength).toList();
 
-  /// Applies the function [f] to each element and its index,
-  /// returning a new list with the results.
-  List<E2> mapIndexed<E2>(E2 Function(int index, E element) f) {
-    final result = <E2>[];
-    var index = 0;
-    for (final element in this) {
-      result.add(f(index, element));
-      index++;
-    }
-    return result;
-  }
-
   /// returns a list with two swapped items
   /// [i] first item
   /// [j] second item
   List<E> swap(int i, int j) {
-    final list = this.toList();
+    final list = toList();
     final aux = list[i];
     list[i] = list[j];
     list[j] = aux;
@@ -338,37 +276,8 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   E getRandom([int? seed]) {
     final generator = Random(seed);
     final index = generator.nextInt(length);
-    return this.toList()[index];
+    return toList()[index];
   }
-
-  /// Will retrun new [Iterable] with all elements that satisfy the predicate [predicate],
-  Iterable<E> whereIndexed(IndexedPredicate<E> predicate) =>
-      _IndexedWhereIterable(this, predicate);
-
-  ///
-  /// Performs the given action on each element on iterable, providing sequential index with the element.
-  /// [item] the element on the current iteration
-  /// [index] the index of the current iteration
-  ///
-  /// example:
-  /// ["a","b","c"].forEachIndexed((element, index) {
-  ///    print("$element, $index");
-  ///  });
-  /// result:
-  /// a, 0
-  /// b, 1
-  /// c, 2
-  void forEachIndexed(void Function(E element, int index) action) {
-    var index = 0;
-    for (final element in this) {
-      action(element, index++);
-    }
-  }
-
-  /// Returns a new list with all elements sorted according to descending
-  /// natural sort order.
-  List<E> sortedDescending() =>
-      this.toList()..sort((a, b) => -(a as Comparable).compareTo(b));
 
   /// Checks if all elements in the specified [collection] are contained in
   /// this collection.
@@ -377,28 +286,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
       if (!contains(element)) return false;
     }
     return true;
-  }
-
-  /// Return a number of the existing elements by a specific predicate
-  /// example:
-  ///  final aboveTwenty = [
-  ///    User(33, "chicko"),
-  ///    User(45, "ronit"),
-  ///    User(19, "amsalam"),
-  ///  ].count((user) => user.age > 20); // 2
-  int count([Predicate<E>? predicate]) {
-    var count = 0;
-    if (predicate == null) {
-      return length;
-    } else {
-      for (final current in this) {
-        if (predicate(current)) {
-          count++;
-        }
-      }
-    }
-
-    return count;
   }
 
   /// Returns a new list containing the first occurrence of each distinct element
@@ -481,7 +368,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// result:
   /// 1,2,3
 
-  dynamic subtract(Iterable<E> other) => this.toSet()..removeAll(other);
+  dynamic subtract(Iterable<E> other) => toSet()..removeAll(other);
 
   /// Returns the first element matching the given [predicate], or `null`
   /// if element was not found.
@@ -494,37 +381,4 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
     return null;
   }
-}
-
-// A lazy [Iterable] skip elements do **NOT** match the predicate [_f].
-class _IndexedWhereIterable<E> extends Iterable<E> {
-  _IndexedWhereIterable(this._iterable, this._f);
-
-  final Iterable<E> _iterable;
-  final IndexedPredicate<E> _f;
-
-  @override
-  Iterator<E> get iterator => _IndexedWhereIterator<E>(_iterable.iterator, _f);
-}
-
-/// [Iterator] for [_IndexedWhereIterable]
-class _IndexedWhereIterator<E> implements Iterator<E> {
-  _IndexedWhereIterator(this._iterator, this._f);
-
-  final Iterator<E> _iterator;
-  final IndexedPredicate<E> _f;
-  int _index = 0;
-
-  @override
-  bool moveNext() {
-    while (_iterator.moveNext()) {
-      if (_f(_index++, _iterator.current)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  @override
-  E get current => _iterator.current;
 }

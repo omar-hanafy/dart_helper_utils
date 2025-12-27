@@ -30,9 +30,6 @@ extension DHUStringExtensions on String {
   /// Example: "Line 1\n Line 2" => "Line1Line2"
   String get clean => toOneLine.removeWhiteSpaces;
 
-  /// returns the integer value of the Roman numeral string.
-  int get asRomanNumeralToInt => NumbersHelper.fromRomanNumeral(this);
-
   /// Base64 Encode for this String
   String base64Encode() => base64.encode(utf8.encode(this));
 
@@ -47,13 +44,7 @@ extension DHUStringExtensions on String {
     String other,
     SimilarityAlgorithm algorithm, {
     StringSimilarityConfig config = const StringSimilarityConfig(),
-  }) =>
-      StringSimilarity.compare(
-        this,
-        other,
-        algorithm,
-        config: config,
-      );
+  }) => StringSimilarity.compare(this, other, algorithm, config: config);
 }
 
 ///
@@ -148,11 +139,15 @@ extension DHUNullSafeStringExtensions on String? {
   /// Checks if the string is a valid URL.
   bool get isValidUrl => tryToLowerCase().clean.hasMatch(regexValidUrl);
 
-  /// Checks if the string consists only of numbers (no whitespace).
-  bool get isNumeric => hasMatch(regexNumeric);
+  /// Checks if the string consists only of ASCII digits (no sign or decimals).
+  ///
+  /// Leading/trailing whitespace is ignored. Use convert_object for parsing.
+  bool get isNumeric => this != null && this!.trim().hasMatch(regexNumeric);
 
-  /// Checks if the string consists only of letters (no whitespace).
-  bool get isAlphabet => hasMatch(regexAlphabet);
+  /// Checks if the string consists only of ASCII letters (A-Z, a-z).
+  ///
+  /// Leading/trailing whitespace is ignored.
+  bool get isAlphabet => this != null && this!.trim().hasMatch(regexAlphabet);
 
   /// Checks if the string contains at least one capital letter.
   bool get hasCapitalLetter => hasMatch(regexHasCapitalLetter);
@@ -174,8 +169,13 @@ extension DHUNullSafeStringExtensions on String? {
         dotAll: dotAll,
       ).hasMatch(this!);
 
-  /// Checks if the string represents a boolean value.
-  bool get isBool => this == 'true' || this == 'false';
+  /// Checks if the string is a boolean literal (`true`/`false`, case-insensitive).
+  bool get isBool {
+    final value = this;
+    if (value == null) return false;
+    final normalized = value.trim().toLowerCase();
+    return normalized == 'true' || normalized == 'false';
+  }
 
   /// Wraps the string based on the specified word count, wrap behavior, and delimiter.
   /// Example: "This is a test".wrapString(wrapCount: 2, wrapEach: false) => "This is\na test"
@@ -246,8 +246,8 @@ extension DHUNullSafeStringExtensions on String? {
     final index = this!.indexOf(delimiter);
     return (index == -1)
         ? defaultValue.isEmptyOrNull
-            ? this
-            : defaultValue
+              ? this
+              : defaultValue
         : this!.replaceRange(index + 1, this!.length, replacement);
   }
 
@@ -262,8 +262,8 @@ extension DHUNullSafeStringExtensions on String? {
     final index = this!.indexOf(delimiter);
     return (index == -1)
         ? defaultValue.isEmptyOrNull
-            ? this
-            : defaultValue
+              ? this
+              : defaultValue
         : this!.replaceRange(0, index, replacement);
   }
 
@@ -288,12 +288,6 @@ extension DHUNullSafeStringExtensions on String? {
   // Numeric conversions moved to convert_object. Use:
   //   toNum(this), toDouble(this), toInt(this), tryToNum(this), tryToDouble(this), tryToInt(this)
 
-  /// Indicates whether the string is null, empty, or consists only of whitespace characters.
-  bool get isNullOrWhiteSpace {
-    final length = (this?.split('') ?? []).where((x) => x == ' ').length;
-    return length == (this?.length ?? 0) || isEmptyOrNull;
-  }
-
   /// Shrinks the string to be no more than [maxSize] in length, extending from the end.
   /// Example: In a string with 10 characters, a [maxSize] of 3 would return the last 3 characters.
   String? limitFromEnd(int maxSize) => (this?.length ?? 0) < maxSize
@@ -304,8 +298,4 @@ extension DHUNullSafeStringExtensions on String? {
   /// Example: In a string with 10 characters, a [maxSize] of 3 would return the first 3 characters.
   String? limitFromStart(int maxSize) =>
       (this?.length ?? 0) < maxSize ? this : this!.substring(0, maxSize);
-
-  /// property returns the integer value of the Roman numeral string.
-  int? get asRomanNumeralToInt =>
-      this == null ? null : NumbersHelper.fromRomanNumeral(this!);
 }

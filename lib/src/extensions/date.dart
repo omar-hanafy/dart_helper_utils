@@ -13,7 +13,7 @@ extension NumberToDateUtils on num {
   /// ```
   /// If the number is outside the range 1-12, it will be clamped within this range.
   String get toFullMonthName {
-    final monthIndex = this.toInt().clamp(1, 12);
+    final monthIndex = toInt().clamp(1, 12);
     return fullMonthsNames[monthIndex]!;
   }
 
@@ -28,7 +28,7 @@ extension NumberToDateUtils on num {
   /// ```
   /// If the number is outside the range 1-7, it will be normalized within this range using modulo arithmetic.
   String get toFullDayName {
-    final dayIndex = this.toInt().clamp(1, 7);
+    final dayIndex = toInt().clamp(1, 7);
     return fullWeekdays[dayIndex]!;
   }
 
@@ -70,7 +70,7 @@ extension NumberToDateUtils on num {
   /// 6.isBetweenMonths(3, 8);  // Returns true, June is within March-August
   /// ```
   bool isBetweenMonths(int startMonth, int endMonth) {
-    final month = this.toInt();
+    final month = toInt();
     // Handle cases where the range crosses over the year boundary (e.g., December to February)
     if (startMonth > endMonth) {
       return month >= startMonth || month <= endMonth;
@@ -90,7 +90,7 @@ extension NumberToDateUtils on num {
   /// ```
   bool get isCurrentDayOfWeek {
     final now = DateTime.now();
-    return this.toInt() == now.weekday;
+    return toInt() == now.weekday;
   }
 
   /// Checks if the number (assumed to represent a year) corresponds to the current year.
@@ -101,7 +101,7 @@ extension NumberToDateUtils on num {
   /// ```
   bool get isCurrentYear {
     final now = DateTime.now();
-    return this.toInt() == now.year;
+    return toInt() == now.year;
   }
 
   /// Checks if the number (assumed to represent a month, 1-based) corresponds to the current month.
@@ -112,7 +112,7 @@ extension NumberToDateUtils on num {
   /// ```
   bool get isCurrentMonth {
     final now = DateTime.now();
-    return this.toInt() == now.month;
+    return toInt() == now.month;
   }
 
   /// Checks if the number (assumed to represent a day, 1-based) corresponds to the current day of the month.
@@ -123,7 +123,7 @@ extension NumberToDateUtils on num {
   /// ```
   bool get isCurrentDay {
     final now = DateTime.now();
-    return this.toInt() == now.day;
+    return toInt() == now.day;
   }
 }
 
@@ -175,31 +175,31 @@ extension DHUNullableDateExtensions on DateTime? {
   }
 
   /// checks isPresent
-  bool get isPresent => isNotNull && this!.isAfter(DateTime.now());
+  bool get isPresent => this != null && this!.isAfter(DateTime.now());
 
   /// checks isPast
-  bool get isPast => isNotNull && this!.isBefore(DateTime.now());
+  bool get isPast => this != null && this!.isBefore(DateTime.now());
 
   /// checks isInPastWeek
   bool get isInPastWeek {
-    if (isNull) return false;
+    if (this == null) return false;
     final now = DateTime.now();
     return now.dateOnly.previousWeek.isBefore(this!) && now.isAfter(this!);
   }
 
   /// checks isInThisYear
-  bool get isInThisYear => isNotNull && this!.year == DateTime.now().year;
+  bool get isInThisYear => this != null && this!.year == DateTime.now().year;
 
   /// checks isInThisMonth
   bool get isInThisMonth {
-    if (isNull) return false;
+    if (this == null) return false;
     final now = DateTime.now();
     return this!.month == now.month && this!.year == now.year;
   }
 
   /// checks isLeapYear
   bool get isLeapYear {
-    if (isNull) return false;
+    if (this == null) return false;
     return (this!.year % 4 == 0) &&
         ((this!.year % 100 != 0) || (this!.year % 400 == 0));
   }
@@ -233,17 +233,16 @@ extension DHUNullableDateExtensions on DateTime? {
 
   /// checks passedDuration
   Duration? get passedDuration =>
-      isNull ? null : DateTime.now().difference(this!);
+      this == null ? null : DateTime.now().difference(this!);
 
   /// checks remainingDuration
-  Duration? get remainingDuration =>
-      isNull ? null : this!.difference(DateTime.now());
+  Duration? get remainingDuration => this?.difference(DateTime.now());
 
   /// Returns the number of days remaining until this DateTime.
-  int? get remainingDays => isNull ? null : this!.remainingDays;
+  int? get remainingDays => this?.remainingDays;
 
   /// checks passedDays
-  int? get passedDays => isNull ? null : this!.passedDays;
+  int? get passedDays => this?.passedDays;
 }
 
 /// DHUDateExtensions
@@ -251,11 +250,10 @@ extension DHUDateExtensions on DateTime {
   /// Converts this DateTime to local time.
   DateTime get local => toLocal();
 
-  // TODO(ME): Rename this to httpDateFormat.
   /// Format a date to "DAY, DD MON YYYY hh:mm:ss GMT" according to
   /// [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123"),
   /// e.g. `Thu, 1 Jan 1970 00:00:00 GMT`.
-  String get httpFormat {
+  String get httpDateFormat {
     final weekday = smallWeekdays[this.weekday];
     final month = smallMonthsNames[this.month];
     final d = toUtc();
@@ -415,15 +413,15 @@ extension DHUDateExtensions on DateTime {
   /// [startOfWeek] is an optional parameter specifying the weekday that is considered
   /// the start of the week (1 for Monday, 7 for Sunday, etc.). Defaults to Monday.
   DateTime firstDayOfWeek({int startOfWeek = DateTime.monday}) {
-// Normalize the startOfWeek value to be within the range of 1-7
+    // Normalize the startOfWeek value to be within the range of 1-7
     final normalizedStartOfWeek =
         ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
 
-// Calculate the difference between the current weekday and normalizedStartOfWeek
-// and adjust it to be positive and within the range of 0-6
+    // Calculate the difference between the current weekday and normalizedStartOfWeek
+    // and adjust it to be positive and within the range of 0-6
     final daysToSubtract =
         (weekday - normalizedStartOfWeek + DateTime.daysPerWeek) %
-            DateTime.daysPerWeek;
+        DateTime.daysPerWeek;
 
     return subtract(Duration(days: daysToSubtract));
   }
@@ -437,9 +435,9 @@ extension DHUDateExtensions on DateTime {
         ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
     final daysToAdd =
         (DateTime.daysPerWeek - weekday + normalizedStartOfWeek - 1) %
-            DateTime.daysPerWeek;
+        DateTime.daysPerWeek;
 
-// Convert to UTC and then back to the original timezone to ensure correct midnight
+    // Convert to UTC and then back to the original timezone to ensure correct midnight
     final utcLastDayOfWeek = toUtc().add(Duration(days: daysToAdd));
     return utcLastDayOfWeek.toLocal();
   }
@@ -475,8 +473,9 @@ extension DHUDateExtensions on DateTime {
 
   /// Returns a DateTime representing the last day of the month for this DateTime.
   DateTime get lastDayOfMonth {
-    final beginningNextMonth =
-        (month < 12) ? DateTime(year, month + 1) : DateTime(year + 1);
+    final beginningNextMonth = (month < 12)
+        ? DateTime(year, month + 1)
+        : DateTime(year + 1);
     return beginningNextMonth.subtract(const Duration(days: 1));
   }
 
@@ -490,8 +489,16 @@ extension DHUDateExtensions on DateTime {
     while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
       newDay--;
     }
-    return DateTime(newYear, newMonth, newDay, hour, minute, second,
-        millisecond, microsecond);
+    return DateTime(
+      newYear,
+      newMonth,
+      newDay,
+      hour,
+      minute,
+      second,
+      millisecond,
+      microsecond,
+    );
   }
 
   /// Adds or subtracts the specified number of months from this DateTime.
@@ -513,8 +520,16 @@ extension DHUDateExtensions on DateTime {
     while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
       newDay--;
     }
-    return DateTime(newYear, newMonth, newDay, hour, minute, second,
-        millisecond, microsecond);
+    return DateTime(
+      newYear,
+      newMonth,
+      newDay,
+      hour,
+      minute,
+      second,
+      millisecond,
+      microsecond,
+    );
   }
 
   /// Adds or subtracts the specified number of days from this DateTime.
@@ -602,11 +617,13 @@ extension DHUDateExtensions on DateTime {
 
     if (thisNoonUtc.difference(otherNoonUtc).inDays.abs() >= 7) return false;
 
-// Find the start of the week (Monday) for both dates
-    final startOfWeekThis =
-        thisNoonUtc.subtract(Duration(days: thisNoonUtc.weekday - 1));
-    final startOfWeekOther =
-        otherNoonUtc.subtract(Duration(days: otherNoonUtc.weekday - 1));
+    // Find the start of the week (Monday) for both dates
+    final startOfWeekThis = thisNoonUtc.subtract(
+      Duration(days: thisNoonUtc.weekday - 1),
+    );
+    final startOfWeekOther = otherNoonUtc.subtract(
+      Duration(days: otherNoonUtc.weekday - 1),
+    );
 
     return startOfWeekThis.isAtSameMomentAs(startOfWeekOther);
   }
@@ -671,7 +688,8 @@ extension DHUDateExtensions on DateTime {
     // Validate range
     if (compareStart.isAfter(compareEnd)) {
       throw ArgumentError(
-          'Start date ($start) must be before or equal to end date ($end)');
+        'Start date ($start) must be before or equal to end date ($end)',
+      );
     }
 
     // Perform comparison
@@ -707,12 +725,13 @@ extension DHUDateExtensions on DateTime {
       yield current;
       current = current.add(const Duration(days: 1));
 
-// Adjust for potential time zone changes during iteration
+      // Adjust for potential time zone changes during iteration
       final offsetDifference = current.timeZoneOffset - currentOffset;
       if (offsetDifference.inSeconds != 0) {
         currentOffset = current.timeZoneOffset; // Update offset
-        current =
-            current.subtract(Duration(seconds: offsetDifference.inSeconds));
+        current = current.subtract(
+          Duration(seconds: offsetDifference.inSeconds),
+        );
       }
     }
   }

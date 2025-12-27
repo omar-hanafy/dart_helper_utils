@@ -75,9 +75,7 @@ extension DHUNumberFormatExtensions on num {
 
   /// Formats the number in a compact form with the given [locale].
   String formatAsCompact({String? locale}) {
-    return NumberFormat.compact(
-      locale: locale,
-    ).format(this);
+    return NumberFormat.compact(locale: locale).format(this);
   }
 
   /// Formats the number in a long compact form with the given [locale].
@@ -204,21 +202,22 @@ extension DHUNumberFormatExtensions on num {
 
     // Use a unique placeholder for the decimal separator
     const decimalPlaceholder = '{DECIMAL_PLACEHOLDER}';
-    formatted =
-        formatted.replaceFirst(defaultDecimalSeparator, decimalPlaceholder);
+    formatted = formatted.replaceFirst(
+      defaultDecimalSeparator,
+      decimalPlaceholder,
+    );
 
     // Replace grouping separator if a custom one is provided
     if (groupingSeparator != null && groupingSeparator.isNotEmpty) {
-      formatted =
-          formatted.replaceAll(defaultGroupingSeparator, groupingSeparator);
+      formatted = formatted.replaceAll(
+        defaultGroupingSeparator,
+        groupingSeparator,
+      );
     }
 
     // Replace the decimal placeholder with the custom decimal separator
     if (decimalSeparator != null && decimalSeparator.isNotEmpty) {
-      formatted = formatted.replaceFirst(
-        decimalPlaceholder,
-        decimalSeparator,
-      );
+      formatted = formatted.replaceFirst(decimalPlaceholder, decimalSeparator);
     } else {
       // Replace placeholder back to default decimal separator
       formatted = formatted.replaceFirst(

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 /// Determines whether a given value is of a primitive type for JSON serialization.
@@ -23,23 +24,19 @@ bool isValuePrimitive(dynamic value) => value is Object && value.isPrimitive();
 
 ///
 bool isTypePrimitive<T>() => switch (T) {
-      const (num) ||
-      const (int) ||
-      const (double) ||
-      const (bool) ||
-      const (String) ||
-      const (BigInt) ||
-      const (DateTime) =>
-        true,
-      _ => false,
-    };
+  const (num) ||
+  const (int) ||
+  const (double) ||
+  const (bool) ||
+  const (String) ||
+  const (BigInt) ||
+  const (DateTime) => true,
+  _ => false,
+};
 
 ///
-bool isEqual(dynamic a, dynamic b) {
-  if (a is Map && b is Map) return a.isEqual(b);
-  if (a is Iterable && b is Iterable) return a.isEqual(b);
-  return a == b;
-}
+bool isEqual(dynamic a, dynamic b) =>
+    const DeepCollectionEquality().equals(a, b);
 
 /// Returns the current time in milliseconds since the Unix epoch.
 int get currentMillisecondsSinceEpoch => DateTime.now().millisecondsSinceEpoch;

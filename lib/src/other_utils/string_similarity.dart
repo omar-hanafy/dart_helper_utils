@@ -141,8 +141,12 @@ extension SimilarityAlgorithmExtension on SimilarityAlgorithm {
     String second, {
     StringSimilarityConfig config = const StringSimilarityConfig(),
   }) {
-    return StringSimilarity.compareWithDetails(first, second, this,
-        config: config);
+    return StringSimilarity.compareWithDetails(
+      first,
+      second,
+      this,
+      config: config,
+    );
   }
 
   /// Returns true if this algorithm requires equal-length strings
@@ -195,10 +199,9 @@ class LRUCache<K, V> {
   /// Creates an [LRUCache] with the given maximum [capacity].
   LRUCache(this.capacity) {
     if (capacity <= 0) {
-      throw InvalidConfigurationError(
-        'Cache capacity must be greater than 0',
-        {'providedCapacity': capacity},
-      );
+      throw InvalidConfigurationError('Cache capacity must be greater than 0', {
+        'providedCapacity': capacity,
+      });
     }
   }
 
@@ -248,10 +251,10 @@ class LRUCache<K, V> {
 
   /// Returns cache statistics
   Map<String, dynamic> get stats => {
-        'size': size,
-        'capacity': capacity,
-        'utilization': size / capacity,
-      };
+    'size': size,
+    'capacity': capacity,
+    'utilization': size / capacity,
+  };
 }
 
 /// Configuration class for string similarity operations.
@@ -285,14 +288,11 @@ class StringSimilarityConfig {
     this.postProcessor,
     this.tokenizer,
     this.chunkSize = 5000,
-  })  : assert(
-          jaroPrefixScale >= 0 && jaroPrefixScale <= 0.25,
-          'jaroPrefixScale must be between 0 and 0.25',
-        ),
-        assert(
-          ngramSize > 0,
-          'ngramSize must be greater than 0',
-        );
+  }) : assert(
+         jaroPrefixScale >= 0 && jaroPrefixScale <= 0.25,
+         'jaroPrefixScale must be between 0 and 0.25',
+       ),
+       assert(ngramSize > 0, 'ngramSize must be greater than 0');
 
   // Normalization options.
 
@@ -669,15 +669,15 @@ class SimilarityResult {
 
   /// Converts the result to a JSON-serializable map
   Map<String, dynamic> toJson() => {
-        'score': score,
-        'firstString': firstString,
-        'secondString': secondString,
-        'algorithm': algorithm.name,
-        'normalizedFirst': normalizedFirst,
-        'normalizedSecond': normalizedSecond,
-        'executionTime': executionTime,
-        'metadata': metadata,
-      };
+    'score': score,
+    'firstString': firstString,
+    'secondString': secondString,
+    'algorithm': algorithm.name,
+    'normalizedFirst': normalizedFirst,
+    'normalizedSecond': normalizedSecond,
+    'executionTime': executionTime,
+    'metadata': metadata,
+  };
 }
 
 /// Result of a benchmark comparison
@@ -711,7 +711,8 @@ class BenchmarkResult {
   final int iterations;
 
   /// Formats the benchmark result
-  String toReport() => '''
+  String toReport() =>
+      '''
 Algorithm: $algorithm
 Iterations: $iterations
 Average Time: ${averageTime.toStringAsFixed(2)}μs
@@ -874,8 +875,9 @@ class StringSimilarity {
 
     // Apply pre-processing hook.
     // This is where users can integrate the diacritic package if desired
-    var result =
-        config.preProcessor != null ? config.preProcessor!(input) : input;
+    var result = config.preProcessor != null
+        ? config.preProcessor!(input)
+        : input;
 
     // Apply basic unicode normalization
     if (config.removeAccents) {
@@ -966,22 +968,29 @@ class StringSimilarity {
     var intersectionSize = 0;
     for (final entry in firstBigrams.entries) {
       final countInSecond = secondBigrams[entry.key] ?? 0;
-      intersectionSize +=
-          entry.value < countInSecond ? entry.value : countInSecond;
+      intersectionSize += entry.value < countInSecond
+          ? entry.value
+          : countInSecond;
     }
 
     // Fix: Use the sum of actual bigram counts rather than string lengths
-    final firstBigramsCount =
-        firstBigrams.values.fold<int>(0, (sum, count) => sum + count);
-    final secondBigramsCount =
-        secondBigrams.values.fold<int>(0, (sum, count) => sum + count);
+    final firstBigramsCount = firstBigrams.values.fold<int>(
+      0,
+      (sum, count) => sum + count,
+    );
+    final secondBigramsCount = secondBigrams.values.fold<int>(
+      0,
+      (sum, count) => sum + count,
+    );
 
     return (2.0 * intersectionSize) / (firstBigramsCount + secondBigramsCount);
   }
 
   /// Generates bigrams from a string with optimizations for long strings.
   static Map<String, int> _createBigrams(
-      String input, StringSimilarityConfig config) {
+    String input,
+    StringSimilarityConfig config,
+  ) {
     _initializeCaches(config);
     if (config.enableCache && _bigramCache != null) {
       final cached = _bigramCache!.get(input);
@@ -995,17 +1004,21 @@ class StringSimilarity {
 
     // For very long strings, process in chunks to avoid potential performance issues
     if (input.length > config.chunkSize) {
-      for (var offset = 0;
-          offset < codeUnits.length - 1;
-          offset += config.chunkSize) {
+      for (
+        var offset = 0;
+        offset < codeUnits.length - 1;
+        offset += config.chunkSize
+      ) {
         final end = (offset + config.chunkSize < codeUnits.length - 1)
             ? offset + config.chunkSize
             : codeUnits.length - 1;
         for (var i = offset; i < end; i++) {
           if (i + 1 < codeUnits.length) {
             // Use StringBuffer for better performance
-            final bigram =
-                String.fromCharCodes([codeUnits[i], codeUnits[i + 1]]);
+            final bigram = String.fromCharCodes([
+              codeUnits[i],
+              codeUnits[i + 1],
+            ]);
             bigramCounts[bigram] = (bigramCounts[bigram] ?? 0) + 1;
           }
         }
@@ -1119,13 +1132,10 @@ class StringSimilarity {
     final str2 = _normalizeString(s2, config);
 
     if (str1.length != str2.length) {
-      throw AlgorithmError(
-        'Hamming distance requires equal-length strings',
-        {
-          'firstLength': str1.length,
-          'secondLength': str2.length,
-        },
-      );
+      throw AlgorithmError('Hamming distance requires equal-length strings', {
+        'firstLength': str1.length,
+        'secondLength': str2.length,
+      });
     }
 
     var distance = 0;
@@ -1582,19 +1592,23 @@ class StringSimilarity {
     }
 
     // Use custom tokenizer if provided
-    final tokens1 =
-        config.tokenizer != null ? config.tokenizer!(str1) : _tokenize(str1);
-    final tokens2 =
-        config.tokenizer != null ? config.tokenizer!(str2) : _tokenize(str2);
+    final tokens1 = config.tokenizer != null
+        ? config.tokenizer!(str1)
+        : _tokenize(str1);
+    final tokens2 = config.tokenizer != null
+        ? config.tokenizer!(str2)
+        : _tokenize(str2);
 
     if (tokens1.isEmpty && tokens2.isEmpty) return 1;
     if (tokens1.isEmpty || tokens2.isEmpty) return 0;
 
     // Apply stemming if configured
-    final processedTokens1 =
-        config.stemTokens ? tokens1.map(_basicStem).toList() : tokens1;
-    final processedTokens2 =
-        config.stemTokens ? tokens2.map(_basicStem).toList() : tokens2;
+    final processedTokens1 = config.stemTokens
+        ? tokens1.map(_basicStem).toList()
+        : tokens1;
+    final processedTokens2 = config.stemTokens
+        ? tokens2.map(_basicStem).toList()
+        : tokens2;
 
     // Create frequency maps
     final freq1 = _createFrequencyMap(processedTokens1);
@@ -1622,7 +1636,9 @@ class StringSimilarity {
 
   // Helper for cosine calculation
   static SimilarityScore _calculateCosine(
-      Map<String, int> freq1, Map<String, int> freq2) {
+    Map<String, int> freq1,
+    Map<String, int> freq2,
+  ) {
     final allKeys = {...freq1.keys, ...freq2.keys};
 
     double dotProduct = 0;
@@ -1651,8 +1667,10 @@ class StringSimilarity {
     }
 
     // Strict whitespace-based tokenization to match test expectations
-    final tokens =
-        text.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).toList();
+    final tokens = text
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
 
     return tokens;
   }
@@ -1734,8 +1752,10 @@ class StringSimilarity {
     if (algorithm == SimilarityAlgorithm.levenshteinDistance) {
       final distance = levenshteinDistance(first, second, config);
       metadata['distance'] = distance;
-      metadata['maxLength'] =
-          max(normalizedFirst.length, normalizedSecond.length);
+      metadata['maxLength'] = max(
+        normalizedFirst.length,
+        normalizedSecond.length,
+      );
       metadata['operations'] = distance;
     } else if (algorithm == SimilarityAlgorithm.soundex) {
       metadata['firstCode'] = soundex(first, config);
@@ -1751,8 +1771,10 @@ class StringSimilarity {
     } else if (algorithm == SimilarityAlgorithm.lcs) {
       final lcsLength = longestCommonSubsequence(first, second, config);
       metadata['lcsLength'] = lcsLength;
-      metadata['maxLength'] =
-          max(normalizedFirst.length, normalizedSecond.length);
+      metadata['maxLength'] = max(
+        normalizedFirst.length,
+        normalizedSecond.length,
+      );
     } else if (algorithm == SimilarityAlgorithm.ngram) {
       metadata['ngramSize'] = config.ngramSize;
     } else if (algorithm == SimilarityAlgorithm.jaccard) {
@@ -1789,8 +1811,10 @@ class StringSimilarity {
         return diceCoefficient(first, second, config);
       case SimilarityAlgorithm.levenshteinDistance:
         final distance = levenshteinDistance(first, second, config);
-        final maxLength = max(_normalizeString(first, config).length,
-            _normalizeString(second, config).length);
+        final maxLength = max(
+          _normalizeString(first, config).length,
+          _normalizeString(second, config).length,
+        );
         return maxLength == 0 ? 1 : 1 - (distance / maxLength);
       case SimilarityAlgorithm.jaro:
         return jaro(first, second, config);
@@ -1850,7 +1874,8 @@ class StringSimilarity {
 
     if (shouldUseIsolate) {
       return Isolate.run(
-          () => compare(first, second, algorithm, config: config));
+        () => compare(first, second, algorithm, config: config),
+      );
     }
 
     // For smaller strings, just wrap in Future
@@ -1869,8 +1894,9 @@ class StringSimilarity {
       return pairs.map((pair) {
         if (pair.length != 2) {
           throw StringSimilarityError(
-              'Each pair must contain exactly 2 strings.',
-              {'pairLength': pair.length});
+            'Each pair must contain exactly 2 strings.',
+            {'pairLength': pair.length},
+          );
         }
         return compare(pair[0], pair[1], algorithm, config: config);
       }).toList();
@@ -1888,7 +1914,8 @@ class StringSimilarity {
           final pair = pairs[j];
           if (pair.length != 2) {
             throw StringSimilarityError(
-                'Each pair must contain exactly 2 strings.');
+              'Each pair must contain exactly 2 strings.',
+            );
           }
           results[j] = compare(pair[0], pair[1], algorithm, config: config);
         }
@@ -1928,7 +1955,8 @@ class StringSimilarity {
     return chunk.map((pair) {
       if (pair.length != 2) {
         throw StringSimilarityError(
-            'Each pair must contain exactly 2 strings.');
+          'Each pair must contain exactly 2 strings.',
+        );
       }
       return compare(pair[0], pair[1], algorithm, config: config);
     }).toList();
@@ -1959,16 +1987,22 @@ class StringSimilarity {
 
     // Select algorithm based on query characteristics
     final algorithm = query.length <= 5
-        ? SimilarityAlgorithm.jaroWinkler // Short strings
+        ? SimilarityAlgorithm
+              .jaroWinkler // Short strings
         : query.contains(' ')
-            ? SimilarityAlgorithm.cosine // Multi-word
-            : SimilarityAlgorithm.diceCoefficient; // Single medium words
+        ? SimilarityAlgorithm
+              .cosine // Multi-word
+        : SimilarityAlgorithm.diceCoefficient; // Single medium words
 
     final results = <String>[];
 
     for (final candidate in candidates) {
-      final score =
-          compare(query, candidate, algorithm, config: effectiveConfig);
+      final score = compare(
+        query,
+        candidate,
+        algorithm,
+        config: effectiveConfig,
+      );
 
       // Also check edit distance for typo tolerance
       if (score >= minSimilarity) {
@@ -2016,14 +2050,20 @@ class StringSimilarity {
     StringSimilarityConfig config = const StringSimilarityConfig(),
     double threshold = 0.0,
   }) {
-    final rankings = candidates
-        .map((candidate) {
-          final score = compare(query, candidate, algorithm, config: config);
-          return MapEntry(candidate, score);
-        })
-        .where((entry) => entry.value >= threshold)
-        .toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final rankings =
+        candidates
+            .map((candidate) {
+              final score = compare(
+                query,
+                candidate,
+                algorithm,
+                config: config,
+              );
+              return MapEntry(candidate, score);
+            })
+            .where((entry) => entry.value >= threshold)
+            .toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
     return rankings;
   }
 
@@ -2056,14 +2096,16 @@ class StringSimilarity {
         final totalTime = times.reduce((a, b) => a + b);
         final avgTime = totalTime / times.length;
 
-        results.add(BenchmarkResult(
-          algorithm: algorithm,
-          averageTime: avgTime,
-          minTime: times.first,
-          maxTime: times.last,
-          totalTime: totalTime,
-          iterations: times.length,
-        ));
+        results.add(
+          BenchmarkResult(
+            algorithm: algorithm,
+            averageTime: avgTime,
+            minTime: times.first,
+            maxTime: times.last,
+            totalTime: totalTime,
+            iterations: times.length,
+          ),
+        );
       }
     }
 
@@ -2109,17 +2151,17 @@ class _NormalizationKey {
 
   @override
   int get hashCode => Object.hash(
-        input,
-        config.normalize,
-        config.removeSpaces,
-        config.toLowerCase,
-        config.removeSpecialChars,
-        config.removeAccents,
-        config.trimWhitespace,
-        config.locale,
-        identityHashCode(config.preProcessor),
-        identityHashCode(config.postProcessor),
-      );
+    input,
+    config.normalize,
+    config.removeSpaces,
+    config.toLowerCase,
+    config.removeSpecialChars,
+    config.removeAccents,
+    config.trimWhitespace,
+    config.locale,
+    identityHashCode(config.preProcessor),
+    identityHashCode(config.postProcessor),
+  );
 }
 
 /// Internal helper class for caching n-grams
@@ -2144,8 +2186,10 @@ class _NgramKey {
 /// Extensions on [String] for easy similarity calculations.
 extension StringSimilarityExtensions on String {
   /// Calculates the Dice coefficient similarity with another string.
-  SimilarityScore diceCoefficient(String other,
-      [StringSimilarityConfig? config]) {
+  SimilarityScore diceCoefficient(
+    String other, [
+    StringSimilarityConfig? config,
+  ]) {
     return StringSimilarity.diceCoefficient(
       this,
       other,
@@ -2190,8 +2234,10 @@ extension StringSimilarityExtensions on String {
   }
 
   /// Calculates n-gram similarity with another string.
-  SimilarityScore ngramSimilarity(String other,
-      [StringSimilarityConfig? config]) {
+  SimilarityScore ngramSimilarity(
+    String other, [
+    StringSimilarityConfig? config,
+  ]) {
     return StringSimilarity.ngramSimilarity(
       this,
       other,
@@ -2200,8 +2246,10 @@ extension StringSimilarityExtensions on String {
   }
 
   /// Calculates Jaccard similarity with another string.
-  SimilarityScore jaccardSimilarity(String other,
-      [StringSimilarityConfig? config]) {
+  SimilarityScore jaccardSimilarity(
+    String other, [
+    StringSimilarityConfig? config,
+  ]) {
     return StringSimilarity.jaccardSimilarity(
       this,
       other,
@@ -2226,8 +2274,10 @@ extension StringSimilarityExtensions on String {
   }
 
   /// Calculates similarity using automatic algorithm selection
-  SimilarityScore smartSimilarity(String other,
-      [StringSimilarityConfig? config]) {
+  SimilarityScore smartSimilarity(
+    String other, [
+    StringSimilarityConfig? config,
+  ]) {
     return StringSimilarity.smartCompare(
       this,
       other,

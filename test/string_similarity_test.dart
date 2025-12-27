@@ -6,10 +6,14 @@ import 'package:test/test.dart';
 void main() {
   group('Basic Algorithm Tests', () {
     test('Dice Coefficient algorithm', () {
-      expect(StringSimilarity.diceCoefficient('night', 'nacht'),
-          closeTo(0.25, 0.01));
-      expect(StringSimilarity.diceCoefficient('context', 'contact'),
-          closeTo(0.5, 0.01));
+      expect(
+        StringSimilarity.diceCoefficient('night', 'nacht'),
+        closeTo(0.25, 0.01),
+      );
+      expect(
+        StringSimilarity.diceCoefficient('context', 'contact'),
+        closeTo(0.5, 0.01),
+      );
       expect(StringSimilarity.diceCoefficient('abc', 'abc'), equals(1.0));
       expect(StringSimilarity.diceCoefficient('', ''), equals(1.0));
       expect(StringSimilarity.diceCoefficient('abc', ''), equals(0.0));
@@ -18,7 +22,9 @@ void main() {
 
     test('Levenshtein Distance algorithm', () {
       expect(
-          StringSimilarity.levenshteinDistance('kitten', 'sitting'), equals(3));
+        StringSimilarity.levenshteinDistance('kitten', 'sitting'),
+        equals(3),
+      );
       expect(StringSimilarity.levenshteinDistance('abc', 'abc'), equals(0));
       expect(StringSimilarity.levenshteinDistance('', ''), equals(0));
       expect(StringSimilarity.levenshteinDistance('abc', ''), equals(3));
@@ -26,9 +32,13 @@ void main() {
 
       // Test the normalized score through compare method
       expect(
-          StringSimilarity.compare(
-              'kitten', 'sitting', SimilarityAlgorithm.levenshteinDistance),
-          closeTo(0.57, 0.01));
+        StringSimilarity.compare(
+          'kitten',
+          'sitting',
+          SimilarityAlgorithm.levenshteinDistance,
+        ),
+        closeTo(0.57, 0.01),
+      );
     });
 
     test('Jaro algorithm', () {
@@ -40,32 +50,44 @@ void main() {
     });
 
     test('Jaro-Winkler algorithm', () {
-      expect(StringSimilarity.jaroWinkler('MARTHA', 'MARHTA'),
-          closeTo(0.96, 0.01));
-      expect(StringSimilarity.jaroWinkler('DIXON', 'DICKSONX'),
-          closeTo(0.81, 0.01));
+      expect(
+        StringSimilarity.jaroWinkler('MARTHA', 'MARHTA'),
+        closeTo(0.96, 0.01),
+      );
+      expect(
+        StringSimilarity.jaroWinkler('DIXON', 'DICKSONX'),
+        closeTo(0.81, 0.01),
+      );
       expect(StringSimilarity.jaroWinkler('abc', 'abc'), equals(1.0));
       expect(StringSimilarity.jaroWinkler('', ''), equals(1.0));
       expect(StringSimilarity.jaroWinkler('abc', ''), equals(0.0));
 
       // Test prefix scaling
       const config = StringSimilarityConfig(jaroPrefixScale: 0.2);
-      expect(StringSimilarity.jaroWinkler('program', 'porgram', config: config),
-          greaterThan(StringSimilarity.jaroWinkler('program', 'porgram')));
+      expect(
+        StringSimilarity.jaroWinkler('program', 'porgram', config: config),
+        greaterThan(StringSimilarity.jaroWinkler('program', 'porgram')),
+      );
     });
 
     test('Cosine Similarity algorithm', () {
-      expect(StringSimilarity.cosine('this is a test', 'this is a test'),
-          equals(1.0));
-      expect(StringSimilarity.cosine('this is a test', 'this is another test'),
-          closeTo(0.75, 0.01));
+      expect(
+        StringSimilarity.cosine('this is a test', 'this is a test'),
+        equals(1.0),
+      );
+      expect(
+        StringSimilarity.cosine('this is a test', 'this is another test'),
+        closeTo(0.75, 0.01),
+      );
       expect(StringSimilarity.cosine('', ''), equals(1.0));
       expect(StringSimilarity.cosine('abc', ''), equals(0.0));
 
       // Single word behavior for cosine
       expect(StringSimilarity.cosine('test', 'test'), equals(1.0));
-      expect(StringSimilarity.cosine('test', 'tent'),
-          equals(0.0)); // No common tokens for single words
+      expect(
+        StringSimilarity.cosine('test', 'tent'),
+        equals(0.0),
+      ); // No common tokens for single words
     });
 
     test('Soundex algorithm', () {
@@ -77,18 +99,28 @@ void main() {
 
       // Test through compare
       expect(
-          StringSimilarity.compare(
-              'Robert', 'Rupert', SimilarityAlgorithm.soundex),
-          equals(1.0));
+        StringSimilarity.compare(
+          'Robert',
+          'Rupert',
+          SimilarityAlgorithm.soundex,
+        ),
+        equals(1.0),
+      );
       expect(
-          StringSimilarity.compare(
-              'Robert', 'Smith', SimilarityAlgorithm.soundex),
-          equals(0.0));
+        StringSimilarity.compare(
+          'Robert',
+          'Smith',
+          SimilarityAlgorithm.soundex,
+        ),
+        equals(0.0),
+      );
     });
 
     test('N-gram similarity algorithm', () {
       expect(
-          StringSimilarity.ngramSimilarity('hello', 'hallo'), greaterThan(0.0));
+        StringSimilarity.ngramSimilarity('hello', 'hallo'),
+        greaterThan(0.0),
+      );
       expect(StringSimilarity.ngramSimilarity('abc', 'abc'), equals(1.0));
       expect(StringSimilarity.ngramSimilarity('', ''), equals(1.0));
       expect(StringSimilarity.ngramSimilarity('abc', ''), equals(0.0));
@@ -98,18 +130,24 @@ void main() {
       const config2 = StringSimilarityConfig(ngramSize: 2);
 
       expect(
-          StringSimilarity.ngramSimilarity('testing', 'testing'), equals(1.0));
+        StringSimilarity.ngramSimilarity('testing', 'testing'),
+        equals(1.0),
+      );
       expect(
-          StringSimilarity.ngramSimilarity(
-              'hello world', 'world hello', config2),
-          greaterThan(0.0));
+        StringSimilarity.ngramSimilarity('hello world', 'world hello', config2),
+        greaterThan(0.0),
+      );
     });
 
     test('Jaccard similarity algorithm', () {
-      expect(StringSimilarity.jaccardSimilarity('cat dog', 'dog cat'),
-          equals(1.0));
-      expect(StringSimilarity.jaccardSimilarity('cat dog', 'dog cat mouse'),
-          closeTo(0.67, 0.01));
+      expect(
+        StringSimilarity.jaccardSimilarity('cat dog', 'dog cat'),
+        equals(1.0),
+      );
+      expect(
+        StringSimilarity.jaccardSimilarity('cat dog', 'dog cat mouse'),
+        closeTo(0.67, 0.01),
+      );
       expect(StringSimilarity.jaccardSimilarity('', ''), equals(1.0));
       expect(StringSimilarity.jaccardSimilarity('test', ''), equals(0.0));
     });
@@ -120,56 +158,76 @@ void main() {
       expect(StringSimilarity.hammingDistance('', ''), equals(0));
 
       // Test error on different lengths
-      expect(() => StringSimilarity.hammingDistance('short', 'longer'),
-          throwsA(isA<AlgorithmError>()));
+      expect(
+        () => StringSimilarity.hammingDistance('short', 'longer'),
+        throwsA(isA<AlgorithmError>()),
+      );
 
       // Test through compare
       expect(
-          StringSimilarity.compare('1011', '1001', SimilarityAlgorithm.hamming),
-          equals(0.75) // 1 difference in 4 positions
-          );
+        StringSimilarity.compare('1011', '1001', SimilarityAlgorithm.hamming),
+        equals(0.75), // 1 difference in 4 positions
+      );
     });
 
     test('Metaphone algorithm', () {
-      expect(StringSimilarity.metaphone('Smith'),
-          equals(StringSimilarity.metaphone('Smyth')));
-      expect(StringSimilarity.metaphone('Schmidt'),
-          isNot(equals(StringSimilarity.metaphone('Smith'))));
+      expect(
+        StringSimilarity.metaphone('Smith'),
+        equals(StringSimilarity.metaphone('Smyth')),
+      );
+      expect(
+        StringSimilarity.metaphone('Schmidt'),
+        isNot(equals(StringSimilarity.metaphone('Smith'))),
+      );
       expect(StringSimilarity.metaphone(''), equals(''));
 
       // Test through compare
       expect(
-          StringSimilarity.compare(
-              'Philip', 'Phillip', SimilarityAlgorithm.metaphone),
-          equals(1.0));
+        StringSimilarity.compare(
+          'Philip',
+          'Phillip',
+          SimilarityAlgorithm.metaphone,
+        ),
+        equals(1.0),
+      );
     });
 
     test('Longest Common Subsequence algorithm', () {
-      expect(StringSimilarity.longestCommonSubsequence('ABCDGH', 'AEDFHR'),
-          equals(3)); // ADH
-      expect(StringSimilarity.longestCommonSubsequence('AGGTAB', 'GXTXAYB'),
-          equals(4)); // GTAB
+      expect(
+        StringSimilarity.longestCommonSubsequence('ABCDGH', 'AEDFHR'),
+        equals(3),
+      ); // ADH
+      expect(
+        StringSimilarity.longestCommonSubsequence('AGGTAB', 'GXTXAYB'),
+        equals(4),
+      ); // GTAB
       expect(StringSimilarity.longestCommonSubsequence('', ''), equals(0));
       expect(
-          StringSimilarity.longestCommonSubsequence('abc', 'abc'), equals(3));
+        StringSimilarity.longestCommonSubsequence('abc', 'abc'),
+        equals(3),
+      );
 
       // Test through compare
       expect(
-          StringSimilarity.compare('ABCDGH', 'AEDFHR', SimilarityAlgorithm.lcs),
-          equals(0.5) // 3/6
-          );
+        StringSimilarity.compare('ABCDGH', 'AEDFHR', SimilarityAlgorithm.lcs),
+        equals(0.5), // 3/6
+      );
     });
   });
 
   group('Algorithm Extension Tests', () {
     test('SimilarityAlgorithm extension methods', () {
       // Test compare method on enum
-      expect(SimilarityAlgorithm.diceCoefficient.compare('test', 'text'),
-          greaterThan(0.0));
+      expect(
+        SimilarityAlgorithm.diceCoefficient.compare('test', 'text'),
+        greaterThan(0.0),
+      );
 
       // Test compareWithDetails
-      final result =
-          SimilarityAlgorithm.jaro.compareWithDetails('MARTHA', 'MARHTA');
+      final result = SimilarityAlgorithm.jaro.compareWithDetails(
+        'MARTHA',
+        'MARHTA',
+      );
       expect(result.score, closeTo(0.94, 0.01));
       expect(result.algorithm, equals(SimilarityAlgorithm.jaro));
     });
@@ -196,13 +254,16 @@ void main() {
 
       // Long text - should use cosine
       final longTextScore = StringSimilarity.smartCompare(
-          'This is a long sentence with many words for testing',
-          'This is another long sentence with different words for testing');
+        'This is a long sentence with many words for testing',
+        'This is another long sentence with different words for testing',
+      );
       expect(longTextScore, greaterThan(0.5));
 
       // Code-like strings - should use Levenshtein
-      final codeScore =
-          StringSimilarity.smartCompare('USER_ID_123', 'USER_ID_124');
+      final codeScore = StringSimilarity.smartCompare(
+        'USER_ID_123',
+        'USER_ID_124',
+      );
       expect(codeScore, greaterThan(0.8));
     });
   });
@@ -213,9 +274,10 @@ void main() {
 
       // Find with typos
       final matches = StringSimilarity.fuzzySearch(
-          'aple', // Missing 'p'
-          candidates,
-          minSimilarity: 0.7);
+        'aple', // Missing 'p'
+        candidates,
+        minSimilarity: 0.7,
+      );
 
       expect(matches, contains('apple'));
       expect(matches.length, greaterThanOrEqualTo(1));
@@ -240,21 +302,27 @@ void main() {
       // Case-sensitive configuration
       const caseSensitiveConfig = StringSimilarityConfig(toLowerCase: false);
       expect(
-          StringSimilarity.diceCoefficient(
-              'HELLO', 'hello', caseSensitiveConfig),
-          lessThan(1.0));
+        StringSimilarity.diceCoefficient('HELLO', 'hello', caseSensitiveConfig),
+        lessThan(1.0),
+      );
     });
 
     test('Remove spaces configuration', () {
       const defaultConfig = StringSimilarityConfig();
-      expect(StringSimilarity.diceCoefficient('hello world', 'helloworld'),
-          lessThan(1.0));
+      expect(
+        StringSimilarity.diceCoefficient('hello world', 'helloworld'),
+        lessThan(1.0),
+      );
 
       const removeSpacesConfig = StringSimilarityConfig(removeSpaces: true);
       expect(
-          StringSimilarity.diceCoefficient(
-              'hello world', 'helloworld', removeSpacesConfig),
-          equals(1.0));
+        StringSimilarity.diceCoefficient(
+          'hello world',
+          'helloworld',
+          removeSpacesConfig,
+        ),
+        equals(1.0),
+      );
     });
 
     test('Remove accents configuration', () {
@@ -263,8 +331,9 @@ void main() {
 
       const removeAccentsConfig = StringSimilarityConfig(removeAccents: true);
       expect(
-          StringSimilarity.diceCoefficient('café', 'cafe', removeAccentsConfig),
-          equals(1.0));
+        StringSimilarity.diceCoefficient('café', 'cafe', removeAccentsConfig),
+        equals(1.0),
+      );
     });
 
     test('Custom pre-processor', () {
@@ -279,8 +348,10 @@ void main() {
       final config = StringSimilarityConfig(preProcessor: preprocessor);
 
       // Should treat "1" and "one" as identical
-      expect(StringSimilarity.diceCoefficient('test 1', 'test one', config),
-          equals(1.0));
+      expect(
+        StringSimilarity.diceCoefficient('test 1', 'test one', config),
+        equals(1.0),
+      );
     });
 
     test('Custom tokenizer', () {
@@ -292,21 +363,30 @@ void main() {
       final config = StringSimilarityConfig(tokenizer: customTokenizer);
 
       expect(
-          StringSimilarity.jaccardSimilarity(
-              'apple,banana', 'banana,apple', config),
-          equals(1.0));
+        StringSimilarity.jaccardSimilarity(
+          'apple,banana',
+          'banana,apple',
+          config,
+        ),
+        equals(1.0),
+      );
     });
 
     test('Stemming configuration', () {
       const config = StringSimilarityConfig(stemTokens: true);
 
       // Should treat "running" and "runs" as more similar with stemming
-      final withStemming =
-          StringSimilarity.cosine('running quickly', 'runs quick', config);
+      final withStemming = StringSimilarity.cosine(
+        'running quickly',
+        'runs quick',
+        config,
+      );
 
       const noStemConfig = StringSimilarityConfig();
-      final withoutStemming =
-          StringSimilarity.cosine('running quickly', 'runs quick');
+      final withoutStemming = StringSimilarity.cosine(
+        'running quickly',
+        'runs quick',
+      );
 
       expect(withStemming, greaterThanOrEqualTo(withoutStemming));
     });
@@ -339,7 +419,9 @@ void main() {
       expect('MARTHA'.jaro('MARHTA'), closeTo(0.94, 0.01));
       expect('MARTHA'.jaroWinkler('MARHTA'), closeTo(0.96, 0.01));
       expect(
-          'this is a test'.cosine('this is another test'), closeTo(0.75, 0.01));
+        'this is a test'.cosine('this is another test'),
+        closeTo(0.75, 0.01),
+      );
       expect('Robert'.soundex(), equals('R163'));
     });
 
@@ -356,21 +438,26 @@ void main() {
       final candidates = ['apple', 'banana', 'orange', 'pear', 'apricot'];
 
       expect(
-          'appel'
-              .mostSimilarTo(candidates, SimilarityAlgorithm.diceCoefficient),
-          equals('apple'));
+        'appel'.mostSimilarTo(candidates, SimilarityAlgorithm.diceCoefficient),
+        equals('apple'),
+      );
 
       expect(
-          'orang'.mostSimilarTo(
-              candidates, SimilarityAlgorithm.levenshteinDistance),
-          equals('orange'));
+        'orang'.mostSimilarTo(
+          candidates,
+          SimilarityAlgorithm.levenshteinDistance,
+        ),
+        equals('orange'),
+      );
     });
 
     test('rankByRelevance extension', () {
       final candidates = ['apple', 'banana', 'orange', 'pear', 'apricot'];
 
-      final ranking =
-          'appl'.rankByRelevance(candidates, SimilarityAlgorithm.jaroWinkler);
+      final ranking = 'appl'.rankByRelevance(
+        candidates,
+        SimilarityAlgorithm.jaroWinkler,
+      );
 
       expect(ranking.length, equals(5));
       expect(ranking.first.key, equals('apple'));
@@ -381,7 +468,10 @@ void main() {
   group('Utility Methods Tests', () {
     test('compareWithDetails', () {
       final result = StringSimilarity.compareWithDetails(
-          'test', 'tent', SimilarityAlgorithm.levenshteinDistance);
+        'test',
+        'tent',
+        SimilarityAlgorithm.levenshteinDistance,
+      );
 
       expect(result.score, closeTo(0.75, 0.01));
       expect(result.firstString, equals('test'));
@@ -394,7 +484,10 @@ void main() {
 
     test('SimilarityResult JSON serialization', () {
       final result = StringSimilarity.compareWithDetails(
-          'test', 'text', SimilarityAlgorithm.diceCoefficient);
+        'test',
+        'text',
+        SimilarityAlgorithm.diceCoefficient,
+      );
 
       final json = result.toJson();
       expect(json['score'], isA<double>());
@@ -407,8 +500,11 @@ void main() {
       final candidates = ['apple', 'banana', 'orange', 'pear', 'apricot'];
 
       final matches = StringSimilarity.findMatches(
-          'appel', candidates, SimilarityAlgorithm.diceCoefficient,
-          threshold: 0.5);
+        'appel',
+        candidates,
+        SimilarityAlgorithm.diceCoefficient,
+        threshold: 0.5,
+      );
 
       expect(matches, contains('apple'));
       expect(matches, isNot(contains('banana')));
@@ -418,7 +514,10 @@ void main() {
       final candidates = ['apple', 'banana', 'orange', 'pear', 'apricot'];
 
       final bestMatch = StringSimilarity.findBestMatch(
-          'appel', candidates, SimilarityAlgorithm.diceCoefficient);
+        'appel',
+        candidates,
+        SimilarityAlgorithm.diceCoefficient,
+      );
 
       expect(bestMatch?.key, equals('apple'));
       expect(bestMatch?.value, greaterThanOrEqualTo(0.5));
@@ -426,7 +525,10 @@ void main() {
 
     test('generateReport', () {
       final report = StringSimilarity.generateReport(
-          'test', 'tent', SimilarityAlgorithm.levenshteinDistance);
+        'test',
+        'tent',
+        SimilarityAlgorithm.levenshteinDistance,
+      );
 
       expect(report, contains('Similarity Score:'));
       expect(report, contains('test'));
@@ -437,19 +539,29 @@ void main() {
 
   group('Error Handling Tests', () {
     test('Invalid configuration errors', () {
-      expect(() => LRUCache<String, String>(0),
-          throwsA(isA<InvalidConfigurationError>()));
+      expect(
+        () => LRUCache<String, String>(0),
+        throwsA(isA<InvalidConfigurationError>()),
+      );
 
-      expect(() => LRUCache<String, String>(-1),
-          throwsA(isA<InvalidConfigurationError>()));
+      expect(
+        () => LRUCache<String, String>(-1),
+        throwsA(isA<InvalidConfigurationError>()),
+      );
     });
 
     test('Algorithm-specific errors', () {
       // Hamming requires equal length
       expect(
-          () => StringSimilarity.hammingDistance('abc', 'abcd'),
-          throwsA(isA<AlgorithmError>().having(
-              (e) => e.details, 'details', containsPair('firstLength', 3))));
+        () => StringSimilarity.hammingDistance('abc', 'abcd'),
+        throwsA(
+          isA<AlgorithmError>().having(
+            (e) => e.details,
+            'details',
+            containsPair('firstLength', 3),
+          ),
+        ),
+      );
     });
 
     test('Batch processing errors', () {
@@ -459,9 +571,12 @@ void main() {
       ];
 
       expect(
-          () => StringSimilarity.compareBatch(
-              invalidPairs, SimilarityAlgorithm.diceCoefficient),
-          throwsA(isA<StringSimilarityError>()));
+        () => StringSimilarity.compareBatch(
+          invalidPairs,
+          SimilarityAlgorithm.diceCoefficient,
+        ),
+        throwsA(isA<StringSimilarityError>()),
+      );
     });
   });
 
@@ -483,39 +598,52 @@ void main() {
       final longStr2 = 'a' * 9990 + 'b' * 10;
 
       // Should handle long strings without errors
-      expect(StringSimilarity.diceCoefficient(longStr1, longStr2),
-          closeTo(0.999, 0.001));
+      expect(
+        StringSimilarity.diceCoefficient(longStr1, longStr2),
+        closeTo(0.999, 0.001),
+      );
     });
 
     test('Unicode characters', () {
       expect(
-          StringSimilarity.diceCoefficient('こんにちは', 'こんばんは'), greaterThan(0.0));
+        StringSimilarity.diceCoefficient('こんにちは', 'こんばんは'),
+        greaterThan(0.0),
+      );
 
       // Test with emoji
-      expect(StringSimilarity.diceCoefficient('Hello 👋', 'Hello 👍'),
-          greaterThan(0.5));
+      expect(
+        StringSimilarity.diceCoefficient('Hello 👋', 'Hello 👍'),
+        greaterThan(0.5),
+      );
     });
 
     test('Accented characters', () {
       const noAccentsConfig = StringSimilarityConfig(removeAccents: true);
 
       expect(
-          StringSimilarity.diceCoefficient('naïve', 'naive', noAccentsConfig),
-          equals(1.0));
+        StringSimilarity.diceCoefficient('naïve', 'naive', noAccentsConfig),
+        equals(1.0),
+      );
 
-      expect(StringSimilarity.diceCoefficient('café', 'cafe', noAccentsConfig),
-          equals(1.0));
+      expect(
+        StringSimilarity.diceCoefficient('café', 'cafe', noAccentsConfig),
+        equals(1.0),
+      );
 
       // Test extended accent map
-      expect(StringSimilarity.diceCoefficient('Źiź', 'Ziz', noAccentsConfig),
-          equals(1.0));
+      expect(
+        StringSimilarity.diceCoefficient('Źiź', 'Ziz', noAccentsConfig),
+        equals(1.0),
+      );
     });
 
     test('Special characters handling', () {
       const config = StringSimilarityConfig(removeSpecialChars: true);
 
-      expect(StringSimilarity.diceCoefficient('hello!@#', 'hello', config),
-          equals(1.0));
+      expect(
+        StringSimilarity.diceCoefficient('hello!@#', 'hello', config),
+        equals(1.0),
+      );
     });
   });
 
@@ -548,7 +676,10 @@ void main() {
 
       // Run comparison
       StringSimilarity.diceCoefficient(
-          'performance test', 'caching test', config);
+        'performance test',
+        'caching test',
+        config,
+      );
 
       // Get cache stats
       final stats = StringSimilarity.getCacheStats();
@@ -557,9 +688,11 @@ void main() {
       // or the caches should not exist (size should be 0 or null)
       final bigram = stats['bigramCache'] as Map;
       final normalization = stats['normalizationCache'] as Map;
-      final bigramDisabled = (bigram['enabled'] == false) ||
+      final bigramDisabled =
+          (bigram['enabled'] == false) ||
           ((bigram['size'] ?? 0) == 0 && bigram['enabled'] == null);
-      final normalizationDisabled = (normalization['enabled'] == false) ||
+      final normalizationDisabled =
+          (normalization['enabled'] == false) ||
           ((normalization['size'] ?? 0) == 0 &&
               normalization['enabled'] == null);
       expect(bigramDisabled, isTrue);
@@ -568,9 +701,7 @@ void main() {
 
     test('Cache capacity management', () {
       // Small cache capacity
-      const config = StringSimilarityConfig(
-        bigramCacheCapacity: 2,
-      );
+      const config = StringSimilarityConfig(bigramCacheCapacity: 2);
 
       // Fill cache beyond capacity
       StringSimilarity.diceCoefficient('test1', 'test2', config);
@@ -590,11 +721,13 @@ void main() {
       final pairs = [
         ['test', 'text'],
         ['hello', 'hallo'],
-        ['identical', 'identical']
+        ['identical', 'identical'],
       ];
 
       final results = StringSimilarity.compareBatch(
-          pairs, SimilarityAlgorithm.diceCoefficient);
+        pairs,
+        SimilarityAlgorithm.diceCoefficient,
+      );
 
       expect(results.length, equals(3));
       expect(results[2], equals(1.0)); // Identical strings
@@ -605,12 +738,14 @@ void main() {
       final pairs = [
         ['test', 'text'],
         ['hello', 'hallo'],
-        ['identical', 'identical']
+        ['identical', 'identical'],
       ];
 
       final results = StringSimilarity.compareBatch(
-          pairs, SimilarityAlgorithm.diceCoefficient,
-          parallel: true);
+        pairs,
+        SimilarityAlgorithm.diceCoefficient,
+        parallel: true,
+      );
 
       expect(results.length, equals(3));
       expect(results[2], equals(1.0)); // Identical strings
@@ -620,7 +755,9 @@ void main() {
       final pairs = List.generate(100, (i) => ['test$i', 'text$i']);
 
       final results = await StringSimilarity.compareBatchAsync(
-          pairs, SimilarityAlgorithm.diceCoefficient);
+        pairs,
+        SimilarityAlgorithm.diceCoefficient,
+      );
 
       expect(results.length, equals(100));
       expect(results.every((score) => score > 0), isTrue);
@@ -628,8 +765,11 @@ void main() {
 
     test('compareAsync with forceIsolate', () async {
       final result = await StringSimilarity.compareAsync(
-          'test' * 1000, 'text' * 1000, SimilarityAlgorithm.diceCoefficient,
-          forceIsolate: true);
+        'test' * 1000,
+        'text' * 1000,
+        SimilarityAlgorithm.diceCoefficient,
+        forceIsolate: true,
+      );
 
       expect(result, greaterThan(0.0));
     });

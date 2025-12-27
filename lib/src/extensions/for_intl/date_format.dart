@@ -5,11 +5,11 @@ extension DHUNDateFormatExtension on DateTime? {
   /// Formats the DateTime object using the provided pattern and optional locale.
   /// respects null dates.
   String? tryFormat(String format) =>
-      isNull ? null : format.dateFormat().format(this!);
+      this == null ? null : format.dateFormat().format(this!);
 
   /// Formats the DateTime object in UTC using the provided pattern and optional locale.
   String? tryDateFormatUtc(String pattern, [String? locale]) =>
-      isNull ? null : DateFormat(pattern, locale).format(this!.toUtc());
+      this == null ? null : DateFormat(pattern, locale).format(this!.toUtc());
 }
 
 /// extension DHUDateFormatExtension on DateTime
