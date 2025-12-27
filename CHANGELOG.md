@@ -1,8 +1,32 @@
 # CHANGELOG
 
-## 6.0.0-dev.1
-- Enhanced all conversion functions, with a new dedicated [package](https://pub.dev/packages/convert_object) for conversions.
-- Migration docs to be added later.
+## 6.0.0 (unreleased)
+
+### Breaking changes
+- Conversion APIs moved to the dedicated
+  [convert_object](https://pub.dev/packages/convert_object) package and are
+  re-exported here. `ConvertObject` → `Convert`, top-level conversion functions
+  renamed to `convertTo*` / `tryConvertTo*`, and `ParsingException` replaced by
+  `ConversionException`.
+- Removed DHU duplicate extensions (object parsing checks, null checks, iterable
+  helpers like `firstOrNull`/`groupBy`/`mapIndexed`, map `isEqual`/`update`,
+  string `isNullOrWhiteSpace`, etc.). Use SDK or `package:collection` instead.
+- `TimeUtils.throttle` signature changed; now returns a callable object with
+  `cancel()` / `dispose()` and supports leading/trailing options.
+- `BasePaginator.goToPage` now applies immediately (no internal debounce).
+- `httpFormat` renamed to `httpDateFormat`.
+- Roman numeral helpers moved to `convert_object`.
+- `DoublyLinkedList` removed from DHU; use `doubly_linked_list` package.
+- Removed static country/timezone datasets to keep DHU lightweight. For
+  up-to-date data, use a dedicated package or API that fits your use case.
+- HTTP status maps drop non‑standard 499/599 and mark 306 as unused.
+
+### New/updated
+- Throttling utilities (`Throttler`, `ThrottledCallback`).
+- String validation now trims input; `isBool` is case‑insensitive.
+
+### Migration
+- Updated `migration_guides.md` with v6 migration notes.
 
 ## 5.5.0
 
@@ -411,7 +435,7 @@ conversions.
 
 #### New Getter
 
-- `httpFormat` (formats this date according to [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123") e.g.
+- `httpDateFormat` (formats this date according to [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123") e.g.
   `"Thu, 1 Jan 2024 00:00:00 GMT"`)
 
 #### Flexible Weekday Customization:

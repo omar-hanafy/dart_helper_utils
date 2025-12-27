@@ -1,3 +1,275 @@
+# Migration Guide (v6)
+
+Version 6.0.0 is a major release that refactors all conversion logic into a
+specialized standalone package: [`convert_object`](https://pub.dev/packages/convert_object).
+`dart_helper_utils` now exports this package, ensuring a cleaner architecture.
+
+## 💥 Breaking Changes
+
+### 1. Class Renaming: `ConvertObject` → `Convert`
+The static utility class `ConvertObject` has been renamed to `Convert` to be more concise.
+
+| v5 (Old)                        | v6 (New)                  |
+|:--------------------------------|:--------------------------|
+| `ConvertObject.toInt(...)`      | `Convert.toInt(...)`      |
+| `ConvertObject.toBool(...)`     | `Convert.toBool(...)`     |
+| `ConvertObject.toDateTime(...)` | `Convert.toDateTime(...)` |
+| `ConvertObject.tryToMap(...)`   | `Convert.tryToMap(...)`   |
+
+### 2. Method Renaming: `toString1` → `string`
+To avoid confusion with the standard Dart `toString()`, the static string conversion method has been renamed.
+
+| v5 (Old)                         | v6 (New)                |
+|:---------------------------------|:------------------------|
+| `ConvertObject.toString1(value)` | `Convert.string(value)` |
+
+### 3. Top-level Functions Renamed
+The top-level conversion functions have been renamed to avoid conflicts and improve clarity. They are now prefixed with `convert` or `tryConvert`.
+
+| v5 (Old)             | v6 (New)                    |
+|:---------------------|:----------------------------|
+| `toString1(val)`     | `convertToString(val)`      |
+| `tryToString(val)`   | `tryConvertToString(val)`   |
+| `toNum(val)`         | `convertToNum(val)`         |
+| `tryToNum(val)`      | `tryConvertToNum(val)`      |
+| `toInt(val)`         | `convertToInt(val)`         |
+| `tryToInt(val)`      | `tryConvertToInt(val)`      |
+| `toDouble(val)`      | `convertToDouble(val)`      |
+| `tryToDouble(val)`   | `tryConvertToDouble(val)`   |
+| `toBigInt(val)`      | `convertToBigInt(val)`      |
+| `tryToBigInt(val)`   | `tryConvertToBigInt(val)`   |
+| `toBool(val)`        | `convertToBool(val)`        |
+| `tryToBool(val)`     | `tryConvertToBool(val)`     |
+| `toDateTime(val)`    | `convertToDateTime(val)`    |
+| `tryToDateTime(val)` | `tryConvertToDateTime(val)` |
+| `toUri(val)`         | `convertToUri(val)`         |
+| `tryToUri(val)`      | `tryConvertToUri(val)`      |
+| `toMap<K,V>(val)`    | `convertToMap<K,V>(val)`    |
+| `tryToMap<K,V>(val)` | `tryConvertToMap<K,V>(val)` |
+| `toSet<T>(val)`      | `convertToSet<T>(val)`      |
+| `tryToSet<T>(val)`   | `tryConvertToSet<T>(val)`   |
+| `toList<T>(val)`     | `convertToList<T>(val)`     |
+| `tryToList<T>(val)`  | `tryConvertToList<T>(val)`  |
+| `toType<T>(val)`     | `convertToType<T>(val)`     |
+| `tryToType<T>(val)`  | `tryConvertToType<T>(val)`  |
+
+### 4. Exception Changes
+`ParsingException` has been replaced by `ConversionException`.
+
+| Feature             | v5 (Old)           | v6 (New)              |
+|:--------------------|:-------------------|:----------------------|
+| **Exception Class** | `ParsingException` | `ConversionException` |
+| **Error Context**   | `e.parsingInfo`    | `e.context`           |
+
+**Migration Example:**
+```dart
+try {
+  Convert.toInt("invalid");
+} catch (e) {
+  if (e is ConversionException) { // Was ParsingException
+    print(e.context); // Was e.parsingInfo
+  }
+}
+```
+
+### 5. Map Extension Parameter Changes
+The `altKeys` parameter in Map extension methods has been renamed to `alternativeKeys` for clarity.
+
+```dart
+// v5
+map.getString('key', altKeys: ['k2']);
+
+// v6
+map.getString('key', alternativeKeys: ['k2']);
+```
+
+### 6. Removed Object Extensions
+The type-checking getters on `Object?` have been removed to keep the API clean. Use the `tryConvert` functions or standard Dart checks.
+
+| v5 (Old)       | v6 (Replacement)                  |
+|:---------------|:----------------------------------|
+| `obj.isDouble` | `tryConvertToDouble(obj) != null` |
+| `obj.isInt`    | `tryConvertToInt(obj) != null`    |
+| `obj.isNum`    | `tryConvertToNum(obj) != null`    |
+| `obj.isNull` / `obj.isNotNull` | `obj == null` / `obj != null` |
+
+### 7. List/Set `convertTo` Changes
+The `.convertTo<T>()` extension method has been removed from `List` to avoid ambiguity with `map`. It remains available on `Set`.
+
+| v5 (Old)                | v6 (New)                                                  |
+|:------------------------|:----------------------------------------------------------|
+| `list.convertTo<int>()` | `convertToList<int>(list)` or `Convert.toList<int>(list)` |
+| `set.convertTo<int>()`  | `set.convertTo<int>()` (Unchanged)                        |
+
+### 8. Behavior Differences (Defaults)
+- `tryToBool` returns `null` for unknown values. Use `defaultValue: false` or
+  `?? false` if you want a false fallback.
+- Numeric parsing is **lenient** by default (commas/spaces/underscores and
+  `(123)` → `-123`). You can enforce strict parsing:
+  ```dart
+  Convert.configure(
+    ConvertConfig(
+      numbers: const NumberOptions(strictParsing: true),
+    ),
+  );
+  ```
+- URI parsing auto-detects emails and phone numbers. You can disable either:
+  ```dart
+  Convert.configure(
+    ConvertConfig(
+      uri: const UriOptions(
+        detectEmails: false,
+        detectPhoneNumbers: false,
+      ),
+    ),
+  );
+  ```
+- `tryToType<T>` returns `null` for unsupported target types. Use
+  `Convert.toType<T>` if you need exceptions.
+- `toDateTime`/`tryToDateTime` now accept numeric epoch values (seconds or
+  milliseconds).
+
+### 9. Iterable/Map Cleanup (collection replacements)
+Duplicate iterable/map helpers were removed in favor of `package:collection`.
+Add:
+
+```dart
+import 'package:collection/collection.dart';
+```
+
+Common replacements:
+
+| Removed | Replacement |
+|:---|:---|
+| `iter.firstOrNull` | `iter.firstOrNull` (from `collection`) |
+| `iter.lastOrNull` | `iter.lastOrNull` (from `collection`) |
+| `iter.firstWhereOrNull(...)` | `iter.firstWhereOrNull(...)` (from `collection`) |
+| `iter.whereNotNull()` | `iter.whereNotNull()` (from `collection`) |
+| `iter.mapIndexed(...)` | `iter.mapIndexed(...)` (from `collection`) |
+| `iter.forEachIndexed(...)` | `iter.forEachIndexed(...)` (from `collection`) |
+| `iter.whereIndexed(...)` | `iter.whereIndexed(...)` (from `collection`) |
+| `groupBy(iter, ...)` | `groupBy(iter, ...)` (from `collection`) |
+| `iter.sortedDescending()` | `iter.sorted((a, b) => b.compareTo(a))` |
+| `iter.count((e) => ...)` | `iter.where((e) => ...).length` |
+| `map.update(...)` (extension) | `Map.update(...)` (SDK) |
+| `map.isEqual(other)` | `const MapEquality().equals(map, other)` |
+
+For deep equality across nested collections:
+
+```dart
+const DeepCollectionEquality().equals(a, b);
+```
+
+### 10. Roman Numerals Moved to `convert_object`
+Roman numeral helpers now live in `convert_object`:
+
+```dart
+import 'package:convert_object/convert_object.dart';
+
+final roman = 42.toRomanNumeral(); // "XLII"
+final value = 'XLII'.asRomanNumeralToInt; // 42
+print(romanNumerals); // Map<int, String>
+```
+
+### 11. `TimeUtils.throttle` API Update
+
+`TimeUtils.throttle` now returns a callable object with `cancel()` and `dispose()`,
+and the parameter order has changed.
+
+**Old usage:**
+
+```dart
+final throttled = TimeUtils.throttle(
+  duration: Duration(seconds: 1),
+  function: () => print('tick'),
+);
+```
+
+**New usage:**
+
+```dart
+final throttled = TimeUtils.throttle(
+  () => print('tick'),
+  Duration(seconds: 1),
+  trailing: true,
+);
+throttled();
+```
+
+### 12. Pagination `goToPage` Timing
+
+`BasePaginator.goToPage` is now immediate (no internal debounce). If your code
+relied on a debounce window, apply debouncing at the call site or use
+`Debouncer`.
+
+### 13. DoublyLinkedList Moved Out
+
+`DoublyLinkedList` and `toDoublyLinkedList` have been removed from
+`dart_helper_utils`. Use the standalone package instead:
+
+https://pub.dev/packages/doubly_linked_list
+
+### 14. Date Utils Rename
+
+`httpFormat` is now `httpDateFormat` on `DateTime`.
+
+### 15. String Validation Intent
+
+`isNumeric` and `isAlphabet` are ASCII-only and trim whitespace before checking.
+`isBool` is case-insensitive and trims whitespace.
+
+### 16. Country/Timezone Data Removed
+
+The static country/timezone datasets and helpers were removed to keep
+`dart_helper_utils` lightweight.
+
+Removed:
+
+- `DHUCountry`, `DHUTimezone`, `CountrySearchService`
+- `getRawCountriesData`, `getTimezonesRawData`, `getTimezonesList`
+
+Use a dedicated package or API that fits your use case for up-to-date data.
+
+## ✨ New Features
+
+### Fluent API
+You can now use the `.convert` getter on any object for a fluent, chainable API.
+
+```dart
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+// Fluent Style
+"123".convert.toInt(); 
+data.convert.fromMap('user').fromMap('age').toIntOr(0);
+```
+
+### Improved Enum Support
+Dedicated methods for Enum conversion.
+
+```dart
+// Convert string/int to Enum
+Convert.toEnum(value, parser: MyEnum.values.parser);
+```
+
+### Global Configuration
+You can now configure global defaults (like locale or error hooks) using `Convert.configure`.
+
+```dart
+Convert.configure(
+  ConvertConfig(
+    locale: 'en_US',
+    onException: (e) => log(e.toString()),
+  ),
+);
+```
+
+### Kotlin-style Scope Functions
+Added `let` and `letOr` extensions for cleaner null handling and scoping.
+
+```dart
+final result = nullableValue?.let((v) => calculate(v));
+```
+
 # Migration Guide (v4)
 
 This guide explains the major changes in version 4 provides step-by-step instructions to

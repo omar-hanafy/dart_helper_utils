@@ -294,18 +294,20 @@ try {
 
 // Throttle function calls
 final throttled = TimeUtils.throttle(
-  duration: Duration(seconds: 1),
-  function: () => print('Throttled function called'),
+  () => print('Throttled function called'),
+  Duration(seconds: 1),
+  trailing: true,
 );
+throttled();
 
 // Run periodic tasks
-final subscription = TimeUtils.runPeriodically(
+final timer = TimeUtils.runPeriodically(
   interval: Duration(minutes: 1),
-  task: () => checkForUpdates(),
+  onExecute: (timer, count) => checkForUpdates(),
 );
 
 // Clean up when done
-subscription.cancel();
+timer.cancel();
 ```
 
 ---
@@ -390,7 +392,7 @@ print(date.passedDays(otherDate));       // days since otherDate
 
 // Formatting
 print(date.format('dd/MM/yyyy'));        // "16/01/2025"
-print(date.httpFormat);                  // "Thu, 16 Jan 2025 00:00:00 GMT"
+print(date.httpDateFormat);              // "Thu, 16 Jan 2025 00:00:00 GMT"
 
 // Age calculation
 final birthDate = DateTime(1990, 1, 1);
@@ -535,33 +537,8 @@ if (statusCode.isRateLimitError) {
 
 ### DoublyLinkedList
 
-A full-featured doubly linked list implementation with extensive operations:
-
-```dart
-// Create a list
-final list = DoublyLinkedList<int>([1, 2, 3, 4]);
-
-// Basic operations
-list.append(5);         // Add to end
-list.prepend(0);       // Add to start
-list.insert(1, 15);    // Insert at position
-
-// Node operations
-for (final node in list.nodes) {
-  print('Value: ${node.data}, '
-        'Previous: ${node.prev?.data}, '
-        'Next: ${node.next?.data}');
-}
-
-// Factory constructors
-final filled = DoublyLinkedList.filled(3, 0);           // [0, 0, 0]
-final generated = DoublyLinkedList.generate(3, (i) => i * 2);  // [0, 2, 4]
-
-// Advanced operations
-list.reverse();
-list.removeNodesWhere((node) => node.data.isEven);
-list.swapNodes(list.firstNode!, list.lastNode!);
-```
+`DoublyLinkedList` moved to its own package: `doubly_linked_list`.
+Use it directly from `https://pub.dev/packages/doubly_linked_list`.
 ---
 
 ### Regular Expressions
@@ -580,7 +557,7 @@ print("test@email.com".isValidEmail);   // true
 print("192.168.1.1".isValidIp4);        // true
 print("https://dart.dev".isValidUrl);   // true
 print("12345".isNumeric);               // true
-print("abcDEF".isAlpha);                // true
+print("abcDEF".isAlphabet);             // true
 ```
 ---
 
