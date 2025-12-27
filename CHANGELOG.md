@@ -1,6 +1,9 @@
 # CHANGELOG
 
-## 6.0.0 (unreleased)
+## 6.0.0-dev.2
+
+- Pre-release for v6.
+- Repository automation and CI/CD workflows.
 
 ### Breaking changes
 - Conversion APIs moved to the dedicated

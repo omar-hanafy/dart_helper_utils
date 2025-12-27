@@ -138,7 +138,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_helper_utils: ^4.0.0
+  dart_helper_utils: ^6.0.0-dev.2
 ```
 
 Then run:
