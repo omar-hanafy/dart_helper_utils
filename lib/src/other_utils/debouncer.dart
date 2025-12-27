@@ -47,6 +47,7 @@
 ///
 /// You may supply a custom [timerFactory] to override the default [Timer] creation,
 /// which is useful for testing or implementing specialized timing logic.
+library;
 
 import 'dart:async';
 import 'dart:developer';
@@ -59,8 +60,8 @@ typedef LoggerFunction = void Function(String message);
 /// A function signature for creating timers.
 /// [timerFactory] allows customizing timer creation, useful for testing or
 /// specialized timing behavior. Defaults to standard [Timer.new].
-typedef TimerFactory = Timer Function(
-    Duration duration, void Function() callback);
+typedef TimerFactory =
+    Timer Function(Duration duration, void Function() callback);
 
 /// A function signature for asynchronous actions.
 typedef AsyncAction = FutureOr<void> Function();
@@ -114,14 +115,14 @@ class DebouncerState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isRunning,
-        isDisposed,
-        executionCount,
-        lastExecutionTime,
-        remainingTime,
-        remainingMaxWait,
-        isPaused,
-      ];
+    isRunning,
+    isDisposed,
+    executionCount,
+    lastExecutionTime,
+    remainingTime,
+    remainingMaxWait,
+    isPaused,
+  ];
 
   /// Creates a copy of this state with optional field updates.
   DebouncerState copyWith({
@@ -173,14 +174,14 @@ class Debouncer {
     int maxHistorySize = 0,
     LoggerFunction? logger,
     TimerFactory? timerFactory,
-  })  : _delay = delay,
-        _maxWait = maxWait,
-        _immediate = immediate,
-        _onError = onError,
-        _debugLabel = debugLabel,
-        _maxHistorySize = maxHistorySize,
-        _logger = logger,
-        _timerFactory = timerFactory ?? Timer.new {
+  }) : _delay = delay,
+       _maxWait = maxWait,
+       _immediate = immediate,
+       _onError = onError,
+       _debugLabel = debugLabel,
+       _maxHistorySize = maxHistorySize,
+       _logger = logger,
+       _timerFactory = timerFactory ?? Timer.new {
     if (delay <= Duration.zero) {
       throw ArgumentError('Delay must be greater than zero.');
     }
@@ -221,7 +222,6 @@ class Debouncer {
   bool _isPaused = false;
   Duration? _remainingDelayOnPause;
   Duration? _remainingMaxWaitOnPause;
-  DateTime? _pauseTimestamp;
 
   // --------------------- Disposal ---------------------
   bool _isDisposed = false;
@@ -267,7 +267,7 @@ class Debouncer {
       return _remainingMaxWaitOnPause;
     }
     final elapsed = DateTime.now().difference(_firstCallTime!);
-    final remaining = _maxWait! - elapsed;
+    final remaining = _maxWait - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
@@ -284,7 +284,9 @@ class Debouncer {
     final successfulRecords = _executionHistory.where((r) => r.success);
     if (successfulRecords.isEmpty) return null;
     final totalMicroseconds = successfulRecords.fold<int>(
-        0, (sum, r) => sum + r.duration.inMicroseconds);
+      0,
+      (sum, r) => sum + r.duration.inMicroseconds,
+    );
     final avgMicroseconds = totalMicroseconds ~/ successfulRecords.length;
     return Duration(microseconds: avgMicroseconds);
   }
@@ -295,14 +297,14 @@ class Debouncer {
 
   /// Returns a snapshot of the current debouncer state.
   DebouncerState get currentState => DebouncerState(
-        isRunning: isRunning,
-        isDisposed: isDisposed,
-        executionCount: executionCount,
-        lastExecutionTime: lastExecutionTime,
-        remainingTime: remainingTime,
-        remainingMaxWait: remainingMaxWait,
-        isPaused: isPaused,
-      );
+    isRunning: isRunning,
+    isDisposed: isDisposed,
+    executionCount: executionCount,
+    lastExecutionTime: lastExecutionTime,
+    remainingTime: remainingTime,
+    remainingMaxWait: remainingMaxWait,
+    isPaused: isPaused,
+  );
 
   /// Schedules [action] to run after [delay]. In immediate mode, the first call
   /// executes right away while subsequent calls during that burst are debounced
@@ -347,7 +349,7 @@ class Debouncer {
 
     // Set up a maxWait timer if specified.
     if (_maxWait != null && _maxWaitTimer == null) {
-      _maxWaitTimer = _timerFactory(_maxWait!, () {
+      _maxWaitTimer = _timerFactory(_maxWait, () {
         if (_lastAction != null) {
           _executeAction(_lastAction!);
         }
@@ -420,7 +422,6 @@ class Debouncer {
     _isPaused = false;
     _remainingDelayOnPause = null;
     _remainingMaxWaitOnPause = null;
-    _pauseTimestamp = null;
     _logDebug('Debouncer state has been reset.');
     _publishState();
   }
@@ -435,7 +436,6 @@ class Debouncer {
       return;
     }
     _isPaused = true;
-    _pauseTimestamp = DateTime.now();
     // Capture remaining time for main timer.
     if (_timer != null && _lastCallTime != null) {
       final elapsed = DateTime.now().difference(_lastCallTime!);
@@ -447,9 +447,10 @@ class Debouncer {
     // Capture remaining time for maxWait timer.
     if (_maxWaitTimer != null && _firstCallTime != null && _maxWait != null) {
       final elapsed = DateTime.now().difference(_firstCallTime!);
-      final remaining = _maxWait! - elapsed;
-      _remainingMaxWaitOnPause =
-          remaining.isNegative ? Duration.zero : remaining;
+      final remaining = _maxWait - elapsed;
+      _remainingMaxWaitOnPause = remaining.isNegative
+          ? Duration.zero
+          : remaining;
       _maxWaitTimer?.cancel();
       _maxWaitTimer = null;
     }
@@ -463,14 +464,14 @@ class Debouncer {
     if (!_isPaused) return;
     _isPaused = false;
     final now = DateTime.now();
+    final remainingMaxWait = _remainingMaxWaitOnPause;
+    final maxWait = _maxWait;
     // Reconstruct timestamps so remaining getters line up with timers.
     if (_remainingDelayOnPause != null && _lastCallTime != null) {
       _lastCallTime = now.subtract(_delay - _remainingDelayOnPause!);
     }
-    if (_maxWait != null &&
-        _remainingMaxWaitOnPause != null &&
-        _firstCallTime != null) {
-      _firstCallTime = now.subtract(_maxWait! - _remainingMaxWaitOnPause!);
+    if (maxWait != null && remainingMaxWait != null && _firstCallTime != null) {
+      _firstCallTime = now.subtract(maxWait - remainingMaxWait);
     }
     // Re-schedule timers if a pending action exists.
     if (_lastAction != null) {
@@ -480,8 +481,8 @@ class Debouncer {
         }
         _cancelTimers();
       });
-      if (_maxWait != null && _remainingMaxWaitOnPause != null) {
-        _maxWaitTimer = _timerFactory(_remainingMaxWaitOnPause!, () {
+      if (maxWait != null && remainingMaxWait != null) {
+        _maxWaitTimer = _timerFactory(remainingMaxWait, () {
           if (_lastAction != null) {
             _executeAction(_lastAction!);
           }
@@ -491,7 +492,6 @@ class Debouncer {
     }
     _remainingDelayOnPause = null;
     _remainingMaxWaitOnPause = null;
-    _pauseTimestamp = null;
     _logDebug('Debouncer resumed.');
     _publishState();
   }
@@ -545,7 +545,7 @@ class Debouncer {
       }
       _logDebug('Action execution failed: $error');
       if (_onError != null) {
-        _onError!(error, stackTrace);
+        _onError(error, stackTrace);
       } else {
         rethrow;
       }
@@ -578,7 +578,7 @@ class Debouncer {
       } catch (error, stackTrace) {
         _logDebug('Error publishing state: $error');
         if (_onError != null) {
-          _onError!(error, stackTrace);
+          _onError(error, stackTrace);
         } else {
           rethrow;
         }
@@ -591,7 +591,7 @@ class Debouncer {
     final logMessage =
         'Debouncer${_debugLabel != null ? '($_debugLabel)' : ''}: $message';
     if (_logger != null) {
-      _logger!(logMessage);
+      _logger(logMessage);
     } else if (_debugLabel != null) {
       log(logMessage);
     }
@@ -611,12 +611,14 @@ class Debouncer {
     bool success, {
     Object? error,
   }) {
-    _executionHistory.add(_ExecutionRecord(
-      startTime: start,
-      endTime: end,
-      success: success,
-      error: error,
-    ));
+    _executionHistory.add(
+      _ExecutionRecord(
+        startTime: start,
+        endTime: end,
+        success: success,
+        error: error,
+      ),
+    );
     // Remove oldest entries if history exceeds [maxHistorySize].
     while (_executionHistory.length > _maxHistorySize) {
       _executionHistory.removeAt(0);
@@ -651,12 +653,12 @@ class _ExecutionRecord {
 
   /// Converts this record to a map for logging or debugging.
   Map<String, dynamic> toMap() => {
-        'startTime': startTime.toIso8601String(),
-        'endTime': endTime.toIso8601String(),
-        'durationSeconds': duration.inMicroseconds / 1e6,
-        'success': success,
-        'error': error?.toString(),
-      };
+    'startTime': startTime.toIso8601String(),
+    'endTime': endTime.toIso8601String(),
+    'durationSeconds': duration.inMicroseconds / 1e6,
+    'success': success,
+    'error': error?.toString(),
+  };
 }
 
 // Extension on StreamController to safely add data.

@@ -13,8 +13,10 @@ void main() {
       });
 
       test('Initialization with invalid page size throws error', () {
-        expect(() => Paginator<int>(items: [1, 2, 3], pageSize: 0),
-            throwsArgumentError);
+        expect(
+          () => Paginator<int>(items: [1, 2, 3], pageSize: 0),
+          throwsArgumentError,
+        );
       });
 
       test('Default configuration values', () {
@@ -22,7 +24,9 @@ void main() {
         expect(paginator.config.retryAttempts, equals(3));
         expect(paginator.config.retryDelay, equals(const Duration(seconds: 1)));
         expect(
-            paginator.config.cacheTimeout, equals(const Duration(minutes: 5)));
+          paginator.config.cacheTimeout,
+          equals(const Duration(minutes: 5)),
+        );
         expect(paginator.config.autoCancelFetches, isTrue);
         expect(paginator.config.maxCacheSize, equals(100));
       });
@@ -43,7 +47,9 @@ void main() {
         expect(paginator.config.retryAttempts, equals(5));
         expect(paginator.config.retryDelay, equals(const Duration(seconds: 2)));
         expect(
-            paginator.config.cacheTimeout, equals(const Duration(minutes: 10)));
+          paginator.config.cacheTimeout,
+          equals(const Duration(minutes: 10)),
+        );
         expect(paginator.config.autoCancelFetches, isFalse);
         expect(paginator.config.maxCacheSize, equals(50));
       });
@@ -51,46 +57,54 @@ void main() {
 
     group('Lifecycle Events', () {
       test('Emits event for page change', () async {
-        final paginator =
-            Paginator<int>(items: List.generate(20, (i) => i), pageSize: 5);
+        final paginator = Paginator<int>(
+          items: List.generate(20, (i) => i),
+          pageSize: 5,
+        );
         final events = <String>[];
         final sub = paginator.lifecycleStream.listen(events.add);
         paginator.goToPage(2);
-        await 150.millisecondsDelay();
+        await Future<void>.delayed(Duration.zero);
         expect(events, contains('pageChanged'));
         await sub.cancel();
       });
 
       test('Emits event for reset', () async {
-        final paginator =
-            Paginator<int>(items: List.generate(10, (i) => i), pageSize: 2);
+        final paginator = Paginator<int>(
+          items: List.generate(10, (i) => i),
+          pageSize: 2,
+        );
         final events = <String>[];
         final sub = paginator.lifecycleStream.listen(events.add);
         paginator.reset();
-        await 150.millisecondsDelay();
+        await Future<void>.delayed(Duration.zero);
         expect(events, contains('reset'));
         await sub.cancel();
       });
 
       test('Emits event for page size change', () async {
-        final paginator =
-            Paginator<int>(items: List.generate(10, (i) => i), pageSize: 2);
+        final paginator = Paginator<int>(
+          items: List.generate(10, (i) => i),
+          pageSize: 2,
+        );
         final events = <String>[];
         final sub = paginator.lifecycleStream.listen(events.add);
         paginator.pageSize = 3;
-        await 150.millisecondsDelay();
+        await Future<void>.delayed(Duration.zero);
         expect(events, contains('pageSizeChanged'));
         await sub.cancel();
       });
 
       test('No events emitted after disposal', () async {
-        final paginator =
-            Paginator<int>(items: List.generate(10, (i) => i), pageSize: 2);
+        final paginator = Paginator<int>(
+          items: List.generate(10, (i) => i),
+          pageSize: 2,
+        );
         final events = <String>[];
         final sub = paginator.lifecycleStream.listen(events.add);
         paginator.dispose();
         paginator.goToPage(2);
-        await 150.millisecondsDelay();
+        await Future<void>.delayed(Duration.zero);
         expect(events, isEmpty);
         await sub.cancel();
       });
@@ -114,8 +128,6 @@ void main() {
         expect(paginator.currentPage, equals(1));
         expect(paginator.currentPageItems, equals(items.sublist(0, 3)));
         paginator.nextPage();
-        // Wait for debounce to kick in.
-        await 150.millisecondsDelay();
         expect(paginator.currentPage, equals(2));
         expect(paginator.currentPageItems, equals(items.sublist(3, 6)));
       });
@@ -136,7 +148,6 @@ void main() {
         final items = List.generate(10, (i) => i);
         final paginator = Paginator<int>(items: items, pageSize: 3);
         paginator.goToPage(4);
-        await 150.millisecondsDelay();
         expect(paginator.currentPage, equals(4));
         expect(paginator.currentPageItems, equals(items.sublist(9, 10)));
       });
@@ -145,7 +156,6 @@ void main() {
         final items = List.generate(10, (i) => i);
         final paginator = Paginator<int>(items: items, pageSize: 3);
         paginator.goToPage(-5);
-        await 150.millisecondsDelay();
         expect(paginator.currentPage, equals(1));
       });
     });
@@ -179,10 +189,14 @@ void main() {
 
     group('Cache Management', () {
       test('Cache entry expiration', () async {
-        const config =
-            PaginationConfig(cacheTimeout: Duration(milliseconds: 100));
-        final paginator =
-            Paginator<int>(items: [1, 2, 3, 4, 5], pageSize: 2, config: config);
+        const config = PaginationConfig(
+          cacheTimeout: Duration(milliseconds: 100),
+        );
+        final paginator = Paginator<int>(
+          items: [1, 2, 3, 4, 5],
+          pageSize: 2,
+          config: config,
+        );
         final filtered = paginator.where((x) => x > 2);
         await 150.millisecondsDelay();
         final filtered2 = paginator.where((x) => x > 2);
@@ -205,11 +219,15 @@ void main() {
         Future<List<int>> fetchPage(int pageNumber, int pageSize) async {
           await 50.millisecondsDelay();
           return List.generate(
-              pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+            pageSize,
+            (i) => (pageNumber - 1) * pageSize + i + 1,
+          );
         }
 
-        final asyncPaginator =
-            AsyncPaginator<int>(fetchPage: fetchPage, pageSize: 3);
+        final asyncPaginator = AsyncPaginator<int>(
+          fetchPage: fetchPage,
+          pageSize: 3,
+        );
         final items = await asyncPaginator.currentPageItems;
         expect(items, equals([1, 2, 3]));
       });
@@ -220,14 +238,20 @@ void main() {
           fetchCount++;
           await 50.millisecondsDelay();
           return List.generate(
-              pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+            pageSize,
+            (i) => (pageNumber - 1) * pageSize + i + 1,
+          );
         }
 
-        final asyncPaginator =
-            AsyncPaginator<int>(fetchPage: fetchPage, pageSize: 3);
+        final asyncPaginator = AsyncPaginator<int>(
+          fetchPage: fetchPage,
+          pageSize: 3,
+        );
         // Call currentPageItems twice concurrently.
-        final results = await Future.wait(
-            [asyncPaginator.currentPageItems, asyncPaginator.currentPageItems]);
+        final results = await Future.wait([
+          asyncPaginator.currentPageItems,
+          asyncPaginator.currentPageItems,
+        ]);
         expect(fetchCount, equals(1));
         expect(results[0], equals([1, 2, 3]));
         expect(results[1], equals([1, 2, 3]));
@@ -239,13 +263,20 @@ void main() {
           attempt++;
           if (attempt < 3) throw Exception('Fetch error');
           return List.generate(
-              pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+            pageSize,
+            (i) => (pageNumber - 1) * pageSize + i + 1,
+          );
         }
 
         const config = PaginationConfig(
-            retryAttempts: 5, retryDelay: Duration(milliseconds: 10));
+          retryAttempts: 5,
+          retryDelay: Duration(milliseconds: 10),
+        );
         final asyncPaginator = AsyncPaginator<int>(
-            fetchPage: fetchPage, pageSize: 2, config: config);
+          fetchPage: fetchPage,
+          pageSize: 2,
+          config: config,
+        );
         final items = await asyncPaginator.currentPageItems;
         expect(items, equals([1, 2]));
         expect(attempt, greaterThanOrEqualTo(3));
@@ -258,10 +289,14 @@ void main() {
           throw Exception('Fetch error');
         }
 
-        final asyncPaginator =
-            AsyncPaginator<int>(fetchPage: fetchPage, pageSize: 2);
-        expect(() async => asyncPaginator.currentPageItems,
-            throwsA(isA<PaginationException>()));
+        final asyncPaginator = AsyncPaginator<int>(
+          fetchPage: fetchPage,
+          pageSize: 2,
+        );
+        expect(
+          () async => asyncPaginator.currentPageItems,
+          throwsA(isA<PaginationException>()),
+        );
       });
     });
 
@@ -274,8 +309,10 @@ void main() {
           return List.generate(pageSize, (i) => i + 1);
         }
 
-        final asyncPaginator =
-            AsyncPaginator<int>(fetchPage: fetchPage, pageSize: 2);
+        final asyncPaginator = AsyncPaginator<int>(
+          fetchPage: fetchPage,
+          pageSize: 2,
+        );
         final items1 = await asyncPaginator.currentPageItems;
         final items2 = await asyncPaginator.currentPageItems;
         expect(fetchCount, equals(1));
@@ -283,8 +320,9 @@ void main() {
       });
 
       test('Cache invalidation after timeout', () async {
-        const config =
-            PaginationConfig(cacheTimeout: Duration(milliseconds: 100));
+        const config = PaginationConfig(
+          cacheTimeout: Duration(milliseconds: 100),
+        );
         var fetchCount = 0;
         Future<List<int>> fetchPage(int pageNumber, int pageSize) async {
           fetchCount++;
@@ -293,7 +331,10 @@ void main() {
         }
 
         final asyncPaginator = AsyncPaginator<int>(
-            fetchPage: fetchPage, pageSize: 2, config: config);
+          fetchPage: fetchPage,
+          pageSize: 2,
+          config: config,
+        );
         await asyncPaginator.currentPageItems;
         await 150.millisecondsDelay();
         await asyncPaginator.currentPageItems;
@@ -308,8 +349,10 @@ void main() {
           return completer.future;
         }
 
-        final asyncPaginator =
-            AsyncPaginator<int>(fetchPage: fetchPage, pageSize: 2);
+        final asyncPaginator = AsyncPaginator<int>(
+          fetchPage: fetchPage,
+          pageSize: 2,
+        );
 
         // Start fetching without awaiting immediately.
         final future = asyncPaginator.currentPageItems;
@@ -338,11 +381,15 @@ void main() {
           await 30.millisecondsDelay();
           if (pageNumber > 3) return [];
           return List.generate(
-              pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+            pageSize,
+            (i) => (pageNumber - 1) * pageSize + i + 1,
+          );
         }
 
         final infinitePaginator = InfinitePaginator<int, int>.pageBased(
-            fetchItems: fetchItems, pageSize: 3);
+          fetchItems: fetchItems,
+          pageSize: 3,
+        );
         await infinitePaginator.loadMoreItems();
         expect(infinitePaginator.items.length, equals(3));
         await infinitePaginator.loadMoreItems();
@@ -359,11 +406,15 @@ void main() {
           await 30.millisecondsDelay();
           if (pageNumber > 2) return [];
           return List.generate(
-              pageSize, (i) => (pageNumber - 1) * pageSize + i + 1);
+            pageSize,
+            (i) => (pageNumber - 1) * pageSize + i + 1,
+          );
         }
 
         final infinitePaginator = InfinitePaginator<int, int>.pageBased(
-            fetchItems: fetchItems, pageSize: 2);
+          fetchItems: fetchItems,
+          pageSize: 2,
+        );
         await infinitePaginator.loadMoreItems();
         expect(infinitePaginator.items.length, equals(2));
         infinitePaginator.reset();
@@ -375,7 +426,9 @@ void main() {
       test('Cursor initialization and updates', () async {
         // Dummy cursor-based fetch.
         Future<List<int>> fetchItems(
-            int pageSize, PaginationCursor<int> cursor) async {
+          int pageSize,
+          PaginationCursor<int> cursor,
+        ) async {
           await 30.millisecondsDelay();
           if (cursor.value > 3) return [];
           return List.generate(pageSize, (i) => cursor.value * pageSize + i);
@@ -383,11 +436,15 @@ void main() {
 
         PaginationCursor<int> getNextCursor(List<int> items) {
           return PaginationCursor<int>(
-              items.isNotEmpty ? (items.first ~/ 10) + 1 : 4);
+            items.isNotEmpty ? (items.first ~/ 10) + 1 : 4,
+          );
         }
 
         final infinitePaginator = InfinitePaginator<int, int>.cursorBased(
-            fetchItems: fetchItems, getNextCursor: getNextCursor, pageSize: 2);
+          fetchItems: fetchItems,
+          getNextCursor: getNextCursor,
+          pageSize: 2,
+        );
         await infinitePaginator.loadMoreItems();
         expect(infinitePaginator.items.length, equals(2));
         await infinitePaginator.loadMoreItems();

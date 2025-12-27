@@ -78,17 +78,23 @@ abstract class TimeUtils {
     return (duration1, duration2);
   }
 
-  /// Creates a throttled function that only invokes the function at most once
-  /// per every `interval` milliseconds.
-  static Function throttle(void Function() func, Duration interval) {
-    var isThrottled = false;
-    return () {
-      if (!isThrottled) {
-        isThrottled = true;
-        Timer(interval, () => isThrottled = false);
-        func();
-      }
-    };
+  /// Creates a throttled callback that invokes [func] at most once per [interval].
+  ///
+  /// The returned object is callable like a function and supports `cancel`/`dispose`.
+  static ThrottledCallback throttle(
+    void Function() func,
+    Duration interval, {
+    bool leading = true,
+    bool trailing = false,
+    ThrottlerErrorHandler? onError,
+  }) {
+    final throttler = Throttler(
+      interval: interval,
+      leading: leading,
+      trailing: trailing,
+      onError: onError,
+    );
+    return ThrottledCallback(throttler, func);
   }
 
   /// Executes a function periodically with the given interval.
@@ -150,4 +156,134 @@ abstract class TimeUtils {
 
     return completer.future;
   }
+}
+
+/// A function signature for throttled actions.
+typedef ThrottlerAction = FutureOr<void> Function();
+
+/// A function signature for throttler error handling.
+typedef ThrottlerErrorHandler = void Function(Object error, StackTrace stack);
+
+/// A lightweight throttler for rate-limiting actions over time.
+class Throttler {
+  /// Creates a [Throttler] that enforces a minimum delay between executions.
+  Throttler({
+    required this.interval,
+    this.leading = true,
+    this.trailing = false,
+    ThrottlerErrorHandler? onError,
+    Timer Function(Duration duration, void Function() callback)? timerFactory,
+  }) : _onError = onError,
+       _timerFactory = timerFactory ?? Timer.new;
+
+  /// Minimum delay between executions.
+  final Duration interval;
+
+  /// Whether to execute immediately on the first call in a burst.
+  final bool leading;
+
+  /// Whether to execute once at the end of a throttling window.
+  final bool trailing;
+
+  final ThrottlerErrorHandler? _onError;
+  final Timer Function(Duration duration, void Function() callback)
+  _timerFactory;
+  Timer? _timer;
+  bool _isThrottled = false;
+  bool _isDisposed = false;
+  ThrottlerAction? _pendingAction;
+
+  /// Returns `true` if throttling is currently active.
+  bool get isThrottled => _isThrottled;
+
+  /// Returns `true` if the throttler has been disposed.
+  bool get isDisposed => _isDisposed;
+
+  /// Runs [action] under the current throttling rules.
+  void run(ThrottlerAction action) {
+    _ensureNotDisposed();
+    if (_isThrottled) {
+      if (trailing) _pendingAction = action;
+      return;
+    }
+
+    if (leading) {
+      _executeAction(action);
+    } else if (trailing) {
+      _pendingAction = action;
+    }
+
+    _startTimer();
+  }
+
+  /// Cancels any pending action and clears the current throttle window.
+  void cancel() {
+    if (_isDisposed) return;
+    _timer?.cancel();
+    _timer = null;
+    _pendingAction = null;
+    _isThrottled = false;
+  }
+
+  /// Disposes the throttler and releases timers.
+  void dispose() {
+    if (_isDisposed) return;
+    cancel();
+    _isDisposed = true;
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _isThrottled = true;
+    _timer = _timerFactory(interval, _onTimer);
+  }
+
+  void _onTimer() {
+    final pending = _pendingAction;
+    _pendingAction = null;
+    _isThrottled = false;
+
+    if (trailing && pending != null) {
+      _executeAction(pending);
+      _startTimer();
+    }
+  }
+
+  void _executeAction(ThrottlerAction action) {
+    Future.sync(action).catchError((Object error, StackTrace stackTrace) {
+      final handler = _onError;
+      if (handler != null) {
+        handler(error, stackTrace);
+      } else {
+        throw error;
+      }
+    });
+  }
+
+  void _ensureNotDisposed() {
+    if (_isDisposed) {
+      throw StateError('Throttler has been disposed and cannot be used.');
+    }
+  }
+}
+
+/// Callable wrapper that exposes throttling controls.
+class ThrottledCallback {
+  /// Creates a callable wrapper around a [Throttler] and action.
+  ThrottledCallback(this._throttler, this._action);
+
+  final Throttler _throttler;
+  final void Function() _action;
+
+  /// Invokes the throttled action.
+  void call() => _throttler.run(_action);
+
+  /// Cancels any pending action and resets the throttle window.
+  void cancel() => _throttler.cancel();
+
+  /// Disposes the throttler.
+  void dispose() => _throttler.dispose();
+
+  /// Returns `true` if the throttler is disposed.
+  bool get isDisposed => _throttler.isDisposed;
 }

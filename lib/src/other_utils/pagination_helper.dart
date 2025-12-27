@@ -126,7 +126,7 @@ abstract class IPaginator<T> {
   bool get isDisposed;
 }
 
-/// Base class for paginators that provides shared logic, debouncing, and disposal checks.
+/// Base class for paginators that provides shared logic and disposal checks.
 ///
 /// Subclasses must call [dispose] when no longer needed to free resources.
 abstract class BasePaginator<T> implements IPaginator<T> {
@@ -161,7 +161,6 @@ abstract class BasePaginator<T> implements IPaginator<T> {
 
   int _pageSize;
   int _currentPage = 1;
-  Timer? _debounceTimer;
 
   /// The most recent error encountered during pagination operations.
   Exception? lastError;
@@ -207,16 +206,12 @@ abstract class BasePaginator<T> implements IPaginator<T> {
   @override
   void goToPage(int pageNumber) {
     if (isDisposed) return; // If disposed, do nothing.
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 100), () {
-      if (isDisposed) return; // Check again inside the timer.
-      final pn = pageNumber < 1 ? 1 : pageNumber;
-      if (pn != _currentPage) {
-        _currentPage = pn;
-        onPageChanged(pn);
-        emitLifecycleEvent('pageChanged');
-      }
-    });
+    final pn = pageNumber < 1 ? 1 : pageNumber;
+    if (pn != _currentPage) {
+      _currentPage = pn;
+      onPageChanged(pn);
+      emitLifecycleEvent('pageChanged');
+    }
   }
 
   /// Called when the current page changes.
@@ -251,7 +246,6 @@ abstract class BasePaginator<T> implements IPaginator<T> {
   @mustCallSuper
   void dispose() {
     if (_isDisposed) return;
-    _debounceTimer?.cancel();
     _lifecycleController.close();
     _isDisposed = true;
   }
@@ -261,11 +255,7 @@ abstract class BasePaginator<T> implements IPaginator<T> {
 ///
 /// Tracks page load events, errors, and cache hits.
 mixin PaginationAnalytics<T> on BasePaginator<T> {
-  final _metrics = <String, int>{
-    'pageLoads': 0,
-    'errors': 0,
-    'cacheHits': 0,
-  };
+  final _metrics = <String, int>{'pageLoads': 0, 'errors': 0, 'cacheHits': 0};
 
   /// Returns an unmodifiable map of collected metrics.
   Map<String, int> get metrics => Map.unmodifiable(_metrics);
@@ -291,14 +281,11 @@ class Paginator<T> extends BasePaginator<T> with PaginationAnalytics<T> {
   ///
   /// [pageSize] determines the number of items per page. If not specified, defaults to 10.
   /// [config] can be provided to customize pagination behavior.
-  Paginator({
-    required this.items,
-    int pageSize = 10,
-    PaginationConfig? config,
-  }) : super(
-          initialPageSize: pageSize,
-          config: config ?? const PaginationConfig(),
-        );
+  Paginator({required this.items, int pageSize = 10, PaginationConfig? config})
+    : super(
+        initialPageSize: pageSize,
+        config: config ?? const PaginationConfig(),
+      );
 
   /// The complete list of items to paginate.
   final List<T> items;
@@ -328,8 +315,10 @@ class Paginator<T> extends BasePaginator<T> with PaginationAnalytics<T> {
     _ensureNotDisposed();
     if (items.isEmpty) return const [];
     final total = totalItems;
-    final totalPages =
-        (total / pageSize).ceil().clamp(1, double.infinity).toInt();
+    final totalPages = (total / pageSize)
+        .ceil()
+        .clamp(1, double.infinity)
+        .toInt();
     if (currentPage > totalPages) {
       goToPage(totalPages);
     }
@@ -464,13 +453,13 @@ class Paginator<T> extends BasePaginator<T> with PaginationAnalytics<T> {
 
   /// Provides detailed information about the current pagination state.
   Map<String, dynamic> get pageInfo => {
-        'currentPage': currentPage,
-        'totalPages': totalPages,
-        'pageSize': pageSize,
-        'totalItems': totalItems,
-        'hasNextPage': hasNextPage,
-        'hasPreviousPage': hasPreviousPage,
-      };
+    'currentPage': currentPage,
+    'totalPages': totalPages,
+    'pageSize': pageSize,
+    'totalItems': totalItems,
+    'hasNextPage': hasNextPage,
+    'hasPreviousPage': hasPreviousPage,
+  };
 }
 
 /// An asynchronous paginator that fetches pages using a provided [fetchPage] function.
@@ -501,9 +490,9 @@ class AsyncPaginator<T> extends BasePaginator<T> {
     PaginationConfig? config,
     this.totalItemsFetcher,
   }) : super(
-          initialPageSize: pageSize,
-          config: config ?? const PaginationConfig(),
-        );
+         initialPageSize: pageSize,
+         config: config ?? const PaginationConfig(),
+       );
 
   /// Function to fetch a page.
   ///
@@ -758,17 +747,19 @@ class InfinitePaginator<T, C> {
   /// [initialCursor] must be provided for non-int cursor types.
   factory InfinitePaginator.cursorBased({
     required Future<List<T>> Function(int pageSize, PaginationCursor<C> cursor)
-        fetchItems,
+    fetchItems,
     required PaginationCursor<C> Function(List<T> newItems) getNextCursor,
     int pageSize = 20,
     PaginationCursor<C>? initialCursor,
     PaginationConfig? config,
   }) {
-    final initial = initialCursor ??
+    final initial =
+        initialCursor ??
         (() {
           if (C == int) return PaginationCursor<C>(0 as C);
           throw ArgumentError(
-              'initialCursor must be provided for non-int cursor types');
+            'initialCursor must be provided for non-int cursor types',
+          );
         }());
     return InfinitePaginator._(
       fetchItems: (size, key) => fetchItems(size, key as PaginationCursor<C>),
@@ -786,7 +777,7 @@ class InfinitePaginator<T, C> {
   ///
   /// This function must return a [Future] that completes with a [List] of items.
   final Future<List<T>> Function(int pageSize, dynamic paginationKey)
-      fetchItems;
+  fetchItems;
 
   /// Function that updates the pagination key based on the newly fetched [items] and the current key ([currentKey]).
   ///
@@ -936,11 +927,11 @@ class InfinitePaginator<T, C> {
   ///
   /// Useful for debugging or logging.
   Map<String, dynamic> get state => {
-        'itemCount': itemCount,
-        'hasMoreItems': hasMoreItems,
-        'isLoading': isLoading,
-        'lastError': lastError?.toString(),
-      };
+    'itemCount': itemCount,
+    'hasMoreItems': hasMoreItems,
+    'isLoading': isLoading,
+    'lastError': lastError?.toString(),
+  };
 }
 
 /// Extension methods to transform fetched data in an [AsyncPaginator].

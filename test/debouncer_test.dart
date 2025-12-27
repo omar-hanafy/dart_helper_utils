@@ -38,7 +38,9 @@ void main() {
     test('throws error for negative history size', () {
       expect(
         () => Debouncer(
-            delay: const Duration(milliseconds: 100), maxHistorySize: -1),
+          delay: const Duration(milliseconds: 100),
+          maxHistorySize: -1,
+        ),
         throwsArgumentError,
       );
     });
@@ -58,11 +60,17 @@ void main() {
     test('executes action after delay (trailing edge)', () async {
       var count = 0;
       debouncer.run(() => count++);
-      expect(count, equals(0),
-          reason: 'Action should not execute immediately in trailing mode.');
+      expect(
+        count,
+        equals(0),
+        reason: 'Action should not execute immediately in trailing mode.',
+      );
       await 150.millisecondsDelay();
-      expect(count, equals(1),
-          reason: 'Action should execute after the debounce delay.');
+      expect(
+        count,
+        equals(1),
+        reason: 'Action should execute after the debounce delay.',
+      );
     });
 
     test('multiple rapid calls execute only once', () async {
@@ -71,11 +79,17 @@ void main() {
         debouncer.run(() => count++);
         await 20.millisecondsDelay();
       }
-      expect(count, equals(0),
-          reason: 'Action should not execute until the delay expires.');
+      expect(
+        count,
+        equals(0),
+        reason: 'Action should not execute until the delay expires.',
+      );
       await 150.millisecondsDelay();
-      expect(count, equals(1),
-          reason: 'Only one execution should occur for rapid calls.');
+      expect(
+        count,
+        equals(1),
+        reason: 'Only one execution should occur for rapid calls.',
+      );
     });
 
     test('supports asynchronous actions', () async {
@@ -109,26 +123,36 @@ void main() {
     test('executes first call immediately', () {
       var count = 0;
       immediateDebouncer.run(() => count++);
-      expect(count, equals(1),
-          reason: 'Immediate mode should execute the first action right away.');
+      expect(
+        count,
+        equals(1),
+        reason: 'Immediate mode should execute the first action right away.',
+      );
     });
 
-    test('subsequent calls in burst do not trigger extra immediate executions',
-        () async {
-      var count = 0;
-      immediateDebouncer
-        ..run(() => count++)
-        // Immediately schedule more calls.
-
-        ..run(() => count++)
-        ..run(() => count++);
-      expect(count, equals(1),
+    test(
+      'subsequent calls in burst do not trigger extra immediate executions',
+      () async {
+        var count = 0;
+        immediateDebouncer
+          ..run(() => count++)
+          // Immediately schedule more calls.
+          ..run(() => count++)
+          ..run(() => count++);
+        expect(
+          count,
+          equals(1),
           reason:
-              'Only the first call should execute immediately in immediate mode.');
-      await 150.millisecondsDelay();
-      expect(count, equals(1),
-          reason: 'No additional execution should occur after delay.');
-    });
+              'Only the first call should execute immediately in immediate mode.',
+        );
+        await 150.millisecondsDelay();
+        expect(
+          count,
+          equals(1),
+          reason: 'No additional execution should occur after delay.',
+        );
+      },
+    );
   });
 
   group('MaxWait Functionality', () {
@@ -164,11 +188,17 @@ void main() {
       // Wait extra time to allow maxWait execution
       await 400.millisecondsDelay();
 
-      expect(count, greaterThanOrEqualTo(1),
-          reason: 'MaxWait should force at least one execution.');
+      expect(
+        count,
+        greaterThanOrEqualTo(1),
+        reason: 'MaxWait should force at least one execution.',
+      );
 
-      expect(count, lessThan(3),
-          reason: 'Should not execute more than necessary when maxWait fires.');
+      expect(
+        count,
+        lessThan(3),
+        reason: 'Should not execute more than necessary when maxWait fires.',
+      );
     });
 
     test('handles asynchronous actions with maxWait', () async {
@@ -191,8 +221,9 @@ void main() {
       );
       var count = 0;
 
-      final burstDuration =
-          DateTime.now().add(const Duration(milliseconds: 160));
+      final burstDuration = DateTime.now().add(
+        const Duration(milliseconds: 160),
+      );
       while (DateTime.now().isBefore(burstDuration)) {
         debouncer.run(() => count++);
         await 10.millisecondsDelay();
@@ -200,9 +231,12 @@ void main() {
 
       await 120.millisecondsDelay();
 
-      expect(count, greaterThanOrEqualTo(3),
-          reason:
-              'maxWait should trigger multiple executions during long bursts.');
+      expect(
+        count,
+        greaterThanOrEqualTo(3),
+        reason:
+            'maxWait should trigger multiple executions during long bursts.',
+      );
       debouncer.dispose();
     });
 
@@ -224,9 +258,12 @@ void main() {
       await 10.millisecondsDelay();
       final secondRemaining = debouncer.remainingMaxWait;
       expect(secondRemaining, isNotNull);
-      expect(secondRemaining, lessThan(firstRemaining!),
-          reason:
-              'remainingMaxWait should continue decreasing despite repeated runs.');
+      expect(
+        secondRemaining,
+        lessThan(firstRemaining!),
+        reason:
+            'remainingMaxWait should continue decreasing despite repeated runs.',
+      );
 
       debouncer.dispose();
     });
@@ -326,9 +363,7 @@ void main() {
     });
 
     test('new run scheduled during execution is preserved', () async {
-      final debouncer = Debouncer(
-        delay: const Duration(milliseconds: 40),
-      );
+      final debouncer = Debouncer(delay: const Duration(milliseconds: 40));
       var executed = 0;
       final completer = Completer<void>();
 
@@ -346,9 +381,12 @@ void main() {
       completer.complete();
       await 60.millisecondsDelay();
 
-      expect(executed, equals(2),
-          reason:
-              'Pending action scheduled during an execution should run after the burst.');
+      expect(
+        executed,
+        equals(2),
+        reason:
+            'Pending action scheduled during an execution should run after the burst.',
+      );
       debouncer.dispose();
     });
 
@@ -357,11 +395,17 @@ void main() {
       var count = 0;
       debouncer.run(() => count++);
       await debouncer.flush();
-      expect(count, equals(1),
-          reason: 'Flush should execute the pending action immediately.');
+      expect(
+        count,
+        equals(1),
+        reason: 'Flush should execute the pending action immediately.',
+      );
       await 100.millisecondsDelay();
-      expect(count, equals(1),
-          reason: 'No additional execution should occur after flush.');
+      expect(
+        count,
+        equals(1),
+        reason: 'No additional execution should occur after flush.',
+      );
       debouncer.dispose();
     });
 
@@ -399,8 +443,11 @@ void main() {
         await 100.millisecondsDelay();
         final endMemory = ProcessInfo.currentRss;
         final memoryDiff = endMemory - startMemory;
-        expect(memoryDiff, lessThan(10 * 1024 * 1024),
-            reason: 'Memory increase should be bounded (less than 10MB).');
+        expect(
+          memoryDiff,
+          lessThan(10 * 1024 * 1024),
+          reason: 'Memory increase should be bounded (less than 10MB).',
+        );
         debouncer.dispose();
       });
     }
