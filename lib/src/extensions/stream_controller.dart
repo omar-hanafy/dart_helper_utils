@@ -24,7 +24,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// Returns `true` if the event was added successfully, or `false` if
   /// the controller was already closed.
   bool safeAdd(T event) {
-    if (_isClosed()) return false;
+    if (isClosed) return false;
     try {
       add(event);
       return true;
@@ -40,7 +40,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// Returns `true` if the error was added successfully, or `false` if
   /// the controller was closed.
   bool safeAddError(Object error, [StackTrace? stackTrace]) {
-    if (_isClosed()) return false;
+    if (isClosed) return false;
     try {
       addError(error, stackTrace);
       return true;
@@ -60,7 +60,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   ///
   /// Returns a [Future] that completes when the controller is closed.
   Future<void> safeClose() {
-    if (_isClosed()) return Future.value();
+    if (isClosed) return Future.value();
     return close();
   }
 
@@ -109,7 +109,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     );
 
     // If the controller is already closed, cancel the subscription.
-    if (_isClosed() && !completer.isCompleted) {
+    if (isClosed && !completer.isCompleted) {
       await subscription.cancel();
       completer.complete(addedCount);
     }
@@ -158,7 +158,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     }
 
     // Cancel any active subscriptions if the controller is closed.
-    if (_isClosed() && !completer.isCompleted) {
+    if (isClosed && !completer.isCompleted) {
       for (final sub in subscriptions) {
         await sub.cancel();
       }
@@ -180,18 +180,6 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
       onDone: broadcastController.close,
     );
     return broadcastController;
-  }
-
-  /// Determines whether the controller is closed.
-  ///
-  /// This helper method uses [hasListener] as a heuristic; adjust it if your
-  /// environment provides a more reliable indicator.
-  bool _isClosed() {
-    if (isClosed) return true;
-    // For broadcast controllers, we assume that the controller remains open
-    // until explicitly closed.
-    if (stream.isBroadcast) return false;
-    return !hasListener;
   }
 }
 

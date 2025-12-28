@@ -36,15 +36,6 @@ extension DHUStringExtensions on String {
   /// Base64 Decode
   String base64Decode({bool? allowMalformed}) =>
       utf8.decode(base64.decode(this), allowMalformed: allowMalformed);
-
-  /// Measures how similar this string is to another string using the specified algorithm.
-  /// it uses the public [StringSimilarity] class which offers different methods
-  /// for measuring how similar two strings are.
-  double compareWith(
-    String other,
-    SimilarityAlgorithm algorithm, {
-    StringSimilarityConfig config = const StringSimilarityConfig(),
-  }) => StringSimilarity.compare(this, other, algorithm, config: config);
 }
 
 ///
@@ -132,9 +123,6 @@ extension DHUNullSafeStringExtensions on String? {
 
   /// Checks if the string is a valid IPv4 address.
   bool get isValidIp4 => hasMatch(regexValidIp4);
-
-  /// Checks if the string is a valid IPv6 address.
-  bool get isValidIp6 => hasMatch(regexValidIp6);
 
   /// Checks if the string is a valid URL.
   bool get isValidUrl => tryToLowerCase().clean.hasMatch(regexValidUrl);
@@ -248,7 +236,11 @@ extension DHUNullSafeStringExtensions on String? {
         ? defaultValue.isEmptyOrNull
               ? this
               : defaultValue
-        : this!.replaceRange(index + 1, this!.length, replacement);
+        : this!.replaceRange(
+            index + delimiter.length,
+            this!.length,
+            replacement,
+          );
   }
 
   /// Replaces part of the string before the first occurrence of the given delimiter with the [replacement] string.
@@ -298,4 +290,38 @@ extension DHUNullSafeStringExtensions on String? {
   /// Example: In a string with 10 characters, a [maxSize] of 3 would return the first 3 characters.
   String? limitFromStart(int maxSize) =>
       (this?.length ?? 0) < maxSize ? this : this!.substring(0, maxSize);
+
+  /// Truncates the string to [length] and appends [suffix] if it exceeds the length.
+  String? truncate(int length, {String suffix = '...'}) {
+    if (this == null) return null;
+    if (length <= 0) return '';
+    if (this!.length <= length) return this;
+    return '${this!.substring(0, length)}$suffix';
+  }
+
+  /// Checks if the string is a valid UUID.
+  bool get isUuid {
+    if (isEmptyOrNull) return false;
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(this!);
+  }
+
+  /// Masks the email address for privacy.
+  /// Example: "johndoe@gmail.com" -> "jo****@gmail.com"
+  String get maskEmail {
+    if (this == null || !this!.isValidEmail) return this ?? '';
+    final index = this!.indexOf('@');
+    if (index <= 2) return '${this![0]}****${this!.substring(index)}';
+    return '${this!.substring(0, 2)}****${this!.substring(index)}';
+  }
+
+  /// Masks the string keeping [visibleStart] and [visibleEnd] characters visible.
+  String mask({int visibleStart = 0, int visibleEnd = 0, String char = '*'}) {
+    if (this == null) return '';
+    if (this!.length <= visibleStart + visibleEnd) return this!;
+    return this!.substring(0, visibleStart) +
+        (char * (this!.length - visibleStart - visibleEnd)) +
+        this!.substring(this!.length - visibleEnd);
+  }
 }

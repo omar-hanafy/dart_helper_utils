@@ -101,15 +101,13 @@ extension DHUNullSafeNumExtensions on num? {
 
   /// Returns the percentage of `this` value relative to [total], optionally allowing decimals.
   num percentage(num total, {bool allowDecimals = true}) {
-    if (this != null) {
-      final result = this! >= total ? 100 : math.max((this! / total) * 100, 0);
-      if (allowDecimals) {
-        return double.parse(result.toStringAsFixed(2));
-      } else {
-        return result.toInt();
-      }
+    if (this == null || total == 0) return 0;
+    final result = this! >= total ? 100 : math.max((this! / total) * 100, 0);
+    if (allowDecimals) {
+      return double.parse(result.toStringAsFixed(2));
+    } else {
+      return result.toInt();
     }
-    return 0;
   }
 
   /// Returns `true` if the number is negative.
@@ -212,6 +210,14 @@ extension DHUNumExtensions on num {
     return fractionDigits <= 0
         ? '${reducedNum.toInt()}$symbol'
         : '${reducedNum.toStringAsFixed(fractionDigits)}$symbol';
+  }
+
+  /// Converts bytes to a human-readable string (e.g., "1.5 MB").
+  String toFileSize({int decimals = 2}) {
+    if (this <= 0) return '0 B';
+    const suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    var i = (math.log(this) / math.log(1024)).floor();
+    return '${(this / math.pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 
   /// Delay equivalent to the number of days.

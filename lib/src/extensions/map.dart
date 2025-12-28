@@ -1,4 +1,5 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
+import 'dart:collection';
 
 ///  DHUMapExtension
 extension DHUMapExtension<K, V> on Map<K, V> {
@@ -65,39 +66,34 @@ extension DHUMapExt<K extends String, V> on Map<K, V> {
   /// - Customizable:
   ///   - `delimiter`: Adjusts how nested keys are separated.
   ///   - `excludeArrays`: Prevents flattening of arrays.
-  Map<String, dynamic> flatMap({
+  Map<String, Object?> flatMap({
     String delimiter = '.',
     bool excludeArrays = false,
   }) {
-    final result = <String, dynamic>{};
-    final visited = <Object, Object>{};
+    final result = <String, Object?>{};
+    final visited = HashSet.identity();
 
-    void flatten(Map<String, dynamic> obj, String? parentKey) {
-      obj.forEach((key, value) {
-        final newKey = parentKey == null ? key : '$parentKey$delimiter$key';
-        if (value is Map<String, dynamic>) {
-          if (!visited.containsKey(value)) {
-            // Circular reference check
-            visited[value] = value;
-            flatten(value, newKey);
-          }
-        } else if (value is List && !excludeArrays) {
-          for (var i = 0; i < value.length; i++) {
-            final listKey = '$newKey$delimiter$i';
-            final item = value[i];
-            if (item is Map<String, dynamic>) {
-              flatten(item, listKey);
-            } else {
-              result[listKey] = item;
-            }
-          }
-        } else {
-          result[newKey] = value;
+    void flattenAny(Object? value, String key) {
+      if (value is Map) {
+        if (!visited.add(value)) return;
+        value.forEach((k, v) {
+          final childKey = k.toString();
+          flattenAny(v, '$key$delimiter$childKey');
+        });
+        return;
+      }
+
+      if (value is List && !excludeArrays) {
+        for (var i = 0; i < value.length; i++) {
+          flattenAny(value[i], '$key$delimiter$i');
         }
-      });
+        return;
+      }
+
+      result[key] = value;
     }
 
-    flatten(this, null);
+    forEach((k, v) => flattenAny(v, k));
     return result;
   }
 }

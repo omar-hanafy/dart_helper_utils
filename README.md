@@ -2,7 +2,7 @@
 
 [![pub package](https://img.shields.io/pub/v/dart_helper_utils)](https://pub.dev/packages/dart_helper_utils)
 
-**`dart_helper_utils`** is a toolkit designed to make coding in Dart more convenient by offering utilities for pagination, type conversions, data manipulation, time measurements, HTTP status handling, and much more. We’ve bundled a wide range of extension methods and helper classes that let you write less code and focus on your app's core logic.
+**`dart_helper_utils`** is a toolkit designed to make coding in Dart more convenient by offering utilities for type conversions, data manipulation, time measurements, HTTP status handling, and much more. We’ve bundled a wide range of extension methods and helper classes that let you write less code and focus on your app's core logic.
 
 > **Note:** If you’re working on a Flutter project, we recommend using [`flutter_helper_utils`](https://pub.dev/packages/flutter_helper_utils). It includes everything you’ll find here, plus Flutter-specific extensions like widgets and color utilities.
 
@@ -10,7 +10,7 @@
 
 ## Why Use dart_helper_utils?
 
-We initially created `dart_helper_utils` to gather all those tiny, repetitive tasks that pop up in Dart projects—think date parsing, JSON decoding, or pagination. Over time, we introduced more powerful features like infinite scrolling, advanced string transformations, numeric calculations, and user-friendly HTTP status messages. The result is a collection of robust, well-tested utilities that you can easily slot into your own Dart applications.
+We initially created `dart_helper_utils` to gather all those tiny, repetitive tasks that pop up in Dart projects—think date parsing, JSON decoding, or string manipulation. Over time, we introduced more powerful features like advanced string transformations, numeric calculations, and user-friendly HTTP status messages. The result is a collection of robust, well-tested utilities that you can easily slot into your own Dart applications.
 
 ### 1. Parsing Dynamic JSON Data
 
@@ -308,58 +308,6 @@ final timer = TimeUtils.runPeriodically(
 
 // Clean up when done
 timer.cancel();
-```
-
----
-
-### Pagination
-
-A powerful and flexible pagination utilities to efficiently handle data loading from any source, whether it's an in-memory list, a remote API, or a database.
-
-#### 1. In-Memory List (Synchronous)
-
-```dart
-final paginator = Paginator<MyItem>(items: myItems, pageSize: 10);
-
-// Access current page items
-final List<MyItem> currentPageItems = paginator.currentPageItems;
-```
-
-#### 2. API/Database (Asynchronous) 
-
-```dart
-final asyncPaginator = AsyncPaginator<User>(
-  fetchPage: (page, size) async => await api.fetchUsers(page: page, size: size),
-  pageSize: 20,
-  config: PaginationConfig(
-    retryAttempts: 3,
-    autoCancelFetches: true, // Highly recommended!
-  ),
-);
-
-// Access current page items (fetches if needed)
-final List<User> currentPageUsers = await asyncPaginator.currentPageItems;
-```
-
-#### 3. Infinite Scrolling (Cursor-Based)
-
-```dart
-final infinitePaginator = InfinitePaginator<Item, String>.cursorBased(
-  fetchItems: (size, cursor) async => await api.fetchItems(size: size, fromCursor: cursor.value),
-  getNextCursor: (items) => PaginationCursor(items.last.id),
-  pageSize: 20,
-  initialCursor: PaginationCursor(""),
-);
-
-// Load more items
-await infinitePaginator.loadMoreItems();
-```
-
-#### Add Analytics
-
-```dart
-final trackedPaginator = paginator with PaginationAnalytics;
-print(trackedPaginator.metrics); // Example: {pageLoads: 5, errors: 0, cacheHits: 3}
 ```
 
 ---

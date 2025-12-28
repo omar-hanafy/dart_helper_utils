@@ -112,7 +112,7 @@ const String regexValidUsername = r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$';
 
 /// regexValidCurrency
 const String regexValidCurrency =
-    r'^(S?\$|\₩|Rp|\¥|\€|\₹|\₽|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$';
+    r'^(S?S?|\W|Rp|\W|\W|\W|\W|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$';
 
 /// regexValidPhoneNumber
 const String regexValidPhoneNumber =
@@ -126,13 +126,9 @@ const String regexValidEmail =
 const String regexValidIp4 =
     r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$';
 
-/// regexValidIp6
-const String regexValidIp6 =
-    r'/(?<protocol>(?:http|ftp|irc)s?:\/\/)?(?:(?<user>[^:\n\r]+):(?<pass>[^@\n\r]+)@)?(?<host>(?:www\.)?(?:[^:\/\n\r]+)(?::(?<port>\d+))?)\/?(?<request>[^?#\n\r]+)?\??(?<query>[^#\n\r]*)?\#?(?<anchor>[^\n\r]*)?/';
-
 /// regexValidUrl
 const String regexValidUrl =
-    r'''^((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))+$''';
+    r'''^((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+\.[a-z]{2,4}/)(?:[^\s()<>]+|\(([^\\]<>()<>]+|(\(^[^\\]<>()<>]+)))*))+(?:\(([^\\]<>()<>]+|(\(^[^\\]<>()<>]+)))*\)|[^\\]s`!()\[\]{};:'".,<>?«»“”‘’]))+$''';
 
 /// regexNumeric
 const String regexNumeric = r'^\d+$';
@@ -189,7 +185,7 @@ Map<int, String> get httpStatusMessages => const {
   415: 'Unsupported Media Type',
   416: 'Range Not Satisfiable',
   417: 'Expectation Failed',
-  418: "I'm a Teapot",
+  418: 'I\'m a Teapot',
   421: 'Misdirected Request',
   422: 'Unprocessable Entity',
   423: 'Locked',
@@ -219,10 +215,10 @@ Map<int, String> get httpStatusMessages => const {
 /// that can be shown to end users in error messages and notifications.
 Map<int, String> get httpStatusUserMessage => const {
   // 1xx - Informational
-  100: 'Please wait while we process your request...',
-  101: 'Switching to a different protocol...',
-  102: 'Your request is being processed...',
-  103: 'Getting things ready...',
+  100: 'Please wait while we process your request...', 
+  101: 'Switching to a different protocol...', 
+  102: 'Your request is being processed...', 
+  103: 'Getting things ready...', 
 
   // 2xx - Success
   200: 'Success! Everything worked as expected.',

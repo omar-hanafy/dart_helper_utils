@@ -125,11 +125,13 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   /// Optional:
   /// • [seed]: Seed for reproducible randomness.
   E? tryGetRandom([int? seed]) {
-    final iterable = this;
-    if (iterable == null) return null;
+    if (isEmptyOrNull) return null;
+    final iterable = this!;
     final generator = Random(seed);
-    final index = generator.nextInt(iterable.length);
-    return iterable.toList()[index];
+    if (iterable is List<E>) {
+      return iterable[generator.nextInt(iterable.length)];
+    }
+    return iterable.elementAt(generator.nextInt(iterable.length));
   }
 
   /// checks if every element is a [primitive type](https://dart.dev/language/built-in-types).
@@ -223,36 +225,98 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
   /// Returns a list containing first [n] elements.
   List<E> takeOnly(int n) {
-    if (n == 0) return [];
-
-    final list = List<E>.empty();
-    final thisList = toList();
-    final resultSize = length - n;
-    if (resultSize <= 0) return [];
-    if (resultSize == 1) return [last];
-
-    List.generate(n, (index) {
-      list.add(thisList[index]);
-    });
-
-    return list;
+    if (n <= 0) return [];
+    if (n >= length) return toList();
+    return take(n).toList();
   }
 
   /// Returns a list containing all elements except first [n] elements.
   List<E> drop(int n) {
-    if (n == 0) return [];
+    if (n <= 0) return toList();
+    if (n >= length) return [];
+    return skip(n).toList();
+  }
 
-    final list = List<E>.empty();
-    final originalList = toList();
-    final resultSize = length - n;
-    if (resultSize <= 0) return [];
-    if (resultSize == 1) return [last];
+  /// Splits the iterable into chunks of size [size].
+  List<List<E>> chunks(int size) {
+    if (size <= 0) throw ArgumentError('Size must be positive');
+    final chunks = <List<E>>[];
+    final iterator = this.iterator;
+    while (iterator.moveNext()) {
+      final chunk = <E>[iterator.current];
+      for (var i = 1; i < size && iterator.moveNext(); i++) {
+        chunk.add(iterator.current);
+      }
+      chunks.add(chunk);
+    }
+    return chunks;
+  }
 
-    originalList
-      ..removeRange(0, n)
-      ..forEach(list.add);
+  /// Splits the iterable into two lists based on the [predicate].
+  (List<E>, List<E>) partition(bool Function(E) predicate) {
+    final matching = <E>[];
+    final notMatching = <E>[];
+    for (final element in this) {
+      if (predicate(element)) {
+        matching.add(element);
+      } else {
+        notMatching.add(element);
+      }
+    }
+    return (matching, notMatching);
+  }
 
-    return list;
+  /// Inserts [element] between every element in the iterable.
+  Iterable<E> intersperse(E element) sync* {
+    final iterator = this.iterator;
+    if (iterator.moveNext()) {
+      yield iterator.current;
+      while (iterator.moveNext()) {
+        yield element;
+        yield iterator.current;
+      }
+    }
+  }
+
+  /// Converts the iterable to a map using [keySelector] and optional [valueSelector].
+  Map<K, V> associate<K, V>(
+    K Function(E) keySelector, [
+    V Function(E)? valueSelector,
+  ]) {
+    return {
+      for (final e in this)
+        keySelector(e): valueSelector != null ? valueSelector(e) : e as V,
+    };
+  }
+
+  /// Executes [action] on each element with a maximum of [parallelism] concurrent tasks.
+  Future<List<R>> mapConcurrent<R>(
+    Future<R> Function(E item) action, {
+    int parallelism = 1,
+  }) async {
+    if (parallelism <= 0) throw ArgumentError('Parallelism must be positive');
+    final results = <R>[];
+    final active = <Future<void>>[];
+    final iterator = this.iterator;
+
+    while (iterator.moveNext()) {
+      while (active.length >= parallelism) {
+        await Future.any(active);
+      }
+
+      final item = iterator.current;
+      final future = action(item).then((result) {
+        results.add(result);
+      });
+
+      active.add(future);
+      // Remove from active when complete
+      // ignore: unawaited_futures
+      future.whenComplete(() => active.remove(future));
+    }
+
+    await Future.wait(active);
+    return results;
   }
 
   /// Takes the first half of a list

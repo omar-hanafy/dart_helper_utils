@@ -138,40 +138,22 @@ extension DHUNullableDateExtensions on DateTime? {
   /// checks isTomorrow
   bool get isTomorrow {
     if (this == null) return false;
-    final now = DateTime.now();
-
-    // Quick check to rule out dates that are far away
-    if (this!.year != now.year || this!.month != now.month) {
-      return false;
-    }
-
-    return remainingDays == 1;
+    return this!.remainingDays == 1;
   }
 
   /// return true if the date is today
   bool get isToday {
     if (this == null) return false;
     final now = DateTime.now();
-
-    // Quick check to rule out dates that are far away
-    if (this!.year != now.year || this!.month != now.month) {
-      return false;
-    }
-
-    return remainingDays == 0;
+    return this!.year == now.year &&
+        this!.month == now.month &&
+        this!.day == now.day;
   }
 
   /// checks isYesterday
   bool get isYesterday {
     if (this == null) return false;
-    final now = DateTime.now();
-
-    // Quick check to rule out dates that are far away
-    if (this!.year != now.year || this!.month != now.month) {
-      return false;
-    }
-
-    return passedDays == -1;
+    return this!.remainingDays == -1;
   }
 
   /// checks isPresent
@@ -239,9 +221,11 @@ extension DHUNullableDateExtensions on DateTime? {
   Duration? get remainingDuration => this?.difference(DateTime.now());
 
   /// Returns the number of days remaining until this DateTime.
+  /// Returns a positive number for future dates, and negative for past dates.
   int? get remainingDays => this?.remainingDays;
 
-  /// checks passedDays
+  /// Returns the number of days passed since this DateTime.
+  /// Returns a positive number for past dates, and negative for future dates.
   int? get passedDays => this?.passedDays;
 }
 
@@ -317,10 +301,10 @@ extension DHUDateExtensions on DateTime {
 
   /// Returns the number of days that have passed since this DateTime.
   int get passedDays {
-    final today = DateTime.now();
-    // If the date is after today, return 0 as no days have passed yet
-    // Otherwise, return the positive difference
-    return isAfter(today) ? 0 : today.daysDifferenceTo(this);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final self = DateTime(year, month, day);
+    return today.difference(self).inDays;
   }
 
   /// Returns the duration remaining until this DateTime.
@@ -328,9 +312,10 @@ extension DHUDateExtensions on DateTime {
 
   /// Returns the number of days remaining until this DateTime.
   int get remainingDays {
-    final today = DateTime.now();
-    // If the date is before today, return a negative difference
-    return isBefore(today) ? -daysDifferenceTo(today) : daysDifferenceTo(today);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final self = DateTime(year, month, day);
+    return self.difference(today).inDays;
   }
 
   /// Checks if this DateTime is in the same year as [other].
@@ -662,27 +647,26 @@ extension DHUDateExtensions on DateTime {
     ArgumentError.checkNotNull(end, 'end');
 
     // Prepare dates for comparison
+    var self = this;
     var compareStart = start;
     var compareEnd = end;
 
     // Normalize to UTC if requested
     if (normalize) {
+      self = self.toUtc();
       compareStart = start.toUtc();
       compareEnd = end.toUtc();
-      // Directly use 'this' and convert it.
-      if (normalize) {
-        toUtc();
-      }
     }
 
     // Strip time components if requested
     if (ignoreTime) {
-      compareStart = DateTime(start.year, start.month, start.day);
-      compareEnd = DateTime(end.year, end.month, end.day);
-      // Directly use 'this'
-      if (ignoreTime) {
-        DateTime(year, month, day);
-      }
+      self = DateTime(self.year, self.month, self.day);
+      compareStart = DateTime(
+        compareStart.year,
+        compareStart.month,
+        compareStart.day,
+      );
+      compareEnd = DateTime(compareEnd.year, compareEnd.month, compareEnd.day);
     }
 
     // Validate range
@@ -693,8 +677,10 @@ extension DHUDateExtensions on DateTime {
     }
 
     // Perform comparison
-    return (inclusiveStart ? !isBefore(compareStart) : isAfter(compareStart)) &&
-        (inclusiveEnd ? !isAfter(compareEnd) : isBefore(compareEnd));
+    return (inclusiveStart
+            ? !self.isBefore(compareStart)
+            : self.isAfter(compareStart)) &&
+        (inclusiveEnd ? !self.isAfter(compareEnd) : self.isBefore(compareEnd));
   }
 
   /// Calculates the absolute difference in whole days between this DateTime
@@ -771,31 +757,57 @@ extension DHUDateExtensions on DateTime {
 
     return (years: years, months: months, days: days);
   }
-}
 
-///
-abstract class DatesHelper {
-  /// Whether or not two times are on the same hour.
-  static bool isSameHour(DateTime a, DateTime b) => a.isSameHourAs(b);
+  /// Returns true if this date falls on a weekend.
+  bool get isWeekend =>
+      weekday == DateTime.saturday || weekday == DateTime.sunday;
 
-  /// Whether or not two times are on the same day.
-  static bool isSameDay(DateTime a, DateTime b) => a.isSameDayAs(b);
+  /// Returns true if this date falls on a weekday.
+  bool get isWeekday => !isWeekend;
 
-  /// Whether or not two times are on the same week.
-  static bool isSameWeek(DateTime a, DateTime b) => a.isSameWeekAs(b);
+  /// Rounds the DateTime to the nearest interval of the given [duration].
+  DateTime roundTo(Duration duration) {
+    if (duration == Duration.zero) return this;
+    final half = duration.inMicroseconds / 2;
+    final micros = microsecondsSinceEpoch;
+    final newMicros =
+        ((micros + half) ~/ duration.inMicroseconds) * duration.inMicroseconds;
+    return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
+  }
 
-  /// Returns the absolute value of the difference in days between two dates.
-  /// The difference is calculated by comparing only the year, month, and day values of the dates.
-  /// The hour, minute, second, and millisecond values are ignored.
-  /// For example, if date1 is August 22nd at 11 p.m. and date2 is August 24th at 12 a.m. midnight,
-  /// the difference in days is 2, not a fraction of a day.
-  static int diffInDays({required DateTime to, DateTime? from}) =>
-      to.daysDifferenceTo(from);
+  /// Floors the DateTime to the nearest interval of the given [duration].
+  DateTime floorTo(Duration duration) {
+    if (duration == Duration.zero) return this;
+    final micros = microsecondsSinceEpoch;
+    final newMicros =
+        (micros ~/ duration.inMicroseconds) * duration.inMicroseconds;
+    return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
+  }
 
-  /// Returns a [DateTime] for each day the given range.
-  ///
-  /// [start] inclusive
-  /// [end] exclusive
-  static Iterable<DateTime> daysInRange(DateTime start, DateTime end) =>
-      start.daysUpTo(end);
+  /// Ceils the DateTime to the nearest interval of the given [duration].
+  DateTime ceilTo(Duration duration) {
+    if (duration == Duration.zero) return this;
+    final micros = microsecondsSinceEpoch;
+    final newMicros =
+        ((micros + duration.inMicroseconds - 1) ~/ duration.inMicroseconds) *
+        duration.inMicroseconds;
+    return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
+  }
+
+  /// Adds [days] business days to the current date, skipping weekends.
+  DateTime addBusinessDays(int days) {
+    var current = this;
+    var remaining = days.abs();
+    final forward = days >= 0;
+
+    while (remaining > 0) {
+      current = forward
+          ? current.add(const Duration(days: 1))
+          : current.subtract(const Duration(days: 1));
+      if (current.isWeekday) {
+        remaining--;
+      }
+    }
+    return current;
+  }
 }
