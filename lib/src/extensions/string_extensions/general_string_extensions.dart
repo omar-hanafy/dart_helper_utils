@@ -35,6 +35,17 @@ extension DHUStringExtensions on String {
   /// Example: " Line   1 \n Line 2 " => "Line 1 Line 2"
   String normalizeWhitespace() => trim().replaceAll(RegExp(r'\s+'), ' ');
 
+  /// Splits the string into a list of words.
+  ///
+  /// Returns an empty list if the string is empty or contains only whitespace.
+  List<String> get words {
+    final normalized = normalizeWhitespace();
+    return normalized.isEmpty ? [] : normalized.split(' ');
+  }
+
+  /// Splits the string into a list of lines.
+  List<String> get lines => split(RegExp(r'\r?\n'));
+
   /// Converts the string to a URL/filename-friendly slug.
   ///
   /// Example: "Hello, World!" => "hello-world"

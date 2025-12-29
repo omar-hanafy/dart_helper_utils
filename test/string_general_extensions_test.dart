@@ -22,6 +22,17 @@ void main() {
       expect('a b\nc'.clean, 'abc');
     });
 
+    test('words and lines', () {
+      expect('Hello World'.words, ['Hello', 'World']);
+      expect('  Hello   World  '.words, ['Hello', 'World']);
+      expect('Hello\nWorld'.words, ['Hello', 'World']);
+      expect(''.words, []);
+
+      expect('Line 1\nLine 2'.lines, ['Line 1', 'Line 2']);
+      expect('Line 1\r\nLine 2'.lines, ['Line 1', 'Line 2']);
+      expect(''.lines, ['']);
+    });
+
     test('base64Encode/base64Decode round-trip', () {
       final original = 'hello';
       final encoded = original.base64Encode();
@@ -45,8 +56,14 @@ void main() {
       expect('https://example.com'.isValidUrl, isTrue);
       expect('192.168.1.1'.isValidIp4, isTrue);
       expect('12345'.isNumeric, isTrue);
+      expect(' 12345 '.isNumeric, isTrue, reason: 'Should trim whitespace');
+      expect('12.34'.isNumeric, isFalse, reason: 'ASCII digits only');
       expect('abcDEF'.isAlphabet, isTrue);
+      expect(' abcDEF '.isAlphabet, isTrue, reason: 'Should trim whitespace');
+      expect('abc1'.isAlphabet, isFalse);
       expect('Hello'.hasCapitalLetter, isTrue);
+      expect('true'.isBool, isTrue);
+      expect(' FALSE '.isBool, isTrue);
     });
 
     test('equalsIgnoreCase', () {
@@ -63,6 +80,7 @@ void main() {
       expect('foo=bar'.replaceAfter('=', 'baz'), 'foo=baz');
       expect('foo=bar'.replaceBefore('=', 'baz'), 'baz=bar');
       expect('foo'.replaceAfter(':', 'x', 'fallback'), 'fallback');
+      expect('foo'.replaceBefore(':', 'x', 'fallback'), 'fallback');
     });
 
     test('anyChar and orEmpty', () {

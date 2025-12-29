@@ -139,8 +139,19 @@ extension DHUMapExt<K extends String, V> on Map<K, V> {
   /// Reads a value from a nested map using [path] (e.g., "a.b.c").
   ///
   /// Returns `null` if the path does not resolve to a value.
-  Object? getPath(String path, {String delimiter = '.'}) {
-    final segments = _splitPathSegments(path, delimiter);
+  ///
+  /// When [parseIndices] is true (default), bracketed indices are supported
+  /// (e.g., `items[0].id`).
+  Object? getPath(
+    String path, {
+    String delimiter = '.',
+    bool parseIndices = true,
+  }) {
+    final segments = _splitPathSegments(
+      path,
+      delimiter,
+      parseIndices: parseIndices,
+    );
     if (segments.isEmpty) return null;
     return _getPathSegments(this, segments);
   }

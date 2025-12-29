@@ -13,6 +13,8 @@ void main() {
 
     test('status messages', () {
       expect(200.toHttpStatusMessage, 'OK');
+      expect(200.0.toHttpStatusMessage, 'OK');
+      expect(200.5.toHttpStatusMessage, 'Not Found');
       expect(404.toHttpStatusUserMessage, isNotEmpty);
       expect(404.toHttpStatusDevMessage, isNotEmpty);
       expect(999.toHttpStatusMessage, 'Not Found');
@@ -79,6 +81,12 @@ void main() {
     test('random with seed is deterministic', () {
       expect(10.random(1), 10.random(1));
       expect(10.getRandom, inInclusiveRange(0, 9));
+    });
+
+    test('random and getRandom throw for invalid upper bound', () {
+      expect(() => 0.getRandom, throwsRangeError);
+      expect(() => (-1).getRandom, throwsRangeError);
+      expect(() => 0.random(), throwsRangeError);
     });
 
     test('asGreeks formats large numbers', () {
@@ -187,6 +195,9 @@ void main() {
       expect(10.5.roundToNearestMultiple(4), 12);
       expect(10.1.roundUpToMultiple(4), 12);
       expect(10.9.roundDownToMultiple(4), 8);
+      expect(() => 10.5.roundToNearestMultiple(0), throwsArgumentError);
+      expect(() => 10.5.roundUpToMultiple(0), throwsArgumentError);
+      expect(() => 10.5.roundDownToMultiple(0), throwsArgumentError);
       expect(2.5.toFractionString(), '2 1/2');
     });
   });

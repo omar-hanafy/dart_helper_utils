@@ -415,7 +415,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     }
     final generator = Random(seed);
     final index = generator.nextInt(length);
-    return toList()[index];
+    return elementAt(index);
   }
 
   /// Checks if all elements in the specified [collection] are contained in

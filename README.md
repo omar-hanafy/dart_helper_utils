@@ -12,12 +12,14 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_helper_utils: ^6.0.0
+  dart_helper_utils: ^6.0.0-dev.4
 ```
 
 ## Import
 
 ```dart
+import 'dart:async';
+
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 ```
 
@@ -54,6 +56,18 @@ void main() async {
     parallelism: 2,
   );
   print(results); // [2, 4, 6] (completion order)
+
+  try {
+    await TimeUtils.runWithTimeout(
+      task: () async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return 'finished';
+      },
+      timeout: const Duration(milliseconds: 20),
+    );
+  } on TimeoutException catch (e) {
+    print('timed out: $e');
+  }
 }
 ```
 
@@ -73,7 +87,15 @@ void main() async {
 - `String.slugify({separator})`
 - `String.parseDuration()` -> `Duration`
 - `String.maskEmail`, `String.mask({visibleStart, visibleEnd})`
-- `String.normalizeWhitespace()`, `String.removeEmptyLines`
+- `String.normalizeWhitespace()`, `String.removeEmptyLines`, `String.words`, `String.lines`
+
+### Scope functions
+
+- Re-exported from `convert_object` (>= 1.0.2).
+- `Object.let((it) => ...)`
+- `Object.also((it) => ...)`
+- `Object.takeIf((it) => ...)`
+- `Object.takeUnless((it) => ...)`
 
 ### Collections
 
@@ -82,9 +104,19 @@ void main() async {
 - `Iterable<E>.mapConcurrent(action, {parallelism})` (completion order)
 - `Iterable<E>.concatWithSingleList(iterable)`
 - `Iterable<E>.concatWithMultipleList(iterables)`
-- `Map<String, Object?>.getPath(path, {delimiter})`
+- `Map<String, Object?>.getPath(path, {delimiter, parseIndices})`
 - `Map<String, Object?>.setPath(path, value, {delimiter, parseIndices})`
 - `Map<String, Object?>.deepMerge(other)`
+
+### URIs
+
+- `Uri.domainName` -> `String`
+- `Uri.rebuild({ ...builders })` (if both path builders are set, `pathSegmentsBuilder` wins)
+- `Uri.withQueryParameters(queryParameters)`
+- `Uri.mergeQueryParameters(queryParameters)`
+- `Uri.removeQueryParameters(keys)`
+- `Uri.appendPathSegment(segment)` / `appendPathSegments(segments)`
+- `Uri.normalizeTrailingSlash({trailingSlash})`
 
 ### Date and time
 
@@ -100,6 +132,15 @@ void main() async {
 - `Future<T>.timeoutOrNull(timeout)`
 - `Future<T> Function().retry({retries, delay, retryIf})`
 - `Iterable<Future<T> Function()>.waitConcurrency({concurrency})` (completion order)
+
+### Time utilities
+
+- `TimeUtils.executionDuration(task)` -> `Duration` (sync or async)
+- `TimeUtils.executionDurations(tasks)` -> `List<Duration>`
+- `TimeUtils.compareExecutionTimes(taskA: ..., taskB: ...)`
+- `TimeUtils.debounce(func, duration, {maxWait, immediate})` returns `DebouncedCallback`
+- `TimeUtils.throttle(func, interval, {leading, trailing})` returns `ThrottledCallback`
+- `TimeUtils.runWithTimeout(task: ..., timeout: ...)` throws `TimeoutException` without cancelling the original work and swallows late errors to keep the zone clean
 
 ### Streams
 

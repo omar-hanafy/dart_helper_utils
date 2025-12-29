@@ -94,5 +94,24 @@ void main() {
       expect(updated.queryParameters['foo'], '1');
       expect(updated.queryParameters['bar'], '2');
     });
+
+    test(
+      'rebuild prefers pathSegments and queryParameters when both provided',
+      () {
+        final uri = Uri.parse('https://example.com/api?foo=1');
+
+        final updated = uri.rebuild(
+          pathBuilder: (_) => '/should-not-win',
+          pathSegmentsBuilder: (_) => ['v1', 'users'],
+          queryBuilder: (_) => 'raw=1',
+          queryParametersBuilder: (params) => {...params, 'bar': '2'},
+        );
+
+        expect(updated.path, '/v1/users');
+        expect(updated.queryParameters.containsKey('raw'), isFalse);
+        expect(updated.queryParameters['foo'], '1');
+        expect(updated.queryParameters['bar'], '2');
+      },
+    );
   });
 }

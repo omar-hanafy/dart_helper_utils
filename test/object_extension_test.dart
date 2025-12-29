@@ -19,7 +19,7 @@ void main() {
     });
 
     test('let returns transformed value', () {
-      final result = DHUScopeFunctions(5).let((it) => it * 2);
+      final result = 5.let((it) => it * 2);
       expect(result, 10);
     });
 

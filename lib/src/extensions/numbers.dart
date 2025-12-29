@@ -4,6 +4,13 @@ import 'dart:math' as math;
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:meta/meta.dart';
 
+int? _asHttpStatusCode(num? value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value % 1 == 0) return value.toInt();
+  return null;
+}
+
 /// DHUHttpEx
 extension DHUHttpEx on num? {
   /// Checks if the status code represents a successful response (2xx)
@@ -75,17 +82,30 @@ extension DHUHttpEx on num? {
 
   /// Returns the HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusMessage => httpStatusMessages[this] ?? 'Not Found';
+  String get toHttpStatusMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusMessages[statusCode] ?? 'Not Found');
+  }
 
   /// Returns the user-friendly HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusUserMessage =>
-      httpStatusUserMessage[this] ?? 'Not Found';
+  String get toHttpStatusUserMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusUserMessage[statusCode] ?? 'Not Found');
+  }
 
   /// Returns the developer-friendly HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusDevMessage =>
-      httpStatusDevMessage[this] ?? 'Not Found';
+  String get toHttpStatusDevMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusDevMessage[statusCode] ?? 'Not Found');
+  }
 
   /// Returns `true` if the string representation of this number is a valid phone number.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
@@ -383,7 +403,7 @@ extension DHUNumExtensions on num {
 
   /// Normalizes this number to a range between [min] and [max].
   ///
-  /// Returns a value between 0 and 1 representing where [this] falls
+  /// Returns a value between 0 and 1 representing where this value falls
   /// in the range from [min] to [max].
   ///
   /// Throws [ArgumentError] if [min] equals [max] or if [min] > [max].
@@ -777,16 +797,34 @@ extension DHUDoubleExtensions on double {
   double get squared => this * this;
 
   /// Rounds this double to the nearest multiple of [multiple].
-  double roundToNearestMultiple(double multiple) =>
-      (this / multiple).round() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundToNearestMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).round() * multiple;
+  }
 
   /// Rounds this double up to the nearest multiple of [multiple].
-  double roundUpToMultiple(double multiple) =>
-      (this / multiple).ceil() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundUpToMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).ceil() * multiple;
+  }
 
   /// Rounds this double down to the nearest multiple of [multiple].
-  double roundDownToMultiple(double multiple) =>
-      (this / multiple).floor() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundDownToMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).floor() * multiple;
+  }
 
   /// Converts this double to a fraction string representation.
   String toFractionString() {

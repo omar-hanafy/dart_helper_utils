@@ -31,6 +31,13 @@ void main() {
       expect(round, DateTime(2024, 1, 1, 13));
     });
 
+    test('lastDayOfWeek preserves UTC', () {
+      final date = DateTime.utc(2024, 1, 1, 15, 0);
+      final lastDay = date.lastDayOfWeek();
+      expect(lastDay.isUtc, isTrue);
+      expect(lastDay, DateTime.utc(2024, 1, 7, 15, 0));
+    });
+
     test('addBusinessDays skips weekends', () {
       final friday = DateTime(2024, 1, 5);
       expect(friday.addBusinessDays(1), DateTime(2024, 1, 8));

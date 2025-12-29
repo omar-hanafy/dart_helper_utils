@@ -348,7 +348,7 @@ final scoreWithOptions = engine.compare(
 Note: `SimilarityAlgorithm.levenshteinDistance` is now
 `SimilarityAlgorithm.levenshtein`. Other algorithm names are unchanged.
 
-### 18. Nullable List `tryRemoveWhere` Signature
+### 20. Nullable List `tryRemoveWhere` Signature
 
 `tryRemoveWhere` now accepts a predicate and performs removal.
 
@@ -360,7 +360,7 @@ list.tryRemoveWhere(0); // did nothing
 list.tryRemoveWhere((e) => e.isEven);
 ```
 
-### 19. Percentile Range (0-100)
+### 21. Percentile Range (0-100)
 
 Percentile helpers now expect `0..100` instead of `0..1`.
 
@@ -372,71 +372,16 @@ values.percentile(0.5);
 values.percentile(50);
 ```
 
-### 20. `Map.setIfMissing` Key Semantics
+### 22. `Map.setIfMissing` Key Semantics
 
 `setIfMissing` now checks key presence instead of null values. It will not
 overwrite existing entries (even if the value is null).
 
-### 21. Random Helper Validation
+### 23. Random Helper Validation
 
 `Iterable.getRandom` throws `StateError` on empty iterables. `randomInRange`
 throws `ArgumentError` when `min > max`. `num.getRandom` / `num.random` throw
 `RangeError` when the upper bound is `<= 0`.
-
-## ✨ New Features
-
-### Fluent API
-You can now use the `.convert` getter on any object for a fluent, chainable API.
-
-```dart
-import 'package:dart_helper_utils/dart_helper_utils.dart';
-
-// Fluent Style
-"123".convert.toInt(); 
-data.convert.fromMap('user').fromMap('age').toIntOr(0);
-```
-
-### Improved Enum Support
-Dedicated methods for Enum conversion.
-
-```dart
-// Convert string/int to Enum
-Convert.toEnum(value, parser: MyEnum.values.parser);
-```
-
-### Global Configuration
-You can now configure global defaults (like locale or error hooks) using `Convert.configure`.
-
-```dart
-Convert.configure(
-  ConvertConfig(
-    locale: 'en_US',
-    onException: (e) => log(e.toString()),
-  ),
-);
-```
-
-### Kotlin-style Scope Functions
-Added `let` and `letOr` extensions for cleaner null handling and scoping.
-
-```dart
-final result = nullableValue?.let((v) => calculate(v));
-```
-
-### Utility Additions
-More production-focused helpers were added to round out the core extensions:
-
-- **Date/Time:** `DateTime.copyWith`, `isSameYearAs`, `isSameMonthAs`,
-  `clampBetween`, `Duration.toClockString`, `Duration.toHumanShort`,
-  `String.parseDuration`.
-- **Collections:** `Iterable.windowed`, `Iterable.pairwise`, `Map.deepMerge`,
-  `Map.unflatten`, `Map.getPath`, `Map.setPath`.
-- **URIs:** `Uri.withQueryParameters`, `mergeQueryParameters`,
-  `removeQueryParameters`, `appendPathSegment(s)`, `normalizeTrailingSlash`.
-- **Strings:** `String.normalizeWhitespace`, `String.slugify`.
-
-If you were relying on "time ago" helpers, use
-[`timeago`](https://pub.dev/packages/timeago) instead.
 
 # Migration Guide (v4)
 

@@ -468,6 +468,8 @@ extension DHUDateExtensions on DateTime {
   ///
   /// [startOfWeek] is an optional parameter specifying the weekday that is considered
   /// the start of the week (1 for Monday, 7 for Sunday, etc.). Defaults to Monday.
+  ///
+  /// Preserves the original time zone: UTC stays UTC, local stays local.
   DateTime lastDayOfWeek({int startOfWeek = DateTime.monday}) {
     final normalizedStartOfWeek =
         ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
@@ -477,7 +479,7 @@ extension DHUDateExtensions on DateTime {
 
     // Convert to UTC and then back to the original timezone to ensure correct midnight
     final utcLastDayOfWeek = toUtc().add(Duration(days: daysToAdd));
-    return utcLastDayOfWeek.toLocal();
+    return isUtc ? utcLastDayOfWeek : utcLastDayOfWeek.toLocal();
   }
 
   /// Returns a DateTime representing the previous month relative to this Date Time.
@@ -704,28 +706,24 @@ extension DHUDateExtensions on DateTime {
     var compareStart = start;
     var compareEnd = end;
 
-    // Normalize to UTC if requested
+    // Normalize to UTC if requested so all three dates live in the same clock.
     if (normalize) {
       self = self.toUtc();
       compareStart = start.toUtc();
       compareEnd = end.toUtc();
     }
 
-    // Strip time components if requested
+    // Strip time components if requested while preserving UTC state.
     if (ignoreTime) {
-      self = DateTime(self.year, self.month, self.day);
-      compareStart = DateTime(
-        compareStart.year,
-        compareStart.month,
-        compareStart.day,
-      );
-      compareEnd = DateTime(compareEnd.year, compareEnd.month, compareEnd.day);
+      self = _dateOnly(self);
+      compareStart = _dateOnly(compareStart);
+      compareEnd = _dateOnly(compareEnd);
     }
 
     // Validate range
     if (compareStart.isAfter(compareEnd)) {
       throw ArgumentError(
-        'Start date ($start) must be before or equal to end date ($end)',
+        'Start date ($compareStart) must be before or equal to end date ($compareEnd)',
       );
     }
 
@@ -881,3 +879,7 @@ extension DHUDateExtensions on DateTime {
     return current;
   }
 }
+
+DateTime _dateOnly(DateTime date) => date.isUtc
+    ? DateTime.utc(date.year, date.month, date.day)
+    : DateTime(date.year, date.month, date.day);
