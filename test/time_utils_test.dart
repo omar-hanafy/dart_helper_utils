@@ -72,4 +72,53 @@ void main() {
       expect(() => throttled(), throwsStateError);
     });
   });
+
+  group('TimeUtils.runWithTimeout', () {
+    test('returns result before the timeout fires', () async {
+      final result = await TimeUtils.runWithTimeout(
+        task: () async {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          return 'ok';
+        },
+        timeout: const Duration(milliseconds: 50),
+      );
+
+      expect(result, 'ok');
+    });
+
+    test('completes with TimeoutException when the timer expires', () async {
+      final future = TimeUtils.runWithTimeout<String>(
+        task: () async {
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+          return 'never';
+        },
+        timeout: const Duration(milliseconds: 10),
+      );
+
+      await expectLater(future, throwsA(isA<TimeoutException>()));
+    });
+
+    test('suppresses late errors so the zone stays clean', () async {
+      final zoneErrors = <Object>[];
+      await runZonedGuarded(
+        () async {
+          final future = TimeUtils.runWithTimeout<void>(
+            task: () async {
+              await Future<void>.delayed(const Duration(milliseconds: 50));
+              throw StateError('late');
+            },
+            timeout: const Duration(milliseconds: 10),
+          );
+
+          await expectLater(future, throwsA(isA<TimeoutException>()));
+          await Future<void>.delayed(const Duration(milliseconds: 100));
+        },
+        (error, stack) {
+          zoneErrors.add(error);
+        },
+      );
+
+      expect(zoneErrors, isEmpty);
+    });
+  });
 }

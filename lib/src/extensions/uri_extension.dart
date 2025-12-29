@@ -21,6 +21,12 @@ extension DHUUriEx on Uri {
   /// Each builder, if provided, receives the current value and should
   /// return the new value. If a builder isn't provided, the current value
   /// is retained.
+  ///
+  /// If both `pathBuilder` and `pathSegmentsBuilder` return non-null values,
+  /// `pathSegmentsBuilder` takes precedence.
+  ///
+  /// If both `queryBuilder` and `queryParametersBuilder` return non-null values,
+  /// `queryParametersBuilder` takes precedence.
   Uri rebuild({
     String? Function(String current)? schemeBuilder,
     String? Function(String current)? userInfoBuilder,
@@ -97,16 +103,22 @@ extension DHUUriEx on Uri {
       newFragment = fragmentBuilder(fragment);
     }
 
+    final effectivePathSegments = newPathSegments;
+    final effectivePath = effectivePathSegments == null ? newPath : null;
+
+    final effectiveQueryParameters = newQueryParameters;
+    final effectiveQuery = effectiveQueryParameters == null ? newQuery : null;
+
     // Create a new Uri with the modified components
     return replace(
       scheme: newScheme,
       userInfo: newUserInfo,
       host: newHost,
       port: newPort,
-      path: newPath,
-      pathSegments: newPathSegments,
-      query: newQuery,
-      queryParameters: newQueryParameters,
+      path: effectivePath,
+      pathSegments: effectivePathSegments,
+      query: effectiveQuery,
+      queryParameters: effectiveQueryParameters,
       fragment: newFragment,
     );
   }

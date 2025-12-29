@@ -1,5 +1,34 @@
 # CHANGELOG
 
+## 6.0.0-dev.4
+
+- Final v6 release polish (includes everything from 6.0.0-dev.3).
+- Bumped `convert_object` to ^1.0.2 (adds `also`, `takeIf`, and `takeUnless` in the conversion layer).
+- Scope helpers now come from `convert_object`; remove `DHUScopeFunctions` overrides (use `LetExtension` if needed).
+- Fixed nullable list `tryRemoveWhere` to accept a predicate and actually remove items.
+- `Map.setIfMissing` now checks key presence (no overwrite when key exists).
+- `Map.flatMap` now guards against list/map cycles.
+- `Map.getPath` now supports `parseIndices` for symmetry with `setPath`.
+- Percentile helpers now expect a 0-100 range and validate input.
+- Stream helpers now validate arguments with `ArgumentError`.
+- Random helpers now validate bounds; empty iterable `getRandom` throws `StateError`.
+- `Iterable.getRandom` now avoids eager list allocation for non-list iterables.
+- `toFileSize` clamps to the largest suffix for huge inputs.
+- `DateTime.lastDayOfWeek` preserves UTC when the receiver is UTC.
+- `String.words` and `String.lines` provide whitespace-aware splitting helpers.
+- `TimeUtils.runWithTimeout` now handles late errors to avoid unhandled exceptions while the original work keeps running.
+- Concurrency helpers (`mapConcurrent`, `waitConcurrency`) now guard against unhandled errors from in-flight tasks.
+- `roundToNearestMultiple`, `roundUpToMultiple`, and `roundDownToMultiple` validate that the multiple is non-zero.
+- Double `round*ToMultiple` helpers now validate the multiple as well.
+- `scaleBetween` now validates `min`/`max` ordering.
+- URL validation uses a safe regex (prevents `RegExp` format errors).
+- JavaScript/TypeScript MIME checks recognize common `text/*` and `x-*` variants.
+- `Uri.rebuild` now avoids passing both `path`/`pathSegments` and `query`/`queryParameters` to `Uri.replace`.
+- HTTP status message helpers now treat integer-valued doubles as status codes (e.g., `200.0.toHttpStatusMessage`).
+- Iterable concat helpers now treat empty inputs as no-ops instead of returning an empty list.
+- Nullable bool extension renamed to `DHUBoolNullableEx` (typo fix).
+- Expanded tests and documentation for public APIs.
+
 ## 6.0.0-dev.3
 
 - Pre-release for v6.

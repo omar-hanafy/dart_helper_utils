@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:meta/meta.dart';
 
-///
+/// Extensions for Duration formatting and scheduling helpers.
 extension DHUDurationExt on Duration {
   /// Adds the Duration to the current DateTime and returns a DateTime in the future
   DateTime get fromNow => DateTime.now() + this;

@@ -41,6 +41,7 @@ analyzer:
     - "lib/**/generated/**"
     - "build/**"
     - ".dart_tool/**"
+    - "coverage/**"
 
   # Escalate only the things that matter for publish; keep noise low.
   errors:

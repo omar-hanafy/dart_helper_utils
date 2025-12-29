@@ -16,7 +16,7 @@ Future<void> main() async {
   print(convertToList<String>(list)); // ['1', '2', '3', '3.1', '22.3']
 
   // parsing raw Json to Map<String, dynamic>
-  // note: you can also use the ConvertObject.toMap to avoid ambiguity.
+  // note: you can also use Convert.toMap to avoid ambiguity.
   final userMap = convertToMap<String, dynamic>('''
 {
     "name": "John",
@@ -37,7 +37,7 @@ Future<void> main() async {
   final walletBalance = convertToInt(userMap['wallet']);
   // OR
   // final walletBalance = userMap.getInt('wallet');
-  // final walletBalance = ConvertObject.toInt(userMap['wallet']);
+  // final walletBalance = Convert.toInt(userMap['wallet']);
   print('user walletBalance: $walletBalance');
 
   // Example of using string extensions
@@ -155,7 +155,7 @@ Future<void> main() async {
         List.generate(1000000, (index) => userMap);
       }
     },
-    taskB: () async => 100.millisecondsDelay,
+    taskB: () async => 100.millisecondsDelay(),
   );
 
   print(
