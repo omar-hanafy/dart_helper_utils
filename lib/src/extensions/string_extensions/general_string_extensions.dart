@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-///
+/// Extensions for common String helpers.
 extension DHUStringExtensions on String {
   /// If the string is empty, return null. Otherwise, return the string.
   String? get nullIfEmpty => isEmpty ? null : this;
@@ -34,6 +34,17 @@ extension DHUStringExtensions on String {
   ///
   /// Example: " Line   1 \n Line 2 " => "Line 1 Line 2"
   String normalizeWhitespace() => trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Splits the string into a list of words.
+  ///
+  /// Returns an empty list if the string is empty or contains only whitespace.
+  List<String> get words {
+    final normalized = normalizeWhitespace();
+    return normalized.isEmpty ? [] : normalized.split(' ');
+  }
+
+  /// Splits the string into a list of lines.
+  List<String> get lines => split(RegExp(r'\r?\n'));
 
   /// Converts the string to a URL/filename-friendly slug.
   ///
@@ -180,7 +191,7 @@ extension DHUStringExtensions on String {
   }
 }
 
-///
+/// Extensions for nullable String helpers.
 extension DHUNullSafeStringExtensions on String? {
   /// Converts the string into a single line by replacing newline characters.
   String? get toOneLine => this?.replaceAll('\n', '');
@@ -189,7 +200,7 @@ extension DHUNullSafeStringExtensions on String? {
   String? get removeWhiteSpaces => this?.replaceAll(' ', '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
-  String? get clean => toOneLine.removeWhiteSpaces;
+  String? get clean => toOneLine?.removeWhiteSpaces;
 
   /// Returns true if the string is null, empty, or, after cleaning (collapsing into a single line, removing all whitespaces), is empty.
   bool get isEmptyOrNull => this == null || this!.clean.isEmpty;
@@ -267,7 +278,8 @@ extension DHUNullSafeStringExtensions on String? {
   bool get isValidIp4 => hasMatch(regexValidIp4);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl => tryToLowerCase().clean.hasMatch(regexValidUrl);
+  bool get isValidUrl =>
+      tryToLowerCase().clean?.hasMatch(regexValidUrl) ?? false;
 
   /// Checks if the string consists only of ASCII digits (no sign or decimals).
   ///

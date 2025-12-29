@@ -3,6 +3,11 @@ import 'package:test/test.dart';
 
 void main() {
   group('Uri extensions', () {
+    test('domainName strips www', () {
+      final uri = Uri.parse('https://www.example.co.uk/path');
+      expect(uri.domainName, 'example');
+    });
+
     test('withQueryParameters replaces existing parameters', () {
       final uri = Uri.parse('https://example.com/api?foo=1&bar=2');
       final updated = uri.withQueryParameters({
@@ -75,5 +80,38 @@ void main() {
       expect(withSlash.path, '/api/');
       expect(withoutSlash.path, '/api');
     });
+
+    test('rebuild updates selected components', () {
+      final uri = Uri.parse('https://example.com/api?foo=1');
+      final updated = uri.rebuild(
+        schemeBuilder: (_) => 'http',
+        hostBuilder: (_) => 'api.example.com',
+        queryParametersBuilder: (params) => {...params, 'bar': 2},
+      );
+
+      expect(updated.scheme, 'http');
+      expect(updated.host, 'api.example.com');
+      expect(updated.queryParameters['foo'], '1');
+      expect(updated.queryParameters['bar'], '2');
+    });
+
+    test(
+      'rebuild prefers pathSegments and queryParameters when both provided',
+      () {
+        final uri = Uri.parse('https://example.com/api?foo=1');
+
+        final updated = uri.rebuild(
+          pathBuilder: (_) => '/should-not-win',
+          pathSegmentsBuilder: (_) => ['v1', 'users'],
+          queryBuilder: (_) => 'raw=1',
+          queryParametersBuilder: (params) => {...params, 'bar': '2'},
+        );
+
+        expect(updated.path, '/v1/users');
+        expect(updated.queryParameters.containsKey('raw'), isFalse);
+        expect(updated.queryParameters['foo'], '1');
+        expect(updated.queryParameters['bar'], '2');
+      },
+    );
   });
 }

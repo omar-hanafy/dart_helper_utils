@@ -106,5 +106,18 @@ void main() {
       await tasks.waitConcurrency(concurrency: 3);
       expect(maxActive, lessThanOrEqualTo(3));
     });
+
+    test('waitConcurrency propagates errors', () async {
+      final tasks = [
+        () async => 1,
+        () async => throw StateError('boom'),
+        () async => 3,
+      ];
+
+      await expectLater(
+        tasks.waitConcurrency(concurrency: 2),
+        throwsA(isA<StateError>()),
+      );
+    });
   });
 }

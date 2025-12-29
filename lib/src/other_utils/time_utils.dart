@@ -148,36 +148,51 @@ abstract class TimeUtils {
     required void Function(Timer timer, int count) onExecute,
   }) {
     var count = 0;
-    return Timer.periodic(interval, (timer) async {
+    return Timer.periodic(interval, (timer) {
       count++;
       onExecute(timer, count);
     });
   }
 
-  /// Executes a function with a timeout, cancelling the execution if it exceeds
-  /// the specified duration.
+  /// Executes a function with a timeout.
+  ///
+  /// If the timeout elapses first, the returned future completes with a
+  /// [TimeoutException]. The original task continues to execute in the
+  /// background, and any errors it throws after the timeout are handled
+  /// internally to avoid unhandled asynchronous exceptions.
   static Future<T> runWithTimeout<T>({
     required FutureOr<T> Function() task,
     required Duration timeout,
-  }) async {
+  }) {
     final completer = Completer<T>();
-    final timer = Timer(timeout, () {
+    Timer? timeoutTimer;
+
+    timeoutTimer = Timer(timeout, () {
       if (!completer.isCompleted) {
         completer.completeError(
           TimeoutException('The operation has timed out.'),
         );
       }
     });
-    try {
-      final result = await task();
-      if (!completer.isCompleted) completer.complete(result);
-    } catch (e) {
-      if (!completer.isCompleted) completer.completeError(e);
-    } finally {
-      timer.cancel();
-    }
 
-    return completer.future;
+    final taskFuture = Future<T>.sync(task);
+    taskFuture
+        .then((value) {
+          if (!completer.isCompleted) {
+            timeoutTimer?.cancel();
+            completer.complete(value);
+          }
+        })
+        .catchError((error, stackTrace) {
+          if (!completer.isCompleted) {
+            timeoutTimer?.cancel();
+            completer.completeError(error, stackTrace);
+          }
+          // Once the completer finished because the timeout elapsed, swallow
+          // remaining errors to keep the zone clean.
+        });
+
+    return completer.future.whenComplete(() => timeoutTimer?.cancel());
   }
 }
 

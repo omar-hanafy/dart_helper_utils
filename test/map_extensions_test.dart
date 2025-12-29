@@ -59,6 +59,24 @@ void main() {
       expect(map.getPath('items.0.id'), 'x');
     });
 
+    test('setPath respects parseIndices = false', () {
+      final map = <String, Object?>{};
+
+      map.setPath('items[0].id', 'x', parseIndices: false);
+
+      expect(map.getPath('items.0.id'), isNull);
+      expect(map.getPath('items[0].id', parseIndices: false), 'x');
+    });
+
+    test('setPath returns false for fixed-length lists', () {
+      final map = <String, Object?>{
+        'items': List<Object?>.empty(growable: false),
+      };
+
+      expect(() => map.setPath('items.0.id', 'x'), returnsNormally);
+      expect(map.setPath('items.0.id', 'x'), isFalse);
+    });
+
     test('setPath returns false for invalid list index', () {
       final map = <String, Object?>{'list': <Object?>[]};
 

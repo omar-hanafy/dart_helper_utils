@@ -79,6 +79,12 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
   ///
   /// [concurrency] must be positive.
   ///
+  /// Results are returned in completion order, not input order.
+  ///
+  /// If any task throws, the returned future completes with that error. Any
+  /// in-flight tasks continue running and their errors are handled internally
+  /// to avoid unhandled exceptions.
+  ///
   /// Example:
   /// ```dart
   /// await tasks.waitConcurrency(concurrency: 5);
@@ -86,20 +92,32 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
   Future<List<T>> waitConcurrency({int concurrency = 5}) async {
     if (concurrency <= 0) throw ArgumentError('Concurrency must be positive');
     final results = <T>[];
-    final active = <Future<void>>[];
-    for (final task in this) {
-      while (active.length >= concurrency) {
-        await Future.any(active);
+    final active = <Future<void>>{};
+
+    try {
+      for (final task in this) {
+        while (active.length >= concurrency) {
+          await Future.any(active);
+        }
+
+        late Future<void> future;
+        future = task()
+            .then((r) {
+              results.add(r);
+            })
+            .whenComplete(() {
+              active.remove(future);
+            });
+        active.add(future);
       }
-      final future = task().then((r) {
-        results.add(r);
-      });
-      active.add(future);
-      // Remove from active when complete
-      // ignore: unawaited_futures
-      future.whenComplete(() => active.remove(future));
+      await Future.wait(active);
+    } catch (_) {
+      for (final task in active) {
+        // ignore: unawaited_futures
+        task.catchError((_) {});
+      }
+      rethrow;
     }
-    await Future.wait(active);
     return results;
   }
 }

@@ -138,7 +138,9 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// All events and errors from the provided streams are forwarded to this
   /// controller. The returned [Future] completes when all streams have ended.
   Future<void> mergeStreams(List<Stream<T>> streams) async {
-    assert(streams.isNotEmpty, 'Streams list cannot be empty');
+    if (streams.isEmpty) {
+      return;
+    }
     final completer = Completer<void>();
     var completedCount = 0;
     final subscriptions = <StreamSubscription<T>>[];
@@ -183,7 +185,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   }
 }
 
-/// Additional stream transformations not covered by the official Dart [RateLimit] extension.
+/// Additional stream transformations not covered by the official Dart `RateLimit` extension.
 extension StreamTransformations<T> on Stream<T> {
   /// Buffers incoming events into lists of size [count].
   ///
@@ -197,7 +199,9 @@ extension StreamTransformations<T> on Stream<T> {
   /// });
   /// ```
   Stream<List<T>> bufferCount(int count) {
-    assert(count > 0, 'Buffer count must be greater than zero');
+    if (count <= 0) {
+      throw ArgumentError('Buffer count must be greater than zero');
+    }
     final bucket = <T>[];
     return transform(
       StreamTransformer<T, List<T>>.fromHandlers(
@@ -227,10 +231,9 @@ extension StreamTransformations<T> on Stream<T> {
   ///   .listen((events) => print('Window contained ${events.length} items'));
   /// ```
   Stream<List<T>> window(Duration windowDuration) {
-    assert(
-      windowDuration.inMilliseconds > 0,
-      'Window duration must be greater than zero',
-    );
+    if (windowDuration.inMilliseconds <= 0) {
+      throw ArgumentError('Window duration must be greater than zero');
+    }
     StreamController<List<T>>? controller;
     final buffer = <T>[];
     Timer? timer;
@@ -277,8 +280,12 @@ extension StreamTransformations<T> on Stream<T> {
   ///   .listen((data) => print(data));
   /// ```
   Stream<T> rateLimit(int maxEvents, Duration duration) {
-    assert(maxEvents > 0, 'maxEvents must be greater than zero');
-    assert(duration.inMilliseconds > 0, 'Duration must be greater than zero');
+    if (maxEvents <= 0) {
+      throw ArgumentError('maxEvents must be greater than zero');
+    }
+    if (duration.inMilliseconds <= 0) {
+      throw ArgumentError('Duration must be greater than zero');
+    }
 
     var eventCount = 0;
     var windowStart = DateTime.now();
@@ -341,33 +348,25 @@ extension StreamTransformations<T> on Stream<T> {
   /// myStream.withLatestValue().listen((data) => print('Listener got: $data'));
   /// ```
   Stream<T> withLatestValue() {
-    final controller = StreamController<T>.broadcast();
     T? latestValue;
     var hasValue = false;
+    final source = asBroadcastStream();
 
-    final subscription = listen(
-      (data) {
-        latestValue = data;
-        hasValue = true;
-        controller.add(data);
-      },
-      onError: (dynamic error, dynamic stackTrace) {
-        controller._handleDynamicOnError(error, stackTrace);
-      },
-      onDone: controller.close,
-    );
-
-    controller
-      ..onListen = () {
-        if (hasValue) {
-          controller.add(latestValue as T);
-        }
+    return Stream<T>.multi((multiController) {
+      if (hasValue) {
+        multiController.add(latestValue as T);
       }
-      ..onCancel = () async {
-        await subscription.cancel();
-      };
-
-    return controller.stream;
+      final subscription = source.listen(
+        (data) {
+          latestValue = data;
+          hasValue = true;
+          multiController.add(data);
+        },
+        onError: multiController.addError,
+        onDone: multiController.close,
+      );
+      multiController.onCancel = () => subscription.cancel();
+    });
   }
 }
 
@@ -404,11 +403,12 @@ extension StreamErrorRecovery<T> on Stream<T> {
     Duration delayFactor = const Duration(seconds: 1),
     bool Function(Object error)? shouldRetry,
   }) async* {
-    assert(retryCount >= 0, 'retryCount must be non-negative');
-    assert(
-      delayFactor.inMilliseconds > 0,
-      'delayFactor must be greater than zero',
-    );
+    if (retryCount < 0) {
+      throw ArgumentError('retryCount must be non-negative');
+    }
+    if (delayFactor.inMilliseconds <= 0) {
+      throw ArgumentError('delayFactor must be greater than zero');
+    }
 
     var attempts = 0;
     while (true) {

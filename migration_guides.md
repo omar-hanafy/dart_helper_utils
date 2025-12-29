@@ -128,6 +128,8 @@ The `.convertTo<T>()` extension method has been removed from `List` to avoid amb
   `Convert.toType<T>` if you need exceptions.
 - `toDateTime`/`tryToDateTime` now accept numeric epoch values (seconds or
   milliseconds).
+- `concatWithSingleList`/`concatWithMultipleList` now return the non-empty side
+  when one side is empty instead of returning an empty list.
 
 ### 9. Iterable/Map Cleanup (collection replacements)
 Duplicate iterable/map helpers were removed in favor of `package:collection`.
@@ -196,7 +198,33 @@ final throttled = TimeUtils.throttle(
 throttled();
 ```
 
-### 12. Pagination Helpers Removed
+### 12. `TimeUtils.runWithTimeout` behavior
+
+`TimeUtils.runWithTimeout` now completes with a `TimeoutException` when the
+timer fires while the original task is still running. Late errors are captured
+internally to avoid unhandled async failures, so wrap the internal logic in a
+`try/catch` if you want to observe its exceptions, or record completion in a
+shared `Completer` if you still need to react after the work finishes.
+
+```dart
+final taskFinished = Completer<void>();
+try {
+  await TimeUtils.runWithTimeout(
+    task: () async {
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      taskFinished.complete();
+      return 'ok';
+    },
+    timeout: const Duration(milliseconds: 100),
+  );
+} on TimeoutException {
+  // Soft deadline fired; the task continues to completion.
+}
+
+await taskFinished.future; // wait for the still-running task
+```
+
+### 13. Pagination Helpers Removed
 
 The `Pagination` helpers (`Paginator`, `AsyncPaginator`, `InfinitePaginator`)
 have been removed from `dart_helper_utils` to keep the package focused on core utilities.
@@ -206,23 +234,29 @@ If you need pagination logic, we recommend using dedicated packages like:
 - `very_good_infinite_list` (Flutter)
 - Or implementing a custom solution using `Debouncer` and `CancelableOperation` if needed.
 
-### 13. DoublyLinkedList Moved Out
+### 14. DoublyLinkedList Moved Out
 
 `DoublyLinkedList` and `toDoublyLinkedList` have been removed from
 `dart_helper_utils`. Use the standalone package instead:
 
 https://pub.dev/packages/doubly_linked_list
 
-### 14. Date Utils Rename
+### 15. Date Utils Rename
 
 `httpFormat` is now `httpDateFormat` on `DateTime`.
 
-### 15. String Validation Intent
+### 16. Nullable bool extension name
+
+The nullable bool extension name has been corrected to `DHUBoolNullableEx`
+(from `DHUBoolNullablelEx`). If you use an explicit extension override, update
+the name accordingly.
+
+### 17. String Validation Intent
 
 `isNumeric` and `isAlphabet` are ASCII-only and trim whitespace before checking.
 `isBool` is case-insensitive and trims whitespace.
 
-### 16. Country/Timezone Data Removed
+### 18. Country/Timezone Data Removed
 
 The static country/timezone datasets and helpers were removed to keep
 `dart_helper_utils` lightweight.
@@ -234,7 +268,7 @@ Removed:
 
 Use a dedicated package or API that fits your use case for up-to-date data.
 
-### 17. String Similarity Moved Out
+### 19. String Similarity Moved Out
 
 String similarity logic has been moved to a specialized standalone package: [`string_search_algorithms`](https://pub.dev/packages/string_search_algorithms).
 
@@ -314,45 +348,40 @@ final scoreWithOptions = engine.compare(
 Note: `SimilarityAlgorithm.levenshteinDistance` is now
 `SimilarityAlgorithm.levenshtein`. Other algorithm names are unchanged.
 
-## ✨ New Features
+### 20. Nullable List `tryRemoveWhere` Signature
 
-### Fluent API
-You can now use the `.convert` getter on any object for a fluent, chainable API.
-
-```dart
-import 'package:dart_helper_utils/dart_helper_utils.dart';
-
-// Fluent Style
-"123".convert.toInt(); 
-data.convert.fromMap('user').fromMap('age').toIntOr(0);
-```
-
-### Improved Enum Support
-Dedicated methods for Enum conversion.
+`tryRemoveWhere` now accepts a predicate and performs removal.
 
 ```dart
-// Convert string/int to Enum
-Convert.toEnum(value, parser: MyEnum.values.parser);
+// v5
+list.tryRemoveWhere(0); // did nothing
+
+// v6
+list.tryRemoveWhere((e) => e.isEven);
 ```
 
-### Global Configuration
-You can now configure global defaults (like locale or error hooks) using `Convert.configure`.
+### 21. Percentile Range (0-100)
+
+Percentile helpers now expect `0..100` instead of `0..1`.
 
 ```dart
-Convert.configure(
-  ConvertConfig(
-    locale: 'en_US',
-    onException: (e) => log(e.toString()),
-  ),
-);
+// v5
+values.percentile(0.5);
+
+// v6
+values.percentile(50);
 ```
 
-### Kotlin-style Scope Functions
-Added `let` and `letOr` extensions for cleaner null handling and scoping.
+### 22. `Map.setIfMissing` Key Semantics
 
-```dart
-final result = nullableValue?.let((v) => calculate(v));
-```
+`setIfMissing` now checks key presence instead of null values. It will not
+overwrite existing entries (even if the value is null).
+
+### 23. Random Helper Validation
+
+`Iterable.getRandom` throws `StateError` on empty iterables. `randomInRange`
+throws `ArgumentError` when `min > max`. `num.getRandom` / `num.random` throw
+`RangeError` when the upper bound is `<= 0`.
 
 # Migration Guide (v4)
 

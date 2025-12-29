@@ -4,6 +4,13 @@ import 'dart:math' as math;
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:meta/meta.dart';
 
+int? _asHttpStatusCode(num? value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value % 1 == 0) return value.toInt();
+  return null;
+}
+
 /// DHUHttpEx
 extension DHUHttpEx on num? {
   /// Checks if the status code represents a successful response (2xx)
@@ -75,17 +82,30 @@ extension DHUHttpEx on num? {
 
   /// Returns the HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusMessage => httpStatusMessages[this] ?? 'Not Found';
+  String get toHttpStatusMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusMessages[statusCode] ?? 'Not Found');
+  }
 
   /// Returns the user-friendly HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusUserMessage =>
-      httpStatusUserMessage[this] ?? 'Not Found';
+  String get toHttpStatusUserMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusUserMessage[statusCode] ?? 'Not Found');
+  }
 
   /// Returns the developer-friendly HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusDevMessage =>
-      httpStatusDevMessage[this] ?? 'Not Found';
+  String get toHttpStatusDevMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusDevMessage[statusCode] ?? 'Not Found');
+  }
 
   /// Returns `true` if the string representation of this number is a valid phone number.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
@@ -160,7 +180,7 @@ extension DHUNumExtensions on num {
   String get removeTrailingZero =>
       toString().replaceAll(RegExp(r'([.]*0)(?!.*\d)'), '');
 
-  /// Rounds the number to the nearest multiple of 50 or 100.
+  /// Rounds the number up to the nearest multiple of 50.
   double get roundToFiftyOrHundred =>
       this + (50 - ((this % 50) > 0 ? this % 50 : 50));
 
@@ -179,11 +199,26 @@ extension DHUNumExtensions on num {
   /// Returns half of the number.
   double get half => this / 2;
 
-  /// Generates a random number between 0 and this number.
-  int get getRandom => math.Random().nextInt(toInt());
+  /// Generates a random integer between 0 (inclusive) and this value (exclusive).
+  ///
+  /// Throws [RangeError] if this value is less than or equal to zero.
+  int get getRandom {
+    if (this <= 0) {
+      throw RangeError('Upper bound must be greater than zero.');
+    }
+    return math.Random().nextInt(toInt());
+  }
 
-  /// Generates a random number between 0 and this number, with an optional seed for randomization.
-  int random([int? seed]) => math.Random(seed).nextInt(toInt());
+  /// Generates a random integer between 0 (inclusive) and this value (exclusive),
+  /// with an optional [seed] for reproducibility.
+  ///
+  /// Throws [RangeError] if this value is less than or equal to zero.
+  int random([int? seed]) {
+    if (this <= 0) {
+      throw RangeError('Upper bound must be greater than zero.');
+    }
+    return math.Random(seed).nextInt(toInt());
+  }
 
   /// Converts a number to a string with Greek symbols for thousands, millions, etc.
   ///
@@ -217,6 +252,9 @@ extension DHUNumExtensions on num {
     if (this <= 0) return '0 B';
     const suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     var i = (math.log(this) / math.log(1024)).floor();
+    if (i >= suffixes.length) {
+      i = suffixes.length - 1;
+    }
     return '${(this / math.pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 
@@ -251,7 +289,7 @@ extension DHUNumExtensions on num {
   ]) => Future.delayed(asMilliseconds, computation);
 
   /// Converts the number to a Duration in milliseconds.
-  Duration get asMilliseconds => Duration(microseconds: (this * 1000).round());
+  Duration get asMilliseconds => Duration(milliseconds: round());
 
   /// Converts the number to a Duration in seconds.
   Duration get asSeconds => Duration(milliseconds: (this * 1000).round());
@@ -270,7 +308,7 @@ extension DHUNumExtensions on num {
   /// Returns the square root of the number.
   double sqrt() => (this > 0) ? math.sqrt(toDouble()) : 0.0;
 
-  /// Returns a sequence of integers starting from [this],
+  /// Returns a sequence of integers starting from `this`,
   /// incrementing by [step] and ending at [end].
   Iterable<num> until(int end, {int step = 1}) sync* {
     if (step == 0) {
@@ -311,14 +349,34 @@ extension DHUNumExtensions on num {
   );
 
   /// Rounds this number to the nearest multiple of [multiple].
-  num roundToNearestMultiple(num multiple) =>
-      (this / multiple).round() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundToNearestMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).round() * multiple;
+  }
 
   /// Rounds this number up to the nearest multiple of [multiple].
-  num roundUpToMultiple(num multiple) => (this / multiple).ceil() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundUpToMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).ceil() * multiple;
+  }
 
   /// Rounds this number down to the nearest multiple of [multiple].
-  num roundDownToMultiple(num multiple) => (this / multiple).floor() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundDownToMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).floor() * multiple;
+  }
 
   /// Checks if this number is between [min] and [max].
   /// [inclusive] determines whether the range includes the endpoints.
@@ -344,8 +402,18 @@ extension DHUNumExtensions on num {
   }
 
   /// Normalizes this number to a range between [min] and [max].
+  ///
+  /// Returns a value between 0 and 1 representing where this value falls
+  /// in the range from [min] to [max].
+  ///
+  /// Throws [ArgumentError] if [min] equals [max] or if [min] > [max].
   num scaleBetween(num min, num max) {
-    if (min == max) throw ArgumentError('Min and max cannot be the same.');
+    if (min == max) {
+      throw ArgumentError('Min and max cannot be the same.');
+    }
+    if (min > max) {
+      throw ArgumentError('Min cannot be greater than max.');
+    }
     return (this - min) / (max - min);
   }
 
@@ -729,16 +797,34 @@ extension DHUDoubleExtensions on double {
   double get squared => this * this;
 
   /// Rounds this double to the nearest multiple of [multiple].
-  double roundToNearestMultiple(double multiple) =>
-      (this / multiple).round() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundToNearestMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).round() * multiple;
+  }
 
   /// Rounds this double up to the nearest multiple of [multiple].
-  double roundUpToMultiple(double multiple) =>
-      (this / multiple).ceil() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundUpToMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).ceil() * multiple;
+  }
 
   /// Rounds this double down to the nearest multiple of [multiple].
-  double roundDownToMultiple(double multiple) =>
-      (this / multiple).floor() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundDownToMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).floor() * multiple;
+  }
 
   /// Converts this double to a fraction string representation.
   String toFractionString() {
@@ -765,11 +851,11 @@ abstract class NumbersHelper {
   ///
   /// Example:
   /// ```dart
-  /// print(NumHelpers.safeDivide(0, 0)); // Output: 0
-  /// print(NumHelpers.safeDivide(10, 0)); // Output: Infinity
-  /// print(NumHelpers.safeDivide(10, 0, whenDivByZero: -1)); // Output: -1
-  /// print(NumHelpers.safeDivide(10, 0, returnNaNOnDivByZero: true)); // Output: NaN
-  /// print(NumHelpers.safeDivide(10, 2)); // Output: 5
+  /// print(NumbersHelper.safeDivide(0, 0)); // Output: 0
+  /// print(NumbersHelper.safeDivide(10, 0)); // Output: Infinity
+  /// print(NumbersHelper.safeDivide(10, 0, whenDivByZero: -1)); // Output: -1
+  /// print(NumbersHelper.safeDivide(10, 0, returnNaNOnDivByZero: true)); // Output: NaN
+  /// print(NumbersHelper.safeDivide(10, 2)); // Output: 5
   /// ```
   static double safeDivide(
     num a,
@@ -788,7 +874,11 @@ abstract class NumbersHelper {
   /// Calculates the mean of a list of [values].
   static num mean(List<num> values) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
-    return values.reduce((a, b) => a + b) / values.length;
+    num sum = 0;
+    for (final value in values) {
+      sum += value;
+    }
+    return sum / values.length;
   }
 
   /// Calculates the median of a list of [values].
@@ -828,10 +918,16 @@ abstract class NumbersHelper {
   static num standardDeviation(List<num> values) => math.sqrt(variance(values));
 
   /// Calculates the specified [percentile] of a list of [values].
+  ///
+  /// [percentile] must be between 0 and 100 inclusive.
   static num percentile(List<num> values, double percentile) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
+    if (percentile < 0 || percentile > 100) {
+      throw ArgumentError('Percentile must be between 0 and 100.');
+    }
     final sortedValues = List<num>.from(values)..sort();
-    final index = (percentile * (values.length - 1)).round();
+    final rank = percentile / 100;
+    final index = (rank * (values.length - 1)).round();
     return sortedValues[index];
   }
 
@@ -1019,11 +1115,18 @@ extension DHUIterableDoubleExtensionsNS on Iterable<double?>? {
 ///
 /// Returns a random integer between [min] and [max], inclusive.
 ///
+/// [min] and [max] are treated as integer bounds via `toInt()`.
+/// Throws [ArgumentError] if [min] is greater than [max].
+///
 /// If a [seed] is provided, it is used to initialize the random number generator
 /// for reproducible results.
 /// Example:
 /// ```dart
 /// int randomNumber = randomInRange(1, 10);
 /// ```
-int randomInRange(num min, num max, [int? seed]) =>
-    ((max - min + 1).random(seed) + min).toInt();
+int randomInRange(num min, num max, [int? seed]) {
+  if (min > max) {
+    throw ArgumentError('min must be less than or equal to max.');
+  }
+  return ((max - min + 1).random(seed) + min).toInt();
+}

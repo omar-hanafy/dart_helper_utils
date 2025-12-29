@@ -1,3 +1,6 @@
+# custom
+FOLLOWUP.md
+
 # Miscellaneous
 *.class
 *.lock
@@ -9,12 +12,16 @@
 .buildlog/
 .history
 .svn/
+.Saber_API/
 
 # IntelliJ related
 *.iml
 *.ipr
 *.iws
 .idea/
+.cxx/
+.codex/
+.code/
 
 # Visual Studio Code related
 .classpath
@@ -125,3 +132,4 @@ app.*.map.json
 !.idea/dictionaries/
 !.idea/runConfigurations/
 /pubspec.lock
+lib/core/config/api_keys.dart
