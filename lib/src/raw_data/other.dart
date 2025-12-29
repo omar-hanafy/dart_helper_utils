@@ -215,10 +215,10 @@ Map<int, String> get httpStatusMessages => const {
 /// that can be shown to end users in error messages and notifications.
 Map<int, String> get httpStatusUserMessage => const {
   // 1xx - Informational
-  100: 'Please wait while we process your request...', 
-  101: 'Switching to a different protocol...', 
-  102: 'Your request is being processed...', 
-  103: 'Getting things ready...', 
+  100: 'Please wait while we process your request...',
+  101: 'Switching to a different protocol...',
+  102: 'Your request is being processed...',
+  103: 'Getting things ready...',
 
   // 2xx - Success
   200: 'Success! Everything worked as expected.',
