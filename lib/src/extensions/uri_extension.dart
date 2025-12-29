@@ -110,4 +110,129 @@ extension DHUUriEx on Uri {
       fragment: newFragment,
     );
   }
+
+  /// Returns a new [Uri] with query parameters replaced by [queryParameters].
+  Uri withQueryParameters(Map<String, Object?> queryParameters) {
+    final params = _toQueryParametersAll(queryParameters);
+    return replace(query: _toQueryString(params));
+  }
+
+  /// Returns a new [Uri] with [queryParameters] merged into existing parameters.
+  ///
+  /// When keys collide, values from [queryParameters] replace existing ones.
+  Uri mergeQueryParameters(Map<String, Object?> queryParameters) {
+    final merged = <String, List<String>>{};
+    queryParametersAll.forEach((key, value) {
+      merged[key] = List<String>.from(value);
+    });
+    final incoming = _toQueryParametersAll(queryParameters);
+    incoming.forEach((key, value) {
+      merged[key] = value;
+    });
+    return replace(query: _toQueryString(merged));
+  }
+
+  /// Returns a new [Uri] with the provided [keys] removed from query parameters.
+  Uri removeQueryParameters(Iterable<String> keys) {
+    final updated = <String, List<String>>{};
+    queryParametersAll.forEach((key, value) {
+      if (!keys.contains(key)) {
+        updated[key] = List<String>.from(value);
+      }
+    });
+    return replace(query: _toQueryString(updated));
+  }
+
+  /// Returns a new [Uri] with [segment] appended to the path.
+  Uri appendPathSegment(String segment) {
+    if (segment.isEmpty) return this;
+    final segments = _normalizedPathSegments(this)
+      ..addAll(_cleanPathSegments([segment]));
+    return replace(pathSegments: segments);
+  }
+
+  /// Returns a new [Uri] with [segments] appended to the path.
+  Uri appendPathSegments(Iterable<String> segments) {
+    final cleaned = _cleanPathSegments(segments);
+    if (cleaned.isEmpty) return this;
+    final combined = _normalizedPathSegments(this)..addAll(cleaned);
+    return replace(pathSegments: combined);
+  }
+
+  /// Normalizes the trailing slash in the path.
+  ///
+  /// If [trailingSlash] is true, ensures the path ends with a slash.
+  /// If false, removes any trailing slashes.
+  Uri normalizeTrailingSlash({bool trailingSlash = true}) {
+    final currentPath = path;
+    if (currentPath.isEmpty) return this;
+
+    if (trailingSlash) {
+      if (currentPath.endsWith('/')) return this;
+      return replace(path: '$currentPath/');
+    }
+
+    final normalized = currentPath.replaceAll(RegExp(r'/+$'), '');
+    return normalized == currentPath ? this : replace(path: normalized);
+  }
+}
+
+Map<String, List<String>> _toQueryParametersAll(
+  Map<String, Object?> queryParameters,
+) {
+  final result = <String, List<String>>{};
+
+  queryParameters.forEach((key, value) {
+    if (value == null) return;
+    if (value is Iterable && value is! String) {
+      final values = value
+          .where((item) => item != null)
+          .map((item) => item.toString())
+          .toList(growable: false);
+      if (values.isNotEmpty) {
+        result[key] = values;
+      }
+      return;
+    }
+    result[key] = [value.toString()];
+  });
+
+  return result;
+}
+
+String _toQueryString(Map<String, List<String>> queryParameters) {
+  if (queryParameters.isEmpty) return '';
+  final pairs = <String>[];
+
+  queryParameters.forEach((key, values) {
+    final encodedKey = Uri.encodeQueryComponent(key);
+    if (values.isEmpty) {
+      pairs.add(encodedKey);
+      return;
+    }
+    for (final value in values) {
+      final encodedValue = Uri.encodeQueryComponent(value);
+      pairs.add('$encodedKey=$encodedValue');
+    }
+  });
+
+  return pairs.join('&');
+}
+
+List<String> _normalizedPathSegments(Uri uri) {
+  final segments = uri.pathSegments.toList();
+  if (segments.isNotEmpty && segments.last.isEmpty) {
+    segments.removeLast();
+  }
+  return segments;
+}
+
+List<String> _cleanPathSegments(Iterable<String> segments) {
+  final cleaned = <String>[];
+  for (final segment in segments) {
+    if (segment.isNotEmpty) {
+      cleaned.add(segment);
+    }
+  }
+  return cleaned;
 }

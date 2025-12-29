@@ -17,6 +17,24 @@ void main() {
       expect(testDate.toUtcIso, testDate.toUtc().toIso8601String());
     });
 
+    test('copyWith', () {
+      final updated = testDate.copyWith(month: 7, day: 2, minute: 45);
+      expect(updated, DateTime(2022, 7, 2, 10, 45));
+    });
+
+    test('copyWith preserves utc flag', () {
+      final utcDate = DateTime.utc(2022, 5, 10, 10, 30);
+      final updated = utcDate.copyWith(day: 11);
+      expect(updated.isUtc, isTrue);
+      expect(updated, DateTime.utc(2022, 5, 11, 10, 30));
+    });
+
+    test('copyWith can switch to utc', () {
+      final updated = testDate.copyWith(isUtc: true, hour: 5);
+      expect(updated.isUtc, isTrue);
+      expect(updated, DateTime.utc(2022, 5, 10, 5, 30));
+    });
+
     test('operator +', () {
       const duration = Duration(days: 1);
       expect(testDate + duration, testDate.add(duration));
@@ -70,9 +88,19 @@ void main() {
       expect(testDate.isAtSameYearAs(otherDate), true);
     });
 
+    test('isSameYearAs', () {
+      final otherDate = DateTime(2022, 1, 1);
+      expect(testDate.isSameYearAs(otherDate), true);
+    });
+
     test('isAtSameMonthAs', () {
       final otherDate = DateTime(2022, 5);
       expect(testDate.isAtSameMonthAs(otherDate), true);
+    });
+
+    test('isSameMonthAs', () {
+      final otherDate = DateTime(2022, 5, 1);
+      expect(testDate.isSameMonthAs(otherDate), true);
     });
 
     test('isAtSameDayAs', () {
@@ -255,6 +283,32 @@ void main() {
     test('max', () {
       final laterDate = DateTime(2022, 5, 11);
       expect(testDate.max(laterDate), laterDate);
+    });
+
+    group('clampBetween', () {
+      final start = DateTime(2022, 5, 1);
+      final end = DateTime(2022, 5, 31);
+
+      test('returns start when before range', () {
+        final before = DateTime(2022, 4, 30);
+        expect(before.clampBetween(start, end), start);
+      });
+
+      test('returns end when after range', () {
+        final after = DateTime(2022, 6, 1);
+        expect(after.clampBetween(start, end), end);
+      });
+
+      test('returns same value when in range', () {
+        expect(testDate.clampBetween(start, end), testDate);
+      });
+
+      test('throws when start is after end', () {
+        expect(
+          () => testDate.clampBetween(end, start),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
     });
 
     test('addDays', () {

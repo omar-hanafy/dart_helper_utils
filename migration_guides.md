@@ -196,11 +196,15 @@ final throttled = TimeUtils.throttle(
 throttled();
 ```
 
-### 12. Pagination `goToPage` Timing
+### 12. Pagination Helpers Removed
 
-`BasePaginator.goToPage` is now immediate (no internal debounce). If your code
-relied on a debounce window, apply debouncing at the call site or use
-`Debouncer`.
+The `Pagination` helpers (`Paginator`, `AsyncPaginator`, `InfinitePaginator`)
+have been removed from `dart_helper_utils` to keep the package focused on core utilities.
+If you need pagination logic, we recommend using dedicated packages like:
+
+- `infinite_scroll_pagination` (Flutter)
+- `very_good_infinite_list` (Flutter)
+- Or implementing a custom solution using `Debouncer` and `CancelableOperation` if needed.
 
 ### 13. DoublyLinkedList Moved Out
 
@@ -229,6 +233,86 @@ Removed:
 - `getRawCountriesData`, `getTimezonesRawData`, `getTimezonesList`
 
 Use a dedicated package or API that fits your use case for up-to-date data.
+
+### 17. String Similarity Moved Out
+
+String similarity logic has been moved to a specialized standalone package: [`string_search_algorithms`](https://pub.dev/packages/string_search_algorithms).
+
+**Removed:**
+- `StringSimilarity` class
+- `SimilarityAlgorithm` enum
+- `String.similarityTo` extension and related methods.
+- `String.compareWith` extension.
+
+**Migration:**
+Add the new package to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  string_search_algorithms: ^1.0.0
+```
+
+And update your imports:
+
+```dart
+import 'package:string_search_algorithms/string_search_algorithms.dart';
+```
+
+Then replace `compareWith` with the new extension or facade:
+
+```dart
+// Old:
+// final score = 'kitten'.compareWith(
+//   'sitting',
+//   SimilarityAlgorithm.levenshteinDistance,
+// );
+
+// New:
+final score = 'kitten'.similarityTo(
+  'sitting',
+  algorithm: SimilarityAlgorithm.levenshtein,
+);
+```
+
+If you used `StringSimilarityConfig`, construct an engine with
+`SimilarityOptions` instead:
+
+```dart
+final engine = StringSimilarityEngine(
+  options: SimilarityOptions(
+    normalization: NormalizationOptions(
+      enabled: true,
+      trimWhitespace: true,
+      removeSpaces: false,
+      toLowerCase: true,
+      removeSpecialChars: false,
+      removeAccents: false,
+      preProcessor: (s) => s,
+      postProcessor: (s) => s,
+    ),
+    cache: CacheOptions(
+      enabled: true,
+      normalizedCapacity: 1000,
+      bigramCapacity: 1000,
+      ngramCapacity: 1000,
+    ),
+    algorithms: AlgorithmOptions(
+      jaroWinklerPrefixScale: 0.1,
+      ngramSize: 3,
+      stemTokens: false,
+    ),
+  ),
+);
+
+final scoreWithOptions = engine.compare(
+  'kitten',
+  'sitting',
+  algorithm: SimilarityAlgorithm.levenshtein,
+);
+```
+
+Note: `SimilarityAlgorithm.levenshteinDistance` is now
+`SimilarityAlgorithm.levenshtein`. Other algorithm names are unchanged.
 
 ## ✨ New Features
 

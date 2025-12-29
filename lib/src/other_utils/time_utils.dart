@@ -1,5 +1,8 @@
 import 'dart:async';
 
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+import 'package:dart_helper_utils/src/other_utils/debouncer.dart';
+
 /// A utility class that provides helper methods for working with time.
 abstract class TimeUtils {
   /// Calculates the execution duration of a task, accommodating both synchronous
@@ -76,6 +79,26 @@ abstract class TimeUtils {
     final duration1 = await executionDuration(taskA);
     final duration2 = await executionDuration(taskB);
     return (duration1, duration2);
+  }
+
+  /// Creates a debounced callback that delays the execution of [func] until
+  /// [duration] has passed since the last time it was invoked.
+  ///
+  /// The returned object is callable and exposes `cancel` and `flush` methods.
+  static DebouncedCallback debounce(
+    FutureOr<void> Function() func,
+    Duration duration, {
+    Duration? maxWait,
+    bool immediate = false,
+    String? debugLabel,
+  }) {
+    final debouncer = Debouncer(
+      delay: duration,
+      maxWait: maxWait,
+      immediate: immediate,
+      debugLabel: debugLabel,
+    );
+    return DebouncedCallback(debouncer, func);
   }
 
   /// Creates a throttled callback that invokes [func] at most once per [interval].

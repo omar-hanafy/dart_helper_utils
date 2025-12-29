@@ -516,9 +516,10 @@ class Debouncer {
       executionCount: 0,
     );
 
-    _stateController
-      .._safeAdd(finalState)
-      ..close();
+    if (!_stateController.isClosed) {
+      _stateController.add(finalState);
+      _stateController.close();
+    }
     _logDebug('Debouncer disposed.');
   }
 
@@ -661,11 +662,29 @@ class _ExecutionRecord {
   };
 }
 
-// Extension on StreamController to safely add data.
-extension _StreamControllerExtension<T> on StreamController<T> {
-  void _safeAdd(T data) {
-    if (!isClosed) {
-      add(data);
-    }
-  }
+/// Callable wrapper that exposes debouncing controls.
+class DebouncedCallback {
+  /// Creates a callable wrapper around a [Debouncer] and action.
+  DebouncedCallback(this._debouncer, this._action);
+
+  final Debouncer _debouncer;
+  final AsyncAction _action;
+
+  /// Invokes the debounced action.
+  void call() => _debouncer.run(_action);
+
+  /// Cancels any pending action.
+  void cancel() => _debouncer.cancel();
+
+  /// Flushes any pending action.
+  Future<void> flush() => _debouncer.flush();
+
+  /// Disposes the debouncer.
+  void dispose() => _debouncer.dispose();
+
+  /// Returns `true` if the debouncer is disposed.
+  bool get isDisposed => _debouncer.isDisposed;
+
+  /// Returns `true` if there is a scheduled action pending.
+  bool get isRunning => _debouncer.isRunning;
 }

@@ -1,36 +1,79 @@
 # CHANGELOG
 
-## 6.0.0-dev.2
+## 6.0.0-dev.3
 
 - Pre-release for v6.
 - Repository automation and CI/CD workflows.
 - Update convert_object dependency to ^1.0.1.
 
-### Breaking changes
-- Conversion APIs moved to the dedicated
-  [convert_object](https://pub.dev/packages/convert_object) package and are
-  re-exported here. `ConvertObject` → `Convert`, top-level conversion functions
-  renamed to `convertTo*` / `tryConvertTo*`, and `ParsingException` replaced by
-  `ConversionException`.
-- Removed DHU duplicate extensions (object parsing checks, null checks, iterable
-  helpers like `firstOrNull`/`groupBy`/`mapIndexed`, map `isEqual`/`update`,
-  string `isNullOrWhiteSpace`, etc.). Use SDK or `package:collection` instead.
-- `TimeUtils.throttle` signature changed; now returns a callable object with
-  `cancel()` / `dispose()` and supports leading/trailing options.
-- `BasePaginator.goToPage` now applies immediately (no internal debounce).
-- `httpFormat` renamed to `httpDateFormat`.
-- Roman numeral helpers moved to `convert_object`.
-- `DoublyLinkedList` removed from DHU; use `doubly_linked_list` package.
-- Removed static country/timezone datasets to keep DHU lightweight. For
-  up-to-date data, use a dedicated package or API that fits your use case.
-- HTTP status maps drop non‑standard 499/599 and mark 306 as unused.
+### Breaking Changes
+- **DatesHelper removed:** Removed the abstract `DatesHelper` class. Use the idiomatic `DateTime` extensions instead (e.g., `dateA.isSameDayAs(dateB)`).
+- **String Similarity moved:** String similarity algorithms have been moved to a dedicated package:
+  [`string_search_algorithms`](https://pub.dev/packages/string_search_algorithms).
+  Removed `StringSimilarity`, `SimilarityAlgorithm`, and string extensions like
+  `compareWith` from `dart_helper_utils`.
+- **Conversion APIs moved:** All conversion logic is now in the dedicated
+  [`convert_object`](https://pub.dev/packages/convert_object) package and re-exported here.
+  - `ConvertObject` renamed to `Convert`.
+  - Top-level conversion functions renamed to `convertTo*` / `tryConvertTo*`.
+  - `ParsingException` replaced by `ConversionException`.
+- **Duplicate extensions removed:** Removed extensions that duplicated functionality found in the SDK or `package:collection` (e.g., object parsing checks, null checks, `firstOrNull`, `groupBy`, `mapIndexed`, map `isEqual`/`update`, string `isNullOrWhiteSpace`).
+- **Throttling changes:** `TimeUtils.throttle` signature changed; it now returns a callable object with `cancel()` / `dispose()` and supports leading/trailing options.
+- **Date/Time renaming:** `httpFormat` renamed to `httpDateFormat`.
+- **Roman numerals moved:** Roman numeral helpers moved to `convert_object`.
+- **DoublyLinkedList moved:** Removed from DHU; use the [`doubly_linked_list`](https://pub.dev/packages/doubly_linked_list) package.
+- **Pagination removed:** Removed `Paginator`, `AsyncPaginator`, and `InfinitePaginator`.
+- **Data removal:** Removed static country/timezone datasets and non-standard HTTP status codes (499/599) to keep the package lightweight.
+- **Validation removal:** Removed `isValidIp6` and `regexValidIp6` as the previous regex implementation was incorrect.
 
-### New/updated
-- Throttling utilities (`Throttler`, `ThrottledCallback`).
-- String validation now trims input; `isBool` is case‑insensitive.
+### New Features
+- **Async Utilities:**
+  - `Future.minWait(Duration)`: Ensures a Future takes at least a specified duration (useful for preventing UI flicker).
+  - `Future.timeoutOrNull(Duration)`: Returns `null` on timeout instead of throwing.
+  - `Future.retry()`: Retry logic for Futures with exponential backoff.
+  - `waitConcurrency`: Execute an Iterable of Futures with a parallelism limit.
+- **Debouncing:** Added `TimeUtils.debounce` which returns a callable `DebouncedCallback` (symmetrical to `throttle`).
+- **Collection Extensions:**
+  - `chunks(size)`: Split list into fixed-size sub-lists.
+  - `windowed(size, step, partials)`: Sliding windows over iterables.
+  - `pairwise()`: Consecutive pairs from an iterable.
+  - `partition(predicate)`: Split list into two lists (matching and non-matching).
+  - `intersperse(element)`: Insert an element between every item.
+  - `associate(keySelector)`: Convert an Iterable to a Map.
+  - `mapConcurrent`: Run async tasks on an iterable with concurrency control.
+- **Scope Functions:** Added Kotlin-style `let`, `also`, `takeIf`, and `takeUnless` to all Objects for fluent chaining.
+- **String Utilities:**
+  - `truncate(length)`: Smart truncation with ellipsis.
+  - `maskEmail` / `mask`: Privacy masking helpers.
+  - `isUuid`: UUID validation.
+  - `normalizeWhitespace()`: Collapse whitespace to single spaces.
+  - `slugify()`: URL/filename-friendly slugs.
+  - `parseDuration()`: Parse `1h 20m` or `00:01:30` to `Duration`.
+- **Number Utilities:**
+  - `toFileSize`: Formats bytes to KB, MB, GB, etc.
+- **URI Utilities:**
+  - `withQueryParameters`, `mergeQueryParameters`, `removeQueryParameters`.
+  - `appendPathSegment(s)`, `normalizeTrailingSlash`.
+- **Map Utilities:**
+  - `deepMerge`, `unflatten`, `getPath`, `setPath`.
+- **Date Utilities:**
+  - `isWeekend` / `isWeekday` getters.
+  - `roundTo` / `floorTo` / `ceilTo` for rounding dates to nearest duration.
+  - `addBusinessDays`: Add days skipping weekends.
+  - `copyWith`, `isSameYearAs`, `isSameMonthAs`, `clampBetween`.
+
+### Fixes
+- **Throttling:** Enhanced throttling utilities (`Throttler`, `ThrottledCallback`).
+- **String Validation:** String validation now trims input; `isBool` is case-insensitive.
+- Fixed runtime errors in `takeOnly` and `drop` (previously used fixed-length lists).
+- Fixed logic error in `isBetween` where normalization was ignored.
+- Fixed `isYesterday` logic.
+- Fixed `percentage` calculation to handle division by zero.
+- Fixed `Map.flatMap` typing issues.
+- Fixed circular export in `for_intl`.
 
 ### Migration
-- Updated `migration_guides.md` with v6 migration notes.
+- Updated `migration_guides.md` with detailed v6 migration notes.
 
 ## 5.5.0
 
