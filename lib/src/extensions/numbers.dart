@@ -160,7 +160,7 @@ extension DHUNumExtensions on num {
   String get removeTrailingZero =>
       toString().replaceAll(RegExp(r'([.]*0)(?!.*\d)'), '');
 
-  /// Rounds the number to the nearest multiple of 50 or 100.
+  /// Rounds the number up to the nearest multiple of 50.
   double get roundToFiftyOrHundred =>
       this + (50 - ((this % 50) > 0 ? this % 50 : 50));
 
@@ -179,11 +179,26 @@ extension DHUNumExtensions on num {
   /// Returns half of the number.
   double get half => this / 2;
 
-  /// Generates a random number between 0 and this number.
-  int get getRandom => math.Random().nextInt(toInt());
+  /// Generates a random integer between 0 (inclusive) and this value (exclusive).
+  ///
+  /// Throws [RangeError] if this value is less than or equal to zero.
+  int get getRandom {
+    if (this <= 0) {
+      throw RangeError('Upper bound must be greater than zero.');
+    }
+    return math.Random().nextInt(toInt());
+  }
 
-  /// Generates a random number between 0 and this number, with an optional seed for randomization.
-  int random([int? seed]) => math.Random(seed).nextInt(toInt());
+  /// Generates a random integer between 0 (inclusive) and this value (exclusive),
+  /// with an optional [seed] for reproducibility.
+  ///
+  /// Throws [RangeError] if this value is less than or equal to zero.
+  int random([int? seed]) {
+    if (this <= 0) {
+      throw RangeError('Upper bound must be greater than zero.');
+    }
+    return math.Random(seed).nextInt(toInt());
+  }
 
   /// Converts a number to a string with Greek symbols for thousands, millions, etc.
   ///
@@ -217,6 +232,9 @@ extension DHUNumExtensions on num {
     if (this <= 0) return '0 B';
     const suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     var i = (math.log(this) / math.log(1024)).floor();
+    if (i >= suffixes.length) {
+      i = suffixes.length - 1;
+    }
     return '${(this / math.pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
   }
 
@@ -251,7 +269,7 @@ extension DHUNumExtensions on num {
   ]) => Future.delayed(asMilliseconds, computation);
 
   /// Converts the number to a Duration in milliseconds.
-  Duration get asMilliseconds => Duration(microseconds: (this * 1000).round());
+  Duration get asMilliseconds => Duration(milliseconds: round());
 
   /// Converts the number to a Duration in seconds.
   Duration get asSeconds => Duration(milliseconds: (this * 1000).round());
@@ -765,11 +783,11 @@ abstract class NumbersHelper {
   ///
   /// Example:
   /// ```dart
-  /// print(NumHelpers.safeDivide(0, 0)); // Output: 0
-  /// print(NumHelpers.safeDivide(10, 0)); // Output: Infinity
-  /// print(NumHelpers.safeDivide(10, 0, whenDivByZero: -1)); // Output: -1
-  /// print(NumHelpers.safeDivide(10, 0, returnNaNOnDivByZero: true)); // Output: NaN
-  /// print(NumHelpers.safeDivide(10, 2)); // Output: 5
+  /// print(NumbersHelper.safeDivide(0, 0)); // Output: 0
+  /// print(NumbersHelper.safeDivide(10, 0)); // Output: Infinity
+  /// print(NumbersHelper.safeDivide(10, 0, whenDivByZero: -1)); // Output: -1
+  /// print(NumbersHelper.safeDivide(10, 0, returnNaNOnDivByZero: true)); // Output: NaN
+  /// print(NumbersHelper.safeDivide(10, 2)); // Output: 5
   /// ```
   static double safeDivide(
     num a,
@@ -788,7 +806,11 @@ abstract class NumbersHelper {
   /// Calculates the mean of a list of [values].
   static num mean(List<num> values) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
-    return values.reduce((a, b) => a + b) / values.length;
+    num sum = 0;
+    for (final value in values) {
+      sum += value;
+    }
+    return sum / values.length;
   }
 
   /// Calculates the median of a list of [values].
@@ -828,10 +850,16 @@ abstract class NumbersHelper {
   static num standardDeviation(List<num> values) => math.sqrt(variance(values));
 
   /// Calculates the specified [percentile] of a list of [values].
+  ///
+  /// [percentile] must be between 0 and 100 inclusive.
   static num percentile(List<num> values, double percentile) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
+    if (percentile < 0 || percentile > 100) {
+      throw ArgumentError('Percentile must be between 0 and 100.');
+    }
     final sortedValues = List<num>.from(values)..sort();
-    final index = (percentile * (values.length - 1)).round();
+    final rank = percentile / 100;
+    final index = (rank * (values.length - 1)).round();
     return sortedValues[index];
   }
 
@@ -1019,11 +1047,18 @@ extension DHUIterableDoubleExtensionsNS on Iterable<double?>? {
 ///
 /// Returns a random integer between [min] and [max], inclusive.
 ///
+/// [min] and [max] are treated as integer bounds via `toInt()`.
+/// Throws [ArgumentError] if [min] is greater than [max].
+///
 /// If a [seed] is provided, it is used to initialize the random number generator
 /// for reproducible results.
 /// Example:
 /// ```dart
 /// int randomNumber = randomInRange(1, 10);
 /// ```
-int randomInRange(num min, num max, [int? seed]) =>
-    ((max - min + 1).random(seed) + min).toInt();
+int randomInRange(num min, num max, [int? seed]) {
+  if (min > max) {
+    throw ArgumentError('min must be less than or equal to max.');
+  }
+  return ((max - min + 1).random(seed) + min).toInt();
+}

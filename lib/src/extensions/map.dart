@@ -12,8 +12,11 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// If the key exists, its associated value is returned; otherwise,
   /// the new value is inserted and then returned.
   V setIfMissing(K key, V value) {
-    if (this[key] == null) return this[key] = value;
-    return this[key]!;
+    if (!containsKey(key)) {
+      this[key] = value;
+      return value;
+    }
+    return this[key] as V;
   }
 
   /// Returns an iterable of keys where the associated values satisfy the given condition.
@@ -43,17 +46,17 @@ extension DHUMapExtension<K, V> on Map<K, V> {
 
 /// DHUMapNullableExtension
 extension DHUMapNullableExtension<K, V> on Map<K, V>? {
-  /// checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
+  /// Returns `true` when every key and value is a primitive value.
   bool isPrimitive() {
     if (this == null) return false;
     return (isTypePrimitive<K>() || this!.keys.every(isValuePrimitive)) &&
         (isTypePrimitive<V>() || this!.values.every(isValuePrimitive));
   }
 
-  ///
+  /// Returns `true` when the map is `null` or empty.
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
-  ///
+  /// Returns `true` when the map is non-null and not empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 }
 
@@ -71,7 +74,7 @@ extension DHUMapExt<K extends String, V> on Map<K, V> {
     bool excludeArrays = false,
   }) {
     final result = <String, Object?>{};
-    final visited = HashSet.identity();
+    final visited = HashSet<Object>.identity();
 
     void flattenAny(Object? value, String key) {
       if (value is Map) {
@@ -84,6 +87,7 @@ extension DHUMapExt<K extends String, V> on Map<K, V> {
       }
 
       if (value is List && !excludeArrays) {
+        if (!visited.add(value)) return;
         for (var i = 0; i < value.length; i++) {
           flattenAny(value[i], '$key$delimiter$i');
         }

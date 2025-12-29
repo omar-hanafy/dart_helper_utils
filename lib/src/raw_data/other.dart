@@ -68,75 +68,74 @@ const fullMonthsNames = <int, String>{
   12: 'December',
 };
 
-/// Common time-related durations defined as constants.
-/// oneSecond
+/// Duration representing one second.
 const Duration oneSecond = Duration(seconds: 1);
 
-/// oneMinute
+/// Duration representing one minute.
 const Duration oneMinute = Duration(minutes: 1);
 
-/// oneHour
+/// Duration representing one hour.
 const Duration oneHour = Duration(hours: 1);
 
-/// oneDay
+/// Duration representing one day.
 const Duration oneDay = Duration(days: 1);
 
 /// Milliseconds constants for different time units.
-/// millisecondsPerSecond
+/// Number of milliseconds in one second.
 const millisecondsPerSecond = 1000;
 
-/// millisecondsPerMinute
+/// Number of milliseconds in one minute.
 const int millisecondsPerMinute = 60 * millisecondsPerSecond;
 
-/// millisecondsPerHour
+/// Number of milliseconds in one hour.
 const int millisecondsPerHour = 60 * millisecondsPerMinute;
 
-/// millisecondsPerDay
+/// Number of milliseconds in one day.
 const int millisecondsPerDay = 24 * millisecondsPerHour;
 
 /// Common regex patterns used for validation and parsing.
-/// regexAlphanumeric
+/// Matches ASCII letters and digits only.
 const String regexAlphanumeric = r'^[a-zA-Z0-9]+$';
 
-/// regexSpecialChars
+/// Matches any character that is not ASCII letter, digit, or space.
 const String regexSpecialChars = '[^a-zA-Z0-9 ]';
 
-/// regexStartsWithNumber
+/// Matches strings that start with a digit.
 const String regexStartsWithNumber = r'^\d';
 
-/// regexContainsDigits
+/// Matches strings containing at least one digit.
 const String regexContainsDigits = r'\d';
 
-/// regexValidUsername
+/// Matches usernames starting and ending with an alphanumeric character.
 const String regexValidUsername = r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$';
 
-/// regexValidCurrency
+/// Matches common currency strings with optional symbols and grouping.
 const String regexValidCurrency =
     r'^(S?S?|\W|Rp|\W|\W|\W|\W|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$';
 
-/// regexValidPhoneNumber
+/// Matches common phone number formats with optional country codes and extensions.
 const String regexValidPhoneNumber =
     r'(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?';
 
-/// regexValidEmail
+/// Matches email addresses in a typical local@domain format.
 const String regexValidEmail =
     r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
 
-/// regexValidIp4
+/// Matches IPv4 addresses.
 const String regexValidIp4 =
     r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$';
 
-/// regexValidUrl
+/// Matches http/https URLs and common URL patterns.
 const String regexValidUrl =
-    r'''^((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+\.[a-z]{2,4}/)(?:[^\s()<>]+|\(([^\\]<>()<>]+|(\(^[^\\]<>()<>]+)))*))+(?:\(([^\\]<>()<>]+|(\(^[^\\]<>()<>]+)))*\)|[^\\]s`!()\[\]{};:'".,<>?«»“”‘’]))+$''';
+    r'^(https?:\/\/)?(www\.)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+([\/?#][^\s]*)?$';
 
-/// regexNumeric
+/// Matches ASCII digits only.
 const String regexNumeric = r'^\d+$';
 
-/// regexAlphabet
+/// Matches ASCII letters only.
 const String regexAlphabet = r'^[a-zA-Z]+$';
 
-/// regexHasCapitalLetter
+/// Matches uppercase ASCII letters.
 const String regexHasCapitalLetter = '[A-Z]';
 
 /// A map of HTTP status codes to their corresponding messages.

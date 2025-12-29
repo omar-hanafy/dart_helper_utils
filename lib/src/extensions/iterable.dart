@@ -90,15 +90,18 @@ extension DHUNullableListExtensions<E> on List<E>? {
     }
   }
 
-  /// Safely attempts to remove elements (currently a placeholder) when called.
-  /// Note: The parameter [element] is used only to match the method signature.
-  void tryRemoveWhere(int element) =>
-      isEmptyOrNull ? null : this!.removeWhere((element) => false);
+  /// Safely removes elements that satisfy [predicate].
+  void tryRemoveWhere(bool Function(E element) predicate) {
+    if (isEmptyOrNull) return;
+    try {
+      this!.removeWhere(predicate);
+    } catch (_) {}
+  }
 }
 
-/// Enhanced documentation for nullable Iterable extensions.
+/// Utility extensions for nullable iterables.
 extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
-  /// similar to list[index] but it is null safe.
+  /// Returns the element at [index] or `null` if out of bounds or null.
   E? of(int index) {
     if (isNotEmptyOrNull && index >= 0 && this!.length > index) {
       return this!.elementAt(index);
@@ -112,11 +115,11 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   /// Returns `false` if this nullable iterable is either null or empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 
-  /// Returns the last element or provides [defaultValue] if the iterable is empty or null.
+  /// Returns the last element or [defaultValue] when null or empty.
   E? lastOrDefault(E defaultValue) =>
       isNotEmptyOrNull ? this!.last : defaultValue;
 
-  /// Returns the first element or provides [defaultValue] if no element exists.
+  /// Returns the first element or [defaultValue] when null or empty.
   E firstOrDefault(E defaultValue) =>
       isNotEmptyOrNull ? this!.first : defaultValue;
 
@@ -134,7 +137,7 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     return iterable.elementAt(generator.nextInt(iterable.length));
   }
 
-  /// checks if every element is a [primitive type](https://dart.dev/language/built-in-types).
+  /// Returns `true` when every element is a primitive value.
   bool isPrimitive() {
     if (this == null) return false;
     return isTypePrimitive<E>() || this!.every(isValuePrimitive);
@@ -159,7 +162,7 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     return true;
   }
 
-  /// Returns the sum of values calculated by [valueSelector] function for each element.
+  /// Returns the sum of values calculated by [valueSelector] for each element.
   ///
   /// The [valueSelector] function is applied to each non-null element in the list.
   /// If the list is null or empty, returns `0`.
@@ -173,7 +176,7 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   }
 }
 
-/// Enhanced documentation for non-nullable Iterable extensions.
+/// Utility extensions for non-nullable iterables.
 extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Converts this iterable to a list of type [R] using convert_object logic.
   List<R> toListConverted<R>() => convertToList<R>(this);
@@ -184,21 +187,23 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Returns this iterable (as is) if it is non-null; otherwise, returns an empty iterable.
   Iterable<E> orEmpty() => this;
 
-  /// Return a list concatenates the output of the current list and another [iterable]
+  /// Returns a list that concatenates this iterable with [iterable].
   List<E> concatWithSingleList(Iterable<E> iterable) {
     if (isEmptyOrNull || iterable.isEmptyOrNull) return [];
 
     return <E>[...orEmpty(), ...iterable];
   }
 
-  /// Return a list concatenates the output of the current list and multiple [iterables]
+  /// Returns a list that concatenates this iterable with [iterables].
   List<E> concatWithMultipleList(List<Iterable<E>> iterables) {
     if (isEmptyOrNull || iterables.isEmptyOrNull) return [];
     final list = iterables.toList(growable: false).expand((i) => i);
     return <E>[...orEmpty(), ...list];
   }
 
-  /// Returns a list containing only elements matching the given [predicate].
+  /// Returns a list containing elements that satisfy [test].
+  ///
+  /// Null elements are skipped.
   List<E> filter(Predicate<E> test) {
     final result = <E>[];
     forEach((e) {
@@ -209,7 +214,9 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return result;
   }
 
-  /// Returns a list containing all elements not matching the given [predicate] and will filter nulls as well.
+  /// Returns a list containing elements that do not satisfy [test].
+  ///
+  /// Null elements are skipped.
   List<E> filterNot(Predicate<E> test) {
     final result = <E>[];
     forEach((e) {
@@ -220,17 +227,17 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return result;
   }
 
-  /// return the half size of a list
+  /// Returns half the length (floored).
   int get halfLength => (length / 2).floor();
 
-  /// Returns a list containing first [n] elements.
+  /// Returns a list containing the first [n] elements.
   List<E> takeOnly(int n) {
     if (n <= 0) return [];
     if (n >= length) return toList();
     return take(n).toList();
   }
 
-  /// Returns a list containing all elements except first [n] elements.
+  /// Returns a list containing all elements except the first [n] elements.
   List<E> drop(int n) {
     if (n <= 0) return toList();
     if (n >= length) return [];
@@ -331,7 +338,9 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     };
   }
 
-  /// Executes [action] on each element with a maximum of [parallelism] concurrent tasks.
+  /// Executes [action] on each element with at most [parallelism] concurrent tasks.
+  ///
+  /// Results are returned in completion order, not input order.
   Future<List<R>> mapConcurrent<R>(
     Future<R> Function(E item) action, {
     int parallelism = 1,
@@ -361,15 +370,13 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return results;
   }
 
-  /// Takes the first half of a list
+  /// Returns the first half of the iterable.
   List<E> firstHalf() => take(halfLength).toList();
 
-  /// Takes the second half of a list
+  /// Returns the second half of the iterable.
   List<E> secondHalf() => drop(halfLength).toList();
 
-  /// returns a list with two swapped items
-  /// [i] first item
-  /// [j] second item
+  /// Returns a list with elements at [i] and [j] swapped.
   List<E> swap(int i, int j) {
     final list = toList();
     final aux = list[i];
@@ -378,8 +385,13 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return list;
   }
 
+  /// Returns a random element.
   ///
+  /// Throws [StateError] if the iterable is empty.
   E getRandom([int? seed]) {
+    if (isEmpty) {
+      throw StateError('Cannot get a random element from an empty iterable.');
+    }
     final generator = Random(seed);
     final index = generator.nextInt(length);
     return toList()[index];
@@ -463,8 +475,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return list;
   }
 
-  /// Returns a set containing all elements that are contained by this collection
-  /// and not contained by the specified collection.
+  /// Returns a set of elements contained in this collection but not in [other].
   /// The returned set preserves the element iteration order of the original collection.
   ///
   /// Example:
@@ -473,9 +484,9 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// // result: {1, 2, 3}
   /// ```
 
-  dynamic subtract(Iterable<E> other) => toSet()..removeAll(other);
+  Set<E> subtract(Iterable<E> other) => toSet()..removeAll(other);
 
-  /// Returns the first element matching the given [predicate], or `null`
+  /// Returns the first element matching [predicate], or `null`
   /// if element was not found.
   E? find(Predicate<E> predicate) {
     for (final element in this) {

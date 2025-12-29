@@ -148,36 +148,26 @@ abstract class TimeUtils {
     required void Function(Timer timer, int count) onExecute,
   }) {
     var count = 0;
-    return Timer.periodic(interval, (timer) async {
+    return Timer.periodic(interval, (timer) {
       count++;
       onExecute(timer, count);
     });
   }
 
-  /// Executes a function with a timeout, cancelling the execution if it exceeds
-  /// the specified duration.
+  /// Executes a function with a timeout.
+  ///
+  /// If the timeout elapses first, the returned future completes with a
+  /// [TimeoutException]. The task itself is not cancelled.
   static Future<T> runWithTimeout<T>({
     required FutureOr<T> Function() task,
     required Duration timeout,
   }) async {
-    final completer = Completer<T>();
-    final timer = Timer(timeout, () {
-      if (!completer.isCompleted) {
-        completer.completeError(
-          TimeoutException('The operation has timed out.'),
-        );
-      }
-    });
-    try {
-      final result = await task();
-      if (!completer.isCompleted) completer.complete(result);
-    } catch (e) {
-      if (!completer.isCompleted) completer.completeError(e);
-    } finally {
-      timer.cancel();
-    }
-
-    return completer.future;
+    final taskFuture = Future<T>.sync(task);
+    final timeoutFuture = Future<T>.delayed(
+      timeout,
+      () => throw TimeoutException('The operation has timed out.'),
+    );
+    return Future.any([taskFuture, timeoutFuture]);
   }
 }
 

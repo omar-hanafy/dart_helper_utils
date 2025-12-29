@@ -26,7 +26,7 @@ extension NumberToDateUtils on num {
   /// 1.toFullDayName; // Returns "Monday"
   /// 7.toFullDayName; // Returns "Sunday"
   /// ```
-  /// If the number is outside the range 1-7, it will be normalized within this range using modulo arithmetic.
+  /// If the number is outside the range 1-7, it will be clamped within this range.
   String get toFullDayName {
     final dayIndex = toInt().clamp(1, 7);
     return fullWeekdays[dayIndex]!;
@@ -39,7 +39,7 @@ extension NumberToDateUtils on num {
   /// 1.toSmallDayName; // Returns "Mon"
   /// 7.toSmallDayName; // Returns "Sun"
   /// ```
-  /// If the number is outside the range 1-7, it will be normalized within this range using modulo arithmetic.
+  /// If the number is outside the range 1-7, it will be clamped within this range.
   String get toSmallDayName => toFullDayName.substring(0, 3);
 
   /// Gets the short month name (e.g., "Jan") corresponding to this number (1-12).
@@ -66,7 +66,8 @@ extension NumberToDateUtils on num {
   ///
   /// Example:
   /// ```dart
-  /// 3.isBetweenMonths(12, 2); // Returns true, March is within December-February
+  /// 3.isBetweenMonths(12, 2); // Returns false, March is outside December-February
+  /// 1.isBetweenMonths(12, 2); // Returns true, January is within December-February
   /// 6.isBetweenMonths(3, 8);  // Returns true, June is within March-August
   /// ```
   bool isBetweenMonths(int startMonth, int endMonth) {

@@ -79,6 +79,8 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
   ///
   /// [concurrency] must be positive.
   ///
+  /// Results are returned in completion order, not input order.
+  ///
   /// Example:
   /// ```dart
   /// await tasks.waitConcurrency(concurrency: 5);

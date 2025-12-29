@@ -37,7 +37,7 @@ const cssColorNamesToArgb = <String, int>{
   'crimson': 0xFFDC143C,
   'transparent': 0x00000000,
   'aliceblue': 0xFFF0F8FF,
-  // (Additional named colors could be added here in the feature.)
+  // (Additional named colors could be added here in the future.)
 };
 
 /// Validates hex color strings in various formats (CSS-style or `0x` prefixed).

@@ -379,15 +379,24 @@ extension DHUProgrammingMimeChecksExtensions on String? {
   }
 
   /// Checks if a file path or URL represents a JavaScript file.
+  ///
+  /// Includes common `text/javascript` and `application/javascript` variants.
   bool get isJavaScript {
     final mt = mimeType();
-    return mt == 'application/javascript';
+    return mt == 'application/javascript' ||
+        mt == 'application/x-javascript' ||
+        mt == 'text/javascript' ||
+        mt == 'text/x-javascript';
   }
 
   /// Checks if a file path or URL represents a TypeScript file.
+  ///
+  /// Includes common `text/typescript` and `application/typescript` variants.
   bool get isTypeScript {
     final mt = mimeType();
-    return mt == 'application/typescript';
+    return mt == 'application/typescript' ||
+        mt == 'application/x-typescript' ||
+        mt == 'text/typescript';
   }
 
   /// Checks if a file path or URL represents a C# source file.

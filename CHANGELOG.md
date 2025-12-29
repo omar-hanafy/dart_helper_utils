@@ -2,7 +2,18 @@
 
 ## 6.0.0
 
-- Stable v6 release (includes everything from 6.0.0-dev.3).
+- Final v6 release polish (includes everything from 6.0.0-dev.3).
+- Fixed nullable list `tryRemoveWhere` to accept a predicate and actually remove items.
+- `Map.setIfMissing` now checks key presence (no overwrite when key exists).
+- `Map.flatMap` now guards against list/map cycles.
+- Percentile helpers now expect a 0-100 range and validate input.
+- Stream helpers now validate arguments with `ArgumentError`.
+- Random helpers now validate bounds; empty iterable `getRandom` throws `StateError`.
+- `toFileSize` clamps to the largest suffix for huge inputs.
+- `TimeUtils.runWithTimeout` now avoids unhandled timeout errors and documents that tasks keep running.
+- URL validation uses a safe regex (prevents `RegExp` format errors).
+- JavaScript/TypeScript MIME checks recognize common `text/*` and `x-*` variants.
+- Expanded tests and documentation for public APIs.
 
 ## 6.0.0-dev.3
 

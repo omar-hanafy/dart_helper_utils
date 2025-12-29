@@ -1,7 +1,6 @@
 /// A set of extensions on the `bool` type to provide more functionality.
 extension DHUBoolEx on bool {
-  /// returns a new bool which is toggled from the current one.
-  /// itn does NOT change the current bool.
+  /// Returns the inverse of this value.
   bool get toggled => !this;
 }
 
@@ -32,7 +31,6 @@ extension DHUBoolNullablelEx on bool? {
   /// Returns `'1'` if the value is non-null and true, otherwise returns `'0'`.
   String get binaryText => (this ?? false) ? '1' : '0';
 
-  /// returns a new bool which is toggled from the current one.
-  /// itn does NOT change the current bool.
+  /// Returns the inverse of this value, or `null` when the value is `null`.
   bool? get toggled => this == null ? null : !this!;
 }

@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-///
+/// Extensions for common String helpers.
 extension DHUStringExtensions on String {
   /// If the string is empty, return null. Otherwise, return the string.
   String? get nullIfEmpty => isEmpty ? null : this;
@@ -180,7 +180,7 @@ extension DHUStringExtensions on String {
   }
 }
 
-///
+/// Extensions for nullable String helpers.
 extension DHUNullSafeStringExtensions on String? {
   /// Converts the string into a single line by replacing newline characters.
   String? get toOneLine => this?.replaceAll('\n', '');

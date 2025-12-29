@@ -314,6 +314,41 @@ final scoreWithOptions = engine.compare(
 Note: `SimilarityAlgorithm.levenshteinDistance` is now
 `SimilarityAlgorithm.levenshtein`. Other algorithm names are unchanged.
 
+### 18. Nullable List `tryRemoveWhere` Signature
+
+`tryRemoveWhere` now accepts a predicate and performs removal.
+
+```dart
+// v5
+list.tryRemoveWhere(0); // did nothing
+
+// v6
+list.tryRemoveWhere((e) => e.isEven);
+```
+
+### 19. Percentile Range (0-100)
+
+Percentile helpers now expect `0..100` instead of `0..1`.
+
+```dart
+// v5
+values.percentile(0.5);
+
+// v6
+values.percentile(50);
+```
+
+### 20. `Map.setIfMissing` Key Semantics
+
+`setIfMissing` now checks key presence instead of null values. It will not
+overwrite existing entries (even if the value is null).
+
+### 21. Random Helper Validation
+
+`Iterable.getRandom` throws `StateError` on empty iterables. `randomInRange`
+throws `ArgumentError` when `min > max`. `num.getRandom` / `num.random` throw
+`RangeError` when the upper bound is `<= 0`.
+
 ## ✨ New Features
 
 ### Fluent API
