@@ -45,7 +45,7 @@
 ///
 /// ## Custom Timing Strategies
 ///
-/// You may supply a custom [timerFactory] to override the default [Timer] creation,
+/// You may supply a custom `timerFactory` to override the default [Timer] creation,
 /// which is useful for testing or implementing specialized timing logic.
 library;
 
@@ -58,7 +58,7 @@ import 'package:equatable/equatable.dart';
 typedef LoggerFunction = void Function(String message);
 
 /// A function signature for creating timers.
-/// [timerFactory] allows customizing timer creation, useful for testing or
+/// `timerFactory` allows customizing timer creation, useful for testing or
 /// specialized timing behavior. Defaults to standard [Timer.new].
 typedef TimerFactory =
     Timer Function(Duration duration, void Function() callback);
@@ -164,7 +164,7 @@ class Debouncer {
   /// - [debugLabel] helps tag log messages.
   /// - [maxHistorySize] defines how many past execution records to store (0 disables history).
   /// - [logger] can be provided to inject a custom logging function.
-  /// - [timerFactory] allows for custom timer creation. Defaults to [Timer].
+  /// - `timerFactory` allows for custom timer creation. Defaults to [Timer].
   Debouncer({
     required Duration delay,
     Duration? maxWait,

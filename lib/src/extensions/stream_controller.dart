@@ -183,7 +183,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   }
 }
 
-/// Additional stream transformations not covered by the official Dart [RateLimit] extension.
+/// Additional stream transformations not covered by the official Dart `RateLimit` extension.
 extension StreamTransformations<T> on Stream<T> {
   /// Buffers incoming events into lists of size [count].
   ///

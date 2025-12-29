@@ -106,10 +106,10 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     return null;
   }
 
-  ///Returns [true] if this nullable iterable is either null or empty.
+  /// Returns `true` if this nullable iterable is either null or empty.
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
-  ///Returns [false] if this nullable iterable is either null or empty.
+  /// Returns `false` if this nullable iterable is either null or empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 
   /// Returns the last element or provides [defaultValue] if the iterable is empty or null.
@@ -294,7 +294,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
   /// Returns consecutive pairs from the iterable.
   ///
-  /// Example: [1,2,3] => [(1,2), (2,3)]
+  /// Example: `[1, 2, 3] => [(1, 2), (2, 3)]`
   List<(E, E)> pairwise() {
     final iterator = this.iterator;
     if (!iterator.moveNext()) return [];
@@ -467,12 +467,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// and not contained by the specified collection.
   /// The returned set preserves the element iteration order of the original collection.
   ///
-  /// example:
-  ///
-  /// [1,2,3,4,5,6].subtract([4,5,6])
-  ///
-  /// result:
-  /// 1,2,3
+  /// Example:
+  /// ```dart
+  /// final result = [1, 2, 3, 4, 5, 6].subtract([4, 5, 6]);
+  /// // result: {1, 2, 3}
+  /// ```
 
   dynamic subtract(Iterable<E> other) => toSet()..removeAll(other);
 

@@ -138,7 +138,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_helper_utils: ^6.0.0-dev.3
+  dart_helper_utils: ^6.0.0
 ```
 
 Then run:
@@ -227,8 +227,8 @@ final zipcode = userData.getInt(
 ); // 12345
 
 // Complex conversions
-final date = "2024-01-16".toDateTime(format: "yyyy-MM-dd");
-final number = "1,234.56".toNum(format: "#,##0.00");
+final date = Convert.toDateTime("2024-01-16", format: "yyyy-MM-dd");
+final number = Convert.toNum("1,234.56", format: "#,##0.00");
 ```
 ---
 

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 6.0.0
+
+- Stable v6 release (includes everything from 6.0.0-dev.3).
+
 ## 6.0.0-dev.3
 
 - Pre-release for v6.

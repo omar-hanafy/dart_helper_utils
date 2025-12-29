@@ -1,5 +1,5 @@
 /// A map of CSS color names to their corresponding ARGB values.
-/// Usage could be like with Color class: Color(cssColorNamesToArgb['red'])
+/// Usage could be like with Color class: `Color(cssColorNamesToArgb['red'])`
 const cssColorNamesToArgb = <String, int>{
   'black': 0xFF000000,
   'white': 0xFFFFFFFF,

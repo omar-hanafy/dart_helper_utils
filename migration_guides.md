@@ -354,6 +354,21 @@ Added `let` and `letOr` extensions for cleaner null handling and scoping.
 final result = nullableValue?.let((v) => calculate(v));
 ```
 
+### Utility Additions
+More production-focused helpers were added to round out the core extensions:
+
+- **Date/Time:** `DateTime.copyWith`, `isSameYearAs`, `isSameMonthAs`,
+  `clampBetween`, `Duration.toClockString`, `Duration.toHumanShort`,
+  `String.parseDuration`.
+- **Collections:** `Iterable.windowed`, `Iterable.pairwise`, `Map.deepMerge`,
+  `Map.unflatten`, `Map.getPath`, `Map.setPath`.
+- **URIs:** `Uri.withQueryParameters`, `mergeQueryParameters`,
+  `removeQueryParameters`, `appendPathSegment(s)`, `normalizeTrailingSlash`.
+- **Strings:** `String.normalizeWhitespace`, `String.slugify`.
+
+If you were relying on "time ago" helpers, use
+[`timeago`](https://pub.dev/packages/timeago) instead.
+
 # Migration Guide (v4)
 
 This guide explains the major changes in version 4 provides step-by-step instructions to

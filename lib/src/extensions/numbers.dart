@@ -270,7 +270,7 @@ extension DHUNumExtensions on num {
   /// Returns the square root of the number.
   double sqrt() => (this > 0) ? math.sqrt(toDouble()) : 0.0;
 
-  /// Returns a sequence of integers starting from [this],
+  /// Returns a sequence of integers starting from `this`,
   /// incrementing by [step] and ending at [end].
   Iterable<num> until(int end, {int step = 1}) sync* {
     if (step == 0) {
