@@ -1,6 +1,8 @@
 name: dart_helper_utils
 description: Dart utilities and extensions, with type-safe conversions via the re-exported convert_object package.
 repository: https://github.com/omar-hanafy/dart_helper_utils
+homepage: https://github.com/omar-hanafy/dart_helper_utils
+issue_tracker: https://github.com/omar-hanafy/dart_helper_utils/issues
 version: 6.0.0
 
 topics:

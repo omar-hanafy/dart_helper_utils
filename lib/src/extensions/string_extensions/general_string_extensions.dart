@@ -189,7 +189,7 @@ extension DHUNullSafeStringExtensions on String? {
   String? get removeWhiteSpaces => this?.replaceAll(' ', '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
-  String? get clean => toOneLine.removeWhiteSpaces;
+  String? get clean => toOneLine?.removeWhiteSpaces;
 
   /// Returns true if the string is null, empty, or, after cleaning (collapsing into a single line, removing all whitespaces), is empty.
   bool get isEmptyOrNull => this == null || this!.clean.isEmpty;
@@ -267,7 +267,8 @@ extension DHUNullSafeStringExtensions on String? {
   bool get isValidIp4 => hasMatch(regexValidIp4);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl => tryToLowerCase().clean.hasMatch(regexValidUrl);
+  bool get isValidUrl =>
+      tryToLowerCase().clean?.hasMatch(regexValidUrl) ?? false;
 
   /// Checks if the string consists only of ASCII digits (no sign or decimals).
   ///

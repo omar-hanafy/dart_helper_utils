@@ -79,5 +79,21 @@ void main() {
         throwsA(isA<TimeoutException>()),
       );
     });
+
+    test('runWithTimeout keeps the background task running', () async {
+      final taskCompleted = Completer<void>();
+      final future = TimeUtils.runWithTimeout(
+        task: () async {
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+          taskCompleted.complete();
+          return 'done';
+        },
+        timeout: const Duration(milliseconds: 10),
+      );
+
+      await expectLater(future, throwsA(isA<TimeoutException>()));
+      await taskCompleted.future;
+      expect(taskCompleted.isCompleted, isTrue);
+    });
   });
 }

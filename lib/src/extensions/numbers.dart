@@ -329,14 +329,34 @@ extension DHUNumExtensions on num {
   );
 
   /// Rounds this number to the nearest multiple of [multiple].
-  num roundToNearestMultiple(num multiple) =>
-      (this / multiple).round() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundToNearestMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).round() * multiple;
+  }
 
   /// Rounds this number up to the nearest multiple of [multiple].
-  num roundUpToMultiple(num multiple) => (this / multiple).ceil() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundUpToMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).ceil() * multiple;
+  }
 
   /// Rounds this number down to the nearest multiple of [multiple].
-  num roundDownToMultiple(num multiple) => (this / multiple).floor() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundDownToMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).floor() * multiple;
+  }
 
   /// Checks if this number is between [min] and [max].
   /// [inclusive] determines whether the range includes the endpoints.
@@ -362,8 +382,18 @@ extension DHUNumExtensions on num {
   }
 
   /// Normalizes this number to a range between [min] and [max].
+  ///
+  /// Returns a value between 0 and 1 representing where [this] falls
+  /// in the range from [min] to [max].
+  ///
+  /// Throws [ArgumentError] if [min] equals [max] or if [min] > [max].
   num scaleBetween(num min, num max) {
-    if (min == max) throw ArgumentError('Min and max cannot be the same.');
+    if (min == max) {
+      throw ArgumentError('Min and max cannot be the same.');
+    }
+    if (min > max) {
+      throw ArgumentError('Min cannot be greater than max.');
+    }
     return (this - min) / (max - min);
   }
 

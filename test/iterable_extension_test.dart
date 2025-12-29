@@ -46,5 +46,14 @@ void main() {
       );
       expect(result, unorderedEquals([2, 4, 6]));
     });
+
+    test('mapConcurrent propagates errors', () async {
+      final list = [1, 2, 3];
+      final future = list.mapConcurrent((i) async {
+        if (i == 2) throw StateError('boom');
+        return i;
+      }, parallelism: 2);
+      await expectLater(future, throwsA(isA<StateError>()));
+    });
   });
 }

@@ -6,13 +6,22 @@ void main() {
     test('concat helpers', () {
       final list = [1, 2];
       expect(list.concatWithSingleList([3]), [1, 2, 3]);
-      expect(list.concatWithSingleList([]), isEmpty);
+      expect(list.concatWithSingleList([]), [1, 2]);
+      expect(<int>[].concatWithSingleList([3]), [3]);
       expect(
         list.concatWithMultipleList([
           [3],
           [4, 5],
         ]),
         [1, 2, 3, 4, 5],
+      );
+      expect(list.concatWithMultipleList([]), [1, 2]);
+      expect(
+        <int>[].concatWithMultipleList([
+          [3],
+          [4],
+        ]),
+        [3, 4],
       );
     });
 

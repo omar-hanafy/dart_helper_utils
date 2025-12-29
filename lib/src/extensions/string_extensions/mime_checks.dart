@@ -81,18 +81,23 @@ extension DHUImageMimeChecksExtensions on String? {
   }
 
   /// Checks if a file path or URL represents an ICO image.
-
+  ///
+  /// Returns `true` for files with MIME type 'image/x-icon' (.ico extension).
   bool get isICO => mimeType() == 'image/x-icon';
 
   /// Checks if a file path or URL represents an ICNS image.
+  ///
+  /// Returns `true` for files with MIME type 'image/x-icns' (.icns extension).
   bool get isICNS => mimeType() == 'image/x-icns';
 
   /// Checks if a file path or URL represents a HEIF image.
-
+  ///
+  /// Returns `true` for files with MIME type 'image/heif' (.heif extension).
   bool get isHEIF => mimeType() == 'image/heif';
 
   /// Checks if a file path or URL represents a HEIC image.
-
+  ///
+  /// Returns `true` for files with MIME type 'image/heic' (.heic extension).
   bool get isHEIC => mimeType() == 'image/heic';
 
   /// Checks if a file path or URL represents a JPEG or JPG image.

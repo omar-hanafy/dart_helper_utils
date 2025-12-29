@@ -10,9 +10,14 @@
 - Stream helpers now validate arguments with `ArgumentError`.
 - Random helpers now validate bounds; empty iterable `getRandom` throws `StateError`.
 - `toFileSize` clamps to the largest suffix for huge inputs.
-- `TimeUtils.runWithTimeout` now avoids unhandled timeout errors and documents that tasks keep running.
+- `TimeUtils.runWithTimeout` now handles late errors to avoid unhandled exceptions while the original work keeps running.
+- Concurrency helpers (`mapConcurrent`, `waitConcurrency`) now guard against unhandled errors from in-flight tasks.
+- `roundToNearestMultiple`, `roundUpToMultiple`, and `roundDownToMultiple` validate that the multiple is non-zero.
+- `scaleBetween` now validates `min`/`max` ordering.
 - URL validation uses a safe regex (prevents `RegExp` format errors).
 - JavaScript/TypeScript MIME checks recognize common `text/*` and `x-*` variants.
+- Iterable concat helpers now treat empty inputs as no-ops instead of returning an empty list.
+- Nullable bool extension renamed to `DHUBoolNullableEx` (typo fix).
 - Expanded tests and documentation for public APIs.
 
 ## 6.0.0-dev.3

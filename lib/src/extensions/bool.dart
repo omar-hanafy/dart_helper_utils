@@ -5,7 +5,7 @@ extension DHUBoolEx on bool {
 }
 
 /// A set of extensions on the nullable `bool` type to provide more functionality.
-extension DHUBoolNullablelEx on bool? {
+extension DHUBoolNullableEx on bool? {
   /// Gets a boolean value indicating whether the nullable boolean is true.
   ///
   /// Returns `true` if the value is non-null and true, otherwise returns `false`.

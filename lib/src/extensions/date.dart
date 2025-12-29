@@ -130,10 +130,15 @@ extension NumberToDateUtils on num {
 
 /// DHUNullableDateExtensions
 extension DHUNullableDateExtensions on DateTime? {
-  /// checks local
+  /// Converts this DateTime to the local time zone.
+  ///
+  /// Returns `null` if this DateTime is `null`.
   DateTime? get local => this?.toLocal();
 
-  /// checks toUtcIso
+  /// Converts this DateTime to UTC and returns an ISO 8601 string representation.
+  ///
+  /// Returns `null` if this DateTime is `null`.
+  /// Example: "2024-01-15T10:30:00.000Z"
   String? get toUtcIso => this?.toUtc().toIso8601String();
 
   /// checks isTomorrow

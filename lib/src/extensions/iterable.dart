@@ -188,17 +188,24 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   Iterable<E> orEmpty() => this;
 
   /// Returns a list that concatenates this iterable with [iterable].
+  ///
+  /// If either iterable is empty, the result contains the elements of the
+  /// other iterable.
   List<E> concatWithSingleList(Iterable<E> iterable) {
-    if (isEmptyOrNull || iterable.isEmptyOrNull) return [];
+    if (iterable.isEmpty) return toList();
+    if (isEmpty) return iterable.toList();
 
-    return <E>[...orEmpty(), ...iterable];
+    return <E>[...this, ...iterable];
   }
 
   /// Returns a list that concatenates this iterable with [iterables].
+  ///
+  /// If [iterables] is empty, the result contains only this iterable.
   List<E> concatWithMultipleList(List<Iterable<E>> iterables) {
-    if (isEmptyOrNull || iterables.isEmptyOrNull) return [];
+    if (iterables.isEmpty) return toList();
     final list = iterables.toList(growable: false).expand((i) => i);
-    return <E>[...orEmpty(), ...list];
+    if (isEmpty) return list.toList();
+    return <E>[...this, ...list];
   }
 
   /// Returns a list containing elements that satisfy [test].
@@ -341,32 +348,46 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Executes [action] on each element with at most [parallelism] concurrent tasks.
   ///
   /// Results are returned in completion order, not input order.
+  ///
+  /// If any task throws, the returned future completes with that error. Any
+  /// in-flight tasks continue running and their errors are handled internally
+  /// to avoid unhandled exceptions.
   Future<List<R>> mapConcurrent<R>(
     Future<R> Function(E item) action, {
     int parallelism = 1,
   }) async {
     if (parallelism <= 0) throw ArgumentError('Parallelism must be positive');
     final results = <R>[];
-    final active = <Future<void>>[];
+    final active = <Future<void>>{};
     final iterator = this.iterator;
 
-    while (iterator.moveNext()) {
-      while (active.length >= parallelism) {
-        await Future.any(active);
+    try {
+      while (iterator.moveNext()) {
+        while (active.length >= parallelism) {
+          await Future.any(active);
+        }
+
+        final item = iterator.current;
+        late Future<void> task;
+        task = action(item)
+            .then((result) {
+              results.add(result);
+            })
+            .whenComplete(() {
+              active.remove(task);
+            });
+
+        active.add(task);
       }
 
-      final item = iterator.current;
-      final future = action(item).then((result) {
-        results.add(result);
-      });
-
-      active.add(future);
-      // Remove from active when complete
-      // ignore: unawaited_futures
-      future.whenComplete(() => active.remove(future));
+      await Future.wait(active);
+    } catch (_) {
+      for (final task in active) {
+        // ignore: unawaited_futures
+        task.catchError((_) {});
+      }
+      rethrow;
     }
-
-    await Future.wait(active);
     return results;
   }
 
