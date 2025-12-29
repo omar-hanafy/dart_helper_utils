@@ -290,6 +290,47 @@ extension DHUDateExtensions on DateTime {
   /// ```
   String get toIso => toIso8601String();
 
+  /// Returns a new DateTime with the provided fields replaced.
+  ///
+  /// If [isUtc] is provided, the returned value will be constructed in UTC
+  /// or local time accordingly. Otherwise, it preserves the current timezone.
+  DateTime copyWith({
+    int? year,
+    int? month,
+    int? day,
+    int? hour,
+    int? minute,
+    int? second,
+    int? millisecond,
+    int? microsecond,
+    bool? isUtc,
+  }) {
+    final useUtc = isUtc ?? this.isUtc;
+    if (useUtc) {
+      return DateTime.utc(
+        year ?? this.year,
+        month ?? this.month,
+        day ?? this.day,
+        hour ?? this.hour,
+        minute ?? this.minute,
+        second ?? this.second,
+        millisecond ?? this.millisecond,
+        microsecond ?? this.microsecond,
+      );
+    }
+
+    return DateTime(
+      year ?? this.year,
+      month ?? this.month,
+      day ?? this.day,
+      hour ?? this.hour,
+      minute ?? this.minute,
+      second ?? this.second,
+      millisecond ?? this.millisecond,
+      microsecond ?? this.microsecond,
+    );
+  }
+
   /// Adds the specified duration to this DateTime.
   DateTime operator +(Duration duration) => add(duration);
 
@@ -321,9 +362,15 @@ extension DHUDateExtensions on DateTime {
   /// Checks if this DateTime is in the same year as [other].
   bool isAtSameYearAs(DateTime other) => year == other.year;
 
+  /// Checks if this DateTime is in the same year as [other].
+  bool isSameYearAs(DateTime other) => isAtSameYearAs(other);
+
   /// Checks if this DateTime is in the same month and year as [other].
   bool isAtSameMonthAs(DateTime other) =>
       isAtSameYearAs(other) && month == other.month;
+
+  /// Checks if this DateTime is in the same month and year as [other].
+  bool isSameMonthAs(DateTime other) => isAtSameMonthAs(other);
 
   /// Checks if this DateTime is on the same day, month, and year as [other].
   bool isAtSameDayAs(DateTime other) =>
@@ -681,6 +728,23 @@ extension DHUDateExtensions on DateTime {
             ? !self.isBefore(compareStart)
             : self.isAfter(compareStart)) &&
         (inclusiveEnd ? !self.isAfter(compareEnd) : self.isBefore(compareEnd));
+  }
+
+  /// Clamps this DateTime between [start] and [end].
+  ///
+  /// Returns [start] if this is before the range, [end] if after, or `this`
+  /// if it already falls within the range.
+  ///
+  /// Throws [ArgumentError] if [start] is after [end].
+  DateTime clampBetween(DateTime start, DateTime end) {
+    if (start.isAfter(end)) {
+      throw ArgumentError(
+        'Start date ($start) must be before or equal to end date ($end)',
+      );
+    }
+    if (isBefore(start)) return start;
+    if (isAfter(end)) return end;
+    return this;
   }
 
   /// Calculates the absolute difference in whole days between this DateTime

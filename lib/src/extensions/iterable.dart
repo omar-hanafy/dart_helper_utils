@@ -252,6 +252,32 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
     return chunks;
   }
 
+  /// Returns a sliding window of [size] over the iterable.
+  ///
+  /// [step] controls how far the window moves each time (defaults to 1).
+  /// If [partials] is true, the final window will be included even if it is
+  /// smaller than [size].
+  List<List<E>> windowed(int size, {int step = 1, bool partials = false}) {
+    if (size <= 0) throw ArgumentError('Size must be positive');
+    if (step <= 0) throw ArgumentError('Step must be positive');
+    final list = toList();
+    final windows = <List<E>>[];
+    if (list.isEmpty) return windows;
+
+    for (var start = 0; start < list.length; start += step) {
+      final end = start + size;
+      if (end <= list.length) {
+        windows.add(list.sublist(start, end));
+      } else if (partials) {
+        windows.add(list.sublist(start));
+      } else {
+        break;
+      }
+    }
+
+    return windows;
+  }
+
   /// Splits the iterable into two lists based on the [predicate].
   (List<E>, List<E>) partition(bool Function(E) predicate) {
     final matching = <E>[];
@@ -264,6 +290,22 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
       }
     }
     return (matching, notMatching);
+  }
+
+  /// Returns consecutive pairs from the iterable.
+  ///
+  /// Example: [1,2,3] => [(1,2), (2,3)]
+  List<(E, E)> pairwise() {
+    final iterator = this.iterator;
+    if (!iterator.moveNext()) return [];
+    var previous = iterator.current;
+    final pairs = <(E, E)>[];
+    while (iterator.moveNext()) {
+      final current = iterator.current;
+      pairs.add((previous, current));
+      previous = current;
+    }
+    return pairs;
   }
 
   /// Inserts [element] between every element in the iterable.

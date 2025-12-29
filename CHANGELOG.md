@@ -35,6 +35,8 @@
 - **Debouncing:** Added `TimeUtils.debounce` which returns a callable `DebouncedCallback` (symmetrical to `throttle`).
 - **Collection Extensions:**
   - `chunks(size)`: Split list into fixed-size sub-lists.
+  - `windowed(size, step, partials)`: Sliding windows over iterables.
+  - `pairwise()`: Consecutive pairs from an iterable.
   - `partition(predicate)`: Split list into two lists (matching and non-matching).
   - `intersperse(element)`: Insert an element between every item.
   - `associate(keySelector)`: Convert an Iterable to a Map.
@@ -44,12 +46,21 @@
   - `truncate(length)`: Smart truncation with ellipsis.
   - `maskEmail` / `mask`: Privacy masking helpers.
   - `isUuid`: UUID validation.
+  - `normalizeWhitespace()`: Collapse whitespace to single spaces.
+  - `slugify()`: URL/filename-friendly slugs.
+  - `parseDuration()`: Parse `1h 20m` or `00:01:30` to `Duration`.
 - **Number Utilities:**
   - `toFileSize`: Formats bytes to KB, MB, GB, etc.
+- **URI Utilities:**
+  - `withQueryParameters`, `mergeQueryParameters`, `removeQueryParameters`.
+  - `appendPathSegment(s)`, `normalizeTrailingSlash`.
+- **Map Utilities:**
+  - `deepMerge`, `unflatten`, `getPath`, `setPath`.
 - **Date Utilities:**
   - `isWeekend` / `isWeekday` getters.
   - `roundTo` / `floorTo` / `ceilTo` for rounding dates to nearest duration.
   - `addBusinessDays`: Add days skipping weekends.
+  - `copyWith`, `isSameYearAs`, `isSameMonthAs`, `clampBetween`.
 
 ### Fixes
 - **Throttling:** Enhanced throttling utilities (`Throttler`, `ThrottledCallback`).

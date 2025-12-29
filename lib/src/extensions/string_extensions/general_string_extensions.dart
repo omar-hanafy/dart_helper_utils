@@ -30,12 +30,154 @@ extension DHUStringExtensions on String {
   /// Example: "Line 1\n Line 2" => "Line1Line2"
   String get clean => toOneLine.removeWhiteSpaces;
 
+  /// Collapses consecutive whitespace into single spaces and trims the result.
+  ///
+  /// Example: " Line   1 \n Line 2 " => "Line 1 Line 2"
+  String normalizeWhitespace() => trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Converts the string to a URL/filename-friendly slug.
+  ///
+  /// Example: "Hello, World!" => "hello-world"
+  String slugify({String separator = '-'}) {
+    if (separator.isEmpty) {
+      throw ArgumentError('Separator must not be empty');
+    }
+
+    final normalized = normalizeWhitespace().toLowerCase();
+    if (normalized.isEmpty) return '';
+
+    final escapedSeparator = RegExp.escape(separator);
+    final cleaned = normalized
+        .replaceAll(RegExp(r'[^a-z0-9\s_-]'), '')
+        .replaceAll(RegExp(r'[_\s]+'), separator)
+        .replaceAll(RegExp('$escapedSeparator+'), separator)
+        .replaceAll(RegExp('^$escapedSeparator|$escapedSeparator\$'), '');
+
+    return cleaned;
+  }
+
   /// Base64 Encode for this String
   String base64Encode() => base64.encode(utf8.encode(this));
 
   /// Base64 Decode
   String base64Decode({bool? allowMalformed}) =>
       utf8.decode(base64.decode(this), allowMalformed: allowMalformed);
+
+  /// Parses this string into a [Duration].
+  ///
+  /// Supported formats:
+  /// - Clock format: "HH:mm:ss" or "mm:ss"
+  /// - Token format: "1h 20m", "2d 3h 4m 5s"
+  ///
+  /// Throws [FormatException] for invalid input.
+  Duration parseDuration() {
+    final original = this;
+    var input = trim();
+    if (input.isEmpty) {
+      throw FormatException('Invalid duration', original);
+    }
+
+    var isNegative = false;
+    if (input.startsWith('-')) {
+      isNegative = true;
+      input = input.substring(1).trimLeft();
+    }
+
+    if (input.isEmpty) {
+      throw FormatException('Invalid duration', original);
+    }
+
+    FormatException invalid([String? reason]) =>
+        FormatException(reason ?? 'Invalid duration', original);
+
+    Duration parseClock(String value) {
+      final parts = value.split(':');
+      if (parts.length < 2 || parts.length > 3) {
+        throw invalid('Invalid clock duration');
+      }
+
+      int hours = 0;
+      int minutes = 0;
+      int seconds = 0;
+
+      try {
+        if (parts.length == 3) {
+          hours = int.parse(parts[0]);
+          minutes = int.parse(parts[1]);
+          seconds = int.parse(parts[2]);
+          if (minutes >= 60 || seconds >= 60) {
+            throw invalid('Invalid clock duration');
+          }
+        } else {
+          minutes = int.parse(parts[0]);
+          seconds = int.parse(parts[1]);
+          if (seconds >= 60) {
+            throw invalid('Invalid clock duration');
+          }
+        }
+      } on FormatException {
+        throw invalid('Invalid clock duration');
+      }
+
+      if (hours < 0 || minutes < 0 || seconds < 0) {
+        throw invalid('Invalid clock duration');
+      }
+
+      return Duration(hours: hours, minutes: minutes, seconds: seconds);
+    }
+
+    Duration parseTokens(String value) {
+      final regex = RegExp(r'(\d+)\s*([dhms])', caseSensitive: false);
+      final matches = regex.allMatches(value);
+      if (matches.isEmpty) {
+        throw invalid();
+      }
+
+      final leftover = value.replaceAll(regex, '').trim();
+      if (leftover.isNotEmpty) {
+        throw invalid();
+      }
+
+      var days = 0;
+      var hours = 0;
+      var minutes = 0;
+      var seconds = 0;
+
+      for (final match in matches) {
+        final amount = int.parse(match.group(1)!);
+        final unit = match.group(2)!.toLowerCase();
+        switch (unit) {
+          case 'd':
+            days += amount;
+            break;
+          case 'h':
+            hours += amount;
+            break;
+          case 'm':
+            minutes += amount;
+            break;
+          case 's':
+            seconds += amount;
+            break;
+        }
+      }
+
+      return Duration(
+        days: days,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
+      );
+    }
+
+    final duration = input.contains(':')
+        ? parseClock(input)
+        : parseTokens(input.replaceAll(RegExp(r'\s+'), ' '));
+
+    return isNegative
+        ? Duration(microseconds: -duration.inMicroseconds)
+        : duration;
+  }
 }
 
 ///

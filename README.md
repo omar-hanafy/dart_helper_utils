@@ -125,7 +125,7 @@ List<String> processItems(List<dynamic>? items) {
 **After**:
 
 ```dart
-final processed = items?.convertTo<String>() ?? [];
+final processed = convertToList<String>(items ?? []);
 ```
 
 ---
@@ -138,7 +138,7 @@ Add this to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_helper_utils: ^6.0.0-dev.2
+  dart_helper_utils: ^6.0.0-dev.3
 ```
 
 Then run:
@@ -172,15 +172,15 @@ print(date.isToday);  // true
 print(date.format("dd/MM/yyyy"));  // "16/01/2025"
 
 // Collection utilities
-final list = [1, 2, null, 3, null, 4];
-print(list.whereNotNull());  // [1, 2, 3, 4]
+final list = [1, 2, 3, 4];
+print(list.windowed(2));  // [[1, 2], [2, 3], [3, 4]]
 ```
 ---
 
 ## Core Features
-### String Similarity & Text Operations
+### String Utilities
 
-Powerful text manipulation tools including case conversion and similarity checks:
+Useful string helpers for cleaning and URL-safe text:
 
 ```dart
 // Case conversions
@@ -190,20 +190,9 @@ print(text.toSnakeCase);            // hello_world_example_text
 print(text.toKebabCase);            // hello-world-example-text
 print(text.toScreamingSnakeCase);   // HELLO_WORLD_EXAMPLE_TEXT
 
-// String similarity checks
-final str1 = "hello";
-final str2 = "hallo";
-
-// Different algorithms available
-final similarity = str1.compareWith(
-  str2, 
-  algorithm: StringSimilarityAlgorithm.levenshtein
-);
-print(similarity); // 0.8
-
-// Words extraction (smarter than simple split)
-print("FlutterAndDart_are-AWESOME".toWords);
-// [Flutter, And, Dart, are, AWESOME]
+// Clean and slugify
+print("Hello,   World!".normalizeWhitespace()); // "Hello, World!"
+print("Hello,   World!".slugify()); // "hello-world"
 ```
 ---
 
@@ -331,12 +320,16 @@ print(date.isWeekend);       // depends on the date
 final nextWeek = date.nextWeek;
 final prevMonth = date.previousMonth;
 final startOfDay = date.startOfDay;
-final endOfMonth = date.endOfMonth;
+final endOfMonth = date.lastDayOfMonth;
 
 // Duration calculations
 final otherDate = DateTime(2025, 12, 31);
-print(date.remainingDays(otherDate));    // days until otherDate
-print(date.passedDays(otherDate));       // days since otherDate
+print(otherDate.remainingDays);          // days until otherDate
+print(date.daysDifferenceTo(otherDate)); // absolute day difference
+
+// Copies and clamps
+print(date.copyWith(hour: 9));           // keeps date, updates time
+print(date.clampBetween(startOfDay, endOfMonth));
 
 // Formatting
 print(date.format('dd/MM/yyyy'));        // "16/01/2025"
@@ -355,10 +348,11 @@ Powerful extensions for Lists, Maps, and Sets:
 
 ```dart
 // List Extensions
-final list = [1, 2, null, 3, null, 4];
-print(list.whereNotNull());              // [1, 2, 3, 4]
+final list = [1, 2, 3, 4, 5];
+print(list.windowed(3));                 // [[1, 2, 3], [2, 3, 4], [3, 4, 5]]
+print(list.pairwise());                  // [(1, 2), (2, 3), (3, 4), (4, 5)]
 print(list.firstOrDefault(0));           // 1
-print(list.distinctBy((e) => e));        // [1, 2, null, 3, 4]
+print(list.distinctBy((e) => e));        // [1, 2, 3, 4, 5]
 
 // Splitting lists
 print(list.firstHalf);                   // [1, 2, null]
@@ -374,15 +368,14 @@ final scores = map.getList<int>('scores', defaultValue: []);
 // Manipulation
 map.setIfMissing('email', 'default@email.com');
 final filtered = map.filter((key, value) => value != null);
-
-// Set Extensions
-final set = {1, 2, 3};
-set.addIfNotNull(4);                     // Adds only if not null
-set.removeWhere((e) => e.isEven);        // Removes even numbers
+print(map.getPath('scores.0'));          // 85
+map.setPath('profile.age', 30);
+final flattened = map.flatMap();
+final nested = flattened.unflatten();
 
 // Common Iterable Extensions
 final items = [1, 2, 3, 4, 5];
-print(items.total);                      // Sum: 15
+print(items.totalBy((e) => e));          // Sum: 15
 print(items.tryGetRandom());             // Random element or null
 ```
 ---
