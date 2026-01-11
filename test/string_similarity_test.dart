@@ -92,7 +92,6 @@ void main() {
       expect(StringSimilarity.ngramSimilarity('abc', ''), equals(0.0));
 
       // Test with different n-gram sizes
-      const config3 = StringSimilarityConfig();
       const config2 = StringSimilarityConfig(ngramSize: 2);
 
       expect(
@@ -232,7 +231,6 @@ void main() {
   group('Configuration Tests', () {
     test('Case sensitivity', () {
       // Default is case-insensitive (toLowerCase=true)
-      const defaultConfig = StringSimilarityConfig();
       expect(StringSimilarity.diceCoefficient('HELLO', 'hello'), equals(1.0));
 
       // Case-sensitive configuration
@@ -244,7 +242,6 @@ void main() {
     });
 
     test('Remove spaces configuration', () {
-      const defaultConfig = StringSimilarityConfig();
       expect(StringSimilarity.diceCoefficient('hello world', 'helloworld'),
           lessThan(1.0));
 
@@ -256,7 +253,6 @@ void main() {
     });
 
     test('Remove accents configuration', () {
-      const defaultConfig = StringSimilarityConfig();
       expect(StringSimilarity.diceCoefficient('café', 'cafe'), lessThan(1.0));
 
       const removeAccentsConfig = StringSimilarityConfig(removeAccents: true);
@@ -302,7 +298,6 @@ void main() {
       final withStemming =
           StringSimilarity.cosine('running quickly', 'runs quick', config);
 
-      const noStemConfig = StringSimilarityConfig();
       final withoutStemming =
           StringSimilarity.cosine('running quickly', 'runs quick');
 
@@ -521,9 +516,6 @@ void main() {
     setUp(StringSimilarity.clearCache);
 
     test('Cache behavior', () {
-      // Enable caching
-      const config = StringSimilarityConfig();
-
       // First call should populate cache
       StringSimilarity.diceCoefficient('performance test', 'caching test');
 
@@ -553,13 +545,15 @@ void main() {
 
       // When caching is disabled, the caches should show 'enabled': false
       // or the caches should not exist (size should be 0 or null)
-      expect(
-          stats['bigramCache']['enabled'] ?? stats['bigramCache']['size'] == 0,
-          isTrue);
-      expect(
-          stats['normalizationCache']['enabled'] ??
-              stats['normalizationCache']['size'] == 0,
-          isTrue);
+      final bigramCache = stats['bigramCache'] as Map<String, dynamic>;
+      final bigramEnabled = bigramCache['enabled'] as bool?;
+      final bigramSize = bigramCache['size'] as int?;
+      expect(bigramEnabled ?? (bigramSize ?? 0) == 0, isTrue);
+      final normalizationCache =
+          stats['normalizationCache'] as Map<String, dynamic>;
+      final normalizationEnabled = normalizationCache['enabled'] as bool?;
+      final normalizationSize = normalizationCache['size'] as int?;
+      expect(normalizationEnabled ?? (normalizationSize ?? 0) == 0, isTrue);
     });
 
     test('Cache capacity management', () {
@@ -695,8 +689,6 @@ void main() {
     });
 
     test('N-gram caching performance', () {
-      const config = StringSimilarityConfig();
-
       const text = 'This is a test string for n-gram caching';
 
       // First call - no cache
