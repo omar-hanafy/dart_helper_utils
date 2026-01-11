@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 5.4.2
+
+- Fixed `distinctBy` to skip invalid keys and enforce type-safe `isValidKey`; added tests.
+- Fixed `intersect` behavior and `takeOnly`/`drop` edge cases; made `tryRemoveWhere` functional.
+- Improved `groupBy` type safety and `subtract` return type.
+
 ## 5.4.1
 
 - Fixed a bug in `ConvertObject` where `innerKey` navigation was ignored if the intermediate object matched the target type.

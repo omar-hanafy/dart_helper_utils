@@ -102,10 +102,23 @@ extension DHUNullableListExtensions<E> on List<E>? {
     }
   }
 
-  /// Safely attempts to remove elements (currently a placeholder) when called.
-  /// Note: The parameter [element] is used only to match the method signature.
-  void tryRemoveWhere(int element) =>
-      isEmptyOrNull ? null : this!.removeWhere((element) => false);
+  /// Safely removes all elements that satisfy the given [test] predicate.
+  ///
+  /// If the list is null or empty, does nothing.
+  /// If an error occurs during removal, it is silently caught.
+  ///
+  /// Example:
+  /// ```dart
+  /// List<int>? numbers = [1, 2, 3, 4, 5];
+  /// numbers.tryRemoveWhere((n) => n.isEven);
+  /// print(numbers); // [1, 3, 5]
+  /// ```
+  void tryRemoveWhere(Predicate<E> test) {
+    if (isEmptyOrNull) return;
+    try {
+      this!.removeWhere(test);
+    } catch (_) {}
+  }
 }
 
 /// Enhanced documentation for nullable Iterable extensions.
@@ -237,19 +250,42 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   Set<E> toMutableSet() => Set.from(this);
 
   /// Returns a set containing all elements that are contained
-  /// by both this set and the specified collection.
-  Set<E> intersect(Iterable<E> other) => toMutableSet()..addAll(other);
-
-  /// Groups the elements in values by the value returned by key.
+  /// by both this iterable and the specified collection.
   ///
-  /// Returns a map from keys computed by key to a list of all values for which
-  /// key returns that key. The values appear in the list in the same
-  /// relative order as in values.
-  // ignore: avoid_shadowing_type_parameters
-  Map<K, List<T>> groupBy<T, K>(K Function(T e) key) {
-    final map = <K, List<T>>{};
+  /// Example:
+  /// ```dart
+  /// [1, 2, 3, 4].intersect([3, 4, 5, 6]); // {3, 4}
+  /// [1, 2].intersect([3, 4]);              // {}
+  /// ```
+  Set<E> intersect(Iterable<E> other) {
+    final otherSet = other is Set<E> ? other : other.toSet();
+    return toMutableSet().intersection(otherSet);
+  }
+
+  /// Groups the elements by the value returned by [keySelector].
+  ///
+  /// Returns a map from keys computed by [keySelector] to a list of all elements
+  /// for which [keySelector] returns that key. The elements appear in the list
+  /// in the same relative order as in the original iterable.
+  ///
+  /// Example:
+  /// ```dart
+  /// final people = [
+  ///   Person('Alice', 'Engineering'),
+  ///   Person('Bob', 'Marketing'),
+  ///   Person('Carol', 'Engineering'),
+  /// ];
+  ///
+  /// final byDepartment = people.groupBy((p) => p.department);
+  /// // {
+  /// //   'Engineering': [Person('Alice', ...), Person('Carol', ...)],
+  /// //   'Marketing': [Person('Bob', ...)],
+  /// // }
+  /// ```
+  Map<K, List<E>> groupBy<K>(K Function(E element) keySelector) {
+    final map = <K, List<E>>{};
     for (final element in this) {
-      map.putIfAbsent(key(element as T), () => []).add(element);
+      map.putIfAbsent(keySelector(element), () => <E>[]).add(element);
     }
     return map;
   }
@@ -280,37 +316,35 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   int get halfLength => (length / 2).floor();
 
   /// Returns a list containing first [n] elements.
+  ///
+  /// If [n] is greater than the length of this iterable, returns all elements.
+  /// If [n] is zero or negative, returns an empty list.
+  ///
+  /// Example:
+  /// ```dart
+  /// [1, 2, 3, 4, 5].takeOnly(3); // [1, 2, 3]
+  /// [1, 2].takeOnly(5);          // [1, 2]
+  /// [1, 2, 3].takeOnly(0);       // []
+  /// ```
   List<E> takeOnly(int n) {
-    if (n == 0) return [];
-
-    final list = List<E>.empty();
-    final thisList = this.toList();
-    final resultSize = length - n;
-    if (resultSize <= 0) return [];
-    if (resultSize == 1) return [last];
-
-    List.generate(n, (index) {
-      list.add(thisList[index]);
-    });
-
-    return list;
+    if (n <= 0) return <E>[];
+    return take(n).toList();
   }
 
   /// Returns a list containing all elements except first [n] elements.
+  ///
+  /// If [n] is zero or negative, returns all elements.
+  /// If [n] is greater than or equal to the length, returns an empty list.
+  ///
+  /// Example:
+  /// ```dart
+  /// [1, 2, 3, 4, 5].drop(2); // [3, 4, 5]
+  /// [1, 2, 3].drop(0);       // [1, 2, 3]
+  /// [1, 2].drop(5);          // []
+  /// ```
   List<E> drop(int n) {
-    if (n == 0) return [];
-
-    final list = List<E>.empty();
-    final originalList = this.toList();
-    final resultSize = length - n;
-    if (resultSize <= 0) return [];
-    if (resultSize == 1) return [last];
-
-    originalList
-      ..removeRange(0, n)
-      ..forEach(list.add);
-
-    return list;
+    if (n <= 0) return this.toList();
+    return skip(n).toList();
   }
 
   /// Returns map operation as a List
@@ -424,19 +458,38 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   }
 
   /// Returns a new list containing the first occurrence of each distinct element
-  /// from the original iterable, as determined by the provided `keySelector` function.
+  /// as determined by the key returned from [keySelector].
   ///
-  /// The `keySelector` is applied to each element, and elements are considered
-  /// distinct if their keys are unique. The order of the elements in the resulting
-  /// list is the same as their first occurrence in the original iterable.
+  /// Elements are considered duplicates if their keys are equal according to
+  /// the provided [equals] function (or default equality if not specified).
+  /// The order of elements in the result preserves their first occurrence.
   ///
-  /// Optional parameters allow for custom comparison logic:
-  /// - `equals`: A custom equality function for comparing keys. Useful for case-insensitive comparisons or complex objects.
-  /// - `hashCode`: A custom hash code function for generating hash codes for keys. Useful for optimizing performance with specific key characteristics.
-  /// - `isValidKey`: A custom function to validate keys. Useful for filtering or handling invalid keys.
+  /// ## Parameters
   ///
-  /// Example:
+  /// - [keySelector]: Extracts the comparison key from each element.
+  ///   Elements with equal keys are considered duplicates.
   ///
+  /// - [equals]: Optional custom equality function for comparing keys.
+  ///   **Must be provided together with [hashCode].**
+  ///
+  /// - [hashCode]: Optional custom hash code function for keys.
+  ///   **Must be provided together with [equals]** and be consistent:
+  ///   if `equals(a, b)` returns true, then `hashCode(a)` must equal `hashCode(b)`.
+  ///
+  /// - [isValidKey]: Optional predicate to filter which keys are valid.
+  ///   Elements whose keys **fail** this predicate (return `false`) are
+  ///   **excluded entirely** from the result. This is useful for filtering
+  ///   out null keys, empty strings, or other invalid values.
+  ///
+  /// ## Performance
+  ///
+  /// - Time complexity: O(n) where n is the number of elements
+  /// - Space complexity: O(k) where k is the number of unique valid keys
+  /// - Uses a [HashSet] to track unique keys
+  ///
+  /// ## Examples
+  ///
+  /// ### Basic usage:
   /// ```dart
   /// final people = [
   ///   Person('Alice', 25),
@@ -446,64 +499,88 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   ///
   /// final uniquePeople = people.distinctBy((p) => p.name);
   /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  /// ```
   ///
-  /// // Using custom equality and hash code functions
-  /// final uniquePeopleCustom = people.distinctBy(
-  ///   (p) => p.name,
+  /// ### Case-insensitive string keys:
+  /// ```dart
+  /// final names = ['Alice', 'ALICE', 'Bob', 'alice'];
+  ///
+  /// final uniqueNames = names.distinctBy(
+  ///   (name) => name,
   ///   equals: (a, b) => a.toLowerCase() == b.toLowerCase(),
   ///   hashCode: (key) => key.toLowerCase().hashCode,
   /// );
-  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
-  ///
-  /// // Using a custom key validation function
-  /// final peopleWithInvalidKeys = [
-  ///   Person('Alice', 25),
-  ///   Person('Bob', 30),
-  ///   Person('', 28), // Invalid key (empty string)
-  ///   Person(null, 28), // Invalid key (null)
-  /// ];
-  ///
-  /// final uniquePeopleValid = peopleWithInvalidKeys.distinctBy(
-  ///   (p) => p.name,
-  ///   isValidKey: (key) => key != null && key.isNotEmpty,
-  /// );
-  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  /// // Result: ['Alice', 'Bob']
   /// ```
   ///
-  /// This method is efficient, using a [HashSet] internally to track unique keys.
+  /// ### Filtering invalid keys:
+  /// ```dart
+  /// final people = [
+  ///   Person('Alice', 25),
+  ///   Person('', 30),      // Invalid: empty name - EXCLUDED
+  ///   Person('Bob', 28),
+  ///   Person('Alice', 22), // Duplicate - only first Alice kept
+  /// ];
+  ///
+  /// final validUnique = people.distinctBy(
+  ///   (p) => p.name,
+  ///   isValidKey: (name) => name.isNotEmpty,
+  /// );
+  /// // Result: [Person('Alice', 25), Person('Bob', 28)]
+  /// ```
+  ///
+  /// ## Throws
+  ///
+  /// - [ArgumentError] if only one of [equals] or [hashCode] is provided.
+  ///   Both must be provided together to ensure correct hashing semantics.
   List<E> distinctBy<R>(
-    R Function(E) keySelector, {
-    bool Function(R, R)? equals,
-    int Function(R)? hashCode,
-    bool Function(dynamic)? isValidKey,
+    R Function(E element) keySelector, {
+    bool Function(R a, R b)? equals,
+    int Function(R key)? hashCode,
+    bool Function(R key)? isValidKey,
   }) {
-    final set = HashSet<R>(
+    // Enforce correctness: custom equals/hashCode must come together.
+    if ((equals == null) != (hashCode == null)) {
+      throw ArgumentError(
+        'distinctBy: If you provide `equals` you must also provide `hashCode` '
+        '(and vice versa). Providing only one can break hashing semantics.',
+      );
+    }
+
+    final result = <E>[];
+    final seenKeys = HashSet<R>(
       equals: equals,
       hashCode: hashCode,
-      isValidKey: isValidKey,
     );
-    final list = <E>[];
-    for (final e in this) {
-      final key = keySelector(e);
-      if (set.add(key)) {
-        list.add(e);
+
+    for (final element in this) {
+      final key = keySelector(element);
+
+      // Skip invalid keys entirely (they won't appear in result)
+      if (isValidKey != null && !isValidKey(key)) continue;
+
+      if (seenKeys.add(key)) {
+        result.add(element);
       }
     }
-    return list;
+
+    return result;
   }
 
   /// Returns a set containing all elements that are contained by this collection
   /// and not contained by the specified collection.
+  ///
   /// The returned set preserves the element iteration order of the original collection.
   ///
-  /// example:
-  ///
-  /// [1,2,3,4,5,6].subtract([4,5,6])
-  ///
-  /// result:
-  /// 1,2,3
-
-  dynamic subtract(Iterable<E> other) => this.toSet()..removeAll(other);
+  /// Example:
+  /// ```dart
+  /// [1, 2, 3, 4, 5, 6].subtract([4, 5, 6]); // {1, 2, 3}
+  /// ['a', 'b', 'c'].subtract(['b']);         // {'a', 'c'}
+  /// ```
+  Set<E> subtract(Iterable<E> other) {
+    final result = this.toSet()..removeAll(other);
+    return result;
+  }
 
   /// Returns the first element matching the given [predicate], or `null`
   /// if element was not found.

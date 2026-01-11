@@ -409,6 +409,7 @@ final list = [1, 2, null, 3, null, 4];
 print(list.whereNotNull());              // [1, 2, 3, 4]
 print(list.firstOrDefault(0));           // 1
 print(list.distinctBy((e) => e));        // [1, 2, null, 3, 4]
+print(list.distinctBy((e) => e, isValidKey: (e) => e != null)); // [1, 2, 3, 4]
 
 // Splitting lists
 print(list.firstHalf);                   // [1, 2, null]
