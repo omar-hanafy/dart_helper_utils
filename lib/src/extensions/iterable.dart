@@ -421,11 +421,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   }
 
   /// Returns a new list containing the first occurrence of each distinct element
-  /// from the original iterable, as determined by the provided `keySelector` function.
+  /// as determined by the key returned from [keySelector].
   ///
-  /// The `keySelector` is applied to each element, and elements are considered
-  /// distinct if their keys are unique. The order of the elements in the resulting
-  /// list is the same as their first occurrence in the original iterable.
+  /// Elements are considered duplicates if their keys are equal according to
+  /// the provided [equals] function (or default equality if not specified).
+  /// The order of elements in the result preserves their first occurrence.
   ///
   /// Optional parameters allow for custom comparison logic:
   /// - `equals`: A custom equality function for comparing keys. Useful for case-insensitive comparisons or complex objects.
@@ -434,8 +434,30 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   ///
   /// If you provide `equals`, you must also provide `hashCode` (and vice versa).
   ///
-  /// Example:
+  /// - [keySelector]: Extracts the comparison key from each element.
+  ///   Elements with equal keys are considered duplicates.
   ///
+  /// - [equals]: Optional custom equality function for comparing keys.
+  ///   **Must be provided together with [hashCode].**
+  ///
+  /// - [hashCode]: Optional custom hash code function for keys.
+  ///   **Must be provided together with [equals]** and be consistent:
+  ///   if `equals(a, b)` returns true, then `hashCode(a)` must equal `hashCode(b)`.
+  ///
+  /// - [isValidKey]: Optional predicate to filter which keys are valid.
+  ///   Elements whose keys **fail** this predicate (return `false`) are
+  ///   **excluded entirely** from the result. This is useful for filtering
+  ///   out null keys, empty strings, or other invalid values.
+  ///
+  /// ## Performance
+  ///
+  /// - Time complexity: O(n) where n is the number of elements
+  /// - Space complexity: O(k) where k is the number of unique valid keys
+  /// - Uses a [HashSet] to track unique keys
+  ///
+  /// ## Examples
+  ///
+  /// ### Basic usage:
   /// ```dart
   /// final people = [
   ///   Person('Alice', 25),
@@ -445,28 +467,18 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   ///
   /// final uniquePeople = people.distinctBy((p) => p.name);
   /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  /// ```
   ///
-  /// // Using custom equality and hash code functions
-  /// final uniquePeopleCustom = people.distinctBy(
-  ///   (p) => p.name,
+  /// ### Case-insensitive string keys:
+  /// ```dart
+  /// final names = ['Alice', 'ALICE', 'Bob', 'alice'];
+  ///
+  /// final uniqueNames = names.distinctBy(
+  ///   (name) => name,
   ///   equals: (a, b) => a.toLowerCase() == b.toLowerCase(),
   ///   hashCode: (key) => key.toLowerCase().hashCode,
   /// );
-  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
-  ///
-  /// // Using a custom key validation function
-  /// final peopleWithInvalidKeys = [
-  ///   Person('Alice', 25),
-  ///   Person('Bob', 30),
-  ///   Person('', 28), // Invalid key (empty string)
-  ///   Person(null, 28), // Invalid key (null)
-  /// ];
-  ///
-  /// final uniquePeopleValid = peopleWithInvalidKeys.distinctBy(
-  ///   (p) => p.name,
-  ///   isValidKey: (key) => key != null && key.isNotEmpty,
-  /// );
-  /// // Result: [Person('Alice', 25), Person('Bob', 30)]
+  /// // Result: ['Alice', 'Bob']
   /// ```
   ///
   /// This method is efficient, using a native [Set] for standard equality and

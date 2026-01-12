@@ -86,9 +86,10 @@ This release represents a massive overhaul of `dart_helper_utils`, focusing on p
 
 ## 5.4.1
 
-Improved String.toDateAutoFormat docs (parsing order, locale, time zones) with examples. Refactored implementation for
+- Fixed a bug in `ConvertObject` where `innerKey` navigation was ignored if the intermediate object matched the target type.
+- Improved String.toDateAutoFormat docs (parsing order, locale, time zones) with examples. Refactored implementation for
 better normalization and locale-aware disambiguation.
-Added documentation_rules.md for module docs standards.
+- Added documentation_rules.md for module docs standards.
 
 ## 5.4.0
 
