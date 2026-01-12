@@ -267,8 +267,7 @@ bool _setPathSegments(
     final segment = segments[i];
     final isLast = i == segments.length - 1;
     final nextSegment = !isLast ? segments[i + 1] : null;
-    final nextIsIndex =
-        parseIndices &&
+    final nextIsIndex = parseIndices &&
         nextSegment != null &&
         int.tryParse(nextSegment) != null;
 

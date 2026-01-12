@@ -364,13 +364,11 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
         final item = iterator.current;
         late Future<void> task;
-        task = action(item)
-            .then((result) {
-              results.add(result);
-            })
-            .whenComplete(() {
-              active.remove(task);
-            });
+        task = action(item).then((result) {
+          results.add(result);
+        }).whenComplete(() {
+          active.remove(task);
+        });
 
         active.add(task);
       }

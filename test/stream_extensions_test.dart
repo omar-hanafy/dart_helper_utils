@@ -228,7 +228,8 @@ void main() {
       expect(values, [1]);
     });
 
-    test('retry throws informative error on single-subscription stream', () async {
+    test('retry throws informative error on single-subscription stream',
+        () async {
       final controller = StreamController<int>();
       controller.addError(Exception('Fail 1'));
 

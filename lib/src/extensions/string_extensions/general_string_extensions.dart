@@ -388,8 +388,8 @@ extension DHUNullSafeStringExtensions on String? {
     final index = this!.indexOf(delimiter);
     return (index == -1)
         ? defaultValue.isEmptyOrNull
-              ? this
-              : defaultValue
+            ? this
+            : defaultValue
         : this!.replaceRange(
             index + delimiter.length,
             this!.length,
@@ -408,8 +408,8 @@ extension DHUNullSafeStringExtensions on String? {
     final index = this!.indexOf(delimiter);
     return (index == -1)
         ? defaultValue.isEmptyOrNull
-              ? this
-              : defaultValue
+            ? this
+            : defaultValue
         : this!.replaceRange(0, index, replacement);
   }
 

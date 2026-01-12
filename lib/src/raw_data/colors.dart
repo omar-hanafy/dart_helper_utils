@@ -94,8 +94,7 @@ const regexComponentSeparator = r'\s*,\s*';
 
 /// Legacy rgb()/rgba() regex. (Note that if the function name is exactly "rgb("
 /// then an alpha value is not allowed.)
-const regexValidRgbColor =
-    r'^rgba?\(\s*'
+const regexValidRgbColor = r'^rgba?\(\s*'
     '((?:$_intPattern|$_percentPattern))$regexComponentSeparator'
     '((?:$_intPattern|$_percentPattern))$regexComponentSeparator'
     '((?:$_intPattern|$_percentPattern))'
@@ -106,8 +105,7 @@ const regexValidRgbColor =
 
 /// Legacy hsl()/hsla() regex - updated to handle all valid space combinations
 /// and Allow zero or more spaces before and after the comma.
-const regexValidHslColor =
-    r'^hsla?\s*\(\s*'
+const regexValidHslColor = r'^hsla?\s*\(\s*'
     r'([0-9]+(?:\.[0-9]+)?(?:deg|rad|turn|grad)?)'
     '$regexComponentSeparator'
     '((?:100|[0-9]{1,2})%)'

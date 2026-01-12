@@ -84,11 +84,11 @@ extension DHUBidiStringExtensions on String {
     bool resetDir = true,
   }) {
     return textDirection.toBidiFormatter().wrapWithSpan(
-      this,
-      isHtml: isHtml,
-      resetDir: resetDir,
-      direction: textDirection,
-    );
+          this,
+          isHtml: isHtml,
+          resetDir: resetDir,
+          direction: textDirection,
+        );
   }
 
   /// Wraps the text with unicode BiDi formatting characters based on the provided or estimated direction.
@@ -103,12 +103,13 @@ extension DHUBidiStringExtensions on String {
     TextDirection textDirection = textDirectionUNKNOWN,
     bool isHtml = false,
     bool resetDir = true,
-  }) => textDirection.toBidiFormatter().wrapWithUnicode(
-    this,
-    isHtml: isHtml,
-    resetDir: resetDir,
-    direction: textDirection,
-  );
+  }) =>
+      textDirection.toBidiFormatter().wrapWithUnicode(
+            this,
+            isHtml: isHtml,
+            resetDir: resetDir,
+            direction: textDirection,
+          );
 }
 
 /// Left-to-right text direction constant.

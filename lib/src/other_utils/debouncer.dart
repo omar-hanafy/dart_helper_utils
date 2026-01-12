@@ -60,8 +60,8 @@ typedef LoggerFunction = void Function(String message);
 /// A function signature for creating timers.
 /// `timerFactory` allows customizing timer creation, useful for testing or
 /// specialized timing behavior. Defaults to standard [Timer.new].
-typedef TimerFactory =
-    Timer Function(Duration duration, void Function() callback);
+typedef TimerFactory = Timer Function(
+    Duration duration, void Function() callback);
 
 /// A function signature for asynchronous actions.
 typedef AsyncAction = FutureOr<void> Function();
@@ -115,14 +115,14 @@ class DebouncerState extends Equatable {
 
   @override
   List<Object?> get props => [
-    isRunning,
-    isDisposed,
-    executionCount,
-    lastExecutionTime,
-    remainingTime,
-    remainingMaxWait,
-    isPaused,
-  ];
+        isRunning,
+        isDisposed,
+        executionCount,
+        lastExecutionTime,
+        remainingTime,
+        remainingMaxWait,
+        isPaused,
+      ];
 
   /// Creates a copy of this state with optional field updates.
   DebouncerState copyWith({
@@ -174,14 +174,14 @@ class Debouncer {
     int maxHistorySize = 0,
     LoggerFunction? logger,
     TimerFactory? timerFactory,
-  }) : _delay = delay,
-       _maxWait = maxWait,
-       _immediate = immediate,
-       _onError = onError,
-       _debugLabel = debugLabel,
-       _maxHistorySize = maxHistorySize,
-       _logger = logger,
-       _timerFactory = timerFactory ?? Timer.new {
+  })  : _delay = delay,
+        _maxWait = maxWait,
+        _immediate = immediate,
+        _onError = onError,
+        _debugLabel = debugLabel,
+        _maxHistorySize = maxHistorySize,
+        _logger = logger,
+        _timerFactory = timerFactory ?? Timer.new {
     if (delay <= Duration.zero) {
       throw ArgumentError('Delay must be greater than zero.');
     }
@@ -297,14 +297,14 @@ class Debouncer {
 
   /// Returns a snapshot of the current debouncer state.
   DebouncerState get currentState => DebouncerState(
-    isRunning: isRunning,
-    isDisposed: isDisposed,
-    executionCount: executionCount,
-    lastExecutionTime: lastExecutionTime,
-    remainingTime: remainingTime,
-    remainingMaxWait: remainingMaxWait,
-    isPaused: isPaused,
-  );
+        isRunning: isRunning,
+        isDisposed: isDisposed,
+        executionCount: executionCount,
+        lastExecutionTime: lastExecutionTime,
+        remainingTime: remainingTime,
+        remainingMaxWait: remainingMaxWait,
+        isPaused: isPaused,
+      );
 
   /// Schedules [action] to run after [delay]. In immediate mode, the first call
   /// executes right away while subsequent calls during that burst are debounced
@@ -448,9 +448,8 @@ class Debouncer {
     if (_maxWaitTimer != null && _firstCallTime != null && _maxWait != null) {
       final elapsed = DateTime.now().difference(_firstCallTime!);
       final remaining = _maxWait - elapsed;
-      _remainingMaxWaitOnPause = remaining.isNegative
-          ? Duration.zero
-          : remaining;
+      _remainingMaxWaitOnPause =
+          remaining.isNegative ? Duration.zero : remaining;
       _maxWaitTimer?.cancel();
       _maxWaitTimer = null;
     }
@@ -654,12 +653,12 @@ class _ExecutionRecord {
 
   /// Converts this record to a map for logging or debugging.
   Map<String, dynamic> toMap() => {
-    'startTime': startTime.toIso8601String(),
-    'endTime': endTime.toIso8601String(),
-    'durationSeconds': duration.inMicroseconds / 1e6,
-    'success': success,
-    'error': error?.toString(),
-  };
+        'startTime': startTime.toIso8601String(),
+        'endTime': endTime.toIso8601String(),
+        'durationSeconds': duration.inMicroseconds / 1e6,
+        'success': success,
+        'error': error?.toString(),
+      };
 }
 
 /// Callable wrapper that exposes debouncing controls.

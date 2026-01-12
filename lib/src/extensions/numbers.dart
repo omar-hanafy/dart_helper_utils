@@ -262,31 +262,36 @@ extension DHUNumExtensions on num {
   @optionalTypeArgs
   Future<T> daysDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
-  ]) => Future.delayed(asDays, computation);
+  ]) =>
+      Future.delayed(asDays, computation);
 
   /// Delay equivalent to the number of hours.
   @optionalTypeArgs
   Future<T> hoursDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
-  ]) => Future.delayed(asHours, computation);
+  ]) =>
+      Future.delayed(asHours, computation);
 
   /// Delay equivalent to the number of minutes.
   @optionalTypeArgs
   Future<T> minutesDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
-  ]) => Future.delayed(asMinutes, computation);
+  ]) =>
+      Future.delayed(asMinutes, computation);
 
   /// Delay equivalent to the number of seconds.
   @optionalTypeArgs
   Future<T> secondsDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
-  ]) => Future.delayed(asSeconds, computation);
+  ]) =>
+      Future.delayed(asSeconds, computation);
 
   /// Delay equivalent to the number of milliseconds.
   @optionalTypeArgs
   Future<T> millisecondsDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
-  ]) => Future.delayed(asMilliseconds, computation);
+  ]) =>
+      Future.delayed(asMilliseconds, computation);
 
   /// Converts the number to a Duration in milliseconds.
   Duration get asMilliseconds => Duration(milliseconds: round());
@@ -340,13 +345,14 @@ extension DHUNumExtensions on num {
     num whenBothZero = 0,
     num whenDivByZero = double.infinity,
     bool returnNaNOnDivByZero = false,
-  }) => NumbersHelper.safeDivide(
-    this,
-    b,
-    whenDivByZero: whenDivByZero,
-    whenBothZero: whenBothZero,
-    returnNaNOnDivByZero: returnNaNOnDivByZero,
-  );
+  }) =>
+      NumbersHelper.safeDivide(
+        this,
+        b,
+        whenDivByZero: whenDivByZero,
+        whenBothZero: whenBothZero,
+        returnNaNOnDivByZero: returnNaNOnDivByZero,
+      );
 
   /// Rounds this number to the nearest multiple of [multiple].
   ///

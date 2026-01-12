@@ -176,21 +176,19 @@ abstract class TimeUtils {
     });
 
     final taskFuture = Future<T>.sync(task);
-    taskFuture
-        .then((value) {
-          if (!completer.isCompleted) {
-            timeoutTimer?.cancel();
-            completer.complete(value);
-          }
-        })
-        .catchError((error, stackTrace) {
-          if (!completer.isCompleted) {
-            timeoutTimer?.cancel();
-            completer.completeError(error, stackTrace);
-          }
-          // Once the completer finished because the timeout elapsed, swallow
-          // remaining errors to keep the zone clean.
-        });
+    taskFuture.then((value) {
+      if (!completer.isCompleted) {
+        timeoutTimer?.cancel();
+        completer.complete(value);
+      }
+    }).catchError((error, stackTrace) {
+      if (!completer.isCompleted) {
+        timeoutTimer?.cancel();
+        completer.completeError(error, stackTrace);
+      }
+      // Once the completer finished because the timeout elapsed, swallow
+      // remaining errors to keep the zone clean.
+    });
 
     return completer.future.whenComplete(() => timeoutTimer?.cancel());
   }
@@ -211,8 +209,8 @@ class Throttler {
     this.trailing = false,
     ThrottlerErrorHandler? onError,
     Timer Function(Duration duration, void Function() callback)? timerFactory,
-  }) : _onError = onError,
-       _timerFactory = timerFactory ?? Timer.new;
+  })  : _onError = onError,
+        _timerFactory = timerFactory ?? Timer.new;
 
   /// Minimum delay between executions.
   final Duration interval;
@@ -225,7 +223,7 @@ class Throttler {
 
   final ThrottlerErrorHandler? _onError;
   final Timer Function(Duration duration, void Function() callback)
-  _timerFactory;
+      _timerFactory;
   Timer? _timer;
   bool _isThrottled = false;
   bool _isDisposed = false;

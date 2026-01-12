@@ -1,4 +1,3 @@
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:test/test.dart';
 
@@ -29,10 +28,12 @@ void main() {
       });
 
       test('rejects invalid values', () {
-        expect(regex.hasMatch('rgb(256, 0, 0)'), isFalse); // Out of range (regex loosely checks 255 but strictly digits) - Wait, regex is (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
+        expect(regex.hasMatch('rgb(256, 0, 0)'),
+            isFalse); // Out of range (regex loosely checks 255 but strictly digits) - Wait, regex is (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
         expect(regex.hasMatch('rgb(-1, 0, 0)'), isFalse);
         expect(regex.hasMatch('rgb(0, 0)'), isFalse); // Missing component
-        expect(regex.hasMatch('rgba(0, 0, 0)'), isTrue); // Optional alpha? No, rgba usually requires alpha, but regex might be permissive or strict. Code says "rgba?" and optional group for alpha.
+        expect(regex.hasMatch('rgba(0, 0, 0)'),
+            isTrue); // Optional alpha? No, rgba usually requires alpha, but regex might be permissive or strict. Code says "rgba?" and optional group for alpha.
         // Let's check logic: ^rgba? ... ( ... )? ... $
         // It allows rgb(...) to have 3 or 4 components.
         // It allows rgba(...) to have 3 or 4 components.
@@ -61,7 +62,7 @@ void main() {
       });
 
       test('rejects invalid values', () {
-         // Regex expects % for saturation and lightness
+        // Regex expects % for saturation and lightness
         expect(regex.hasMatch('hsl(0, 100, 50)'), isFalse);
       });
     });
@@ -76,10 +77,10 @@ void main() {
         expect(regex.hasMatch('lch(50% 100 0)'), isTrue);
         expect(regex.hasMatch('color(display-p3 1 0.5 0)'), isTrue);
       });
-      
+
       test('rejects commas in modern syntax regex', () {
-          // The regex explicitly disallows commas inside the parentheses: ([^,]+)
-          expect(regex.hasMatch('rgb(255, 0, 0)'), isFalse);
+        // The regex explicitly disallows commas inside the parentheses: ([^,]+)
+        expect(regex.hasMatch('rgb(255, 0, 0)'), isFalse);
       });
     });
   });

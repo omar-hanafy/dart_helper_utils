@@ -462,7 +462,7 @@ extension DHUDateExtensions on DateTime {
     // and adjust it to be positive and within the range of 0-6
     final daysToSubtract =
         (weekday - normalizedStartOfWeek + DateTime.daysPerWeek) %
-        DateTime.daysPerWeek;
+            DateTime.daysPerWeek;
 
     return subtract(Duration(days: daysToSubtract));
   }
@@ -478,7 +478,7 @@ extension DHUDateExtensions on DateTime {
         ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
     final daysToAdd =
         (DateTime.daysPerWeek - weekday + normalizedStartOfWeek - 1) %
-        DateTime.daysPerWeek;
+            DateTime.daysPerWeek;
 
     // Convert to UTC and then back to the original timezone to ensure correct midnight
     final utcLastDayOfWeek = toUtc().add(Duration(days: daysToAdd));
@@ -516,9 +516,8 @@ extension DHUDateExtensions on DateTime {
 
   /// Returns a DateTime representing the last day of the month for this DateTime.
   DateTime get lastDayOfMonth {
-    final beginningNextMonth = (month < 12)
-        ? DateTime(year, month + 1)
-        : DateTime(year + 1);
+    final beginningNextMonth =
+        (month < 12) ? DateTime(year, month + 1) : DateTime(year + 1);
     return beginningNextMonth.subtract(const Duration(days: 1));
   }
 
@@ -861,7 +860,7 @@ extension DHUDateExtensions on DateTime {
     final micros = microsecondsSinceEpoch;
     final newMicros =
         ((micros + duration.inMicroseconds - 1) ~/ duration.inMicroseconds) *
-        duration.inMicroseconds;
+            duration.inMicroseconds;
     return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
   }
 

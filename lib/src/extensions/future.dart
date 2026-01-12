@@ -101,13 +101,11 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
         }
 
         late Future<void> future;
-        future = task()
-            .then((r) {
-              results.add(r);
-            })
-            .whenComplete(() {
-              active.remove(future);
-            });
+        future = task().then((r) {
+          results.add(r);
+        }).whenComplete(() {
+          active.remove(future);
+        });
         active.add(future);
       }
       await Future.wait(active);
