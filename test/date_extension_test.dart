@@ -171,14 +171,21 @@ void main() {
       expect(daysInMonth.length, lessThanOrEqualTo(31));
     });
 
-    test('daysInMonth alignment for Sunday start', () {
+    test('daysInMonth alignment for Monday start', () {
       // Oct 2023 starts on a Sunday (Oct 1st 2023 is Sunday)
       final oct1 = DateTime(2023, 10, 1);
       final days = oct1.daysInMonth;
-      // With fix, if 1st is Sunday, daysBefore should be 0.
-      // So first day of list is Oct 1.
-      expect(days.first.day, equals(1));
-      expect(days.first.month, equals(10));
+      // Monday start: Sun(1st) is the 7th day.
+      // Grid starts Mon Sept 25.
+      expect(days.first.day, equals(25));
+      expect(days.first.month, equals(9));
+    });
+
+    test('daysInMonth ends on Sunday without extra week', () {
+      // April 2023 ends on a Sunday (Apr 30, 2023).
+      final april1 = DateTime(2023, 4, 1);
+      final days = april1.daysInMonth;
+      expect(days.last, DateTime(2023, 4, 30));
     });
 
     test('previousDay', () {

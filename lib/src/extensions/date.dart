@@ -423,16 +423,13 @@ extension DHUDateExtensions on DateTime {
   /// Returns a list of DateTimes representing the days in the same month as this DateTime.
   List<DateTime> get daysInMonth {
     final first = firstDayOfMonth;
-    // Calculate days before the first of the month to align with the start of the week (Sunday).
-    // If first.weekday is 7 (Sunday), daysBefore should be 0.
-    // If first.weekday is 1 (Monday), daysBefore should be 1.
-    final daysBefore = first.weekday % 7;
+    // Calculate days before to align with Monday (ISO 8601 default).
+    // Mon(1) -> 0, Sun(7) -> 6.
+    final daysBefore = (first.weekday - 1) % DateTime.daysPerWeek;
     final firstToDisplay = first.subtract(Duration(days: daysBefore));
     final last = lastDayOfMonth;
-    var daysAfter = 7 - last.weekday;
-    if (daysAfter == 0) {
-      daysAfter = 7;
-    }
+    // Add days to include the last day and fill the week through Sunday.
+    final daysAfter = DateTime.daysPerWeek - last.weekday + 1;
     final lastToDisplay = last.add(Duration(days: daysAfter));
     return firstToDisplay.daysUpTo(lastToDisplay).toList();
   }

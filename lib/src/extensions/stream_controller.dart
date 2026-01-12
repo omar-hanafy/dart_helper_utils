@@ -466,12 +466,14 @@ extension StreamErrorRecovery<T> on Stream<T> {
         }
         break;
       } catch (error) {
-        if (error is StateError &&
-            error.message.contains('Stream has already been listened to')) {
-          throw StateError(
-            'Cannot retry a single-subscription stream that has already been listened to. '
-            'Use a broadcast stream or the "retry" extension on a Stream Factory function (Stream<T> Function()) instead.',
-          );
+        if (error is StateError) {
+          final message = error.message.toString();
+          if (message.contains('already been listened')) {
+            throw StateError(
+              'Cannot retry a single-subscription stream that has already been listened to. '
+              'Use a broadcast stream or the "retry" extension on a Stream Factory function (Stream<T> Function()) instead.',
+            );
+          }
         }
 
         if (attempts < retryCount &&

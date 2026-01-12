@@ -196,8 +196,8 @@ extension DHUNullSafeStringExtensions on String? {
   /// Converts the string into a single line by replacing newline characters.
   String? get toOneLine => this?.replaceAll('\n', '');
 
-  /// Removes all whitespace characters (spaces) from the string.
-  String? get removeWhiteSpaces => this?.replaceAll(' ', '');
+  /// Removes all whitespace characters (spaces, tabs, newlines, etc.) from the string.
+  String? get removeWhiteSpaces => this?.replaceAll(RegExp(r'\s+'), '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
   String? get clean => toOneLine?.removeWhiteSpaces;
