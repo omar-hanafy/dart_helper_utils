@@ -201,10 +201,10 @@ extension DHUNumExtensions on num {
 
   /// Generates a random integer between 0 (inclusive) and this value (exclusive).
   ///
-  /// Throws [RangeError] if this value is less than or equal to zero.
+  /// Throws [RangeError] if this value is less than 1.
   int get getRandom {
-    if (this <= 0) {
-      throw RangeError('Upper bound must be greater than zero.');
+    if (this < 1) {
+      throw RangeError('Upper bound must be at least 1.');
     }
     return math.Random().nextInt(toInt());
   }
@@ -212,10 +212,10 @@ extension DHUNumExtensions on num {
   /// Generates a random integer between 0 (inclusive) and this value (exclusive),
   /// with an optional [seed] for reproducibility.
   ///
-  /// Throws [RangeError] if this value is less than or equal to zero.
+  /// Throws [RangeError] if this value is less than 1.
   int random([int? seed]) {
-    if (this <= 0) {
-      throw RangeError('Upper bound must be greater than zero.');
+    if (this < 1) {
+      throw RangeError('Upper bound must be at least 1.');
     }
     return math.Random(seed).nextInt(toInt());
   }

@@ -87,6 +87,8 @@ void main() {
       expect(() => 0.getRandom, throwsRangeError);
       expect(() => (-1).getRandom, throwsRangeError);
       expect(() => 0.random(), throwsRangeError);
+      expect(() => 0.5.getRandom, throwsRangeError);
+      expect(() => 0.99.getRandom, throwsRangeError);
     });
 
     test('asGreeks formats large numbers', () {

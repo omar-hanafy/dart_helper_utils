@@ -47,7 +47,7 @@ extension DHUUriEx on Uri {
     String? newPath;
     List<String>? newPathSegments;
     String? newQuery;
-    Map<String, String>? newQueryParameters;
+    Map<String, dynamic>? newQueryParameters;
     String? newFragment;
 
     // Apply builder functions if provided
@@ -89,12 +89,15 @@ extension DHUUriEx on Uri {
       // Apply the builder
       final resultParams = queryParametersBuilder(dynamicQueryParams);
 
-      // Convert back to Map<String, String> if a new value was returned
+      // Convert back to Map<String, dynamic> allowing Iterables
       if (resultParams != null) {
         newQueryParameters = {};
         resultParams.forEach((key, value) {
-          // Convert value to string (if not null)
-          newQueryParameters![key] = value?.toString() ?? '';
+          if (value is Iterable) {
+            newQueryParameters![key] = value.map((e) => e.toString()).toList();
+          } else {
+            newQueryParameters![key] = value?.toString() ?? '';
+          }
         });
       }
     }

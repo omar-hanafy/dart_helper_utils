@@ -113,5 +113,16 @@ void main() {
         expect(updated.queryParameters['bar'], '2');
       },
     );
+
+    test('rebuild handles List query params correctly', () {
+      final uri = Uri.parse('https://example.com');
+      final updated = uri.rebuild(
+        queryParametersBuilder: (current) => {'ids': ['1', '2']},
+      );
+
+      // Expected: https://example.com?ids=1&ids=2
+      expect(updated.queryParametersAll['ids'], equals(['1', '2']));
+      expect(updated.toString(), 'https://example.com?ids=1&ids=2');
+    });
   });
 }

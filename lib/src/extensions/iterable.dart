@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
@@ -82,12 +81,8 @@ extension DHUNullableListExtensions<E> on List<E>? {
   /// its index. Returns null if no such element is found or if the list is null/empty.
   int? indexWhereOrNull(Predicate<E> test, [int start = 0]) {
     if (isEmptyOrNull) return null;
-    try {
-      return this!.indexWhere(test, start);
-    } catch (e, s) {
-      dev.log('$e', stackTrace: s);
-      return null;
-    }
+    final index = this!.indexWhere(test, start);
+    return index == -1 ? null : index;
   }
 
   /// Safely removes elements that satisfy [predicate].
@@ -437,7 +432,9 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Optional parameters allow for custom comparison logic:
   /// - `equals`: A custom equality function for comparing keys. Useful for case-insensitive comparisons or complex objects.
   /// - `hashCode`: A custom hash code function for generating hash codes for keys. Useful for optimizing performance with specific key characteristics.
-  /// - `isValidKey`: A custom function to validate keys. Useful for filtering or handling invalid keys.
+  /// - `isValidKey`: A custom function to validate keys. Invalid keys are excluded entirely.
+  ///
+  /// If you provide `equals`, you must also provide `hashCode` (and vice versa).
   ///
   /// Example:
   ///
@@ -474,26 +471,47 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// // Result: [Person('Alice', 25), Person('Bob', 30)]
   /// ```
   ///
-  /// This method is efficient, using a [HashSet] internally to track unique keys.
+  /// This method is efficient, using a native [Set] for standard equality and
+  /// a [LinkedHashSet] when custom equality/hash logic is provided.
   List<E> distinctBy<R>(
     R Function(E) keySelector, {
-    bool Function(R, R)? equals,
-    int Function(R)? hashCode,
-    bool Function(dynamic)? isValidKey,
+    bool Function(R a, R b)? equals,
+    int Function(R key)? hashCode,
+    bool Function(R key)? isValidKey,
   }) {
-    final set = HashSet<R>(
+    if ((equals == null) != (hashCode == null)) {
+      throw ArgumentError(
+        'distinctBy: If you provide `equals` you must also provide `hashCode` '
+        '(and vice versa). Providing only one can break hashing semantics.',
+      );
+    }
+
+    final result = <E>[];
+
+    if (equals == null && hashCode == null) {
+      final seenKeys = <R>{};
+      for (final element in this) {
+        final key = keySelector(element);
+        if (isValidKey != null && !isValidKey(key)) continue;
+        if (seenKeys.add(key)) {
+          result.add(element);
+        }
+      }
+      return result;
+    }
+
+    final seenKeys = LinkedHashSet<R>(
       equals: equals,
       hashCode: hashCode,
-      isValidKey: isValidKey,
     );
-    final list = <E>[];
-    for (final e in this) {
-      final key = keySelector(e);
-      if (set.add(key)) {
-        list.add(e);
+    for (final element in this) {
+      final key = keySelector(element);
+      if (isValidKey != null && !isValidKey(key)) continue;
+      if (seenKeys.add(key)) {
+        result.add(element);
       }
     }
-    return list;
+    return result;
   }
 
   /// Returns a set of elements contained in this collection but not in [other].

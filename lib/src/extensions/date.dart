@@ -423,7 +423,10 @@ extension DHUDateExtensions on DateTime {
   /// Returns a list of DateTimes representing the days in the same month as this DateTime.
   List<DateTime> get daysInMonth {
     final first = firstDayOfMonth;
-    final daysBefore = first.weekday;
+    // Calculate days before the first of the month to align with the start of the week (Sunday).
+    // If first.weekday is 7 (Sunday), daysBefore should be 0.
+    // If first.weekday is 1 (Monday), daysBefore should be 1.
+    final daysBefore = first.weekday % 7;
     final firstToDisplay = first.subtract(Duration(days: daysBefore));
     final last = lastDayOfMonth;
     var daysAfter = 7 - last.weekday;

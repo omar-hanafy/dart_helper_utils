@@ -10,6 +10,8 @@ void main() {
       expect('text'.nullIfEmpty, 'text');
       expect('   '.nullIfBlank, isNull);
       expect('text'.nullIfBlank, 'text');
+      expect('\t'.nullIfBlank, isNull);
+      expect(' \n \t '.nullIfBlank, isNull);
     });
 
     test('removeEmptyLines and toOneLine', () {

@@ -84,6 +84,64 @@ void main() {
       expect(distinct, ['a', 'aa', 'bbb']);
     });
 
+    test('distinctBy skips invalid keys', () {
+      final input = ['a', '', 'b', ''];
+      final result = input.distinctBy(
+        (e) => e,
+        isValidKey: (k) => k.isNotEmpty,
+      );
+      expect(result, ['a', 'b']);
+    });
+
+    test('distinctBy handles nullable keys with validation', () {
+      final input = <String?>['a', null, 'b', null, 'a'];
+      final result = input.distinctBy(
+        (e) => e,
+        isValidKey: (k) => k != null,
+      );
+      expect(result, ['a', 'b']);
+    });
+
+    test('distinctBy ignores invalid keys for uniqueness tracking', () {
+      final input = ['valid1', '', 'valid2', '', 'valid1'];
+      final result = input.distinctBy(
+        (e) => e,
+        isValidKey: (k) => k.isNotEmpty,
+      );
+      expect(result, ['valid1', 'valid2']);
+    });
+
+    test('distinctBy enforces equals/hashCode pairing', () {
+      final input = ['a', 'b'];
+      expect(
+        () => input.distinctBy((e) => e, equals: (a, b) => a == b),
+        throwsArgumentError,
+      );
+      expect(
+        () => input.distinctBy((e) => e, hashCode: (k) => k.hashCode),
+        throwsArgumentError,
+      );
+    });
+
+    test('distinctBy supports custom equality and hashCode', () {
+      final input = ['Alice', 'bob', 'ALICE', 'Bob'];
+      final result = input.distinctBy(
+        (e) => e,
+        equals: (a, b) => a.toLowerCase() == b.toLowerCase(),
+        hashCode: (k) => k.toLowerCase().hashCode,
+      );
+      expect(result, ['Alice', 'bob']);
+    });
+
+    test('distinctBy isValidKey is type-safe', () {
+      final input = [1, 2, 3, 4, 5];
+      final result = input.distinctBy(
+        (e) => e,
+        isValidKey: (int k) => k > 2,
+      );
+      expect(result, [3, 4, 5]);
+    });
+
     test('subtract returns set difference', () {
       final list = [1, 2, 3, 4];
       expect(list.subtract([2, 4]), {1, 3});

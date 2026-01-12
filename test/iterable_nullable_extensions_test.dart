@@ -31,6 +31,14 @@ void main() {
       final empty = <int>[];
       expect(empty.indexWhereOrNull((e) => e == 1), isNull);
     });
+
+    test('indexWhereOrNull propagates exceptions', () {
+      final list = [1, 2, 3];
+      expect(
+        () => list.indexWhereOrNull((e) => throw Exception('Bad predicate')),
+        throwsException,
+      );
+    });
   });
 
   group('Nullable iterable extensions', () {

@@ -371,6 +371,54 @@ extension StreamTransformations<T> on Stream<T> {
 }
 
 /// ---------------------------------------------------------------------------
+/// Stream Factory Extensions
+/// ---------------------------------------------------------------------------
+
+/// Extensions for Stream factory functions to support safe retries.
+extension DHUStreamFactoryExtensions<T> on Stream<T> Function() {
+  /// Retries the stream created by this factory.
+  ///
+  /// [retryCount] specifies the maximum number of retry attempts.
+  /// [delayFactor] determines the base delay for exponential backoff.
+  /// [shouldRetry] can be used to decide whether to retry for a specific error.
+  ///
+  /// This safely handles single-subscription streams by creating a new
+  /// stream instance for each attempt.
+  Stream<T> retry({
+    int retryCount = 3,
+    Duration delayFactor = const Duration(seconds: 1),
+    bool Function(Object error)? shouldRetry,
+  }) async* {
+    if (retryCount < 0) {
+      throw ArgumentError('retryCount must be non-negative');
+    }
+    if (delayFactor.inMilliseconds <= 0) {
+      throw ArgumentError('delayFactor must be greater than zero');
+    }
+
+    var attempts = 0;
+    while (true) {
+      try {
+        await for (final value in this()) {
+          yield value;
+        }
+        break;
+      } catch (error) {
+        if (attempts < retryCount &&
+            (shouldRetry == null || shouldRetry(error))) {
+          attempts++;
+          final delayMillis =
+              delayFactor.inMilliseconds * pow(2, attempts - 1).toInt();
+          await delayMillis.millisecondsDelay();
+          continue;
+        }
+        rethrow;
+      }
+    }
+  }
+}
+
+/// ---------------------------------------------------------------------------
 /// Stream Error Recovery Extensions
 /// ---------------------------------------------------------------------------
 
@@ -418,6 +466,14 @@ extension StreamErrorRecovery<T> on Stream<T> {
         }
         break;
       } catch (error) {
+        if (error is StateError &&
+            error.message.contains('Stream has already been listened to')) {
+          throw StateError(
+            'Cannot retry a single-subscription stream that has already been listened to. '
+            'Use a broadcast stream or the "retry" extension on a Stream Factory function (Stream<T> Function()) instead.',
+          );
+        }
+
         if (attempts < retryCount &&
             (shouldRetry == null || shouldRetry(error))) {
           attempts++;

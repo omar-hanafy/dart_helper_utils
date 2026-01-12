@@ -22,9 +22,9 @@ extension DHUStringExtensions on String {
   /// Example: "Line1\nLine2" => "Line1Line2"
   String get toOneLine => replaceAll('\n', '');
 
-  /// Removes all whitespace characters (spaces) from the string.
-  /// Example: "Line 1 Line 2" => "Line1Line2"
-  String get removeWhiteSpaces => replaceAll(' ', '');
+  /// Removes all whitespace characters (spaces, tabs, newlines, etc.) from the string.
+  /// Example: "Line 1\tLine 2" => "Line1Line2"
+  String get removeWhiteSpaces => replaceAll(RegExp(r'\s+'), '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
   /// Example: "Line 1\n Line 2" => "Line1Line2"
