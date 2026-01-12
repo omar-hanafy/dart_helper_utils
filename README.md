@@ -12,7 +12,7 @@ Add the package to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dart_helper_utils: ^6.0.0-dev.4
+  dart_helper_utils: ^6.0.0
 ```
 
 ## Import
@@ -31,7 +31,7 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 - **Numbers**: formatting via `intl`, file size helpers, and HTTP status helpers.
 - **Date/Time**: rounding, comparisons, and HTTP date formatting.
 - **Async**: retries, timeouts, concurrency throttling, debouncing/throttling.
-- **Streams**: retries and safe controller additions.
+- **Streams**: retries (including safe factory-based retries) and controller helpers.
 - **Raw data**: HTTP status messages, CSS colors, and suffix maps.
 
 ## Quick start
@@ -145,7 +145,8 @@ void main() async {
 ### Streams
 
 - `StreamController<T>.safeAdd(event)`
-- `Stream<T>.retry({retryCount, delayFactor, shouldRetry})`
+- `Stream<T>.retry({retryCount, delayFactor, shouldRetry})` (broadcast streams)
+- `Stream<T> Function().retry({retryCount, delayFactor, shouldRetry})` (safe for single-subscription streams)
 
 ### HTTP helpers
 
@@ -162,7 +163,7 @@ void main() async {
 ## Notes
 
 - `mapConcurrent` and `waitConcurrency` return results in completion order.
-- `TimeUtils.runWithTimeout` returns a `TimeoutException` when the timeout
+- `TimeUtils.runWithTimeout` throws a `TimeoutException` when the timeout
   fires, but the original task keeps running in the background.
 
 ## Examples
