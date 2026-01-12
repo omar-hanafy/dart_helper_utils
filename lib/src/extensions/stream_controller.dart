@@ -24,7 +24,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// Returns `true` if the event was added successfully, or `false` if
   /// the controller was already closed.
   bool safeAdd(T event) {
-    if (_isClosed()) return false;
+    if (isClosed) return false;
     try {
       add(event);
       return true;
@@ -40,7 +40,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// Returns `true` if the error was added successfully, or `false` if
   /// the controller was closed.
   bool safeAddError(Object error, [StackTrace? stackTrace]) {
-    if (_isClosed()) return false;
+    if (isClosed) return false;
     try {
       addError(error, stackTrace);
       return true;
@@ -60,7 +60,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   ///
   /// Returns a [Future] that completes when the controller is closed.
   Future<void> safeClose() {
-    if (_isClosed()) return Future.value();
+    if (isClosed) return Future.value();
     return close();
   }
 
@@ -70,8 +70,10 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// duration to help avoid overwhelming downstream listeners.
   ///
   /// Returns the number of events successfully added.
-  Future<int> safeAddAll(Iterable<T> events,
-      {Duration? throttleDuration}) async {
+  Future<int> safeAddAll(
+    Iterable<T> events, {
+    Duration? throttleDuration,
+  }) async {
     var count = 0;
     for (final event in events) {
       if (safeAdd(event)) {
@@ -107,7 +109,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     );
 
     // If the controller is already closed, cancel the subscription.
-    if (_isClosed() && !completer.isCompleted) {
+    if (isClosed && !completer.isCompleted) {
       await subscription.cancel();
       completer.complete(addedCount);
     }
@@ -136,7 +138,9 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   /// All events and errors from the provided streams are forwarded to this
   /// controller. The returned [Future] completes when all streams have ended.
   Future<void> mergeStreams(List<Stream<T>> streams) async {
-    assert(streams.isNotEmpty, 'Streams list cannot be empty');
+    if (streams.isEmpty) {
+      return;
+    }
     final completer = Completer<void>();
     var completedCount = 0;
     final subscriptions = <StreamSubscription<T>>[];
@@ -156,7 +160,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     }
 
     // Cancel any active subscriptions if the controller is closed.
-    if (_isClosed() && !completer.isCompleted) {
+    if (isClosed && !completer.isCompleted) {
       for (final sub in subscriptions) {
         await sub.cancel();
       }
@@ -179,21 +183,9 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     );
     return broadcastController;
   }
-
-  /// Determines whether the controller is closed.
-  ///
-  /// This helper method uses [hasListener] as a heuristic; adjust it if your
-  /// environment provides a more reliable indicator.
-  bool _isClosed() {
-    if (isClosed) return true;
-    // For broadcast controllers, we assume that the controller remains open
-    // until explicitly closed.
-    if (stream.isBroadcast) return false;
-    return !hasListener;
-  }
 }
 
-/// Additional stream transformations not covered by the official Dart [RateLimit] extension.
+/// Additional stream transformations not covered by the official Dart `RateLimit` extension.
 extension StreamTransformations<T> on Stream<T> {
   /// Buffers incoming events into lists of size [count].
   ///
@@ -207,7 +199,9 @@ extension StreamTransformations<T> on Stream<T> {
   /// });
   /// ```
   Stream<List<T>> bufferCount(int count) {
-    assert(count > 0, 'Buffer count must be greater than zero');
+    if (count <= 0) {
+      throw ArgumentError('Buffer count must be greater than zero');
+    }
     final bucket = <T>[];
     return transform(
       StreamTransformer<T, List<T>>.fromHandlers(
@@ -237,8 +231,9 @@ extension StreamTransformations<T> on Stream<T> {
   ///   .listen((events) => print('Window contained ${events.length} items'));
   /// ```
   Stream<List<T>> window(Duration windowDuration) {
-    assert(windowDuration.inMilliseconds > 0,
-        'Window duration must be greater than zero');
+    if (windowDuration.inMilliseconds <= 0) {
+      throw ArgumentError('Window duration must be greater than zero');
+    }
     StreamController<List<T>>? controller;
     final buffer = <T>[];
     Timer? timer;
@@ -285,8 +280,12 @@ extension StreamTransformations<T> on Stream<T> {
   ///   .listen((data) => print(data));
   /// ```
   Stream<T> rateLimit(int maxEvents, Duration duration) {
-    assert(maxEvents > 0, 'maxEvents must be greater than zero');
-    assert(duration.inMilliseconds > 0, 'Duration must be greater than zero');
+    if (maxEvents <= 0) {
+      throw ArgumentError('maxEvents must be greater than zero');
+    }
+    if (duration.inMilliseconds <= 0) {
+      throw ArgumentError('Duration must be greater than zero');
+    }
 
     var eventCount = 0;
     var windowStart = DateTime.now();
@@ -349,33 +348,73 @@ extension StreamTransformations<T> on Stream<T> {
   /// myStream.withLatestValue().listen((data) => print('Listener got: $data'));
   /// ```
   Stream<T> withLatestValue() {
-    final controller = StreamController<T>.broadcast();
     T? latestValue;
     var hasValue = false;
+    final source = asBroadcastStream();
 
-    final subscription = listen(
-      (data) {
-        latestValue = data;
-        hasValue = true;
-        controller.add(data);
-      },
-      onError: (dynamic error, dynamic stackTrace) {
-        controller._handleDynamicOnError(error, stackTrace);
-      },
-      onDone: controller.close,
-    );
-
-    controller
-      ..onListen = () {
-        if (hasValue) {
-          controller.add(latestValue as T);
-        }
+    return Stream<T>.multi((multiController) {
+      if (hasValue) {
+        multiController.add(latestValue as T);
       }
-      ..onCancel = () async {
-        await subscription.cancel();
-      };
+      final subscription = source.listen(
+        (data) {
+          latestValue = data;
+          hasValue = true;
+          multiController.add(data);
+        },
+        onError: multiController.addError,
+        onDone: multiController.close,
+      );
+      multiController.onCancel = () => subscription.cancel();
+    });
+  }
+}
 
-    return controller.stream;
+/// ---------------------------------------------------------------------------
+/// Stream Factory Extensions
+/// ---------------------------------------------------------------------------
+
+/// Extensions for Stream factory functions to support safe retries.
+extension DHUStreamFactoryExtensions<T> on Stream<T> Function() {
+  /// Retries the stream created by this factory.
+  ///
+  /// [retryCount] specifies the maximum number of retry attempts.
+  /// [delayFactor] determines the base delay for exponential backoff.
+  /// [shouldRetry] can be used to decide whether to retry for a specific error.
+  ///
+  /// This safely handles single-subscription streams by creating a new
+  /// stream instance for each attempt.
+  Stream<T> retry({
+    int retryCount = 3,
+    Duration delayFactor = const Duration(seconds: 1),
+    bool Function(Object error)? shouldRetry,
+  }) async* {
+    if (retryCount < 0) {
+      throw ArgumentError('retryCount must be non-negative');
+    }
+    if (delayFactor.inMilliseconds <= 0) {
+      throw ArgumentError('delayFactor must be greater than zero');
+    }
+
+    var attempts = 0;
+    while (true) {
+      try {
+        await for (final value in this()) {
+          yield value;
+        }
+        break;
+      } catch (error) {
+        if (attempts < retryCount &&
+            (shouldRetry == null || shouldRetry(error))) {
+          attempts++;
+          final delayMillis =
+              delayFactor.inMilliseconds * pow(2, attempts - 1).toInt();
+          await delayMillis.millisecondsDelay();
+          continue;
+        }
+        rethrow;
+      }
+    }
   }
 }
 
@@ -412,9 +451,12 @@ extension StreamErrorRecovery<T> on Stream<T> {
     Duration delayFactor = const Duration(seconds: 1),
     bool Function(Object error)? shouldRetry,
   }) async* {
-    assert(retryCount >= 0, 'retryCount must be non-negative');
-    assert(delayFactor.inMilliseconds > 0,
-        'delayFactor must be greater than zero');
+    if (retryCount < 0) {
+      throw ArgumentError('retryCount must be non-negative');
+    }
+    if (delayFactor.inMilliseconds <= 0) {
+      throw ArgumentError('delayFactor must be greater than zero');
+    }
 
     var attempts = 0;
     while (true) {
@@ -424,6 +466,16 @@ extension StreamErrorRecovery<T> on Stream<T> {
         }
         break;
       } catch (error) {
+        if (error is StateError) {
+          final message = error.message.toString();
+          if (message.contains('already been listened')) {
+            throw StateError(
+              'Cannot retry a single-subscription stream that has already been listened to. '
+              'Use a broadcast stream or the "retry" extension on a Stream Factory function (Stream<T> Function()) instead.',
+            );
+          }
+        }
+
         if (attempts < retryCount &&
             (shouldRetry == null || shouldRetry(error))) {
           attempts++;

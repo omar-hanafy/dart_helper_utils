@@ -1,26 +1,3 @@
-import 'package:dart_helper_utils/dart_helper_utils.dart';
-
-/// Extensions for nullable [String] to convert to [Uri]
-extension DHUNullSafeURIExtensions on String? {
-  /// converts a string? to a uri
-  Uri? get toUri => this == null ? null : Uri.tryParse(this!.clean);
-
-  /// converts a string? to a phone uri
-  Uri? get toPhoneUri => this == null
-      ? null
-      : Uri.parse(this!.startsWith('tel://') ? this! : 'tel://${this!.clean}');
-}
-
-/// Extensions for [String] to convert to [Uri]
-extension DHUURIExtensions on String {
-  /// converts a string to a uri
-  Uri get toUri => Uri.parse(clean);
-
-  /// converts a string to a phone uri
-  Uri get toPhoneUri =>
-      Uri.parse(startsWith('tel://') ? clean : 'tel://$clean');
-}
-
 /// Extensions for [Uri] utils and manipulation.
 extension DHUUriEx on Uri {
   /// Extracts the domain name from a URL.
@@ -44,6 +21,12 @@ extension DHUUriEx on Uri {
   /// Each builder, if provided, receives the current value and should
   /// return the new value. If a builder isn't provided, the current value
   /// is retained.
+  ///
+  /// If both `pathBuilder` and `pathSegmentsBuilder` return non-null values,
+  /// `pathSegmentsBuilder` takes precedence.
+  ///
+  /// If both `queryBuilder` and `queryParametersBuilder` return non-null values,
+  /// `queryParametersBuilder` takes precedence.
   Uri rebuild({
     String? Function(String current)? schemeBuilder,
     String? Function(String current)? userInfoBuilder,
@@ -64,7 +47,7 @@ extension DHUUriEx on Uri {
     String? newPath;
     List<String>? newPathSegments;
     String? newQuery;
-    Map<String, String>? newQueryParameters;
+    Map<String, dynamic>? newQueryParameters;
     String? newFragment;
 
     // Apply builder functions if provided
@@ -106,12 +89,15 @@ extension DHUUriEx on Uri {
       // Apply the builder
       final resultParams = queryParametersBuilder(dynamicQueryParams);
 
-      // Convert back to Map<String, String> if a new value was returned
+      // Convert back to Map<String, dynamic> allowing Iterables
       if (resultParams != null) {
         newQueryParameters = {};
         resultParams.forEach((key, value) {
-          // Convert value to string (if not null)
-          newQueryParameters![key] = value?.toString() ?? '';
+          if (value is Iterable) {
+            newQueryParameters![key] = value.map((e) => e.toString()).toList();
+          } else {
+            newQueryParameters![key] = value?.toString() ?? '';
+          }
         });
       }
     }
@@ -120,17 +106,148 @@ extension DHUUriEx on Uri {
       newFragment = fragmentBuilder(fragment);
     }
 
+    final effectivePathSegments = newPathSegments;
+    final effectivePath = effectivePathSegments == null ? newPath : null;
+
+    final effectiveQueryParameters = newQueryParameters;
+    final effectiveQuery = effectiveQueryParameters == null ? newQuery : null;
+
     // Create a new Uri with the modified components
     return replace(
       scheme: newScheme,
       userInfo: newUserInfo,
       host: newHost,
       port: newPort,
-      path: newPath,
-      pathSegments: newPathSegments,
-      query: newQuery,
-      queryParameters: newQueryParameters,
+      path: effectivePath,
+      pathSegments: effectivePathSegments,
+      query: effectiveQuery,
+      queryParameters: effectiveQueryParameters,
       fragment: newFragment,
     );
   }
+
+  /// Returns a new [Uri] with query parameters replaced by [queryParameters].
+  Uri withQueryParameters(Map<String, Object?> queryParameters) {
+    final params = _toQueryParametersAll(queryParameters);
+    return replace(query: _toQueryString(params));
+  }
+
+  /// Returns a new [Uri] with [queryParameters] merged into existing parameters.
+  ///
+  /// When keys collide, values from [queryParameters] replace existing ones.
+  Uri mergeQueryParameters(Map<String, Object?> queryParameters) {
+    final merged = <String, List<String>>{};
+    queryParametersAll.forEach((key, value) {
+      merged[key] = List<String>.from(value);
+    });
+    final incoming = _toQueryParametersAll(queryParameters);
+    incoming.forEach((key, value) {
+      merged[key] = value;
+    });
+    return replace(query: _toQueryString(merged));
+  }
+
+  /// Returns a new [Uri] with the provided [keys] removed from query parameters.
+  Uri removeQueryParameters(Iterable<String> keys) {
+    final updated = <String, List<String>>{};
+    queryParametersAll.forEach((key, value) {
+      if (!keys.contains(key)) {
+        updated[key] = List<String>.from(value);
+      }
+    });
+    return replace(query: _toQueryString(updated));
+  }
+
+  /// Returns a new [Uri] with [segment] appended to the path.
+  Uri appendPathSegment(String segment) {
+    if (segment.isEmpty) return this;
+    final segments = _normalizedPathSegments(this)
+      ..addAll(_cleanPathSegments([segment]));
+    return replace(pathSegments: segments);
+  }
+
+  /// Returns a new [Uri] with [segments] appended to the path.
+  Uri appendPathSegments(Iterable<String> segments) {
+    final cleaned = _cleanPathSegments(segments);
+    if (cleaned.isEmpty) return this;
+    final combined = _normalizedPathSegments(this)..addAll(cleaned);
+    return replace(pathSegments: combined);
+  }
+
+  /// Normalizes the trailing slash in the path.
+  ///
+  /// If [trailingSlash] is true, ensures the path ends with a slash.
+  /// If false, removes any trailing slashes.
+  Uri normalizeTrailingSlash({bool trailingSlash = true}) {
+    final currentPath = path;
+    if (currentPath.isEmpty) return this;
+
+    if (trailingSlash) {
+      if (currentPath.endsWith('/')) return this;
+      return replace(path: '$currentPath/');
+    }
+
+    final normalized = currentPath.replaceAll(RegExp(r'/+$'), '');
+    return normalized == currentPath ? this : replace(path: normalized);
+  }
+}
+
+Map<String, List<String>> _toQueryParametersAll(
+  Map<String, Object?> queryParameters,
+) {
+  final result = <String, List<String>>{};
+
+  queryParameters.forEach((key, value) {
+    if (value == null) return;
+    if (value is Iterable && value is! String) {
+      final values = value
+          .where((item) => item != null)
+          .map((item) => item.toString())
+          .toList(growable: false);
+      if (values.isNotEmpty) {
+        result[key] = values;
+      }
+      return;
+    }
+    result[key] = [value.toString()];
+  });
+
+  return result;
+}
+
+String _toQueryString(Map<String, List<String>> queryParameters) {
+  if (queryParameters.isEmpty) return '';
+  final pairs = <String>[];
+
+  queryParameters.forEach((key, values) {
+    final encodedKey = Uri.encodeQueryComponent(key);
+    if (values.isEmpty) {
+      pairs.add(encodedKey);
+      return;
+    }
+    for (final value in values) {
+      final encodedValue = Uri.encodeQueryComponent(value);
+      pairs.add('$encodedKey=$encodedValue');
+    }
+  });
+
+  return pairs.join('&');
+}
+
+List<String> _normalizedPathSegments(Uri uri) {
+  final segments = uri.pathSegments.toList();
+  if (segments.isNotEmpty && segments.last.isEmpty) {
+    segments.removeLast();
+  }
+  return segments;
+}
+
+List<String> _cleanPathSegments(Iterable<String> segments) {
+  final cleaned = <String>[];
+  for (final segment in segments) {
+    if (segment.isNotEmpty) {
+      cleaned.add(segment);
+    }
+  }
+  return cleaned;
 }

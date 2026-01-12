@@ -66,7 +66,7 @@ void main() {
       expectOrdinal(121, 'one hundred twenty-first', '121st');
     });
 
-// Negative Numbers (should throw an ArgumentError)
+    // Negative Numbers (should throw an ArgumentError)
     test('Negative numbers throw an ArgumentError', () {
       expect(() => expectOrdinal(-1, '', ''), throwsA(isA<ArgumentError>()));
       expect(() => expectOrdinal(-100, '', ''), throwsA(isA<ArgumentError>()));

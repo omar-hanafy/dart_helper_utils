@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-///
+/// Extensions for common String helpers.
 extension DHUStringExtensions on String {
   /// If the string is empty, return null. Otherwise, return the string.
   String? get nullIfEmpty => isEmpty ? null : this;
@@ -22,16 +22,50 @@ extension DHUStringExtensions on String {
   /// Example: "Line1\nLine2" => "Line1Line2"
   String get toOneLine => replaceAll('\n', '');
 
-  /// Removes all whitespace characters (spaces) from the string.
-  /// Example: "Line 1 Line 2" => "Line1Line2"
-  String get removeWhiteSpaces => replaceAll(' ', '');
+  /// Removes all whitespace characters (spaces, tabs, newlines, etc.) from the string.
+  /// Example: "Line 1\tLine 2" => "Line1Line2"
+  String get removeWhiteSpaces => replaceAll(RegExp(r'\s+'), '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
   /// Example: "Line 1\n Line 2" => "Line1Line2"
   String get clean => toOneLine.removeWhiteSpaces;
 
-  /// returns the integer value of the Roman numeral string.
-  int get asRomanNumeralToInt => NumbersHelper.fromRomanNumeral(this);
+  /// Collapses consecutive whitespace into single spaces and trims the result.
+  ///
+  /// Example: " Line   1 \n Line 2 " => "Line 1 Line 2"
+  String normalizeWhitespace() => trim().replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Splits the string into a list of words.
+  ///
+  /// Returns an empty list if the string is empty or contains only whitespace.
+  List<String> get words {
+    final normalized = normalizeWhitespace();
+    return normalized.isEmpty ? [] : normalized.split(' ');
+  }
+
+  /// Splits the string into a list of lines.
+  List<String> get lines => split(RegExp(r'\r?\n'));
+
+  /// Converts the string to a URL/filename-friendly slug.
+  ///
+  /// Example: "Hello, World!" => "hello-world"
+  String slugify({String separator = '-'}) {
+    if (separator.isEmpty) {
+      throw ArgumentError('Separator must not be empty');
+    }
+
+    final normalized = normalizeWhitespace().toLowerCase();
+    if (normalized.isEmpty) return '';
+
+    final escapedSeparator = RegExp.escape(separator);
+    final cleaned = normalized
+        .replaceAll(RegExp(r'[^a-z0-9\s_-]'), '')
+        .replaceAll(RegExp(r'[_\s]+'), separator)
+        .replaceAll(RegExp('$escapedSeparator+'), separator)
+        .replaceAll(RegExp('^$escapedSeparator|$escapedSeparator\$'), '');
+
+    return cleaned;
+  }
 
   /// Base64 Encode for this String
   String base64Encode() => base64.encode(utf8.encode(this));
@@ -40,32 +74,133 @@ extension DHUStringExtensions on String {
   String base64Decode({bool? allowMalformed}) =>
       utf8.decode(base64.decode(this), allowMalformed: allowMalformed);
 
-  /// Measures how similar this string is to another string using the specified algorithm.
-  /// it uses the public [StringSimilarity] class which offers different methods
-  /// for measuring how similar two strings are.
-  double compareWith(
-    String other,
-    SimilarityAlgorithm algorithm, {
-    StringSimilarityConfig config = const StringSimilarityConfig(),
-  }) =>
-      StringSimilarity.compare(
-        this,
-        other,
-        algorithm,
-        config: config,
+  /// Parses this string into a [Duration].
+  ///
+  /// Supported formats:
+  /// - Clock format: "HH:mm:ss" or "mm:ss"
+  /// - Token format: "1h 20m", "2d 3h 4m 5s"
+  ///
+  /// Throws [FormatException] for invalid input.
+  Duration parseDuration() {
+    final original = this;
+    var input = trim();
+    if (input.isEmpty) {
+      throw FormatException('Invalid duration', original);
+    }
+
+    var isNegative = false;
+    if (input.startsWith('-')) {
+      isNegative = true;
+      input = input.substring(1).trimLeft();
+    }
+
+    if (input.isEmpty) {
+      throw FormatException('Invalid duration', original);
+    }
+
+    FormatException invalid([String? reason]) =>
+        FormatException(reason ?? 'Invalid duration', original);
+
+    Duration parseClock(String value) {
+      final parts = value.split(':');
+      if (parts.length < 2 || parts.length > 3) {
+        throw invalid('Invalid clock duration');
+      }
+
+      int hours = 0;
+      int minutes = 0;
+      int seconds = 0;
+
+      try {
+        if (parts.length == 3) {
+          hours = int.parse(parts[0]);
+          minutes = int.parse(parts[1]);
+          seconds = int.parse(parts[2]);
+          if (minutes >= 60 || seconds >= 60) {
+            throw invalid('Invalid clock duration');
+          }
+        } else {
+          minutes = int.parse(parts[0]);
+          seconds = int.parse(parts[1]);
+          if (seconds >= 60) {
+            throw invalid('Invalid clock duration');
+          }
+        }
+      } on FormatException {
+        throw invalid('Invalid clock duration');
+      }
+
+      if (hours < 0 || minutes < 0 || seconds < 0) {
+        throw invalid('Invalid clock duration');
+      }
+
+      return Duration(hours: hours, minutes: minutes, seconds: seconds);
+    }
+
+    Duration parseTokens(String value) {
+      final regex = RegExp(r'(\d+)\s*([dhms])', caseSensitive: false);
+      final matches = regex.allMatches(value);
+      if (matches.isEmpty) {
+        throw invalid();
+      }
+
+      final leftover = value.replaceAll(regex, '').trim();
+      if (leftover.isNotEmpty) {
+        throw invalid();
+      }
+
+      var days = 0;
+      var hours = 0;
+      var minutes = 0;
+      var seconds = 0;
+
+      for (final match in matches) {
+        final amount = int.parse(match.group(1)!);
+        final unit = match.group(2)!.toLowerCase();
+        switch (unit) {
+          case 'd':
+            days += amount;
+            break;
+          case 'h':
+            hours += amount;
+            break;
+          case 'm':
+            minutes += amount;
+            break;
+          case 's':
+            seconds += amount;
+            break;
+        }
+      }
+
+      return Duration(
+        days: days,
+        hours: hours,
+        minutes: minutes,
+        seconds: seconds,
       );
+    }
+
+    final duration = input.contains(':')
+        ? parseClock(input)
+        : parseTokens(input.replaceAll(RegExp(r'\s+'), ' '));
+
+    return isNegative
+        ? Duration(microseconds: -duration.inMicroseconds)
+        : duration;
+  }
 }
 
-///
+/// Extensions for nullable String helpers.
 extension DHUNullSafeStringExtensions on String? {
   /// Converts the string into a single line by replacing newline characters.
   String? get toOneLine => this?.replaceAll('\n', '');
 
-  /// Removes all whitespace characters (spaces) from the string.
-  String? get removeWhiteSpaces => this?.replaceAll(' ', '');
+  /// Removes all whitespace characters (spaces, tabs, newlines, etc.) from the string.
+  String? get removeWhiteSpaces => this?.replaceAll(RegExp(r'\s+'), '');
 
   /// Removes all whitespace characters and collapses the string into a single line.
-  String? get clean => toOneLine.removeWhiteSpaces;
+  String? get clean => toOneLine?.removeWhiteSpaces;
 
   /// Returns true if the string is null, empty, or, after cleaning (collapsing into a single line, removing all whitespaces), is empty.
   bool get isEmptyOrNull => this == null || this!.clean.isEmpty;
@@ -142,17 +277,19 @@ extension DHUNullSafeStringExtensions on String? {
   /// Checks if the string is a valid IPv4 address.
   bool get isValidIp4 => hasMatch(regexValidIp4);
 
-  /// Checks if the string is a valid IPv6 address.
-  bool get isValidIp6 => hasMatch(regexValidIp6);
-
   /// Checks if the string is a valid URL.
-  bool get isValidUrl => tryToLowerCase.clean.hasMatch(regexValidUrl);
+  bool get isValidUrl =>
+      tryToLowerCase().clean?.hasMatch(regexValidUrl) ?? false;
 
-  /// Checks if the string consists only of numbers (no whitespace).
-  bool get isNumeric => hasMatch(regexNumeric);
+  /// Checks if the string consists only of ASCII digits (no sign or decimals).
+  ///
+  /// Leading/trailing whitespace is ignored. Use convert_object for parsing.
+  bool get isNumeric => this != null && this!.trim().hasMatch(regexNumeric);
 
-  /// Checks if the string consists only of letters (no whitespace).
-  bool get isAlphabet => hasMatch(regexAlphabet);
+  /// Checks if the string consists only of ASCII letters (A-Z, a-z).
+  ///
+  /// Leading/trailing whitespace is ignored.
+  bool get isAlphabet => this != null && this!.trim().hasMatch(regexAlphabet);
 
   /// Checks if the string contains at least one capital letter.
   bool get hasCapitalLetter => hasMatch(regexHasCapitalLetter);
@@ -174,8 +311,13 @@ extension DHUNullSafeStringExtensions on String? {
         dotAll: dotAll,
       ).hasMatch(this!);
 
-  /// Checks if the string represents a boolean value.
-  bool get isBool => this == 'true' || this == 'false';
+  /// Checks if the string is a boolean literal (`true`/`false`, case-insensitive).
+  bool get isBool {
+    final value = this;
+    if (value == null) return false;
+    final normalized = value.trim().toLowerCase();
+    return normalized == 'true' || normalized == 'false';
+  }
 
   /// Wraps the string based on the specified word count, wrap behavior, and delimiter.
   /// Example: "This is a test".wrapString(wrapCount: 2, wrapEach: false) => "This is\na test"
@@ -248,7 +390,11 @@ extension DHUNullSafeStringExtensions on String? {
         ? defaultValue.isEmptyOrNull
             ? this
             : defaultValue
-        : this!.replaceRange(index + 1, this!.length, replacement);
+        : this!.replaceRange(
+            index + delimiter.length,
+            this!.length,
+            replacement,
+          );
   }
 
   /// Replaces part of the string before the first occurrence of the given delimiter with the [replacement] string.
@@ -285,30 +431,8 @@ extension DHUNullSafeStringExtensions on String? {
     return this![this!.length - 1];
   }
 
-  /// Parses the string as a num or returns null if it is not a number.
-  num? get tryToNum => this == null ? null : num.tryParse(this!);
-
-  /// Parses the string as a double or returns null if it is not a number.
-  double? get tryToDouble =>
-      this == null ? null : num.tryParse(this!).tryToDouble;
-
-  /// Parses the string as an int or returns null if it is not a number.
-  int? get tryToInt => this == null ? null : num.tryParse(this!).tryToInt;
-
-  /// Parses the string as a num or returns null if it is not a number.
-  num get toNum => num.parse(this!);
-
-  /// Parses the string as a double or returns null if it is not a number.
-  double get toDouble => num.parse(this!).toDouble();
-
-  /// Parses the string as an int or returns null if it is not a number.
-  int get toInt => num.parse(this!).toInt();
-
-  /// Indicates whether the string is null, empty, or consists only of whitespace characters.
-  bool get isNullOrWhiteSpace {
-    final length = (this?.split('') ?? []).where((x) => x == ' ').length;
-    return length == (this?.length ?? 0) || isEmptyOrNull;
-  }
+  // Numeric conversions moved to convert_object. Use:
+  //   toNum(this), toDouble(this), toInt(this), tryToNum(this), tryToDouble(this), tryToInt(this)
 
   /// Shrinks the string to be no more than [maxSize] in length, extending from the end.
   /// Example: In a string with 10 characters, a [maxSize] of 3 would return the last 3 characters.
@@ -321,38 +445,37 @@ extension DHUNullSafeStringExtensions on String? {
   String? limitFromStart(int maxSize) =>
       (this?.length ?? 0) < maxSize ? this : this!.substring(0, maxSize);
 
-  /// Converts the string into a boolean.
-  /// Returns true if the string is any of these values: "true", "yes", "1", or if the string is a number and greater than 0, false if less than 1. This is also case insensitive.
-  bool get asBool {
-    try {
-      final s = clean.tryToLowerCase ?? 'false';
-      return s == 'true' ||
-          s == 'yes' ||
-          s == '1' ||
-          s == 'ok' ||
-          s.tryToNum.asBool;
-    } catch (_) {
-      return false;
-    }
+  /// Truncates the string to [length] and appends [suffix] if it exceeds the length.
+  String? truncate(int length, {String suffix = '...'}) {
+    if (this == null) return null;
+    if (length <= 0) return '';
+    if (this!.length <= length) return this;
+    return '${this!.substring(0, length)}$suffix';
   }
 
-  /// Decodes the JSON string into a dynamic data structure.
-  /// Returns the decoded dynamic data structure if the string is non-empty and valid JSON.
-  /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
-  dynamic decode({Object? Function(Object? key, Object? value)? reviver}) =>
-      isEmptyOrNull ? null : json.decode(this!, reviver: reviver);
-
-  /// Decodes the JSON string into a dynamic data structure.
-  /// Returns the decoded dynamic data structure if the string is non-empty and valid JSON.
-  /// Returns null if the string is null or empty, or if the string is not a valid JSON format.
-  dynamic tryDecode({Object? Function(Object? key, Object? value)? reviver}) {
-    try {
-      return decode(reviver: reviver);
-    } catch (_) {}
-    return null;
+  /// Checks if the string is a valid UUID.
+  bool get isUuid {
+    if (isEmptyOrNull) return false;
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(this!);
   }
 
-  /// property returns the integer value of the Roman numeral string.
-  int? get asRomanNumeralToInt =>
-      this == null ? null : NumbersHelper.fromRomanNumeral(this!);
+  /// Masks the email address for privacy.
+  /// Example: "johndoe@gmail.com" -> "jo****@gmail.com"
+  String get maskEmail {
+    if (this == null || !this!.isValidEmail) return this ?? '';
+    final index = this!.indexOf('@');
+    if (index <= 2) return '${this![0]}****${this!.substring(index)}';
+    return '${this!.substring(0, 2)}****${this!.substring(index)}';
+  }
+
+  /// Masks the string keeping [visibleStart] and [visibleEnd] characters visible.
+  String mask({int visibleStart = 0, int visibleEnd = 0, String char = '*'}) {
+    if (this == null) return '';
+    if (this!.length <= visibleStart + visibleEnd) return this!;
+    return this!.substring(0, visibleStart) +
+        (char * (this!.length - visibleStart - visibleEnd)) +
+        this!.substring(this!.length - visibleEnd);
+  }
 }

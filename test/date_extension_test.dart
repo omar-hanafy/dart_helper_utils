@@ -17,6 +17,24 @@ void main() {
       expect(testDate.toUtcIso, testDate.toUtc().toIso8601String());
     });
 
+    test('copyWith', () {
+      final updated = testDate.copyWith(month: 7, day: 2, minute: 45);
+      expect(updated, DateTime(2022, 7, 2, 10, 45));
+    });
+
+    test('copyWith preserves utc flag', () {
+      final utcDate = DateTime.utc(2022, 5, 10, 10, 30);
+      final updated = utcDate.copyWith(day: 11);
+      expect(updated.isUtc, isTrue);
+      expect(updated, DateTime.utc(2022, 5, 11, 10, 30));
+    });
+
+    test('copyWith can switch to utc', () {
+      final updated = testDate.copyWith(isUtc: true, hour: 5);
+      expect(updated.isUtc, isTrue);
+      expect(updated, DateTime.utc(2022, 5, 10, 5, 30));
+    });
+
     test('operator +', () {
       const duration = Duration(days: 1);
       expect(testDate + duration, testDate.add(duration));
@@ -33,8 +51,11 @@ void main() {
     });
 
     test('passedDays', () {
-      final days = DateTime(testDate.year, testDate.month, testDate.day)
-          .daysDifferenceTo(DateTime.now());
+      final days = DateTime(
+        testDate.year,
+        testDate.month,
+        testDate.day,
+      ).daysDifferenceTo(DateTime.now());
       expect(testDate.passedDays, days);
     });
 
@@ -67,9 +88,19 @@ void main() {
       expect(testDate.isAtSameYearAs(otherDate), true);
     });
 
+    test('isSameYearAs', () {
+      final otherDate = DateTime(2022, 1, 1);
+      expect(testDate.isSameYearAs(otherDate), true);
+    });
+
     test('isAtSameMonthAs', () {
       final otherDate = DateTime(2022, 5);
       expect(testDate.isAtSameMonthAs(otherDate), true);
+    });
+
+    test('isSameMonthAs', () {
+      final otherDate = DateTime(2022, 5, 1);
+      expect(testDate.isSameMonthAs(otherDate), true);
     });
 
     test('isAtSameDayAs', () {
@@ -138,6 +169,23 @@ void main() {
           .toList();
       expect(daysInMonth.length, greaterThanOrEqualTo(28));
       expect(daysInMonth.length, lessThanOrEqualTo(31));
+    });
+
+    test('daysInMonth alignment for Monday start', () {
+      // Oct 2023 starts on a Sunday (Oct 1st 2023 is Sunday)
+      final oct1 = DateTime(2023, 10, 1);
+      final days = oct1.daysInMonth;
+      // Monday start: Sun(1st) is the 7th day.
+      // Grid starts Mon Sept 25.
+      expect(days.first.day, equals(25));
+      expect(days.first.month, equals(9));
+    });
+
+    test('daysInMonth ends on Sunday without extra week', () {
+      // April 2023 ends on a Sunday (Apr 30, 2023).
+      final april1 = DateTime(2023, 4, 1);
+      final days = april1.daysInMonth;
+      expect(days.last, DateTime(2023, 4, 30));
     });
 
     test('previousDay', () {
@@ -254,6 +302,32 @@ void main() {
       expect(testDate.max(laterDate), laterDate);
     });
 
+    group('clampBetween', () {
+      final start = DateTime(2022, 5, 1);
+      final end = DateTime(2022, 5, 31);
+
+      test('returns start when before range', () {
+        final before = DateTime(2022, 4, 30);
+        expect(before.clampBetween(start, end), start);
+      });
+
+      test('returns end when after range', () {
+        final after = DateTime(2022, 6, 1);
+        expect(after.clampBetween(start, end), end);
+      });
+
+      test('returns same value when in range', () {
+        expect(testDate.clampBetween(start, end), testDate);
+      });
+
+      test('throws when start is after end', () {
+        expect(
+          () => testDate.clampBetween(end, start),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+    });
+
     test('addDays', () {
       final addedDays = testDate.addDays(1);
       expect(addedDays, DateTime(2022, 5, 11, 10, 30));
@@ -295,18 +369,19 @@ void main() {
     // Tests for DHUDateNullString extension
     group('DHUDateNullString', () {
       test('tryToDateTime', () {
-        expect('2022-05-10'.tryToDateTime, DateTime(2022, 5, 10));
-        expect('invalid-date'.tryToDateTime, null);
+        expect('2022-05-10'.convert.tryToDateTime(), DateTime(2022, 5, 10));
+        expect('invalid-date'.convert.tryToDateTime(), null);
       });
 
       test('toDateTime', () {
-        expect('2022-05-10'.toDateTime, DateTime(2022, 5, 10));
+        expect('2022-05-10'.convert.toDateTime(), DateTime(2022, 5, 10));
       });
 
       test('timestampToDate', () {
+        const timestamp = 1652188800000;
         expect(
-          '1652188800000'.timestampToDate,
-          DateTime.fromMillisecondsSinceEpoch(1652188800000),
+          timestamp.convert.toDateTime(),
+          DateTime.fromMillisecondsSinceEpoch(timestamp),
         );
       });
     });
@@ -339,13 +414,13 @@ void main() {
 
       test('timestampToDate', () {
         expect(
-          1652188800000.timestampToDate,
+          1652188800000.convert.toDateTime(),
           DateTime.fromMillisecondsSinceEpoch(1652188800000),
         );
       });
-      test('timestampToDate', () {
+      test('timestampToDate duplicate', () {
         expect(
-          1652188800000.timestampToDate,
+          1652188800000.convert.toDateTime(),
           DateTime.fromMillisecondsSinceEpoch(1652188800000),
         );
       });
@@ -380,46 +455,26 @@ void main() {
 
       test('fully inclusive boundaries', () {
         expect(
-          startDate.isBetween(
-            startDate,
-            endDate,
-            inclusiveEnd: true,
-          ),
+          startDate.isBetween(startDate, endDate, inclusiveEnd: true),
           isTrue,
         );
         expect(
-          endDate.isBetween(
-            startDate,
-            endDate,
-            inclusiveEnd: true,
-          ),
+          endDate.isBetween(startDate, endDate, inclusiveEnd: true),
           isTrue,
         );
       });
 
       test('fully exclusive boundaries', () {
         expect(
-          startDate.isBetween(
-            startDate,
-            endDate,
-            inclusiveStart: false,
-          ),
+          startDate.isBetween(startDate, endDate, inclusiveStart: false),
           isFalse,
         );
         expect(
-          endDate.isBetween(
-            startDate,
-            endDate,
-            inclusiveStart: false,
-          ),
+          endDate.isBetween(startDate, endDate, inclusiveStart: false),
           isFalse,
         );
         expect(
-          midDate.isBetween(
-            startDate,
-            endDate,
-            inclusiveStart: false,
-          ),
+          midDate.isBetween(startDate, endDate, inclusiveStart: false),
           isTrue,
         );
       });
@@ -431,20 +486,10 @@ void main() {
         final sameDayDifferentTime = DateTime(2024, 1, 1, 23, 59, 59);
 
         expect(
-          sameDay.isBetween(
-            sameDayDifferentTime,
-            endDate,
-            ignoreTime: true,
-          ),
+          sameDay.isBetween(sameDayDifferentTime, endDate, ignoreTime: true),
           isTrue,
         );
-        expect(
-          sameDay.isBetween(
-            sameDayDifferentTime,
-            endDate,
-          ),
-          isFalse,
-        );
+        expect(sameDay.isBetween(sameDayDifferentTime, endDate), isFalse);
       });
 
       test('milliseconds and microseconds are considered', () {
@@ -453,7 +498,9 @@ void main() {
         final preciseDateMid = DateTime(2024, 1, 1, 10, 0, 0, 0, 2);
 
         expect(
-            preciseDateMid.isBetween(preciseDateStart, preciseDateEnd), isTrue);
+          preciseDateMid.isBetween(preciseDateStart, preciseDateEnd),
+          isTrue,
+        );
       });
     });
 
@@ -466,11 +513,7 @@ void main() {
 
         // This should be true because the relative time differences are preserved
         expect(
-          localMid.isBetween(
-            localStart,
-            localEnd,
-            normalize: true,
-          ),
+          localMid.isBetween(localStart, localEnd, normalize: true),
           isTrue,
         );
 
@@ -480,24 +523,10 @@ void main() {
         final utcEnd = localEnd.toUtc();
 
         // This should also be true as they represent the same moments in time
-        expect(
-          utcMid.isBetween(
-            utcStart,
-            utcEnd,
-            normalize: true,
-          ),
-          isTrue,
-        );
+        expect(utcMid.isBetween(utcStart, utcEnd, normalize: true), isTrue);
 
         // Cross-timezone comparison should work
-        expect(
-          localMid.isBetween(
-            utcStart,
-            utcEnd,
-            normalize: true,
-          ),
-          isTrue,
-        );
+        expect(localMid.isBetween(utcStart, utcEnd, normalize: true), isTrue);
       });
 
       test('timezone differences are handled correctly', () {
@@ -508,14 +537,7 @@ void main() {
         // Create a date in UTC that would fall between them
         final utcMid = start.toUtc().add(const Duration(hours: 1));
 
-        expect(
-          utcMid.isBetween(
-            start,
-            end,
-            normalize: true,
-          ),
-          isTrue,
-        );
+        expect(utcMid.isBetween(start, end, normalize: true), isTrue);
       });
     });
     group('Edge cases and error handling', () {
@@ -535,30 +557,13 @@ void main() {
       test('handles equal start and end dates', () {
         final date = DateTime(2024);
 
-        expect(
-          date.isBetween(
-            date,
-            date,
-            inclusiveEnd: true,
-          ),
-          isTrue,
-        );
-        expect(
-          date.isBetween(
-            date,
-            date,
-            inclusiveStart: false,
-          ),
-          isFalse,
-        );
+        expect(date.isBetween(date, date, inclusiveEnd: true), isTrue);
+        expect(date.isBetween(date, date, inclusiveStart: false), isFalse);
       });
 
       test('handles null for nullable extension', () {
         DateTime? nullDate;
-        expect(
-          nullDate.isBetween(startDate, endDate),
-          isFalse,
-        );
+        expect(nullDate.isBetween(startDate, endDate), isFalse);
       });
     });
 
@@ -570,11 +575,7 @@ void main() {
         final duringTransition = DateTime(2024, 3, 10, 2, 30);
 
         expect(
-          duringTransition.isBetween(
-            beforeDST,
-            afterDST,
-            normalize: true,
-          ),
+          duringTransition.isBetween(beforeDST, afterDST, normalize: true),
           isTrue,
         );
       });

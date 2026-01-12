@@ -1,16 +1,16 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/extensions/extensions.dart';
 
-///
+/// Nullable String casing helpers.
 extension DHUNullSafeCaseConversionExtensions on String? {
   /// Converts the string to lowercase if it's not null.
-  String? get tryToLowerCase => this?.toLowerCase();
+  String? tryToLowerCase() => this?.toLowerCase();
 
   /// Converts the string to uppercase if it's not null.
-  String? get tryToUpperCase => this?.toUpperCase();
+  String? tryToUpperCase() => this?.toUpperCase();
 }
 
-///
+/// String case conversion helpers.
 extension DHUCaseConversionExtensions on String {
   /// Splits the string into a list of words based on camel case, underscores, hyphens, and spaces.
   List<String> get toWords =>

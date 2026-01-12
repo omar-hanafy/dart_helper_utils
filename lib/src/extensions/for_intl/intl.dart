@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 /// Provides extensions for [Map<Object, T>] to support internationalization (i18n) message formatting.
 /// IntlMapExtension
 extension IntlMapExtension<T> on Map<Object, T> {
-  /// Internal: Implements the logic for `select` - use [intlSelect] for
+  /// Internal: Implements the logic for `select` - use `intlSelect` for
   /// normal messages.
   ///
   /// [choice]: The choice used to select the appropriate message.
@@ -20,12 +20,12 @@ extension IntlMapStringExtension on Map<Object, String> {
   /// Format a message differently depending on [choice].
   ///
   /// We look up the value
-  /// of [choice] in [cases] and return the result, or an empty string if
+  /// of [choice] in `cases` and return the result, or an empty string if
   /// it is not found. Normally used as part
   /// of an Intl.message message that is to be translated.
   ///
   /// It is possible to use a Dart enum as the choice and as the
-  /// key in cases, but note that we will process this by truncating
+  /// key in `cases`, but note that we will process this by truncating
   /// `toString()` of the enum and using just the name part. We will
   /// do this for any class or strings that are passed, since we
   /// can't actually identify if something is an enum or not.

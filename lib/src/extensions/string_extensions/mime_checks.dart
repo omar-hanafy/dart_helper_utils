@@ -81,18 +81,23 @@ extension DHUImageMimeChecksExtensions on String? {
   }
 
   /// Checks if a file path or URL represents an ICO image.
-
+  ///
+  /// Returns `true` for files with MIME type 'image/x-icon' (.ico extension).
   bool get isICO => mimeType() == 'image/x-icon';
 
   /// Checks if a file path or URL represents an ICNS image.
+  ///
+  /// Returns `true` for files with MIME type 'image/x-icns' (.icns extension).
   bool get isICNS => mimeType() == 'image/x-icns';
 
   /// Checks if a file path or URL represents a HEIF image.
-
+  ///
+  /// Returns `true` for files with MIME type 'image/heif' (.heif extension).
   bool get isHEIF => mimeType() == 'image/heif';
 
   /// Checks if a file path or URL represents a HEIC image.
-
+  ///
+  /// Returns `true` for files with MIME type 'image/heic' (.heic extension).
   bool get isHEIC => mimeType() == 'image/heic';
 
   /// Checks if a file path or URL represents a JPEG or JPG image.
@@ -379,15 +384,24 @@ extension DHUProgrammingMimeChecksExtensions on String? {
   }
 
   /// Checks if a file path or URL represents a JavaScript file.
+  ///
+  /// Includes common `text/javascript` and `application/javascript` variants.
   bool get isJavaScript {
     final mt = mimeType();
-    return mt == 'application/javascript';
+    return mt == 'application/javascript' ||
+        mt == 'application/x-javascript' ||
+        mt == 'text/javascript' ||
+        mt == 'text/x-javascript';
   }
 
   /// Checks if a file path or URL represents a TypeScript file.
+  ///
+  /// Includes common `text/typescript` and `application/typescript` variants.
   bool get isTypeScript {
     final mt = mimeType();
-    return mt == 'application/typescript';
+    return mt == 'application/typescript' ||
+        mt == 'application/x-typescript' ||
+        mt == 'text/typescript';
   }
 
   /// Checks if a file path or URL represents a C# source file.

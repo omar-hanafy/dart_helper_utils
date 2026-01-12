@@ -1,27 +1,5 @@
-import 'dart:convert';
-
 import 'package:dart_helper_utils/dart_helper_utils.dart';
-import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
-
-dynamic _makeValueEncodable(dynamic value) {
-  if (value is String ||
-      value is int ||
-      value is double ||
-      value is bool ||
-      value == null) {
-    return value;
-  } else if (value is Enum) {
-    return value.name;
-  } else if (value is List) {
-    return value.map(_makeValueEncodable).toList();
-  } else if (value is Set) {
-    return value.map(_makeValueEncodable).toList();
-  } else if (value is Map) {
-    return value.encodableCopy;
-  } else {
-    return value.toString();
-  }
-}
+import 'dart:collection';
 
 ///  DHUMapExtension
 extension DHUMapExtension<K, V> on Map<K, V> {
@@ -29,38 +7,16 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   /// Note: If there are duplicate values, the last key-value pair will be kept.
   Map<V, K> swapKeysWithValues() => map((key, value) => MapEntry(value, key));
 
-  /// Returns a new map with converted dynamic keys and values to a map with string keys and JSON-encodable values.
-  ///
-  /// This is useful for preparing data for JSON serialization, where keys must be strings.
-  Map<String, dynamic> get encodableCopy {
-    final result = <String, dynamic>{};
-    forEach((key, value) {
-      result[key.toString()] = _makeValueEncodable(value);
-    });
-    return result;
-  }
-
-  /// Converts a map with potentially complex data types to a formatted JSON string.
-  ///
-  /// The resulting JSON is indented for readability.
-  String get encodedJsonString =>
-      const JsonEncoder.withIndent('  ').convert(encodableCopy);
-
   /// Inserts a key-value pair into the map if the key does not already exist.
   ///
   /// If the key exists, its associated value is returned; otherwise,
   /// the new value is inserted and then returned.
   V setIfMissing(K key, V value) {
-    if (this[key] == null) return this[key] = value;
-    return this[key]!;
-  }
-
-  /// Updates the value associated with the given key if it exists.
-  ///
-  /// The `updater` function is used to modify the existing value. If the key does not exist,
-  /// the map remains unchanged.
-  void update(K key, V Function(V value) updater) {
-    if (containsKey(key)) this[key] = updater(this[key] as V);
+    if (!containsKey(key)) {
+      this[key] = value;
+      return value;
+    }
+    return this[key] as V;
   }
 
   /// Returns an iterable of keys where the associated values satisfy the given condition.
@@ -86,49 +42,21 @@ extension DHUMapExtension<K, V> on Map<K, V> {
       entries.where((entry) => predicate(entry.key, entry.value)),
     );
   }
-
-  /// Returns a list containing all the values in the map.
-  List<V> get valuesList => values.toList();
-
-  /// Returns a list containing all the keys in the map.
-  List<K> get keysList => keys.toList();
-
-  /// Returns a set containing all the values in the map.
-  Set<V> get valuesSet => values.toSet();
-
-  /// Returns a set containing all the keys in the map.
-  Set<K> get keysSet => keys.toSet();
 }
 
 /// DHUMapNullableExtension
 extension DHUMapNullableExtension<K, V> on Map<K, V>? {
-  /// Compares two maps for element-by-element equality.
-  ///
-  /// Returns true if the maps are both null, or if they are both non-null, have
-  /// the same length, and contain the same keys associated with the same values.
-  /// Returns false otherwise.
-  bool isEqual(Map<K, V>? b) {
-    final a = this;
-    if (identical(a, b)) return true;
-    if (a == null || b == null) return a == b;
-    if (a.length != b.length) return false;
-    for (final key in a.keys) {
-      if (!b.containsKey(key) || !gf.isEqual(a[key], b[key])) return false;
-    }
-    return true;
-  }
-
-  /// checks if every Key and Value is a [primitive type](https://dart.dev/language/built-in-types).
+  /// Returns `true` when every key and value is a primitive value.
   bool isPrimitive() {
     if (this == null) return false;
     return (isTypePrimitive<K>() || this!.keys.every(isValuePrimitive)) &&
         (isTypePrimitive<V>() || this!.values.every(isValuePrimitive));
   }
 
-  ///
+  /// Returns `true` when the map is `null` or empty.
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
-  ///
+  /// Returns `true` when the map is non-null and not empty.
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 }
 
@@ -141,39 +69,261 @@ extension DHUMapExt<K extends String, V> on Map<K, V> {
   /// - Customizable:
   ///   - `delimiter`: Adjusts how nested keys are separated.
   ///   - `excludeArrays`: Prevents flattening of arrays.
-  Map<String, dynamic> flatMap({
+  Map<String, Object?> flatMap({
     String delimiter = '.',
     bool excludeArrays = false,
   }) {
-    final result = <String, dynamic>{};
-    final visited = <Object, Object>{};
+    final result = <String, Object?>{};
+    final visited = HashSet<Object>.identity();
 
-    void flatten(Map<String, dynamic> obj, String? parentKey) {
-      obj.forEach((key, value) {
-        final newKey = parentKey == null ? key : '$parentKey$delimiter$key';
-        if (value is Map<String, dynamic>) {
-          if (!visited.containsKey(value)) {
-            // Circular reference check
-            visited[value] = value;
-            flatten(value, newKey);
-          }
-        } else if (value is List && !excludeArrays) {
-          for (var i = 0; i < value.length; i++) {
-            final listKey = '$newKey$delimiter$i';
-            final item = value[i];
-            if (item is Map<String, dynamic>) {
-              flatten(item, listKey);
-            } else {
-              result[listKey] = item;
-            }
-          }
-        } else {
-          result[newKey] = value;
+    void flattenAny(Object? value, String key) {
+      if (value is Map) {
+        if (!visited.add(value)) return;
+        value.forEach((k, v) {
+          final childKey = k.toString();
+          flattenAny(v, '$key$delimiter$childKey');
+        });
+        return;
+      }
+
+      if (value is List && !excludeArrays) {
+        if (!visited.add(value)) return;
+        for (var i = 0; i < value.length; i++) {
+          flattenAny(value[i], '$key$delimiter$i');
         }
-      });
+        return;
+      }
+
+      result[key] = value;
     }
 
-    flatten(this, null);
+    forEach((k, v) => flattenAny(v, k));
     return result;
   }
+
+  /// Deep merges this map with [other] and returns a new map.
+  ///
+  /// When both maps contain a nested map for the same key, those maps are
+  /// merged recursively. Otherwise, the value from [other] overwrites this one.
+  Map<String, Object?> deepMerge(Map<String, Object?> other) {
+    final base = _toObjectMapFromEntries(entries);
+    return _deepMergeMaps(base, other);
+  }
+
+  /// Rebuilds a nested map from a flattened map.
+  ///
+  /// Keys are split by [delimiter] to create nested structures.
+  /// Numeric segments are treated as list indices when [parseIndices] is true.
+  Map<String, Object?> unflatten({
+    String delimiter = '.',
+    bool parseIndices = true,
+  }) {
+    final result = <String, Object?>{};
+    for (final entry in entries) {
+      final segments = _splitPathSegments(
+        entry.key,
+        delimiter,
+        parseIndices: parseIndices,
+      );
+      if (segments.isEmpty) continue;
+      _setPathSegments(
+        result,
+        segments,
+        entry.value,
+        parseIndices: parseIndices,
+      );
+    }
+    return result;
+  }
+
+  /// Reads a value from a nested map using [path] (e.g., "a.b.c").
+  ///
+  /// Returns `null` if the path does not resolve to a value.
+  ///
+  /// When [parseIndices] is true (default), bracketed indices are supported
+  /// (e.g., `items[0].id`).
+  Object? getPath(
+    String path, {
+    String delimiter = '.',
+    bool parseIndices = true,
+  }) {
+    final segments = _splitPathSegments(
+      path,
+      delimiter,
+      parseIndices: parseIndices,
+    );
+    if (segments.isEmpty) return null;
+    return _getPathSegments(this, segments);
+  }
+
+  /// Writes a value into a nested map using [path] (e.g., "a.b.c").
+  ///
+  /// Returns `true` if the value was set successfully.
+  bool setPath(
+    String path,
+    Object? value, {
+    String delimiter = '.',
+    bool parseIndices = true,
+  }) {
+    final segments = _splitPathSegments(
+      path,
+      delimiter,
+      parseIndices: parseIndices,
+    );
+    if (segments.isEmpty) return false;
+    return _setPathSegments(this, segments, value, parseIndices: parseIndices);
+  }
+}
+
+Map<String, Object?> _toObjectMapFromEntries(
+  Iterable<MapEntry<dynamic, dynamic>> entries,
+) {
+  final result = <String, Object?>{};
+  for (final entry in entries) {
+    if (entry.key is! String) continue;
+    result[entry.key as String] = entry.value;
+  }
+  return result;
+}
+
+Map<String, Object?> _deepMergeMaps(
+  Map<String, Object?> base,
+  Map<String, Object?> other,
+) {
+  final result = Map<String, Object?>.from(base);
+  for (final entry in other.entries) {
+    final key = entry.key;
+    final otherValue = entry.value;
+    final baseValue = result[key];
+    final baseMap = _asStringKeyMap(baseValue);
+    final otherMap = _asStringKeyMap(otherValue);
+    if (baseMap != null && otherMap != null) {
+      result[key] = _deepMergeMaps(baseMap, otherMap);
+    } else {
+      result[key] = otherValue;
+    }
+  }
+  return result;
+}
+
+Map<String, Object?>? _asStringKeyMap(Object? value) {
+  if (value is! Map) return null;
+  final result = <String, Object?>{};
+  for (final entry in value.entries) {
+    final key = entry.key;
+    if (key is! String) return null;
+    result[key] = entry.value;
+  }
+  return result;
+}
+
+List<String> _splitPathSegments(
+  String path,
+  String delimiter, {
+  bool parseIndices = true,
+}) {
+  final trimmed = path.trim();
+  if (trimmed.isEmpty) return const <String>[];
+  final normalized = parseIndices
+      ? trimmed.replaceAllMapped(
+          RegExp(r'\[(\d+)\]'),
+          (match) => '$delimiter${match[1]}',
+        )
+      : trimmed;
+  return normalized
+      .split(delimiter)
+      .where((segment) => segment.isNotEmpty)
+      .toList(growable: false);
+}
+
+Object? _getPathSegments(Object? root, List<String> segments) {
+  var current = root;
+  for (final segment in segments) {
+    if (current is Map) {
+      current = current[segment];
+      continue;
+    }
+
+    if (current is List) {
+      final index = int.tryParse(segment);
+      if (index == null || index < 0 || index >= current.length) return null;
+      current = current[index];
+      continue;
+    }
+
+    return null;
+  }
+  return current;
+}
+
+bool _setPathSegments(
+  Object? root,
+  List<String> segments,
+  Object? value, {
+  required bool parseIndices,
+}) {
+  var current = root;
+  for (var i = 0; i < segments.length; i++) {
+    final segment = segments[i];
+    final isLast = i == segments.length - 1;
+    final nextSegment = !isLast ? segments[i + 1] : null;
+    final nextIsIndex = parseIndices &&
+        nextSegment != null &&
+        int.tryParse(nextSegment) != null;
+
+    if (current is Map) {
+      if (isLast) {
+        current[segment] = value;
+        return true;
+      }
+
+      final existing = current[segment];
+      if (existing is Map || existing is List) {
+        current = existing;
+        continue;
+      }
+
+      final created = nextIsIndex ? <Object?>[] : <String, Object?>{};
+      current[segment] = created;
+      current = created;
+      continue;
+    }
+
+    if (current is List) {
+      final index = int.tryParse(segment);
+      if (index == null || index < 0) return false;
+      if (!_ensureListLength(current, index + 1)) return false;
+
+      if (isLast) {
+        current[index] = value;
+        return true;
+      }
+
+      final existing = current[index];
+      if (existing is Map || existing is List) {
+        current = existing;
+        continue;
+      }
+
+      final created = nextIsIndex ? <Object?>[] : <String, Object?>{};
+      current[index] = created;
+      current = created;
+      continue;
+    }
+
+    return false;
+  }
+  return false;
+}
+
+bool _ensureListLength(List<dynamic> list, int length) {
+  if (list.length >= length) return true;
+  try {
+    while (list.length < length) {
+      list.add(null);
+    }
+  } catch (_) {
+    return false;
+  }
+  return true;
 }

@@ -4,37 +4,10 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 extension DHUNumberFormatNullableStringExtensions on String? {
   /// Creates a [NumberFormat] object using the string as the pattern, along with the given [locale].
   NumberFormat numberFormat({String? locale}) => NumberFormat(this, locale);
-
-  /// Tries to parse the string to a number with the given [newPattern] and [locale].
-  /// Returns null if the string is null or empty.
-  num? tryToNumFormatted([String? newPattern, String? locale]) =>
-      isBlank ? null : NumberFormat(newPattern, locale).tryParse(this!);
-
-  /// Tries to parse the string to an integer with the given [newPattern] and [locale].
-  /// Returns null if the string is null or empty.
-  int? tryToIntFormatted([String? newPattern, String? locale]) =>
-      tryToNumFormatted(newPattern, locale)?.toInt();
-
-  /// Tries to parse the string to a double with the given [newPattern] and [locale].
-  /// Returns null if the string is null or empty.
-  double? tryToDoubleFormatted([String? newPattern, String? locale]) =>
-      tryToNumFormatted(newPattern, locale)?.toDouble();
 }
 
 /// Extension methods for the [String] type to format numbers using the [intl] package.
 extension DHUNumberFormatStringExtensions on String {
-  /// Parses the string to a number with the given [newPattern] and [locale].
-  num toNumFormatted([String? newPattern, String? locale]) =>
-      NumberFormat(newPattern, locale).parse(this);
-
-  /// Parses the string to an integer with the given [newPattern] and [locale].
-  int toIntFormatted([String? newPattern, String? locale]) =>
-      toNumFormatted(newPattern, locale).toInt();
-
-  /// Parses the string to a double with the given [newPattern] and [locale].
-  double toDoubleFormatted([String? newPattern, String? locale]) =>
-      toNumFormatted(newPattern, locale).toDouble();
-
   /// Creates a [NumberFormat] object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
   NumberFormat symbolCurrencyFormat({
     String? locale,
@@ -102,9 +75,7 @@ extension DHUNumberFormatExtensions on num {
 
   /// Formats the number in a compact form with the given [locale].
   String formatAsCompact({String? locale}) {
-    return NumberFormat.compact(
-      locale: locale,
-    ).format(this);
+    return NumberFormat.compact(locale: locale).format(this);
   }
 
   /// Formats the number in a long compact form with the given [locale].
@@ -231,21 +202,22 @@ extension DHUNumberFormatExtensions on num {
 
     // Use a unique placeholder for the decimal separator
     const decimalPlaceholder = '{DECIMAL_PLACEHOLDER}';
-    formatted =
-        formatted.replaceFirst(defaultDecimalSeparator, decimalPlaceholder);
+    formatted = formatted.replaceFirst(
+      defaultDecimalSeparator,
+      decimalPlaceholder,
+    );
 
     // Replace grouping separator if a custom one is provided
     if (groupingSeparator != null && groupingSeparator.isNotEmpty) {
-      formatted =
-          formatted.replaceAll(defaultGroupingSeparator, groupingSeparator);
+      formatted = formatted.replaceAll(
+        defaultGroupingSeparator,
+        groupingSeparator,
+      );
     }
 
     // Replace the decimal placeholder with the custom decimal separator
     if (decimalSeparator != null && decimalSeparator.isNotEmpty) {
-      formatted = formatted.replaceFirst(
-        decimalPlaceholder,
-        decimalSeparator,
-      );
+      formatted = formatted.replaceFirst(decimalPlaceholder, decimalSeparator);
     } else {
       // Replace placeholder back to default decimal separator
       formatted = formatted.replaceFirst(

@@ -14,43 +14,6 @@ const greekNumberSuffixes = <String>[
   'Y', // Yotta represents 1000000000000000000000000000
 ];
 
-/// A map of integers to Roman numeral representations.
-///
-/// This map is used to convert integers into their corresponding Roman numeral forms.
-const romanNumerals = <int, String>{
-  1: 'I', // One
-  2: 'II', // Two
-  3: 'III', // Three
-  4: 'IV', // Four
-  5: 'V', // Five
-  6: 'VI', // Six
-  7: 'VII', // Seven
-  8: 'VIII', // Eight
-  9: 'IX', // Nine
-  10: 'X', // Ten
-  11: 'XI', // Eleven
-  12: 'XII', // Twelve
-  13: 'XIII', // Thirteen
-  14: 'XIV', // Fourteen
-  15: 'XV', // Fifteen
-  20: 'XX', // Twenty
-  30: 'XXX', // Thirty
-  40: 'XL', // Forty
-  50: 'L', // Fifty
-  60: 'LX', // Sixty
-  70: 'LXX', // Seventy
-  90: 'XC', // Ninety
-  99: 'IC', // Ninety-Nine (rarely used; common alternative is XCIX)
-  100: 'C', // One Hundred
-  200: 'CC', // Two Hundred
-  400: 'CD', // Four Hundred
-  500: 'D', // Five Hundred
-  600: 'DC', // Six Hundred
-  900: 'CM', // Nine Hundred
-  990: 'XM', // Nine Hundred Ninety (non-standard; commonly use CMXC)
-  1000: 'M', // One Thousand
-};
-
 /// A map of integers to abbreviated weekday names.
 const smallWeekdays = <int, String>{
   1: 'Mon',
@@ -105,79 +68,74 @@ const fullMonthsNames = <int, String>{
   12: 'December',
 };
 
-/// Common time-related durations defined as constants.
-/// oneSecond
+/// Duration representing one second.
 const Duration oneSecond = Duration(seconds: 1);
 
-/// oneMinute
+/// Duration representing one minute.
 const Duration oneMinute = Duration(minutes: 1);
 
-/// oneHour
+/// Duration representing one hour.
 const Duration oneHour = Duration(hours: 1);
 
-/// oneDay
+/// Duration representing one day.
 const Duration oneDay = Duration(days: 1);
 
 /// Milliseconds constants for different time units.
-/// millisecondsPerSecond
+/// Number of milliseconds in one second.
 const millisecondsPerSecond = 1000;
 
-/// millisecondsPerMinute
+/// Number of milliseconds in one minute.
 const int millisecondsPerMinute = 60 * millisecondsPerSecond;
 
-/// millisecondsPerHour
+/// Number of milliseconds in one hour.
 const int millisecondsPerHour = 60 * millisecondsPerMinute;
 
-/// millisecondsPerDay
+/// Number of milliseconds in one day.
 const int millisecondsPerDay = 24 * millisecondsPerHour;
 
 /// Common regex patterns used for validation and parsing.
-/// regexAlphanumeric
+/// Matches ASCII letters and digits only.
 const String regexAlphanumeric = r'^[a-zA-Z0-9]+$';
 
-/// regexSpecialChars
+/// Matches any character that is not ASCII letter, digit, or space.
 const String regexSpecialChars = '[^a-zA-Z0-9 ]';
 
-/// regexStartsWithNumber
+/// Matches strings that start with a digit.
 const String regexStartsWithNumber = r'^\d';
 
-/// regexContainsDigits
+/// Matches strings containing at least one digit.
 const String regexContainsDigits = r'\d';
 
-/// regexValidUsername
+/// Matches usernames starting and ending with an alphanumeric character.
 const String regexValidUsername = r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$';
 
-/// regexValidCurrency
+/// Matches common currency strings with optional symbols and grouping.
 const String regexValidCurrency =
-    r'^(S?\$|\₩|Rp|\¥|\€|\₹|\₽|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$';
+    r'^(S?S?|\W|Rp|\W|\W|\W|\W|fr|R\$|R)?[ ]?[-]?([0-9]{1,3}[,.]([0-9]{3}[,.])*[0-9]{3}|[0-9]+)([,.][0-9]{1,2})?( ?(USD?|AUD|NZD|CAD|CHF|GBP|CNY|EUR|JPY|IDR|MXN|NOK|KRW|TRY|INR|RUB|BRL|ZAR|SGD|MYR))?$';
 
-/// regexValidPhoneNumber
+/// Matches common phone number formats with optional country codes and extensions.
 const String regexValidPhoneNumber =
     r'(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?';
 
-/// regexValidEmail
+/// Matches email addresses in a typical local@domain format.
 const String regexValidEmail =
     r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
 
-/// regexValidIp4
+/// Matches IPv4 addresses.
 const String regexValidIp4 =
     r'^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$';
 
-/// regexValidIp6
-const String regexValidIp6 =
-    r'/(?<protocol>(?:http|ftp|irc)s?:\/\/)?(?:(?<user>[^:\n\r]+):(?<pass>[^@\n\r]+)@)?(?<host>(?:www\.)?(?:[^:\/\n\r]+)(?::(?<port>\d+))?)\/?(?<request>[^?#\n\r]+)?\??(?<query>[^#\n\r]*)?\#?(?<anchor>[^\n\r]*)?/';
-
-/// regexValidUrl
+/// Matches http/https URLs and common URL patterns.
 const String regexValidUrl =
-    r'''^((?:https?:\/\/|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))+$''';
+    r'^(https?:\/\/)?(www\.)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+([\/?#][^\s]*)?$';
 
-/// regexNumeric
+/// Matches ASCII digits only.
 const String regexNumeric = r'^\d+$';
 
-/// regexAlphabet
+/// Matches ASCII letters only.
 const String regexAlphabet = r'^[a-zA-Z]+$';
 
-/// regexHasCapitalLetter
+/// Matches uppercase ASCII letters.
 const String regexHasCapitalLetter = '[A-Z]';
 
 /// A map of HTTP status codes to their corresponding messages.
@@ -205,7 +163,7 @@ Map<int, String> get httpStatusMessages => const {
       303: 'See Other',
       304: 'Not Modified',
       305: 'Use Proxy',
-      306: 'Switch Proxy',
+      306: 'Unused',
       307: 'Temporary Redirect',
       308: 'Permanent Redirect',
       400: 'Bad Request',
@@ -226,7 +184,7 @@ Map<int, String> get httpStatusMessages => const {
       415: 'Unsupported Media Type',
       416: 'Range Not Satisfiable',
       417: 'Expectation Failed',
-      418: "I'm a Teapot",
+      418: 'I\'m a Teapot',
       421: 'Misdirected Request',
       422: 'Unprocessable Entity',
       423: 'Locked',
@@ -237,7 +195,6 @@ Map<int, String> get httpStatusMessages => const {
       429: 'Too Many Requests',
       431: 'Request Header Fields Too Large',
       451: 'Unavailable For Legal Reasons',
-      499: 'Client Closed Request',
       500: 'Internal Server Error',
       501: 'Not Implemented',
       502: 'Bad Gateway',
@@ -249,7 +206,6 @@ Map<int, String> get httpStatusMessages => const {
       508: 'Loop Detected',
       510: 'Not Extended',
       511: 'Network Authentication Required',
-      599: 'Network Connect Timeout Error',
     };
 
 /// A map of HTTP status codes to user-friendly messages.
@@ -257,13 +213,13 @@ Map<int, String> get httpStatusMessages => const {
 /// This map provides easy-to-understand explanations of HTTP status codes
 /// that can be shown to end users in error messages and notifications.
 Map<int, String> get httpStatusUserMessage => const {
-// 1xx - Informational
+      // 1xx - Informational
       100: 'Please wait while we process your request...',
       101: 'Switching to a different protocol...',
       102: 'Your request is being processed...',
       103: 'Getting things ready...',
 
-// 2xx - Success
+      // 2xx - Success
       200: 'Success! Everything worked as expected.',
       201:
           'Success! Your request has been completed and a new resource was created.',
@@ -277,19 +233,19 @@ Map<int, String> get httpStatusUserMessage => const {
       226:
           'Your request was successful and the response has been modified for efficiency.',
 
-// 3xx - Redirection
+      // 3xx - Redirection
       300: 'Multiple options are available. Please choose one.',
       301: 'This page has been permanently moved to a new location.',
       302: 'This page has been temporarily moved to a different location.',
       303: 'Please check another page for the response to your request.',
       304: 'Nothing has changed since your last visit.',
       305: 'You need to use a proxy to access this resource.',
-      306: 'This code is no longer used but reserved for future use.',
+      306: 'This status code is unused.',
       307: 'This page is temporarily at a different address. Please try again.',
       308:
           'This page has been permanently moved. Please update your bookmarks.',
 
-// 4xx - Client Errors
+      // 4xx - Client Errors
       400: 'Oops! There seems to be a problem with your request.',
       401: 'Please log in to access this content.',
       402: 'Payment is required to access this content.',
@@ -320,9 +276,8 @@ Map<int, String> get httpStatusUserMessage => const {
       429: "Please slow down! You're making too many requests.",
       431: 'Your request headers are too large.',
       451: 'Sorry, this content is not available for legal reasons.',
-      499: 'The request was cancelled before completion.',
 
-// 5xx - Server Errors
+      // 5xx - Server Errors
       500: 'Oops! Something went wrong on our end. Please try again later.',
       501: 'Sorry, this feature is not available yet.',
       502:
@@ -335,8 +290,6 @@ Map<int, String> get httpStatusUserMessage => const {
       508: 'We detected an infinite loop while processing your request.',
       510: 'The server needs additional extensions to fulfill this request.',
       511: 'Please authenticate with the network first.',
-      599:
-          'Unable to connect to the server. Please check your internet connection.',
     };
 
 /// A map of HTTP status codes to detailed technical messages.
@@ -385,15 +338,13 @@ Map<int, String> get httpStatusDevMessage => const {
           'Resource not modified since timestamp or ETag in conditional request.',
       305:
           'Resource must be accessed through proxy in Location header (deprecated).',
-      306:
-          'Status code reserved for future use. Originally meant "Switch Proxy".',
+      306: 'Status code unused per IANA.',
       307:
           'Resource temporarily moved. Maintain method and payload for redirect.',
       308:
           'Resource permanently moved. Maintain method and payload for redirect.',
 
       // 4xx - Client Errors
-
       400:
           'Malformed request syntax, invalid request message framing, or deceptive request routing.',
       401:
@@ -433,7 +384,6 @@ Map<int, String> get httpStatusDevMessage => const {
       429: 'Too Many Requests. Check Rate-Limit headers and implement backoff.',
       431: 'Request header fields too large. Reduce header size.',
       451: 'Resource unavailable for legal reasons. May include explanation.',
-      499: 'Client closed connection before server finished response.',
 
       // 5xx - Server Errors
       500:
@@ -450,6 +400,4 @@ Map<int, String> get httpStatusDevMessage => const {
       508: 'Server detected infinite loop while processing WebDAV request.',
       510: 'Further extensions to request required for server to fulfill it.',
       511: 'Client needs to authenticate to gain network access.',
-      599:
-          'Network connection timeout error occurred while server processing request.',
     };

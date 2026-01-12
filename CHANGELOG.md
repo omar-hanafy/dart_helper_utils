@@ -1,10 +1,88 @@
 # CHANGELOG
 
-## 5.4.2
+## 6.0.0
 
-- Fixed `distinctBy` to skip invalid keys and enforce type-safe `isValidKey`; added tests.
-- Fixed `intersect` behavior and `takeOnly`/`drop` edge cases; made `tryRemoveWhere` functional.
-- Improved `groupBy` type safety and `subtract` return type.
+🎉 **Major Release: V6**
+
+This release represents a massive overhaul of `dart_helper_utils`, focusing on production stability, symmetry across APIs, and filling critical gaps in the Dart ecosystem. It includes significant architectural changes, new asynchronous utilities, robust collection helpers, and comprehensive test coverage.
+
+> **Note:** Several large features (String Similarity, Conversions, Linked List) have been moved to their own dedicated packages to keep this core package lightweight.
+
+### ⚠️ Breaking Changes
+
+- **Architecture & Moved Packages:**
+  - **Conversion:** All conversion logic moved to [`convert_object`](https://pub.dev/packages/convert_object). `ConvertObject` is renamed to `Convert`. Top-level functions like `toNum` are now `convertToNum`.
+  - **String Similarity:** Algorithms moved to [`string_search_algorithms`](https://pub.dev/packages/string_search_algorithms).
+  - **Data Structures:** `DoublyLinkedList` moved to [`doubly_linked_list`](https://pub.dev/packages/doubly_linked_list).
+  - **Pagination:** Removed `Paginator`, `AsyncPaginator`, and `InfinitePaginator` to focus on core utils.
+
+- **API Cleanups:**
+  - **DatesHelper Removed:** Use `DateTime` extensions directly (e.g., `date.isSameDayAs(other)`).
+  - **Duplicate Extensions:** Removed extensions that now exist in Dart SDK or `package:collection` (e.g., `firstOrNull`, `groupBy`).
+  - **Renaming:**
+    - `httpFormat` → `httpDateFormat`
+    - `flatJson` → `flatMap`
+    - `makeEncodable` → `encodableCopy`
+    - `safelyEncodedJson` → `encodedJsonString`
+  - **Throttling:** `TimeUtils.throttle` now returns a callable `ThrottledCallback` object with disposal support.
+
+### ✨ New Features
+
+- **Async & Futures:**
+  - `Future.minWait(Duration)`: Prevent UI flicker by enforcing minimum execution time.
+  - `Future.timeoutOrNull(Duration)`: Graceful timeout handling.
+  - `Future.retry()`: Robust retry logic with exponential backoff.
+  - `waitConcurrency`: Run a list of futures with a configurable concurrency limit.
+
+- **Streams (New!):**
+  - **Safety:** `safeAdd`, `safeAddError`, `safeClose` to prevent "Stream has already been listened to" or closed errors.
+  - **Transformers:** `bufferCount`, `window(duration)`, `rateLimit`, `withLatestValue`.
+  - **Resilience:** `retry()` (resubscribe on error), `replaceOnError`, `completeOnError`.
+  - **Pausable:** `asPausable()` wrapper.
+
+- **Debouncing:**
+  - Added `TimeUtils.debounce` returning a `DebouncedCallback` with support for `flush`, `cancel`, and immediate execution.
+
+- **Collections:**
+  - `chunks(size)`, `windowed()`, `pairwise()`, `partition()`, `intersperse()`.
+  - `associate()` (Iterable to Map).
+  - `mapConcurrent`: Process collections asynchronously with parallelism control.
+  - **Maps:** `deepMerge`, `unflatten`, `getPath`, `setPath` (dot-notation access).
+
+- **Strings & MIME:**
+  - **MIME Checks:** Extensive getters for file types (e.g., `.isImage`, `.isVideo`, `.isPDF`, `.isJSON`).
+  - `truncate()`, `maskEmail`, `isUuid`, `slugify`.
+  - `parseDuration()` (handles "1h 30m" and "01:30:00").
+
+- **Dates & Numbers:**
+  - `isWeekend`, `roundTo`/`floorTo`/`ceilTo` (duration based).
+  - `addBusinessDays`.
+  - `toFileSize` (formatted bytes).
+  - Expanded HTTP status code helpers (`isRateLimitError`, `statusCodeRetryDelay`).
+
+### 🐛 Bug Fixes
+
+- **Critical:** Fixed `Uri.rebuild` incorrectly stringifying `Iterable` query parameters (e.g., `?ids=[1,2]` is now `?ids=1&ids=2`).
+- **Critical:** `indexWhereOrNull` no longer swallows exceptions thrown by the predicate.
+- Fixed `takeOnly` and `drop` causing runtime errors on fixed-length lists.
+- Fixed `isBetween` date logic to correctly respect normalization.
+- Fixed `percentage` calculation to handle division by zero.
+- Fixed `Map.setIfMissing` to correctly check key presence before setting.
+- Fixed recursion issues in `Map.flatMap`.
+
+### ⚡️ Improvements
+
+- **Scope Functions:** Added `let`, `also`, `takeIf`, `takeUnless` (via `convert_object`).
+- **Validation:** Updated regex for URLs and Colors (RGB/HSL/Modern).
+- **Performance:** Optimized `getRandom` for non-list iterables.
+- **Docs:** Significantly expanded documentation and test coverage (now ~99%).
+
+## 5.5.0
+
+- Enum conversion: `ConvertObject.toEnum<T extends Enum>()` / `tryToEnum<T extends Enum>()` + top-level mirrors.
+- Collection extensions: `getEnum`/`tryGetEnum` for `Map` and `Iterable` (nullable and non-nullable).
+- Helpers: `EnumParsers` (`byName`, `fromString`, `byNameOrFallback`, `byNameCaseInsensitive`, `byIndex`) and `List<T extends Enum>` shortcuts (`.parser`, `.parserWithFallback`, `.parserCaseInsensitive`, `.parserByIndex`).
+- Safer `try*` conversions via `_convertObject` improvements; enum APIs constrained to `T extends Enum`.
 
 ## 5.4.1
 
@@ -407,7 +485,7 @@ conversions.
 
 #### New Getter
 
-- `httpFormat` (formats this date according to [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123") e.g.
+- `httpDateFormat` (formats this date according to [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123") e.g.
   `"Thu, 1 Jan 2024 00:00:00 GMT"`)
 
 #### Flexible Weekday Customization:

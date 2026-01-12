@@ -45,7 +45,7 @@
 ///
 /// ## Custom Timing Strategies
 ///
-/// You may supply a custom [timerFactory] to override the default [Timer] creation,
+/// You may supply a custom `timerFactory` to override the default [Timer] creation,
 /// which is useful for testing or implementing specialized timing logic.
 library;
 
@@ -58,7 +58,7 @@ import 'package:equatable/equatable.dart';
 typedef LoggerFunction = void Function(String message);
 
 /// A function signature for creating timers.
-/// [timerFactory] allows customizing timer creation, useful for testing or
+/// `timerFactory` allows customizing timer creation, useful for testing or
 /// specialized timing behavior. Defaults to standard [Timer.new].
 typedef TimerFactory = Timer Function(
     Duration duration, void Function() callback);
@@ -158,12 +158,13 @@ class Debouncer {
   /// - [maxWait] sets an upper limit on how long to wait before forcing execution.
   ///   If provided, it must be greater than [delay].
   /// - When [immediate] is true, the first call in a burst executes immediately,
-  ///   and later calls during that burst are debounced.
+  ///   and later calls during that burst are debounced with no trailing execution
+  ///   until a new burst begins.
   /// - [onError] is an optional callback to handle errors thrown during the action.
   /// - [debugLabel] helps tag log messages.
   /// - [maxHistorySize] defines how many past execution records to store (0 disables history).
   /// - [logger] can be provided to inject a custom logging function.
-  /// - [timerFactory] allows for custom timer creation. Defaults to [Timer].
+  /// - `timerFactory` allows for custom timer creation. Defaults to [Timer].
   Debouncer({
     required Duration delay,
     Duration? maxWait,
@@ -221,7 +222,6 @@ class Debouncer {
   bool _isPaused = false;
   Duration? _remainingDelayOnPause;
   Duration? _remainingMaxWaitOnPause;
-  DateTime? _pauseTimestamp;
 
   // --------------------- Disposal ---------------------
   bool _isDisposed = false;
@@ -267,7 +267,7 @@ class Debouncer {
       return _remainingMaxWaitOnPause;
     }
     final elapsed = DateTime.now().difference(_firstCallTime!);
-    final remaining = _maxWait! - elapsed;
+    final remaining = _maxWait - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
@@ -284,7 +284,9 @@ class Debouncer {
     final successfulRecords = _executionHistory.where((r) => r.success);
     if (successfulRecords.isEmpty) return null;
     final totalMicroseconds = successfulRecords.fold<int>(
-        0, (sum, r) => sum + r.duration.inMicroseconds);
+      0,
+      (sum, r) => sum + r.duration.inMicroseconds,
+    );
     final avgMicroseconds = totalMicroseconds ~/ successfulRecords.length;
     return Duration(microseconds: avgMicroseconds);
   }
@@ -305,7 +307,8 @@ class Debouncer {
       );
 
   /// Schedules [action] to run after [delay]. In immediate mode, the first call
-  /// executes right away while subsequent calls during that burst are debounced.
+  /// executes right away while subsequent calls during that burst are debounced
+  /// (no trailing execution occurs until a new burst starts).
   ///
   /// Throws a [StateError] if the debouncer has been disposed.
   void run(AsyncAction action) {
@@ -322,33 +325,35 @@ class Debouncer {
     _lastAction = action;
     final now = DateTime.now();
     _lastCallTime = now;
+    final isNewBurst = _firstCallTime == null;
     _firstCallTime ??= now;
 
-    // In immediate mode, execute the first action immediately.
-    if (_immediate && _timer == null) {
+    // Leading edge for immediate mode is only triggered for a new burst.
+    if (_immediate && isNewBurst) {
       _executeAction(action);
     }
 
-    // Cancel any existing timers.
-    _cancelTimers();
-
-    // Schedule a trailing timer only if not in immediate mode (or if resuming a pending action).
-    if (!_immediate || _lastAction != null) {
-      _timer = _timerFactory(_delay, () {
-        if (!_immediate && _lastAction != null) {
-          _executeAction(_lastAction!);
-        }
-        _cancelTimers();
-      });
+    // Cancel only the trailing timer to keep maxWait tracking intact.
+    if (_timer?.isActive ?? false) {
+      _timer!.cancel();
     }
+    _timer = null;
+
+    // Always schedule a trailing timer to close the burst after inactivity.
+    _timer = _timerFactory(_delay, () {
+      if (!_immediate && _lastAction != null) {
+        _executeAction(_lastAction!);
+      }
+      _cancelTimers();
+    });
 
     // Set up a maxWait timer if specified.
     if (_maxWait != null && _maxWaitTimer == null) {
-      _maxWaitTimer = _timerFactory(_maxWait!, () {
+      _maxWaitTimer = _timerFactory(_maxWait, () {
         if (_lastAction != null) {
           _executeAction(_lastAction!);
-          _cancelTimers();
         }
+        _cancelTimers();
       });
     }
 
@@ -417,7 +422,6 @@ class Debouncer {
     _isPaused = false;
     _remainingDelayOnPause = null;
     _remainingMaxWaitOnPause = null;
-    _pauseTimestamp = null;
     _logDebug('Debouncer state has been reset.');
     _publishState();
   }
@@ -432,7 +436,6 @@ class Debouncer {
       return;
     }
     _isPaused = true;
-    _pauseTimestamp = DateTime.now();
     // Capture remaining time for main timer.
     if (_timer != null && _lastCallTime != null) {
       final elapsed = DateTime.now().difference(_lastCallTime!);
@@ -444,7 +447,7 @@ class Debouncer {
     // Capture remaining time for maxWait timer.
     if (_maxWaitTimer != null && _firstCallTime != null && _maxWait != null) {
       final elapsed = DateTime.now().difference(_firstCallTime!);
-      final remaining = _maxWait! - elapsed;
+      final remaining = _maxWait - elapsed;
       _remainingMaxWaitOnPause =
           remaining.isNegative ? Duration.zero : remaining;
       _maxWaitTimer?.cancel();
@@ -460,13 +463,14 @@ class Debouncer {
     if (!_isPaused) return;
     _isPaused = false;
     final now = DateTime.now();
-    // Adjust timestamps to account for the paused duration.
-    if (_pauseTimestamp != null && _lastCallTime != null) {
-      final pauseDuration = now.difference(_pauseTimestamp!);
-      _lastCallTime = _lastCallTime!.add(pauseDuration);
-      if (_firstCallTime != null) {
-        _firstCallTime = _firstCallTime!.add(pauseDuration);
-      }
+    final remainingMaxWait = _remainingMaxWaitOnPause;
+    final maxWait = _maxWait;
+    // Reconstruct timestamps so remaining getters line up with timers.
+    if (_remainingDelayOnPause != null && _lastCallTime != null) {
+      _lastCallTime = now.subtract(_delay - _remainingDelayOnPause!);
+    }
+    if (maxWait != null && remainingMaxWait != null && _firstCallTime != null) {
+      _firstCallTime = now.subtract(maxWait - remainingMaxWait);
     }
     // Re-schedule timers if a pending action exists.
     if (_lastAction != null) {
@@ -476,19 +480,17 @@ class Debouncer {
         }
         _cancelTimers();
       });
-      if (_maxWait != null) {
-        _maxWaitTimer =
-            _timerFactory(_remainingMaxWaitOnPause ?? _maxWait!, () {
+      if (maxWait != null && remainingMaxWait != null) {
+        _maxWaitTimer = _timerFactory(remainingMaxWait, () {
           if (_lastAction != null) {
             _executeAction(_lastAction!);
-            _cancelTimers();
           }
+          _cancelTimers();
         });
       }
     }
     _remainingDelayOnPause = null;
     _remainingMaxWaitOnPause = null;
-    _pauseTimestamp = null;
     _logDebug('Debouncer resumed.');
     _publishState();
   }
@@ -513,9 +515,10 @@ class Debouncer {
       executionCount: 0,
     );
 
-    _stateController
-      .._safeAdd(finalState)
-      ..close();
+    if (!_stateController.isClosed) {
+      _stateController.add(finalState);
+      _stateController.close();
+    }
     _logDebug('Debouncer disposed.');
   }
 
@@ -532,7 +535,9 @@ class Debouncer {
       if (_maxHistorySize > 0) {
         _recordExecution(startTime, _lastExecutionTime!, true);
       }
-      _lastAction = null;
+      if (identical(_lastAction, action)) {
+        _lastAction = null;
+      }
       _logDebug('Action executed successfully.');
     } catch (error, stackTrace) {
       if (_maxHistorySize > 0) {
@@ -540,7 +545,7 @@ class Debouncer {
       }
       _logDebug('Action execution failed: $error');
       if (_onError != null) {
-        _onError!(error, stackTrace);
+        _onError(error, stackTrace);
       } else {
         rethrow;
       }
@@ -573,7 +578,7 @@ class Debouncer {
       } catch (error, stackTrace) {
         _logDebug('Error publishing state: $error');
         if (_onError != null) {
-          _onError!(error, stackTrace);
+          _onError(error, stackTrace);
         } else {
           rethrow;
         }
@@ -586,7 +591,7 @@ class Debouncer {
     final logMessage =
         'Debouncer${_debugLabel != null ? '($_debugLabel)' : ''}: $message';
     if (_logger != null) {
-      _logger!(logMessage);
+      _logger(logMessage);
     } else if (_debugLabel != null) {
       log(logMessage);
     }
@@ -606,12 +611,14 @@ class Debouncer {
     bool success, {
     Object? error,
   }) {
-    _executionHistory.add(_ExecutionRecord(
-      startTime: start,
-      endTime: end,
-      success: success,
-      error: error,
-    ));
+    _executionHistory.add(
+      _ExecutionRecord(
+        startTime: start,
+        endTime: end,
+        success: success,
+        error: error,
+      ),
+    );
     // Remove oldest entries if history exceeds [maxHistorySize].
     while (_executionHistory.length > _maxHistorySize) {
       _executionHistory.removeAt(0);
@@ -654,11 +661,29 @@ class _ExecutionRecord {
       };
 }
 
-// Extension on StreamController to safely add data.
-extension _StreamControllerExtension<T> on StreamController<T> {
-  void _safeAdd(T data) {
-    if (!isClosed) {
-      add(data);
-    }
-  }
+/// Callable wrapper that exposes debouncing controls.
+class DebouncedCallback {
+  /// Creates a callable wrapper around a [Debouncer] and action.
+  DebouncedCallback(this._debouncer, this._action);
+
+  final Debouncer _debouncer;
+  final AsyncAction _action;
+
+  /// Invokes the debounced action.
+  void call() => _debouncer.run(_action);
+
+  /// Cancels any pending action.
+  void cancel() => _debouncer.cancel();
+
+  /// Flushes any pending action.
+  Future<void> flush() => _debouncer.flush();
+
+  /// Disposes the debouncer.
+  void dispose() => _debouncer.dispose();
+
+  /// Returns `true` if the debouncer is disposed.
+  bool get isDisposed => _debouncer.isDisposed;
+
+  /// Returns `true` if there is a scheduled action pending.
+  bool get isRunning => _debouncer.isRunning;
 }

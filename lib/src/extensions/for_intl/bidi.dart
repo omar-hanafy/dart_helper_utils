@@ -37,7 +37,10 @@ extension DHUBidiStringExtensions on String {
   bool hasAnyRtl([bool isHtml = false]) => Bidi.hasAnyRtl(this, isHtml);
 
   /// Checks if the string represents a right-to-left (RTL) language text.
-  bool isRtlLanguage([String? languageString]) => Bidi.isRtlLanguage(this);
+  ///
+  /// If [languageString] is provided, it is used instead of `this`.
+  bool isRtlLanguage([String? languageString]) =>
+      Bidi.isRtlLanguage(languageString ?? this);
 
   /// Enforces right-to-left (RTL) directionality in HTML markup.
   String enforceRtlInHtml() => Bidi.enforceRtlInHtml(this);
@@ -109,11 +112,11 @@ extension DHUBidiStringExtensions on String {
           );
 }
 
-///
+/// Left-to-right text direction constant.
 const TextDirection textDirectionLTR = TextDirection.LTR;
 
-///
+/// Right-to-left text direction constant.
 const TextDirection textDirectionRTL = TextDirection.RTL;
 
-///
+/// Unknown text direction constant.
 const TextDirection textDirectionUNKNOWN = TextDirection.UNKNOWN;

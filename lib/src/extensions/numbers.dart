@@ -1,8 +1,15 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:dart_helper_utils/src/src.dart';
+import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:meta/meta.dart';
+
+int? _asHttpStatusCode(num? value) {
+  if (value == null) return null;
+  if (value is int) return value;
+  if (value % 1 == 0) return value.toInt();
+  return null;
+}
 
 /// DHUHttpEx
 extension DHUHttpEx on num? {
@@ -69,23 +76,36 @@ extension DHUHttpEx on num? {
       429 => const Duration(minutes: 1), // Rate Limit: 1 minute
       503 => const Duration(minutes: 5), // Service Unavailable: 5 minutes
       504 => const Duration(seconds: 10), // Gateway Timeout: 10 seconds
-      _ => const Duration(seconds: 30) // Default: 30 seconds
+      _ => const Duration(seconds: 30), // Default: 30 seconds
     };
   }
 
   /// Returns the HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusMessage => httpStatusMessages[this] ?? 'Not Found';
+  String get toHttpStatusMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusMessages[statusCode] ?? 'Not Found');
+  }
 
   /// Returns the user-friendly HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusUserMessage =>
-      httpStatusUserMessage[this] ?? 'Not Found';
+  String get toHttpStatusUserMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusUserMessage[statusCode] ?? 'Not Found');
+  }
 
   /// Returns the developer-friendly HTTP status message associated with the number.
   /// If the status code is not found, it returns "Not Found".
-  String get toHttpStatusDevMessage =>
-      httpStatusDevMessage[this] ?? 'Not Found';
+  String get toHttpStatusDevMessage {
+    final statusCode = _asHttpStatusCode(this);
+    return statusCode == null
+        ? 'Not Found'
+        : (httpStatusDevMessage[statusCode] ?? 'Not Found');
+  }
 
   /// Returns `true` if the string representation of this number is a valid phone number.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
@@ -94,32 +114,30 @@ extension DHUHttpEx on num? {
 /// DHUNullSafeNumExtensions
 extension DHUNullSafeNumExtensions on num? {
   /// Returns the integer value of the number, or `null` if the number is `null`.
-  int? get tryToInt => this?.toInt();
+  int? tryToInt() => this?.toInt();
 
   /// Returns the double value of the number, or `null` if the number is `null`.
-  double? get tryToDouble => this?.toDouble();
+  double? tryToDouble() => this?.toDouble();
 
   /// Returns the percentage of `this` value relative to [total], optionally allowing decimals.
   num percentage(num total, {bool allowDecimals = true}) {
-    if (this != null) {
-      final result = this! >= total ? 100 : math.max((this! / total) * 100, 0);
-      if (allowDecimals) {
-        return double.parse(result.toStringAsFixed(2));
-      } else {
-        return result.toInt();
-      }
+    if (this == null || total == 0) return 0;
+    final result = this! >= total ? 100 : math.max((this! / total) * 100, 0);
+    if (allowDecimals) {
+      return double.parse(result.toStringAsFixed(2));
+    } else {
+      return result.toInt();
     }
-    return 0;
   }
 
   /// Returns `true` if the number is negative.
-  bool get isNegative => isNotNull && this! > 0;
+  bool get isNegative => this != null && this! < 0;
 
   /// Returns `true` if the number is positive.
-  bool get isPositive => isNotNull && this! > 0;
+  bool get isPositive => this != null && this! > 0;
 
   /// Returns `true` if the number is either `null` or zero.
-  bool get isZeroOrNull => isNull || this! == 0;
+  bool get isZeroOrNull => this == null || this! == 0;
 
   /// Returns `true` if the number is greater than 0.
   bool get asBool => (this ?? 0) > 0;
@@ -162,7 +180,7 @@ extension DHUNumExtensions on num {
   String get removeTrailingZero =>
       toString().replaceAll(RegExp(r'([.]*0)(?!.*\d)'), '');
 
-  /// Rounds the number to the nearest multiple of 50 or 100.
+  /// Rounds the number up to the nearest multiple of 50.
   double get roundToFiftyOrHundred =>
       this + (50 - ((this % 50) > 0 ? this % 50 : 50));
 
@@ -181,11 +199,26 @@ extension DHUNumExtensions on num {
   /// Returns half of the number.
   double get half => this / 2;
 
-  /// Generates a random number between 0 and this number.
-  int get getRandom => math.Random().nextInt(this.toInt());
+  /// Generates a random integer between 0 (inclusive) and this value (exclusive).
+  ///
+  /// Throws [RangeError] if this value is less than 1.
+  int get getRandom {
+    if (this < 1) {
+      throw RangeError('Upper bound must be at least 1.');
+    }
+    return math.Random().nextInt(toInt());
+  }
 
-  /// Generates a random number between 0 and this number, with an optional seed for randomization.
-  int random([int? seed]) => math.Random(seed).nextInt(this.toInt());
+  /// Generates a random integer between 0 (inclusive) and this value (exclusive),
+  /// with an optional [seed] for reproducibility.
+  ///
+  /// Throws [RangeError] if this value is less than 1.
+  int random([int? seed]) {
+    if (this < 1) {
+      throw RangeError('Upper bound must be at least 1.');
+    }
+    return math.Random(seed).nextInt(toInt());
+  }
 
   /// Converts a number to a string with Greek symbols for thousands, millions, etc.
   ///
@@ -196,7 +229,7 @@ extension DHUNumExtensions on num {
   String asGreeks([int zerosFractionDigits = 0, int fractionDigits = 1]) {
     if (this < 1000) {
       return zerosFractionDigits <= 0
-          ? this.toInt().toString()
+          ? toInt().toString()
           : toStringAsFixed(zerosFractionDigits);
     }
 
@@ -214,58 +247,54 @@ extension DHUNumExtensions on num {
         : '${reducedNum.toStringAsFixed(fractionDigits)}$symbol';
   }
 
+  /// Converts bytes to a human-readable string (e.g., "1.5 MB").
+  String toFileSize({int decimals = 2}) {
+    if (this <= 0) return '0 B';
+    const suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    var i = (math.log(this) / math.log(1024)).floor();
+    if (i >= suffixes.length) {
+      i = suffixes.length - 1;
+    }
+    return '${(this / math.pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
+  }
+
   /// Delay equivalent to the number of days.
   @optionalTypeArgs
   Future<T> daysDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
-      Future.delayed(
-        asDays,
-        computation,
-      );
+      Future.delayed(asDays, computation);
 
   /// Delay equivalent to the number of hours.
   @optionalTypeArgs
   Future<T> hoursDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
-      Future.delayed(
-        asHours,
-        computation,
-      );
+      Future.delayed(asHours, computation);
 
   /// Delay equivalent to the number of minutes.
   @optionalTypeArgs
   Future<T> minutesDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
-      Future.delayed(
-        asMinutes,
-        computation,
-      );
+      Future.delayed(asMinutes, computation);
 
   /// Delay equivalent to the number of seconds.
   @optionalTypeArgs
   Future<T> secondsDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
-      Future.delayed(
-        asSeconds,
-        computation,
-      );
+      Future.delayed(asSeconds, computation);
 
   /// Delay equivalent to the number of milliseconds.
   @optionalTypeArgs
   Future<T> millisecondsDelay<T extends Object?>([
     FutureOr<T> Function()? computation,
   ]) =>
-      Future.delayed(
-        asMilliseconds,
-        computation,
-      );
+      Future.delayed(asMilliseconds, computation);
 
   /// Converts the number to a Duration in milliseconds.
-  Duration get asMilliseconds => Duration(microseconds: (this * 1000).round());
+  Duration get asMilliseconds => Duration(milliseconds: round());
 
   /// Converts the number to a Duration in seconds.
   Duration get asSeconds => Duration(milliseconds: (this * 1000).round());
@@ -282,9 +311,9 @@ extension DHUNumExtensions on num {
   Duration get asDays => Duration(hours: (this * Duration.hoursPerDay).round());
 
   /// Returns the square root of the number.
-  double sqrt() => (this > 0) ? math.sqrt(this.toDouble()) : 0.0;
+  double sqrt() => (this > 0) ? math.sqrt(toDouble()) : 0.0;
 
-  /// Returns a sequence of integers starting from [this],
+  /// Returns a sequence of integers starting from `this`,
   /// incrementing by [step] and ending at [end].
   Iterable<num> until(int end, {int step = 1}) sync* {
     if (step == 0) {
@@ -326,14 +355,34 @@ extension DHUNumExtensions on num {
       );
 
   /// Rounds this number to the nearest multiple of [multiple].
-  num roundToNearestMultiple(num multiple) =>
-      (this / multiple).round() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundToNearestMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).round() * multiple;
+  }
 
   /// Rounds this number up to the nearest multiple of [multiple].
-  num roundUpToMultiple(num multiple) => (this / multiple).ceil() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundUpToMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).ceil() * multiple;
+  }
 
   /// Rounds this number down to the nearest multiple of [multiple].
-  num roundDownToMultiple(num multiple) => (this / multiple).floor() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  num roundDownToMultiple(num multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).floor() * multiple;
+  }
 
   /// Checks if this number is between [min] and [max].
   /// [inclusive] determines whether the range includes the endpoints.
@@ -359,8 +408,18 @@ extension DHUNumExtensions on num {
   }
 
   /// Normalizes this number to a range between [min] and [max].
+  ///
+  /// Returns a value between 0 and 1 representing where this value falls
+  /// in the range from [min] to [max].
+  ///
+  /// Throws [ArgumentError] if [min] equals [max] or if [min] > [max].
   num scaleBetween(num min, num max) {
-    if (min == max) throw ArgumentError('Min and max cannot be the same.');
+    if (min == max) {
+      throw ArgumentError('Min and max cannot be the same.');
+    }
+    if (min > max) {
+      throw ArgumentError('Min cannot be greater than max.');
+    }
     return (this - min) / (max - min);
   }
 
@@ -379,7 +438,7 @@ extension DHUNumExtensions on num {
   /// Converts the number to its ordinal representation as either a number with a suffix
   /// (e.g., "1st") or as a word (e.g., "first").
   String toOrdinal({bool asWord = false, bool includeAnd = false}) {
-    final number = this.toInt();
+    final number = toInt();
 
     // Return 'zeroth' or '0th' based on asWord
     if (number == 0) return asWord ? 'zeroth' : '0th';
@@ -587,7 +646,7 @@ extension DHUNumExtensions on num {
 
   /// Converts the number to its ordinal suffix representation.
   String _asOrdinalSuffixWithNumber() {
-    final number = this.toInt();
+    final number = toInt();
     // Special case for 11th, 12th, and 13th
     if (number % 100 >= 11 && number % 100 <= 13) return '${number}th';
 
@@ -606,7 +665,6 @@ extension DHUIntExtensions on int {
   /// Return the max if this number is bigger the the maximum
   /// Return this number if it's between the range
   int inRangeOf(int min, int max) {
-    if (min.isNull || max.isNull) throw Exception('min or max cannot be null');
     if (min > max) throw ArgumentError('min must be smaller the max');
 
     if (this < min) return min;
@@ -668,37 +726,6 @@ extension DHUIntExtensions on int {
     return factors;
   }
 
-  /// Converts this integer to a Roman numeral.
-  String toRomanNumeral() {
-    if (this <= 0 || this >= 4000) {
-      throw ArgumentError('Value must be between 1 and 3999');
-    }
-    final numerals = {
-      1000: 'M',
-      900: 'CM',
-      500: 'D',
-      400: 'CD',
-      100: 'C',
-      90: 'XC',
-      50: 'L',
-      40: 'XL',
-      10: 'X',
-      9: 'IX',
-      5: 'V',
-      4: 'IV',
-      1: 'I',
-    };
-    var num = this;
-    final result = StringBuffer();
-    numerals.forEach((value, numeral) {
-      while (num >= value) {
-        result.write(numeral);
-        num -= value;
-      }
-    });
-    return result.toString();
-  }
-
   /// Checks if this integer is a perfect square.
   bool isPerfectSquare() {
     if (this < 0) return false;
@@ -753,7 +780,6 @@ extension DHUDoubleExtensions on double {
   /// Return the max if this number is bigger the the maximum
   /// Return this number if it's between the range
   double inRangeOf(double min, double max) {
-    if (min.isNull || max.isNull) throw Exception('min or max cannot be null');
     if (min > max) throw ArgumentError('min must be smaller the max');
 
     if (this < min) return min;
@@ -777,16 +803,34 @@ extension DHUDoubleExtensions on double {
   double get squared => this * this;
 
   /// Rounds this double to the nearest multiple of [multiple].
-  double roundToNearestMultiple(double multiple) =>
-      (this / multiple).round() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundToNearestMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).round() * multiple;
+  }
 
   /// Rounds this double up to the nearest multiple of [multiple].
-  double roundUpToMultiple(double multiple) =>
-      (this / multiple).ceil() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundUpToMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).ceil() * multiple;
+  }
 
   /// Rounds this double down to the nearest multiple of [multiple].
-  double roundDownToMultiple(double multiple) =>
-      (this / multiple).floor() * multiple;
+  ///
+  /// Throws [ArgumentError] if [multiple] is zero.
+  double roundDownToMultiple(double multiple) {
+    if (multiple == 0) {
+      throw ArgumentError('Multiple cannot be zero.');
+    }
+    return (this / multiple).floor() * multiple;
+  }
 
   /// Converts this double to a fraction string representation.
   String toFractionString() {
@@ -813,11 +857,11 @@ abstract class NumbersHelper {
   ///
   /// Example:
   /// ```dart
-  /// print(NumHelpers.safeDivide(0, 0)); // Output: 0
-  /// print(NumHelpers.safeDivide(10, 0)); // Output: Infinity
-  /// print(NumHelpers.safeDivide(10, 0, whenDivByZero: -1)); // Output: -1
-  /// print(NumHelpers.safeDivide(10, 0, returnNaNOnDivByZero: true)); // Output: NaN
-  /// print(NumHelpers.safeDivide(10, 2)); // Output: 5
+  /// print(NumbersHelper.safeDivide(0, 0)); // Output: 0
+  /// print(NumbersHelper.safeDivide(10, 0)); // Output: Infinity
+  /// print(NumbersHelper.safeDivide(10, 0, whenDivByZero: -1)); // Output: -1
+  /// print(NumbersHelper.safeDivide(10, 0, returnNaNOnDivByZero: true)); // Output: NaN
+  /// print(NumbersHelper.safeDivide(10, 2)); // Output: 5
   /// ```
   static double safeDivide(
     num a,
@@ -836,7 +880,11 @@ abstract class NumbersHelper {
   /// Calculates the mean of a list of [values].
   static num mean(List<num> values) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
-    return values.reduce((a, b) => a + b) / values.length;
+    num sum = 0;
+    for (final value in values) {
+      sum += value;
+    }
+    return sum / values.length;
   }
 
   /// Calculates the median of a list of [values].
@@ -876,10 +924,16 @@ abstract class NumbersHelper {
   static num standardDeviation(List<num> values) => math.sqrt(variance(values));
 
   /// Calculates the specified [percentile] of a list of [values].
+  ///
+  /// [percentile] must be between 0 and 100 inclusive.
   static num percentile(List<num> values, double percentile) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
+    if (percentile < 0 || percentile > 100) {
+      throw ArgumentError('Percentile must be between 0 and 100.');
+    }
     final sortedValues = List<num>.from(values)..sort();
-    final index = (percentile * (values.length - 1)).round();
+    final rank = percentile / 100;
+    final index = (rank * (values.length - 1)).round();
     return sortedValues[index];
   }
 
@@ -891,24 +945,6 @@ abstract class NumbersHelper {
     final sqrtN = math.sqrt(n).toInt();
     return sqrtN * sqrtN == n;
   }
-
-  /// Converts a Roman numeral string [romanNumeral] to an integer.
-  static int fromRomanNumeral(String romanNumeral) {
-    final romanMap = romanNumerals.swapKeysWithValues();
-    var i = 0;
-    var result = 0;
-    while (i < romanNumeral.length) {
-      if (i + 1 < romanNumeral.length &&
-          romanMap.containsKey(romanNumeral.substring(i, i + 2))) {
-        result += romanMap[romanNumeral.substring(i, i + 2)]!;
-        i += 2;
-      } else {
-        result += romanMap[romanNumeral[i]]!;
-        i += 1;
-      }
-    }
-    return result;
-  }
 }
 
 /// Extension on [Iterable<num>] providing statistical operations.
@@ -917,29 +953,27 @@ abstract class NumbersHelper {
 /// variance, standard deviation, and percentiles of a numeric iterable.
 extension DHUListNumStats on Iterable<num> {
   /// Calculates the mean (average) of the numbers in the iterable.
-  num get mean => NumbersHelper.mean(this.toList());
+  num get mean => NumbersHelper.mean(toList());
 
   /// Determines the median value of the numbers in the iterable.
-  num get median => NumbersHelper.median(this.toList());
+  num get median => NumbersHelper.median(toList());
 
   /// Finds the mode(s) of the numbers in the iterable.
   ///
   /// Returns a list of numbers that appear most frequently.
-  List<num> get mode => NumbersHelper.mode(this.toList());
+  List<num> get mode => NumbersHelper.mode(toList());
 
   /// Computes the variance of the numbers in the iterable.
-  num get variance => NumbersHelper.variance(this.toList());
+  num get variance => NumbersHelper.variance(toList());
 
   /// Calculates the standard deviation of the numbers in the iterable.
-  num get standardDeviation => NumbersHelper.standardDeviation(this.toList());
+  num get standardDeviation => NumbersHelper.standardDeviation(toList());
 
   /// Computes the specified [percentile] of the numbers in the iterable.
   ///
   /// The [percentile] should be a value between 0 and 100.
-  num percentile(double percentile) => NumbersHelper.percentile(
-        this.toList(),
-        percentile,
-      );
+  num percentile(double percentile) =>
+      NumbersHelper.percentile(toList(), percentile);
 }
 
 /// Extension on [Iterable<int>] providing statistical operations.
@@ -948,30 +982,28 @@ extension DHUListNumStats on Iterable<num> {
 /// variance, standard deviation, and percentiles of an integer iterable.
 extension DHUListIntStats on Iterable<int> {
   /// Calculates the mean (average) of the integers in the iterable.
-  int get mean => NumbersHelper.mean(this.toList()).toInt();
+  int get mean => NumbersHelper.mean(toList()).toInt();
 
   /// Determines the median value of the integers in the iterable.
-  int get median => NumbersHelper.median(this.toList()).toInt();
+  int get median => NumbersHelper.median(toList()).toInt();
 
   /// Finds the mode(s) of the integers in the iterable.
   ///
   /// Returns a list of integers that appear most frequently.
-  List<int> get mode => NumbersHelper.mode(this.toList()).convertTo<int>();
+  List<int> get mode => convertToList<int>(NumbersHelper.mode(toList()));
 
   /// Computes the variance of the integers in the iterable.
-  int get variance => NumbersHelper.variance(this.toList()).toInt();
+  int get variance => NumbersHelper.variance(toList()).toInt();
 
   /// Calculates the standard deviation of the integers in the iterable.
   int get standardDeviation =>
-      NumbersHelper.standardDeviation(this.toList()).toInt();
+      NumbersHelper.standardDeviation(toList()).toInt();
 
   /// Computes the specified [percentile] of the integers in the iterable.
   ///
   /// The [percentile] should be a value between 0 and 100.
-  int percentile(double percentile) => NumbersHelper.percentile(
-        this.toList(),
-        percentile,
-      ).toInt();
+  int percentile(double percentile) =>
+      NumbersHelper.percentile(toList(), percentile).toInt();
 }
 
 /// Extension on [Iterable<double>] providing statistical operations.
@@ -980,31 +1012,28 @@ extension DHUListIntStats on Iterable<int> {
 /// variance, standard deviation, and percentiles of a double iterable.
 extension DHUListDoubleStats on Iterable<double> {
   /// Calculates the mean (average) of the doubles in the iterable.
-  double get mean => NumbersHelper.mean(this.toList()).toDouble();
+  double get mean => NumbersHelper.mean(toList()).toDouble();
 
   /// Determines the median value of the doubles in the iterable.
-  double get median => NumbersHelper.median(this.toList()).toDouble();
+  double get median => NumbersHelper.median(toList()).toDouble();
 
   /// Finds the mode(s) of the doubles in the iterable.
   ///
   /// Returns a list of doubles that appear most frequently.
-  List<double> get mode =>
-      NumbersHelper.mode(this.toList()).convertTo<double>();
+  List<double> get mode => convertToList<double>(NumbersHelper.mode(toList()));
 
   /// Computes the variance of the doubles in the iterable.
-  double get variance => NumbersHelper.variance(this.toList()).toDouble();
+  double get variance => NumbersHelper.variance(toList()).toDouble();
 
   /// Calculates the standard deviation of the doubles in the iterable.
   double get standardDeviation =>
-      NumbersHelper.standardDeviation(this.toList()).toDouble();
+      NumbersHelper.standardDeviation(toList()).toDouble();
 
   /// Computes the specified [percentile] of the doubles in the iterable.
   ///
   /// The [percentile] should be a value between 0 and 100.
-  double percentile(double percentile) => NumbersHelper.percentile(
-        this.toList(),
-        percentile,
-      ).toDouble();
+  double percentile(double percentile) =>
+      NumbersHelper.percentile(toList(), percentile).toDouble();
 }
 
 /// Extension on nullable [Iterable<num?>] providing a total sum calculation.
@@ -1092,11 +1121,18 @@ extension DHUIterableDoubleExtensionsNS on Iterable<double?>? {
 ///
 /// Returns a random integer between [min] and [max], inclusive.
 ///
+/// [min] and [max] are treated as integer bounds via `toInt()`.
+/// Throws [ArgumentError] if [min] is greater than [max].
+///
 /// If a [seed] is provided, it is used to initialize the random number generator
 /// for reproducible results.
 /// Example:
 /// ```dart
 /// int randomNumber = randomInRange(1, 10);
 /// ```
-int randomInRange(num min, num max, [int? seed]) =>
-    ((max - min + 1).random(seed) + min).toInt();
+int randomInRange(num min, num max, [int? seed]) {
+  if (min > max) {
+    throw ArgumentError('min must be less than or equal to max.');
+  }
+  return ((max - min + 1).random(seed) + min).toInt();
+}
