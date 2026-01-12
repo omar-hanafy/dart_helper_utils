@@ -434,18 +434,15 @@ void main() {
           delay: const Duration(milliseconds: 50),
           maxHistorySize: 1000,
         );
-        final startMemory = ProcessInfo.currentRss;
         for (var i = 0; i < 10000; i++) {
           debouncer.run(() {});
           await 1.millisecondsDelay();
         }
         await 100.millisecondsDelay();
-        final endMemory = ProcessInfo.currentRss;
-        final memoryDiff = endMemory - startMemory;
         expect(
-          memoryDiff,
-          lessThan(10 * 1024 * 1024),
-          reason: 'Memory increase should be bounded (less than 10MB).',
+          debouncer.executionHistory.length,
+          lessThanOrEqualTo(1000),
+          reason: 'Execution history should be capped by maxHistorySize.',
         );
         debouncer.dispose();
       });
