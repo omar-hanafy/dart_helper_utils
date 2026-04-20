@@ -95,10 +95,7 @@ void main() {
 
     test('distinctBy handles nullable keys with validation', () {
       final input = <String?>['a', null, 'b', null, 'a'];
-      final result = input.distinctBy(
-        (e) => e,
-        isValidKey: (k) => k != null,
-      );
+      final result = input.distinctBy((e) => e, isValidKey: (k) => k != null);
       expect(result, ['a', 'b']);
     });
 
@@ -135,10 +132,7 @@ void main() {
 
     test('distinctBy isValidKey is type-safe', () {
       final input = [1, 2, 3, 4, 5];
-      final result = input.distinctBy(
-        (e) => e,
-        isValidKey: (int k) => k > 2,
-      );
+      final result = input.distinctBy((e) => e, isValidKey: (int k) => k > 2);
       expect(result, [3, 4, 5]);
     });
 

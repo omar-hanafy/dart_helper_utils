@@ -228,25 +228,27 @@ void main() {
       expect(values, [1]);
     });
 
-    test('retry throws informative error on single-subscription stream',
-        () async {
-      final controller = StreamController<int>();
-      controller.addError(Exception('Fail 1'));
+    test(
+      'retry throws informative error on single-subscription stream',
+      () async {
+        final controller = StreamController<int>();
+        controller.addError(Exception('Fail 1'));
 
-      final retriedStream = controller.stream.retry(retryCount: 1);
+        final retriedStream = controller.stream.retry(retryCount: 1);
 
-      try {
-        await retriedStream.toList();
-        fail('Should have thrown StateError');
-      } catch (e) {
-        expect(e, isA<StateError>());
-        expect(
-          e.toString(),
-          contains('Cannot retry a single-subscription stream'),
-        );
-      }
-      await controller.close();
-    });
+        try {
+          await retriedStream.toList();
+          fail('Should have thrown StateError');
+        } catch (e) {
+          expect(e, isA<StateError>());
+          expect(
+            e.toString(),
+            contains('Cannot retry a single-subscription stream'),
+          );
+        }
+        await controller.close();
+      },
+    );
 
     test('Stream factory retry works correctly', () async {
       var attempts = 0;

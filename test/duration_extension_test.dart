@@ -5,10 +5,16 @@ void main() {
   group('Duration extensions', () {
     test('fromNow and ago are relative to now', () {
       final now = DateTime.now();
-      final future = const Duration(milliseconds: 10).fromNow;
-      final past = const Duration(milliseconds: 10).ago;
-      expect(future.isAfter(now), isTrue);
-      expect(past.isBefore(now), isTrue);
+      final future = const Duration(seconds: 1).fromNow;
+      final past = const Duration(seconds: 1).ago;
+      expect(
+        future.difference(now),
+        greaterThanOrEqualTo(const Duration(milliseconds: 900)),
+      );
+      expect(
+        now.difference(past),
+        greaterThanOrEqualTo(const Duration(milliseconds: 900)),
+      );
     });
 
     test('delayed runs computation', () async {

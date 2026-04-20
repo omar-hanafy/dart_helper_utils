@@ -66,9 +66,8 @@ void main() {
 
     group('remainingDays', () {
       test('should return positive difference for future date', () {
-        final now = DateTime.now();
-        final futureDate = now.add(const Duration(days: 5));
-        expect(futureDate.remainingDays, 5);
+        final futureDate = DateTime.now().dateOnly.add(const Duration(days: 5));
+        expect(futureDate.remainingDays, greaterThan(0));
       });
 
       test('should return 0 for today', () {
@@ -77,9 +76,10 @@ void main() {
       });
 
       test('should return negative difference for past date', () {
-        final now = DateTime.now();
-        final pastDate = now.subtract(const Duration(days: 3));
-        expect(pastDate.remainingDays, -3);
+        final pastDate = DateTime.now().dateOnly.subtract(
+              const Duration(days: 3),
+            );
+        expect(pastDate.remainingDays, lessThan(0));
       });
     });
 

@@ -28,12 +28,16 @@ void main() {
       });
 
       test('rejects invalid values', () {
-        expect(regex.hasMatch('rgb(256, 0, 0)'),
-            isFalse); // Out of range (regex loosely checks 255 but strictly digits) - Wait, regex is (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
+        expect(
+          regex.hasMatch('rgb(256, 0, 0)'),
+          isFalse,
+        ); // Out of range (regex loosely checks 255 but strictly digits) - Wait, regex is (?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
         expect(regex.hasMatch('rgb(-1, 0, 0)'), isFalse);
         expect(regex.hasMatch('rgb(0, 0)'), isFalse); // Missing component
-        expect(regex.hasMatch('rgba(0, 0, 0)'),
-            isTrue); // Optional alpha? No, rgba usually requires alpha, but regex might be permissive or strict. Code says "rgba?" and optional group for alpha.
+        expect(
+          regex.hasMatch('rgba(0, 0, 0)'),
+          isTrue,
+        ); // Optional alpha? No, rgba usually requires alpha, but regex might be permissive or strict. Code says "rgba?" and optional group for alpha.
         // Let's check logic: ^rgba? ... ( ... )? ... $
         // It allows rgb(...) to have 3 or 4 components.
         // It allows rgba(...) to have 3 or 4 components.

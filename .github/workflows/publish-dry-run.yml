@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   dry-run:
+    name: pub-dry-run / dry-run
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

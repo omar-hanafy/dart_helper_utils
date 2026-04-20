@@ -118,7 +118,7 @@ void main() {
       final uri = Uri.parse('https://example.com');
       final updated = uri.rebuild(
         queryParametersBuilder: (current) => {
-          'ids': ['1', '2']
+          'ids': ['1', '2'],
         },
       );
 

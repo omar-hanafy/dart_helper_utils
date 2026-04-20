@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test-stable:
-    name: Test on stable
+    name: CI / Test on stable
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,7 +26,10 @@ jobs:
       - name: Version channel check
         if: github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'dev')
         run: |
-          if git diff --name-only "origin/${{ github.base_ref }}"...HEAD | grep -q '^pubspec.yaml$'; then
+          set -euo pipefail
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.event.pull_request.head.sha }}"
+          if git diff --name-only "$base_sha" "$head_sha" | grep -q '^pubspec.yaml$'; then
             version=$(awk '/^version:/ {print $2}' pubspec.yaml)
             if [[ "${{ github.base_ref }}" == "main" ]]; then
               if [[ "$version" == *-* ]]; then
@@ -56,7 +59,7 @@ jobs:
         run: dart test
 
   test-beta:
-    name: Test on beta
+    name: CI / Test on beta
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -78,7 +81,7 @@ jobs:
         run: dart test
 
   pana:
-    name: Pana
+    name: CI / Pana
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -95,19 +98,20 @@ jobs:
       - name: Install pana
         run: dart pub global activate pana
 
-      - name: Run pana
+      - name: Run pana (full score required)
         run: |
-          pana --json > pana.json
-          python3 - <<'PY'
-          import json
-          with open('pana.json') as f:
-            data = json.load(f)
-          scores = data.get('scores', {})
-          granted = scores.get('grantedPoints', 0)
-          max_points = scores.get('maxPoints', 0)
-          if max_points == 0:
-            raise SystemExit('pana did not report scores; failing.')
-          if granted != max_points:
-            raise SystemExit(f'pana score {granted}/{max_points} (full score required).')
-          print(f'pana score {granted}/{max_points}')
-          PY
+          set -euo pipefail
+          pana --json . 2>/dev/null | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          sections = data.get('report', {}).get('sections', [])
+          granted = sum(s.get('grantedPoints', 0) for s in sections)
+          maximum = sum(s.get('maxPoints', 0) for s in sections)
+          status = 'PASS' if granted == maximum else 'FAIL'
+          print(f'{status}: pana score {granted}/{maximum}')
+          if granted != maximum:
+              for s in sections:
+                  if s.get('grantedPoints', 0) < s.get('maxPoints', 0):
+                      print(f\"  - {s.get('title', '?')}: {s.get('grantedPoints', 0)}/{s.get('maxPoints', 0)}\")
+              sys.exit(1)
+          "

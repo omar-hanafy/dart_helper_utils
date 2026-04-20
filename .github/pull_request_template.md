@@ -1,9 +1,9 @@
 ## Summary
-- 
+
+- What changed:
 
 ## Checklist
-- [ ] Tests updated or not needed
-- [ ] `dart format` clean (or no formatting changes needed)
-- [ ] `dart analyze` clean
-- [ ] `CHANGELOG.md` updated (release PRs only)
-- [ ] `pubspec.yaml` version bumped (release PRs only)
+
+- [ ] I ran the full local validation checklist (format, fix, analyze, test, dry-run, pana).
+- [ ] If this is a release PR: pubspec.yaml version + CHANGELOG.md updated.
+- [ ] Target branch lane rules respected (main stable, dev prerelease).
