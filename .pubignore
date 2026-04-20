@@ -1,3 +1,7 @@
 # Internal contributor docs, not package payload.
 documentation_rules.md
 v6_proposals.md
+
+# Local artifacts and debug output.
+build/
+firebase-debug.log
