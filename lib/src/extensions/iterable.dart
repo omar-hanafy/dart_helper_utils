@@ -510,10 +510,7 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
       return result;
     }
 
-    final seenKeys = LinkedHashSet<R>(
-      equals: equals,
-      hashCode: hashCode,
-    );
+    final seenKeys = LinkedHashSet<R>(equals: equals, hashCode: hashCode);
     for (final element in this) {
       final key = keySelector(element);
       if (isValidKey != null && !isValidKey(key)) continue;
