@@ -58,7 +58,8 @@ void main() {
 
     test('swap swaps elements', () {
       final list = [1, 2, 3];
-      expect(list.swap(0, 2), [3, 2, 1]);
+      list.swap(0, 2);
+      expect(list, [3, 2, 1]);
     });
 
     test('getRandom is deterministic with seed', () {

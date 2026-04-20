@@ -77,8 +77,8 @@ void main() {
 
       test('should return negative difference for past date', () {
         final pastDate = DateTime.now().dateOnly.subtract(
-              const Duration(days: 3),
-            );
+          const Duration(days: 3),
+        );
         expect(pastDate.remainingDays, lessThan(0));
       });
     });

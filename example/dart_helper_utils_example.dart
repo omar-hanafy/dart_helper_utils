@@ -1,5 +1,4 @@
 // ignore_for_file: avoid_print
-import 'package:collection/collection.dart';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {
@@ -97,8 +96,8 @@ Future<void> main() async {
   // [Flutter, And, Dart, are, AWESOME]
   print('FlutterAndDart_are-AWESOME'.toWords);
 
-  // Converting a map with potentially complex data types to
-  // a formatted JSON string using the safelyEncodedJson getter.
+  // Convert a map with complex values to pretty JSON using
+  // the convert_object helpers re-exported by dart_helper_utils.
   final exampleMap = {
     'id': 2,
     'firstName': 'John',
@@ -115,7 +114,7 @@ Future<void> main() async {
     },
   };
 
-  // Convert the map to a formatted JSON string
+  // Pretty JSON output.
   print(exampleMap.encodeWithIndent);
 
   // Convert the Map into a single-level map.

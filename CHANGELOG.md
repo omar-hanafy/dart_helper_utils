@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 6.0.1
+
+- Re-exported `package:collection/collection.dart` from `dart_helper_utils.dart`.
+- Corrected the v6 migration docs for JSON helpers moved to `convert_object`.
+- Refreshed the README
+
 ## 6.0.0
 
 🎉 **Major Release: V6**
@@ -22,8 +28,8 @@ This release represents a massive overhaul of `dart_helper_utils`, focusing on p
   - **Renaming:**
     - `httpFormat` → `httpDateFormat`
     - `flatJson` → `flatMap`
-    - `makeEncodable` → `encodableCopy`
-    - `safelyEncodedJson` → `encodedJsonString`
+    - `makeEncodable` → use `toJsonSafe()` / `toJsonMap()` from the re-exported `convert_object` package
+    - `safelyEncodedJson` → use `toJsonString(...)` or `encodeWithIndent` from the re-exported `convert_object` package
   - **Throttling:** `TimeUtils.throttle` now returns a callable `ThrottledCallback` object with disposal support.
 
 ### ✨ New Features
@@ -216,8 +222,8 @@ Added new `Debouncer` class for function execution control:
 ### Pagination
 
 - **Unified Paginator:**  
-  Introduced `BasePaginator<T>` to centralize shared logic—such as debouncing, lifecycle events, and disposal
-  checks—across all paginators. The new design includes a single `InfinitePaginator` that supports both page-based and
+  Introduced `BasePaginator<T>` to centralize shared logic - such as debouncing, lifecycle events, and disposal
+  checks - across all paginators. The new design includes a single `InfinitePaginator` that supports both page-based and
   cursor-based infinite scrolling via dedicated factory constructors.
 - **Improved AsyncPaginator:**  
   Updated `AsyncPaginator` to utilize `CancelableOperation` for deduplication and optional cancellation of in-flight

@@ -54,6 +54,5 @@ extension DHUDurationExt on Duration {
   @optionalTypeArgs
   Future<T> delayed<T extends Object?>([
     FutureOr<T> Function()? computation,
-  ]) async =>
-      Future<T>.delayed(this, computation);
+  ]) async => Future<T>.delayed(this, computation);
 }

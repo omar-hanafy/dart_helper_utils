@@ -22,6 +22,9 @@ void main() {
     test('removeWhiteSpaces and clean', () {
       expect('a b c'.removeWhiteSpaces, 'abc');
       expect('a b\nc'.clean, 'abc');
+
+      String? nullableStr = ' a \t b ';
+      expect(nullableStr.removeWhiteSpaces, 'ab');
     });
 
     test('words and lines', () {

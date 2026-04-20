@@ -1,190 +1,143 @@
-# dart_helper_utils
+[![dart_helper_utils logo](https://raw.githubusercontent.com/omar-hanafy/dart_helper_utils/main/logo.svg)](https://pub.dev/packages/dart_helper_utils)
 
-Dart utilities and ergonomic extensions with type-safe conversions via the
-re-exported `convert_object` package.
+[![pub package](https://img.shields.io/pub/v/dart_helper_utils)](https://pub.dev/packages/dart_helper_utils)
 
-Repository: https://github.com/omar-hanafy/dart_helper_utils
-Package: https://pub.dev/packages/dart_helper_utils
+A batteries-included utility package for Dart. One import gives you type-safe
+conversions, ergonomic extensions, a serious debouncer, stream superpowers,
+and the APIs you already know from [`convert_object`](https://pub.dev/packages/convert_object), `collection`, and `intl`.
+
+- Repository: https://github.com/omar-hanafy/dart_helper_utils
+- Full API: https://pub.dev/documentation/dart_helper_utils/latest/dart_helper_utils/
+- Migration guide: https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides.md
 
 ## Installation
 
-Add the package to your `pubspec.yaml`:
-
 ```yaml
 dependencies:
-  dart_helper_utils: ^6.0.0-dev.4
+  dart_helper_utils: ^<latest_version>
 ```
-
-## Import
-
-```dart
-import 'dart:async';
-
-import 'package:dart_helper_utils/dart_helper_utils.dart';
-```
-
-## Highlights
-
-- **Type-safe conversions** (from `convert_object`) with configurable strictness.
-- **Collections**: chunking, windowing, partitioning, and safe map/list helpers.
-- **Strings**: case conversion, slugify, parsing, validation, and masking.
-- **Numbers**: formatting via `intl`, file size helpers, and HTTP status helpers.
-- **Date/Time**: rounding, comparisons, and HTTP date formatting.
-- **Async**: retries, timeouts, concurrency throttling, debouncing/throttling.
-- **Streams**: retries and safe controller additions.
-- **Raw data**: HTTP status messages, CSS colors, and suffix maps.
-
-## Quick start
 
 ```dart
 import 'package:dart_helper_utils/dart_helper_utils.dart';
+```
 
-void main() async {
-  final json = '{"count": "42"}';
-  final data = convertToMap<String, Object?>(json);
-  final count = convertToInt(data['count']);
-  print(count); // 42
+## At a glance
 
-  final slug = 'Hello, World!'.slugify();
-  print(slug); // hello-world
+```dart
+// Type-safe map extraction, collection helpers, and intl formatting
+// all from a single import.
+final map = {'name': 'Omar', 'count': '42', 'items': [1, 2, 3]};
+print(map.getString('name'));                  // Omar
+print(map.getInt('count'));                    // 42
+print(map.getList<int>('items').firstOrNull);  // 1
+print(1234567.89.formatAsReadableNumber());    // 1,234,567.89
+print('invoice.pdf'.isPDF);                    // true
+```
 
-  final chunked = [1, 2, 3, 4, 5].chunks(2);
-  print(chunked); // [[1, 2], [3, 4], [5]]
+## Why reach for it
 
-  final results = await [1, 2, 3].mapConcurrent(
-    (value) async => value * 2,
-    parallelism: 2,
+### One import, not five
+
+Everything below is available from the single package import:
+
+- Type-safe conversions from the re-exported [`convert_object`](https://pub.dev/packages/convert_object)
+- `package:collection` (`firstOrNull`, `groupBy`, `mapIndexed`, ...)
+- `intl` essentials (`DateFormat`, `NumberFormat`, `Bidi`, `Intl`)
+- dozens of focused extensions and helpers from this package itself
+
+No import soup, no glue code.
+
+### A debouncer that is actually complete
+
+Leading or trailing execution, a `maxWait` ceiling, pause and resume,
+a state stream for observability, and optional execution history for debugging.
+
+```dart
+final debouncer = Debouncer(
+  delay: const Duration(milliseconds: 300),
+  maxWait: const Duration(seconds: 2),
+);
+
+void onSearchChanged(String q) =>
+    debouncer.run(() => runSearch(q));
+
+// Screen pauses:
+debouncer.pause();
+// Resumes later:
+debouncer.resume();
+
+// Optional observability.
+debouncer.stateStream.listen(print);
+```
+
+### Stream superpowers, no reactive dependency
+
+```dart
+// Hold events until you are ready for them.
+final paused = sensorStream.asPausable();
+
+// Cap a noisy source at 5 events per second.
+final safe = eventStream.rateLimit(5, const Duration(seconds: 1));
+
+// Group events into fixed-size or time-based batches.
+final batched = logStream.bufferCount(100);
+final windowed = logStream.window(const Duration(seconds: 1));
+
+// Behaviour-subject semantics: late subscribers see the last value.
+final replay = priceStream.withLatestValue();
+```
+
+### Bounded concurrency and soft timeouts
+
+```dart
+// Run at most 4 uploads at once, results in completion order.
+final urls = await files.mapConcurrent(upload, parallelism: 4);
+
+// Soft timeout: the original task keeps running in the background.
+try {
+  final report = await TimeUtils.runWithTimeout(
+    task: fetchReport,
+    timeout: const Duration(seconds: 5),
   );
-  print(results); // [2, 4, 6] (completion order)
-
-  try {
-    await TimeUtils.runWithTimeout(
-      task: () async {
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-        return 'finished';
-      },
-      timeout: const Duration(milliseconds: 20),
-    );
-  } on TimeoutException catch (e) {
-    print('timed out: $e');
-  }
+} on TimeoutException {
+  showSlowNetworkBanner();
 }
 ```
 
-## API overview
-
-### Conversions (re-exported from `convert_object`)
-
-- `convertToInt(value, {defaultValue})` -> `int` (throws `ConversionException`)
-- `tryConvertToInt(value)` -> `int?`
-- `convertToDateTime(value, {format, locale})` -> `DateTime`
-- `Convert.toInt(value, {defaultValue})` -> `int`
-- `Convert.configure(ConvertConfig)` -> `void`
-
-### Strings
-
-- `String.toCamelCase`, `toPascalCase`, `toSnakeCase`, `toKebabCase`
-- `String.slugify({separator})`
-- `String.parseDuration()` -> `Duration`
-- `String.maskEmail`, `String.mask({visibleStart, visibleEnd})`
-- `String.normalizeWhitespace()`, `String.removeEmptyLines`, `String.words`, `String.lines`
-
-### Scope functions
-
-- Re-exported from `convert_object` (>= 1.0.2).
-- `Object.let((it) => ...)`
-- `Object.also((it) => ...)`
-- `Object.takeIf((it) => ...)`
-- `Object.takeUnless((it) => ...)`
-
-### Collections
-
-- `Iterable<E>.chunks(size)` -> `List<List<E>>`
-- `Iterable<E>.windowed(size, {step, partials})`
-- `Iterable<E>.mapConcurrent(action, {parallelism})` (completion order)
-- `Iterable<E>.concatWithSingleList(iterable)`
-- `Iterable<E>.concatWithMultipleList(iterables)`
-- `Map<String, Object?>.getPath(path, {delimiter, parseIndices})`
-- `Map<String, Object?>.setPath(path, value, {delimiter, parseIndices})`
-- `Map<String, Object?>.deepMerge(other)`
-
-### URIs
-
-- `Uri.domainName` -> `String`
-- `Uri.rebuild({ ...builders })` (if both path builders are set, `pathSegmentsBuilder` wins)
-- `Uri.withQueryParameters(queryParameters)`
-- `Uri.mergeQueryParameters(queryParameters)`
-- `Uri.removeQueryParameters(keys)`
-- `Uri.appendPathSegment(segment)` / `appendPathSegments(segments)`
-- `Uri.normalizeTrailingSlash({trailingSlash})`
-
-### Date and time
-
-- `DateTime.httpDateFormat` -> `String`
-- `DateTime.isBetween(start, end, {inclusiveStart, inclusiveEnd, ignoreTime, normalize})`
-- `DateTime.roundTo(duration)`
-- `Duration.toClockString()`
-- `Duration.toHumanShort()`
-
-### Async helpers
-
-- `Future<T>.minWait(duration)`
-- `Future<T>.timeoutOrNull(timeout)`
-- `Future<T> Function().retry({retries, delay, retryIf})`
-- `Iterable<Future<T> Function()>.waitConcurrency({concurrency})` (completion order)
-
-### Time utilities
-
-- `TimeUtils.executionDuration(task)` -> `Duration` (sync or async)
-- `TimeUtils.executionDurations(tasks)` -> `List<Duration>`
-- `TimeUtils.compareExecutionTimes(taskA: ..., taskB: ...)`
-- `TimeUtils.debounce(func, duration, {maxWait, immediate})` returns `DebouncedCallback`
-- `TimeUtils.throttle(func, interval, {leading, trailing})` returns `ThrottledCallback`
-- `TimeUtils.runWithTimeout(task: ..., timeout: ...)` throws `TimeoutException` without cancelling the original work and swallows late errors to keep the zone clean
-
-### Streams
-
-- `StreamController<T>.safeAdd(event)`
-- `Stream<T>.retry({retryCount, delayFactor, shouldRetry})`
-
-### HTTP helpers
-
-- `num.isSuccessCode`, `num.isClientErrorCode`, `num.isServerErrorCode`
-- `num.statusCodeRetryDelay`
-- `num.toHttpStatusUserMessage`
-
-### Raw data
-
-- `greekNumberSuffixes` -> `List<String>`
-- `httpStatusMessages` -> `Map<int, String>`
-- `cssColorNamesToArgb` -> `Map<String, int>`
-
-## Notes
-
-- `mapConcurrent` and `waitConcurrency` return results in completion order.
-- `TimeUtils.runWithTimeout` returns a `TimeoutException` when the timeout
-  fires, but the original task keeps running in the background.
-
-## Examples
-
-### Conversions
+### Deep map utilities for config-heavy apps
 
 ```dart
-print(convertToInt('42')); // 42
-print(tryConvertToInt('x')); // null
+final nested = {
+  'user': {'name': 'Omar', 'roles': ['admin', 'editor']},
+};
+
+final flat = nested.flatMap();
+// {user.name: Omar, user.roles.0: admin, user.roles.1: editor}
+
+print(flat.unflatten()); // round-trips back to nested
+
+final payload = {'users': [{'name': 'A'}, {'name': 'B'}]};
+print(payload.getPath('users[1].name')); // B
 ```
 
-### DateTime.isBetween
+## Also in the box
 
-```dart
-final start = DateTime(2024, 1, 1);
-final end = DateTime(2024, 1, 2);
-print(DateTime(2024, 1, 1).isBetween(start, end)); // true
-print(DateTime(2024, 1, 2).isBetween(start, end)); // false
-```
+Everyday sugar that you would otherwise write by hand: case conversion,
+`slugify`, `parseDuration`, email and string masking, MIME checks
+(`isPDF`, `isImage`, `isFont`), date helpers (`isBetween`, `addBusinessDays`,
+`daysInMonth`), Intl formatters (`formatAsCurrency`, `formatAsCompact`,
+`toOrdinal`, `pluralize`), URI builders (`rebuild`, `mergeQueryParameters`,
+`appendPathSegment`), and `Iterable<num>` statistics (`mean`, `median`,
+`percentile`, `standardDeviation`).
 
-### String.parseDuration
+Browse the full API: https://pub.dev/documentation/dart_helper_utils/latest/
 
-```dart
-print('1h 30m'.parseDuration()); // 1:30:00.000000
-```
+## Migration notes
+
+- v6 moved conversion logic into [`convert_object`](https://pub.dev/packages/convert_object), which is re-exported here.
+- Duplicate iterable and map helpers were removed in favor of
+  `package:collection`, which is now also re-exported.
+- Old JSON helpers like `safelyEncodedJson` are now `toJsonString(...)` or
+  `encodeWithIndent` from [`convert_object`](https://pub.dev/packages/convert_object).
+
+Full guide: https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides.md
