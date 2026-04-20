@@ -133,11 +133,14 @@ The `.convertTo<T>()` extension method has been removed from `List` to avoid amb
 
 ### 9. Iterable/Map Cleanup (collection replacements)
 Duplicate iterable/map helpers were removed in favor of `package:collection`.
-Add:
+In current 6.x releases, `dart_helper_utils` re-exports `package:collection`, so your existing package import is enough:
 
 ```dart
-import 'package:collection/collection.dart';
+import 'package:dart_helper_utils/dart_helper_utils.dart';
 ```
+
+If you prefer a direct dependency, importing `package:collection/collection.dart`
+still works too.
 
 Common replacements:
 
@@ -171,6 +174,31 @@ import 'package:convert_object/convert_object.dart';
 final roman = 42.toRomanNumeral(); // "XLII"
 final value = 'XLII'.asRomanNumeralToInt; // 42
 print(romanNumerals); // Map<int, String>
+```
+
+### 10.5. JSON Encoding Helpers Moved to `convert_object`
+
+The old map helpers did not move over as `encodableCopy` and
+`encodedJsonString`.
+
+Use the JSON helpers re-exported from `convert_object` instead:
+
+| v5 (Old) | v6 (New) |
+|:---|:---|
+| `map.makeEncodable` | `map.toJsonSafe()` or `map.toJsonMap()` |
+| `map.safelyEncodedJson` | `map.toJsonString(indent: '  ')` or `map.encodeWithIndent` |
+
+Example:
+
+```dart
+final data = {
+  'tags': {'dart', 'utils'},
+  'createdAt': DateTime(2025, 1, 1),
+};
+
+print(data.encodeWithIndent);
+print(data.toJsonString(indent: '  '));
+print(data.toJsonMap());
 ```
 
 ### 11. `TimeUtils.throttle` API Update

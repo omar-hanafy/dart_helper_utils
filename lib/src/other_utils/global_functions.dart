@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:collection/collection.dart';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 /// Returns `true` when [value] is a primitive value or a collection of primitives.
@@ -17,16 +16,15 @@ bool isValuePrimitive(dynamic value) => value is Object && value.isPrimitive();
 
 /// Returns `true` when the static type [T] is a primitive type.
 bool isTypePrimitive<T>() => switch (T) {
-      const (num) ||
-      const (int) ||
-      const (double) ||
-      const (bool) ||
-      const (String) ||
-      const (BigInt) ||
-      const (DateTime) =>
-        true,
-      _ => false,
-    };
+  const (num) ||
+  const (int) ||
+  const (double) ||
+  const (bool) ||
+  const (String) ||
+  const (BigInt) ||
+  const (DateTime) => true,
+  _ => false,
+};
 
 /// Returns `true` when [a] and [b] are deeply equal.
 bool isEqual(dynamic a, dynamic b) =>

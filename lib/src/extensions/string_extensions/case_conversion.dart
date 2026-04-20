@@ -36,8 +36,9 @@ extension DHUCaseConversionExtensions on String {
   String get toCamelCase {
     final words = toWords;
     for (var i = 0; i < words.length; i++) {
-      words[i] =
-          (i == 0 ? words[i].toLowerCase() : words[i].capitalizeFirstLowerRest);
+      words[i] = (i == 0
+          ? words[i].toLowerCase()
+          : words[i].capitalizeFirstLowerRest);
     }
     return words.join();
   }
@@ -78,8 +79,9 @@ extension DHUCaseConversionExtensions on String {
   String get toCamelSnakeCase {
     final words = toWords;
     for (var i = 0; i < words.length; i++) {
-      words[i] =
-          (i == 0 ? words[i].toLowerCase() : words[i].capitalizeFirstLowerRest);
+      words[i] = (i == 0
+          ? words[i].toLowerCase()
+          : words[i].capitalizeFirstLowerRest);
     }
     return words.join('_');
   }
@@ -89,8 +91,9 @@ extension DHUCaseConversionExtensions on String {
   String get toCamelKebabCase {
     final words = toWords;
     for (var i = 0; i < words.length; i++) {
-      words[i] =
-          (i == 0 ? words[i].toLowerCase() : words[i].capitalizeFirstLowerRest);
+      words[i] = (i == 0
+          ? words[i].toLowerCase()
+          : words[i].capitalizeFirstLowerRest);
     }
     return words.join('-');
   }
@@ -134,11 +137,10 @@ extension DHUCaseConversionExtensions on String {
   /// print(title); // Output: 'Example-String_For General Use-Sample.'
   /// ```
   String get toTitle => splitMapJoin(
-        RegExp('[-_]'),
-        onMatch: (match) => match.group(0)!,
-        onNonMatch: (subWord) =>
-            subWord.isNotEmpty ? subWord.toTitleCase : subWord,
-      );
+    RegExp('[-_]'),
+    onMatch: (match) => match.group(0)!,
+    onNonMatch: (subWord) => subWord.isNotEmpty ? subWord.toTitleCase : subWord,
+  );
 
   /// Determines if capitalization should be ignored for this string.
   /// Returns true if the string starts with a number or is a common lowercase word in titles.
@@ -147,72 +149,72 @@ extension DHUCaseConversionExtensions on String {
 }
 
 List<String> get _titleCaseExceptions => const <String>[
-      'a',
-      'abaft',
-      'about',
-      'above',
-      'afore',
-      'after',
-      'along',
-      'amid',
-      'among',
-      'an',
-      'apud',
-      'as',
-      'aside',
-      'at',
-      'atop',
-      'below',
-      'but',
-      'by',
-      'circa',
-      'down',
-      'for',
-      'from',
-      'given',
-      'in',
-      'into',
-      'lest',
-      'like',
-      'mid',
-      'midst',
-      'minus',
-      'near',
-      'next',
-      'of',
-      'off',
-      'on',
-      'onto',
-      'out',
-      'over',
-      'pace',
-      'past',
-      'per',
-      'plus',
-      'pro',
-      'qua',
-      'round',
-      'sans',
-      'save',
-      'since',
-      'than',
-      'thru',
-      'till',
-      'times',
-      'to',
-      'under',
-      'until',
-      'unto',
-      'up',
-      'upon',
-      'via',
-      'vice',
-      'with',
-      'worth',
-      'the',
-      'and',
-      'nor',
-      'or',
-      'yet',
-      'so',
-    ];
+  'a',
+  'abaft',
+  'about',
+  'above',
+  'afore',
+  'after',
+  'along',
+  'amid',
+  'among',
+  'an',
+  'apud',
+  'as',
+  'aside',
+  'at',
+  'atop',
+  'below',
+  'but',
+  'by',
+  'circa',
+  'down',
+  'for',
+  'from',
+  'given',
+  'in',
+  'into',
+  'lest',
+  'like',
+  'mid',
+  'midst',
+  'minus',
+  'near',
+  'next',
+  'of',
+  'off',
+  'on',
+  'onto',
+  'out',
+  'over',
+  'pace',
+  'past',
+  'per',
+  'plus',
+  'pro',
+  'qua',
+  'round',
+  'sans',
+  'save',
+  'since',
+  'than',
+  'thru',
+  'till',
+  'times',
+  'to',
+  'under',
+  'until',
+  'unto',
+  'up',
+  'upon',
+  'via',
+  'vice',
+  'with',
+  'worth',
+  'the',
+  'and',
+  'nor',
+  'or',
+  'yet',
+  'so',
+];

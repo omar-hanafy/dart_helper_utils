@@ -62,14 +62,15 @@ void main() {
     test('retry respects retryIf', () async {
       var attempts = 0;
       expect(
-        () => (() async {
-          attempts++;
-          throw Exception('fatal');
-        }).retry(
-          retries: 3,
-          delay: const Duration(milliseconds: 10),
-          retryIf: (e) => e.toString().contains('recoverable'),
-        ),
+        () =>
+            (() async {
+              attempts++;
+              throw Exception('fatal');
+            }).retry(
+              retries: 3,
+              delay: const Duration(milliseconds: 10),
+              retryIf: (e) => e.toString().contains('recoverable'),
+            ),
         throwsException,
       );
       expect(attempts, 1); // Should not retry
