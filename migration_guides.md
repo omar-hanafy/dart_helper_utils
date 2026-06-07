@@ -83,6 +83,28 @@ map.getString('key', altKeys: ['k2']);
 map.getString('key', alternativeKeys: ['k2']);
 ```
 
+### 5.5. Raw value lookup: `firstValueForKeys` -> `tryGetRaw`
+
+v5's public `Map.firstValueForKeys` is replaced by `Map.tryGetRaw` in
+[`convert_object`](https://pub.dev/packages/convert_object) (re-exported here).
+
+> **Availability:** `tryGetRaw` and the updated `alternativeKeys` fallback ship
+> in `convert_object` 1.1.0. This version of `dart_helper_utils` already requires
+> `convert_object: ^1.1.0`, so upgrading pulls it in automatically.
+
+| v5 (Old)                                             | v6 (New)                                     |
+|:-----------------------------------------------------|:---------------------------------------------|
+| `map.firstValueForKeys('k')`                         | `map.tryGetRaw('k')`                         |
+| `map.firstValueForKeys('k', alternativeKeys: ['a'])` | `map.tryGetRaw('k', alternativeKeys: ['a'])` |
+
+For typed reads, prefer the typed getters (for example `map.tryGetString('k', alternativeKeys: ['a'])`).
+
+**Behavior change:** `alternativeKeys` now selects the first key whose value is
+**non-null** (like a `??` chain), not merely the first key that exists. A
+present-but-null alternative key no longer short-circuits the lookup. This
+affects every typed map getter that uses `alternativeKeys`. Use `Map.containsKey`
+if you must distinguish an absent key from a present-but-null one.
+
 ### 6. Removed Object Extensions
 The type-checking getters on `Object?` have been removed to keep the API clean. Use the `tryConvert` functions or standard Dart checks.
 
