@@ -4,7 +4,7 @@ repository: https://github.com/omar-hanafy/dart_helper_utils
 homepage: https://github.com/omar-hanafy/dart_helper_utils
 issue_tracker: https://github.com/omar-hanafy/dart_helper_utils/issues
 documentation: https://pub.dev/documentation/dart_helper_utils/latest/
-version: 6.0.1
+version: 6.0.2
 
 topics:
   - utils
@@ -19,7 +19,7 @@ environment:
 # Add regular dependencies here.
 dependencies:
   collection: ^1.19.1
-  convert_object: ^1.0.4
+  convert_object: ^1.1.0
   equatable: ^2.0.8
   intl: ">=0.20.0 <1.0.0"
   meta: ^1.17.0

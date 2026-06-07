@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 6.0.2
+
+- Require `convert_object: ^1.1.0` so the re-exported `tryGetRaw` and the updated `alternativeKeys` fallback (now selects the first non-null candidate) are always available.
+- Documented the `firstValueForKeys` → `tryGetRaw` migration in the [v6 migration guide](https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides.md).
+
 ## 6.0.1
 
 - Re-exported `package:collection/collection.dart` from `dart_helper_utils.dart`.

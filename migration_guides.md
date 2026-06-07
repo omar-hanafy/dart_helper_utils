@@ -88,9 +88,9 @@ map.getString('key', alternativeKeys: ['k2']);
 v5's public `Map.firstValueForKeys` is replaced by `Map.tryGetRaw` in
 [`convert_object`](https://pub.dev/packages/convert_object) (re-exported here).
 
-> **Requires `convert_object: ^1.1.0`.** `tryGetRaw` and the updated fallback
-> ship in convert_object 1.1.0. Make sure your resolved version is at least
-> 1.1.0 (for example run `dart pub upgrade convert_object`).
+> **Availability:** `tryGetRaw` and the updated `alternativeKeys` fallback ship
+> in `convert_object` 1.1.0. This version of `dart_helper_utils` already requires
+> `convert_object: ^1.1.0`, so upgrading pulls it in automatically.
 
 | v5 (Old)                                             | v6 (New)                                     |
 |:-----------------------------------------------------|:---------------------------------------------|
