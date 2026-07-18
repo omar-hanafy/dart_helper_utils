@@ -1,0 +1,16 @@
+{
+  "name": "dart-helper-utils-tools",
+  "owner": {
+    "name": "Omar Hanafy"
+  },
+  "description": "AI coding-assistant plugins for the dart_helper_utils Dart package",
+  "plugins": [
+    {
+      "name": "dart-helper-utils",
+      "source": "./tooling/ai/dart-helper-utils",
+      "description": "Package-specific skills for the dart_helper_utils Dart package: exact utility APIs (strings, maps, collections, dates, intl formatting), async timing tools (Debouncer, throttle, stream transformers), the v5-to-v6 breaking migration, and version upgrades.",
+      "category": "developer-tools",
+      "tags": ["dart", "flutter", "utilities", "extensions", "debouncer"]
+    }
+  ]
+}

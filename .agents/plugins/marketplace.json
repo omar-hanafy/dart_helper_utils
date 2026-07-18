@@ -1,0 +1,19 @@
+{
+  "name": "dart-helper-utils-tools",
+  "interface": {
+    "displayName": "Dart Helper Utils Tools"
+  },
+  "plugins": [
+    {
+      "name": "dart-helper-utils",
+      "source": {
+        "source": "local",
+        "path": "./tooling/ai/dart-helper-utils"
+      },
+      "policy": {
+        "installation": "AVAILABLE"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}

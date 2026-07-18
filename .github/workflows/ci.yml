@@ -55,6 +55,9 @@ jobs:
       - name: Analyze
         run: dart analyze
 
+      - name: Validate agent plugin
+        run: dart run tool/validate_agent_plugin.dart
+
       - name: Test
         run: dart test
 

@@ -5,3 +5,11 @@ v6_proposals.md
 # Local artifacts and debug output.
 build/
 firebase-debug.log
+
+# AI coding-assistant plugin distribution (repo-hosted; pub.dev strips hidden
+# dirs, so shipping this tree would produce a broken partial plugin) and
+# maintainer-only files.
+tooling/
+tool/
+AGENTS.md
+CLAUDE.md
