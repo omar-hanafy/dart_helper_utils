@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## 6.0.3
+
+No Dart API changes.
+
+- Added an installable AI coding-assistant plugin for Claude Code and OpenAI
+  Codex, hosted in this repository (`tooling/ai/dart-helper-utils/`) with
+  four package-specific skills: exact utility-API usage, async/timing/stream
+  lifecycles (Debouncer, throttle, rateLimit, waitConcurrency), the v5-to-v6
+  breaking migration, and version-aware upgrades. Install via
+  `/plugin marketplace add omar-hanafy/dart_helper_utils` (Claude Code) or
+  `codex plugin marketplace add omar-hanafy/dart_helper_utils` (Codex CLI);
+  see the README's "AI coding-assistant support" section.
+- Added maintainer tooling: `tool/validate_agent_plugin.dart` (runs in CI)
+  keeps plugin manifests, marketplace catalogs, and skill metadata in sync
+  with the package version.
+- The plugin tree and maintainer files are excluded from the pub.dev archive
+  (`.pubignore`); the package payload is unchanged.
+
 ## 6.0.2
 
 - Require `convert_object: ^1.1.0` so the re-exported `tryGetRaw` and the updated `alternativeKeys` fallback (now selects the first non-null candidate) are always available.

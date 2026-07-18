@@ -4,7 +4,7 @@ repository: https://github.com/omar-hanafy/dart_helper_utils
 homepage: https://github.com/omar-hanafy/dart_helper_utils
 issue_tracker: https://github.com/omar-hanafy/dart_helper_utils/issues
 documentation: https://pub.dev/documentation/dart_helper_utils/latest/
-version: 6.0.2
+version: 6.0.3
 
 topics:
   - utils
