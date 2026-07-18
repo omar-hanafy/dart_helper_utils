@@ -10,6 +10,42 @@ and the APIs you already know from [`convert_object`](https://pub.dev/packages/c
 - Full API: https://pub.dev/documentation/dart_helper_utils/latest/dart_helper_utils/
 - Migration guide: https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides.md
 
+## AI coding-assistant support
+
+This repository ships a package-specific **agent plugin** for
+**Claude Code** and **OpenAI Codex** (this is tooling for coding agents, not
+a runtime feature of the Dart package). It teaches the agent the exact
+dart_helper_utils APIs - utility member names and semantics, the
+Debouncer/throttle/stream lifecycles, the v5-to-v6 breaking migration, and
+version-aware upgrades.
+
+Install in **Claude Code**:
+
+```
+/plugin marketplace add omar-hanafy/dart_helper_utils
+/plugin install dart-helper-utils@dart-helper-utils-tools
+```
+
+Install in **OpenAI Codex** (CLI; the IDE extension does not support
+plugins - use its `$skill-installer` there instead):
+
+```
+codex plugin marketplace add omar-hanafy/dart_helper_utils
+codex plugin add dart-helper-utils@dart-helper-utils-tools
+```
+
+Start a new agent session after installing so the skills load. Then try
+prompts like "debounce this search field with dart_helper_utils and clean it
+up on dispose" or "migrate this project from dart_helper_utils 5.x to 6.x",
+or invoke a skill explicitly in Claude Code, e.g.
+`/dart-helper-utils:use-dart-helper-utils`.
+
+The plugin is installed from this Git repository (not from the pub.dev
+archive), contains markdown skills only - no hooks, no MCP servers, no
+telemetry - and its version tracks the package version. Details, the full
+capability list, updating, and uninstalling are in
+[tooling/ai/dart-helper-utils/README.md](https://github.com/omar-hanafy/dart_helper_utils/blob/main/tooling/ai/dart-helper-utils/README.md).
+
 ## Installation
 
 ```yaml

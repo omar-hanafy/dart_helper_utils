@@ -1,0 +1,28 @@
+{
+  "name": "dart-helper-utils",
+  "version": "6.0.3",
+  "description": "Package-specific skills for the dart_helper_utils Dart package: exact utility APIs (strings, maps, collections, dates, intl formatting), async timing tools (Debouncer, throttle, stream transformers), the v5-to-v6 breaking migration, and version upgrades.",
+  "author": {
+    "name": "Omar Hanafy",
+    "url": "https://github.com/omar-hanafy"
+  },
+  "homepage": "https://github.com/omar-hanafy/dart_helper_utils#ai-coding-assistant-support",
+  "repository": "https://github.com/omar-hanafy/dart_helper_utils",
+  "license": "MIT",
+  "keywords": [
+    "dart",
+    "flutter",
+    "dart-helper-utils",
+    "extensions",
+    "debouncer",
+    "streams",
+    "utilities"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Dart Helper Utils",
+    "shortDescription": "Skills for the dart_helper_utils Dart utility package",
+    "developerName": "Omar Hanafy",
+    "category": "Developer Tools"
+  }
+}
