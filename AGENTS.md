@@ -24,8 +24,16 @@ format drift).
 
 - Conversion logic lives in the `convert_object` package, NOT here; do not
   add conversion features to this repo (contribute upstream instead). The
-  same applies to string similarity (`string_search_algorithms`) and linked
-  lists (`doubly_linked_list`).
+  same applies to string similarity (`string_search_algorithms`), linked
+  lists (`doubly_linked_list`), and - since 6.1.0 - string text
+  transformations (`stringo`: case conversion, slugify, truncate, mask,
+  whitespace, blank/character checks).
+- The `stringo` split follows one rule: `stringo` transforms text, this
+  package judges domain formats. Validators (`isValidEmail`, `isUuid`,
+  `isValidIp4`), MIME checks, and `parseDuration` stay here. Never define the
+  same member name in both packages - both are exported from
+  `dart_helper_utils.dart`, so a duplicate becomes an ambiguous-extension
+  compile error for every user.
 - Any public API change needs matching tests in the flat `test/` directory
   (one file per domain) and doc comments on every public member.
 - Behavior quirks are load-bearing: `Iterable.intersect` merges (union) on

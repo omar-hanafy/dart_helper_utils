@@ -1,7 +1,7 @@
 {
   "name": "dart-helper-utils",
   "displayName": "Dart Helper Utils",
-  "version": "6.0.3",
+  "version": "6.1.0",
   "description": "Package-specific skills for the dart_helper_utils Dart package: exact utility APIs (strings, maps, collections, dates, intl formatting), async timing tools (Debouncer, throttle, stream transformers), the v5-to-v6 breaking migration, and version upgrades.",
   "author": {
     "name": "Omar Hanafy",

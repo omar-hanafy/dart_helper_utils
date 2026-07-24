@@ -94,17 +94,14 @@ const int millisecondsPerHour = 60 * millisecondsPerMinute;
 const int millisecondsPerDay = 24 * millisecondsPerHour;
 
 /// Common regex patterns used for validation and parsing.
-/// Matches ASCII letters and digits only.
-const String regexAlphanumeric = r'^[a-zA-Z0-9]+$';
-
+///
+/// The character-class patterns (`regexAlphanumeric`, `regexNumeric`,
+/// `regexAlphabet`, `regexStartsWithNumber`, `regexContainsDigits`,
+/// `regexHasCapitalLetter`) now live in the `stringo` package and are
+/// re-exported from this library, so they remain available from this import.
+///
 /// Matches any character that is not ASCII letter, digit, or space.
 const String regexSpecialChars = '[^a-zA-Z0-9 ]';
-
-/// Matches strings that start with a digit.
-const String regexStartsWithNumber = r'^\d';
-
-/// Matches strings containing at least one digit.
-const String regexContainsDigits = r'\d';
 
 /// Matches usernames starting and ending with an alphanumeric character.
 const String regexValidUsername = r'^[a-zA-Z0-9][a-zA-Z0-9_.]+[a-zA-Z0-9]$';
@@ -128,15 +125,6 @@ const String regexValidIp4 =
 /// Matches http/https URLs and common URL patterns.
 const String regexValidUrl =
     r'^(https?:\/\/)?(www\.)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+([\/?#][^\s]*)?$';
-
-/// Matches ASCII digits only.
-const String regexNumeric = r'^\d+$';
-
-/// Matches ASCII letters only.
-const String regexAlphabet = r'^[a-zA-Z]+$';
-
-/// Matches uppercase ASCII letters.
-const String regexHasCapitalLetter = '[A-Z]';
 
 /// A map of HTTP status codes to their corresponding messages.
 ///

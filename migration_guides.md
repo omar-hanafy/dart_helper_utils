@@ -4,6 +4,46 @@ Version 6.0.0 is a major release that refactors all conversion logic into a
 specialized standalone package: [`convert_object`](https://pub.dev/packages/convert_object).
 `dart_helper_utils` now exports this package, ensuring a cleaner architecture.
 
+## 6.1.0 - string helpers moved to `stringo`
+
+Not a breaking release, but worth a note. String text transformations moved to
+the new zero-dependency [`stringo`](https://pub.dev/packages/stringo) package,
+which `dart_helper_utils` depends on and re-exports.
+
+**Nothing to do in normal code.** `'x'.toSnakeCase`, `'x'.slugify()`,
+`'x'.isBlank` and the rest still resolve from the `dart_helper_utils` import,
+because Dart resolves extension members by name.
+
+Two exceptions:
+
+1. **If you name an extension type explicitly** - `show DHUCaseConversionExtensions`
+   in an import, or `DHUStringExtensions('x').clean` to disambiguate - update
+   the name:
+
+   | Old | New |
+   | --- | --- |
+   | `DHUCaseConversionExtensions` | `StringCaseExtensions` |
+   | `DHUNullSafeCaseConversionExtensions` | `NullableStringCaseExtensions` |
+   | `DHUStringExtensions` (moved members) | `StringTransformExtensions` |
+   | `DHUNullSafeStringExtensions` (moved members) | `NullableStringTransformExtensions` / `StringChecksExtensions` |
+
+   `DHUStringExtensions` and `DHUNullSafeStringExtensions` still exist; they
+   now hold only the members that stayed (validators, `parseDuration`, base64,
+   `wrapString`, `limitFromStart` / `limitFromEnd`, `lastIndex`, `anyChar`,
+   `ifEmpty`, `maskEmail`, `isPalindrome`).
+
+   Dart has no deprecation path for extension names - they cannot be aliased,
+   and two extensions declaring the same members collide - so there is no shim
+   for this.
+
+2. **`toTitleCase` / `toTitle` now capitalize the first word.**
+   `'the lord of the rings'.toTitleCase` used to return
+   `'the Lord of the Rings'` and now returns `'The Lord of the Rings'`. If you
+   depended on the old output, capitalize manually after the call.
+
+Want only the string helpers, without `convert_object` / `intl` / `collection`
+/ `mime`? Depend on `stringo` directly.
+
 ## 💥 Breaking Changes
 
 ### 1. Class Renaming: `ConvertObject` → `Convert`

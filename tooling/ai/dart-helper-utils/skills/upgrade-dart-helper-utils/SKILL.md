@@ -27,6 +27,7 @@ needed" and stop (do not invent work).
 | 3.x | 4.x | medium | paginators rebuilt on `BasePaginator` (lifecycle, transform caching, `CancelableOperation`); generic `delay()` replaced by unit methods (`2.secondsDelay()`); disposal became no-op instead of throwing |
 | 4.x/5.x | 6.x | LARGE | use the dedicated migrate-dart-helper-utils-v5-to-v6 skill (conversion moved to convert_object, renames, removals, behavior changes) |
 | 6.0.x | 6.0.y | none | patch releases are docs/tooling unless the CHANGELOG says otherwise - read it first |
+| 6.0.x | 6.1.x | small | string text transformations moved to the re-exported `stringo` package. Call sites are UNCHANGED. Two things to fix: (1) explicit extension type names - `DHUCaseConversionExtensions` to `StringCaseExtensions`, `DHUNullSafeCaseConversionExtensions` to `NullableStringCaseExtensions`, moved members of `DHUStringExtensions`/`DHUNullSafeStringExtensions` to `StringTransformExtensions`/`NullableStringTransformExtensions`/`StringChecksExtensions`; (2) `toTitleCase`/`toTitle` now capitalize the first word |
 
 Shortcut when crossing several majors: paginator work in the 3-to-4 hop is
 WASTED if the target is 6.x (paginators were removed in v6) - go straight
@@ -51,6 +52,10 @@ to choosing a pagination replacement. The same applies to
 - Behavior differences that survive a clean compile (bool parsing,
   `alternativeKeys`, percentile range) are catalogued in the
   migrate-dart-helper-utils-v5-to-v6 skill's behavior-changes section.
-- If the installed or target version is NEWER than 6.0.x, this skill may
-  predate it: read the package CHANGELOG for entries above 6.0.2 and treat
+- Grep for explicit extension names before a 6.1.x bump - that is the only
+  thing the compiler will flag:
+  `grep -rn "DHUCaseConversionExtensions\|DHUNullSafeCaseConversionExtensions\|DHUStringExtensions\|DHUNullSafeStringExtensions" lib test`.
+  Most projects get zero hits.
+- If the installed or target version is NEWER than 6.1.x, this skill may
+  predate it: read the package CHANGELOG for entries above 6.1.0 and treat
   any "breaking" bullet as its own hop.

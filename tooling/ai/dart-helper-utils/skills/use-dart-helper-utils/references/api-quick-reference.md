@@ -9,9 +9,24 @@ marked `T?`.
 ```dart
 export 'package:collection/collection.dart';          // wholesale
 export 'package:convert_object/convert_object.dart';  // wholesale
+export 'package:stringo/stringo.dart';                // wholesale (since 6.1.0)
 // intl is SHOW-filtered to exactly:
 //   Bidi, BidiFormatter, DateFormat, Intl, NumberFormat
 ```
+
+Since 6.1.0 the string TEXT TRANSFORMATIONS below (casing, slugify, truncate,
+mask, whitespace, blank/character checks) physically live in `stringo` and are
+re-exported. Domain validators (`isValidEmail`, `isUuid`, `isValidIp4`, ...),
+MIME checks, and `parseDuration` stayed in DHU. Either way one DHU import
+reaches all of them.
+
+Extension type names for the moved members changed in 6.1.0:
+`DHUCaseConversionExtensions` -> `StringCaseExtensions`,
+`DHUNullSafeCaseConversionExtensions` -> `NullableStringCaseExtensions`, and
+the moved half of `DHUStringExtensions` / `DHUNullSafeStringExtensions` ->
+`StringTransformExtensions` / `NullableStringTransformExtensions` /
+`StringChecksExtensions`. This only matters for code that names an extension
+explicitly (`show ...`, or `Ext('x').member`).
 
 ## Strings - general (`String` / `String?`)
 
@@ -52,8 +67,14 @@ export 'package:convert_object/convert_object.dart';  // wholesale
 `-`/`_` delimiters, unlike `toTitleCase`). On `String?`:
 `tryToLowerCase()`, `tryToUpperCase()`.
 
-`toTitleCase` lowercases ~70 exception words (a, the, of, ...) inside the
-title; `toTitle` does not.
+`toTitleCase` ALWAYS capitalizes the first word, then lowercases ~70 exception
+words (a, the, of, ...) that appear later in the title. The exception set is
+public as `titleCaseExceptions`. `toTitle` applies `toTitleCase` per segment
+while preserving `-`/`_` delimiters.
+
+Changed in 6.1.0: a leading stop word used to stay lowercase, so
+`'the lord of the rings'.toTitleCase` returned `'the Lord of the Rings'`; it
+now returns `'The Lord of the Rings'`.
 
 ## MIME checks (`String?`, filename/extension based, all getters)
 
