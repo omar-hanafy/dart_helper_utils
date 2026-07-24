@@ -93,13 +93,13 @@ const int millisecondsPerHour = 60 * millisecondsPerMinute;
 /// Number of milliseconds in one day.
 const int millisecondsPerDay = 24 * millisecondsPerHour;
 
-/// Common regex patterns used for validation and parsing.
-///
-/// The character-class patterns (`regexAlphanumeric`, `regexNumeric`,
-/// `regexAlphabet`, `regexStartsWithNumber`, `regexContainsDigits`,
-/// `regexHasCapitalLetter`) now live in the `stringo` package and are
-/// re-exported from this library, so they remain available from this import.
-///
+// Common regex patterns used for format validation.
+//
+// The character-class patterns (regexAlphanumeric, regexNumeric, regexAlphabet,
+// regexStartsWithNumber, regexContainsDigits, regexHasCapitalLetter) live in
+// the stringo package since 6.1.0 and are re-exported from this library, so
+// they remain available from this import.
+
 /// Matches any character that is not ASCII letter, digit, or space.
 const String regexSpecialChars = '[^a-zA-Z0-9 ]';
 
