@@ -18,7 +18,9 @@ across them - use the exact names below instead of memory.
    `DeepCollectionEquality`, ...) - re-exported wholesale.
 3. ALL of `package:convert_object` (`Convert.toX`, map `getInt`/`tryGetString`
    getters, `convertToList`, `.convert` fluent chains, `toJsonString`, ...).
-4. ONLY five intl symbols: `Bidi`, `BidiFormatter`, `DateFormat`, `Intl`,
+4. ALL of `package:stringo` (since DHU 6.1.0) - string text transformations:
+   casing, `slugify`, `truncate`, `mask`, whitespace, blank/character checks.
+5. ONLY five intl symbols: `Bidi`, `BidiFormatter`, `DateFormat`, `Intl`,
    `NumberFormat`. Anything else from intl needs a direct `package:intl` import.
 
 Consequences:
@@ -55,9 +57,17 @@ Consequences:
 
 ## Casing, slugify, masking (all on String)
 
+Since DHU 6.1.0 these come from the re-exported `stringo` package. The one
+DHU import still reaches them - do NOT add a `stringo` import or dependency to
+a project that already depends on `dart_helper_utils`. (A project that wants
+ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
+
 - Casing members are GETTERS, not methods: `toCamelCase`, `toPascalCase`,
   `toSnakeCase`, `toKebabCase`, `toTitleCase`, `toScreamingSnakeCase`,
   `toDotCase`, `toWords`, `capitalizeFirstLetter`, and more.
+- `toTitleCase` ALWAYS capitalizes the first word (since 6.1.0), then leaves
+  later stop words from the public `titleCaseExceptions` set lowercase:
+  `'the lord of the rings'.toTitleCase` gives `'The Lord of the Rings'`.
 - `slugify()` is a method (`separator` param). ASCII-only: non-ASCII letters
   are DROPPED, not transliterated - do not use it for i18n slugs.
 - `maskEmail` (getter) keeps the first two chars of the local part

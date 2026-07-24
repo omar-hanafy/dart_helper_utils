@@ -1,5 +1,65 @@
 # CHANGELOG
 
+## 6.1.0
+
+String text-transformation helpers now live in the new zero-dependency
+[`stringo`](https://pub.dev/packages/stringo) package, which this package
+depends on and re-exports.
+
+**Your call sites do not change.** `'x'.toSnakeCase`, `'x'.slugify()`,
+`'x'.isBlank`, and the rest still resolve from
+`import 'package:dart_helper_utils/dart_helper_utils.dart';` exactly as before,
+because Dart resolves extension members by name. If you want only the string
+helpers in another project, you can now depend on `stringo` alone instead of
+pulling in `convert_object`, `intl`, `collection`, and `mime`.
+
+### What moved to `stringo`
+
+Case conversion (`toWords` and the 15 case styles, `toTitle`,
+`capitalizeFirstLetter` and friends), transforms (`slugify`, `truncate`,
+`mask`, `normalizeWhitespace`, `clean`, `words`, `lines`, `insert`,
+`removeSurrounding`, `replaceBefore` / `replaceAfter`, and so on), the blank
+checks (`isBlank` / `isEmptyOrNull` and negations), the character predicates
+(`isNumeric`, `isAlphabet`, `isAlphanumeric`, `startsWithNumber`,
+`containsDigits`, `hasCapitalLetter`, `hasMatch`), and their six backing regex
+constants.
+
+### What stayed here
+
+Domain validation (`isValidEmail`, `isValidPhoneNumber`, `isValidUrl`,
+`isValidUsername`, `isValidCurrency`, `isValidIp4`, `isUuid`, `maskEmail`,
+`hasSpecialChars`, `isBool`), MIME and file-type checks, `parseDuration`, the
+base64 helpers, `isPalindrome`, `wrapString`, `limitFromStart` /
+`limitFromEnd`, `lastIndex`, `anyChar`, and `ifEmpty`. These judge real-world
+formats or parse values rather than transform text, and the right answer for
+them varies by project.
+
+### ⚠️ Two things to check when upgrading
+
+1. **Extension type names changed for the moved members.**
+   `DHUCaseConversionExtensions`, `DHUNullSafeCaseConversionExtensions`, and
+   the moved half of `DHUStringExtensions` / `DHUNullSafeStringExtensions` are
+   now `StringCaseExtensions`, `NullableStringCaseExtensions`,
+   `StringTransformExtensions`, `NullableStringTransformExtensions`, and
+   `StringChecksExtensions`. This only affects code that names an extension
+   explicitly - `show DHUCaseConversionExtensions` in an import, or
+   `DHUStringExtensions('x').clean` to disambiguate. Ordinary `'x'.toSnakeCase`
+   usage is unaffected. Dart provides no deprecation path for extension names
+   (they cannot be aliased, and two extensions declaring the same members
+   collide), so there is no soft-migration shim for this.
+2. **`toTitleCase` and `toTitle` now capitalize the first word.** Previously a
+   leading stop word was lowercased, so `'the lord of the rings'.toTitleCase`
+   returned `'the Lord of the Rings'`. It now returns
+   `'The Lord of the Rings'`, which matches conventional title casing and the
+   behavior the doc comments already described.
+
+### Also
+
+- `titleCaseExceptions` (the title-case stop-word list) is now public and
+  backed by a `Set` for constant-time lookup.
+- `mask` now rejects negative `visibleStart` / `visibleEnd` with an
+  `ArgumentError` instead of failing later with a `RangeError`.
+
 ## 6.0.3
 
 No Dart API changes.

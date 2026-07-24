@@ -3,5 +3,6 @@ library;
 
 export 'package:collection/collection.dart';
 export 'package:convert_object/convert_object.dart';
+export 'package:stringo/stringo.dart';
 
 export 'src/src.dart';

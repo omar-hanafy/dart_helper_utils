@@ -158,8 +158,10 @@ print(payload.getPath('users[1].name')); // B
 
 ## Also in the box
 
-Everyday sugar that you would otherwise write by hand: case conversion,
-`slugify`, `parseDuration`, email and string masking, MIME checks
+Everyday sugar that you would otherwise write by hand: the full
+[`stringo`](https://pub.dev/packages/stringo) string toolkit (case conversion,
+`slugify`, `truncate`, `mask`, whitespace normalization) re-exported here,
+format validators (`isValidEmail`, `isUuid`), `parseDuration`, MIME checks
 (`isPDF`, `isImage`, `isFont`), date helpers (`isBetween`, `addBusinessDays`,
 `daysInMonth`), Intl formatters (`formatAsCurrency`, `formatAsCompact`,
 `toOrdinal`, `pluralize`), URI builders (`rebuild`, `mergeQueryParameters`,
@@ -170,6 +172,11 @@ Browse the full API: https://pub.dev/documentation/dart_helper_utils/latest/
 
 ## Migration notes
 
+- 6.1.0 moved string text transformations into
+  [`stringo`](https://pub.dev/packages/stringo), which is re-exported here.
+  Call sites are unchanged; only explicit extension *type* names differ (see
+  the [CHANGELOG](CHANGELOG.md)). Depend on `stringo` directly if you want the
+  string helpers without the rest of this package.
 - v6 moved conversion logic into [`convert_object`](https://pub.dev/packages/convert_object), which is re-exported here.
 - Duplicate iterable and map helpers were removed in favor of
   `package:collection`, which is now also re-exported.
