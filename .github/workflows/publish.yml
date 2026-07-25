@@ -4,13 +4,10 @@ on:
   push:
     tags:
       - 'dart_helper_utils-v*'
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
   publish:
     permissions:
+      contents: read
       id-token: write
     uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
