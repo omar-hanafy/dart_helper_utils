@@ -310,7 +310,7 @@ void main() {
       await 150.millisecondsDelay();
       expect(debouncer.executionCount, equals(1));
       if (debouncer.executionHistory.isNotEmpty) {
-        expect(debouncer.executionHistory.first['success'], isTrue);
+        expect(debouncer.executionHistory.first.success, isTrue);
       }
     });
 

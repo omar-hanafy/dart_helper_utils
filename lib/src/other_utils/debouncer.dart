@@ -52,7 +52,7 @@ library;
 import 'dart:async';
 import 'dart:developer';
 
-import 'package:equatable/equatable.dart';
+import 'package:meta/meta.dart';
 
 /// A function signature for logging messages.
 typedef LoggerFunction = void Function(String message);
@@ -67,7 +67,10 @@ typedef TimerFactory =
 typedef AsyncAction = FutureOr<void> Function();
 
 /// An immutable snapshot of a debouncer's state.
-class DebouncerState extends Equatable {
+///
+/// Two snapshots are equal when every field is equal.
+@immutable
+class DebouncerState {
   /// Constructs a new [DebouncerState].
   const DebouncerState({
     required this.isRunning,
@@ -114,7 +117,19 @@ class DebouncerState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DebouncerState &&
+          other.isRunning == isRunning &&
+          other.isDisposed == isDisposed &&
+          other.executionCount == executionCount &&
+          other.lastExecutionTime == lastExecutionTime &&
+          other.remainingTime == remainingTime &&
+          other.remainingMaxWait == remainingMaxWait &&
+          other.isPaused == isPaused;
+
+  @override
+  int get hashCode => Object.hash(
     isRunning,
     isDisposed,
     executionCount,
@@ -122,7 +137,7 @@ class DebouncerState extends Equatable {
     remainingTime,
     remainingMaxWait,
     isPaused,
-  ];
+  );
 
   /// Creates a copy of this state with optional field updates.
   DebouncerState copyWith({
@@ -216,7 +231,7 @@ class Debouncer {
   // --------------------- Execution Tracking ---------------------
   int _executionCount = 0;
   AsyncAction? _lastAction;
-  final List<_ExecutionRecord> _executionHistory = [];
+  final List<DebouncerExecutionRecord> _executionHistory = [];
 
   // --------------------- Pause Management ---------------------
   bool _isPaused = false;
@@ -248,23 +263,25 @@ class Debouncer {
   bool get isPaused => _isPaused;
 
   /// Time remaining until the next scheduled execution fires.
+  ///
+  /// While paused, this is the delay that was left when [pause] was called;
+  /// it stays frozen until [resume]. Returns `null` when nothing is scheduled.
   Duration? get remainingTime {
+    if (_isPaused) return _remainingDelayOnPause;
     if (_timer == null || _lastCallTime == null) return null;
-    if (_isPaused && _remainingDelayOnPause != null) {
-      return _remainingDelayOnPause;
-    }
     final elapsed = DateTime.now().difference(_lastCallTime!);
     final remaining = _delay - elapsed;
     return remaining.isNegative ? Duration.zero : remaining;
   }
 
   /// Time remaining until the maxWait timer forces execution.
+  ///
+  /// While paused, this is the maxWait budget that was left when [pause] was
+  /// called. Returns `null` when no maxWait window is open.
   Duration? get remainingMaxWait {
+    if (_isPaused) return _remainingMaxWaitOnPause;
     if (_maxWaitTimer == null || _firstCallTime == null || _maxWait == null) {
       return null;
-    }
-    if (_isPaused && _remainingMaxWaitOnPause != null) {
-      return _remainingMaxWaitOnPause;
     }
     final elapsed = DateTime.now().difference(_firstCallTime!);
     final remaining = _maxWait - elapsed;
@@ -291,9 +308,13 @@ class Debouncer {
     return Duration(microseconds: avgMicroseconds);
   }
 
-  /// A list of past execution records represented as maps.
-  List<Map<String, dynamic>> get executionHistory =>
-      _executionHistory.map((record) => record.toMap()).toList();
+  /// The most recent executions, oldest first, capped at `maxHistorySize`.
+  ///
+  /// Empty unless the debouncer was created with a positive
+  /// `maxHistorySize`. The returned list is an unmodifiable snapshot; use
+  /// [DebouncerExecutionRecord.toMap] when you need a loggable map.
+  List<DebouncerExecutionRecord> get executionHistory =>
+      List.unmodifiable(_executionHistory);
 
   /// Returns a snapshot of the current debouncer state.
   DebouncerState get currentState => DebouncerState(
@@ -613,7 +634,7 @@ class Debouncer {
     Object? error,
   }) {
     _executionHistory.add(
-      _ExecutionRecord(
+      DebouncerExecutionRecord(
         startTime: start,
         endTime: end,
         success: success,
@@ -627,10 +648,12 @@ class Debouncer {
   }
 }
 
-/// Internal class for recording details about a single action execution.
-class _ExecutionRecord {
-  /// Creates a new execution record.
-  const _ExecutionRecord({
+/// One execution of a debounced action, as recorded in
+/// [Debouncer.executionHistory].
+@immutable
+class DebouncerExecutionRecord {
+  /// Creates a record of an execution that ran from [startTime] to [endTime].
+  const DebouncerExecutionRecord({
     required this.startTime,
     required this.endTime,
     required this.success,
@@ -643,23 +666,32 @@ class _ExecutionRecord {
   /// The end time of the execution.
   final DateTime endTime;
 
-  /// Whether the execution was successful.
+  /// Whether the action completed without throwing.
   final bool success;
 
-  /// Any error encountered during execution.
+  /// The error the action threw, or `null` when [success] is `true`.
   final Object? error;
 
-  /// The duration of the execution.
+  /// How long the action took.
   Duration get duration => endTime.difference(startTime);
 
-  /// Converts this record to a map for logging or debugging.
-  Map<String, dynamic> toMap() => {
+  /// Converts this record to a JSON-friendly map for logging.
+  ///
+  /// Keys: `startTime` and `endTime` (ISO-8601 strings), `durationSeconds`
+  /// (a `double`), `success` (a `bool`), and `error` (the error's
+  /// `toString()`, or `null`).
+  Map<String, Object?> toMap() => {
     'startTime': startTime.toIso8601String(),
     'endTime': endTime.toIso8601String(),
     'durationSeconds': duration.inMicroseconds / 1e6,
     'success': success,
     'error': error?.toString(),
   };
+
+  @override
+  String toString() =>
+      'DebouncerExecutionRecord(success: $success, duration: $duration'
+      '${error == null ? '' : ', error: $error'})';
 }
 
 /// Callable wrapper that exposes debouncing controls.

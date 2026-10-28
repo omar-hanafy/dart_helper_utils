@@ -140,7 +140,7 @@ extension DHUStringExtensions on String {
 extension DHUNullSafeStringExtensions on String? {
   /// Checks if the string is a palindrome.
   bool get isPalindrome {
-    if (isEmptyOrNull) return false;
+    if (isBlank) return false;
 
     final cleanString = this!
         .toLowerCase()
@@ -170,7 +170,7 @@ extension DHUNullSafeStringExtensions on String? {
 
   /// Checks if the string is a valid phone number.
   bool get isValidPhoneNumber {
-    if (isEmptyOrNull || this!.length > 16 || this!.length < 9) return false;
+    if (isBlank || this!.length > 16 || this!.length < 9) return false;
     return hasMatch(regexValidPhoneNumber);
   }
 
@@ -202,7 +202,7 @@ extension DHUNullSafeStringExtensions on String? {
     bool wrapEach = false,
     String delimiter = '\n',
   }) {
-    if (isEmptyOrNull) return '';
+    if (isBlank) return '';
     final wrapCount = wordCount <= 0 ? 1 : wordCount;
     // Handling strings with multiple consecutive spaces by reducing them to single spaces.
     final words = this!.trim().replaceAll(RegExp(' +'), ' ').split(' ');
@@ -235,15 +235,15 @@ extension DHUNullSafeStringExtensions on String? {
   /// Returns true if at least one character matches the given [predicate].
   /// The [predicate] should have only one character.
   bool anyChar(bool Function(String element) predicate) =>
-      isNotEmptyOrNull && this!.split('').any((s) => predicate(s));
+      isNotBlank && this!.split('').any((s) => predicate(s));
 
   /// If the string is empty, performs an action.
   Future<T>? ifEmpty<T>(Future<T> Function() action) =>
-      isEmptyOrNull ? action() : null;
+      isBlank ? action() : null;
 
   /// Returns the last character of the string.
   String get lastIndex {
-    if (isEmptyOrNull) return '';
+    if (isBlank) return '';
     return this![this!.length - 1];
   }
 
@@ -263,7 +263,7 @@ extension DHUNullSafeStringExtensions on String? {
 
   /// Checks if the string is a valid UUID.
   bool get isUuid {
-    if (isEmptyOrNull) return false;
+    if (isBlank) return false;
     return RegExp(
       r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
     ).hasMatch(this!);
