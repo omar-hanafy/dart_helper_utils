@@ -423,6 +423,9 @@ class Debouncer {
     _ensureNotDisposed();
     _cancelTimers();
     _lastAction = null;
+    // A paused debouncer froze its remaining times; nothing is pending now.
+    _remainingDelayOnPause = null;
+    _remainingMaxWaitOnPause = null;
     _logDebug('Cancelled scheduled action.');
     _publishState();
   }

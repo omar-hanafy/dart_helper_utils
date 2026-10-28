@@ -237,8 +237,9 @@ extension DHUNumExtensions on num {
   /// (-2500000000).asGreeks(); // '-2.5B'
   /// ```
   String asGreeks([int zerosFractionDigits = 0, int fractionDigits = 1]) {
+    // Negate as a double: negating the most negative int overflows.
     if (this < 0) {
-      return '-${(-this).asGreeks(zerosFractionDigits, fractionDigits)}';
+      return '-${(-toDouble()).asGreeks(zerosFractionDigits, fractionDigits)}';
     }
     if (this < 1000) {
       return zerosFractionDigits <= 0
@@ -737,8 +738,17 @@ extension DHUIntExtensions on int {
   ///
   /// Returns an empty list for `-1`, `0`, and `1`.
   List<int> primeFactors() {
-    var n = abs();
     final factors = <int>[];
+    var n = this;
+    if (n.isNegative) {
+      // abs() overflows for the most negative int, so take one factor of two
+      // out first when there is one; the rest of the magnitude then fits.
+      if (n.isEven) {
+        factors.add(2);
+        n ~/= 2;
+      }
+      n = n.abs();
+    }
     for (var i = 2; i * i <= n; i++) {
       while (n % i == 0) {
         factors.add(i);
@@ -758,10 +768,14 @@ extension DHUIntExtensions on int {
 
   /// Checks if this integer is a perfect cube (negative cubes included).
   bool isPerfectCube() {
-    final n = abs();
-    final estimate = math.pow(n, 1 / 3).round();
-    for (var root = estimate - 1; root <= estimate + 1; root++) {
-      if (root >= 0 && root * root * root == n) return true;
+    // Estimate from the magnitude as a double: abs() overflows for the most
+    // negative int. Exact integer checks around the estimate settle it.
+    final estimate = math.pow(isNegative ? -toDouble() : toDouble(), 1 / 3);
+    final rounded = estimate.round();
+    for (var root = rounded - 1; root <= rounded + 1; root++) {
+      if (root < 0) continue;
+      final cube = root * root * root;
+      if (cube == this || -cube == this) return true;
     }
     return false;
   }
@@ -798,12 +812,13 @@ extension DHUIntExtensions on int {
 
   /// Returns the number of set bits in the binary representation of this
   /// integer's magnitude (`(-5).bitCount()` is `2`, like `5.bitCount()`).
+  ///
+  /// Counts the digits of [toRadixString] rather than shifting bits, because
+  /// bitwise operators work on 32 bits on the web.
   int bitCount() {
-    var n = abs();
     var count = 0;
-    while (n != 0) {
-      count += n & 1;
-      n >>= 1;
+    for (final unit in toRadixString(2).codeUnits) {
+      if (unit == 0x31) count++; // '1'
     }
     return count;
   }
@@ -965,7 +980,9 @@ abstract final class NumbersHelper {
   static double standardDeviation(List<num> values) =>
       math.sqrt(variance(values));
 
-  /// Calculates the specified [percentile] of a list of [values].
+  /// Returns the [percentile] of [values]: the sorted element at index
+  /// `(percentile / 100 * (values.length - 1)).round()`, so the result is
+  /// always one of the values.
   ///
   /// [percentile] must be between 0 and 100 inclusive.
   static num percentile(List<num> values, double percentile) {
@@ -992,7 +1009,7 @@ abstract final class NumbersHelper {
 }
 
 /// Statistics over an `Iterable<num>`: mean, median, mode, population
-/// variance and standard deviation, and nearest-rank percentiles.
+/// variance and standard deviation, and percentiles.
 ///
 /// Every member throws [ArgumentError] for an empty iterable.
 extension DHUListNumStats on Iterable<num> {
@@ -1059,8 +1076,9 @@ extension DHUListIntStats on Iterable<int> {
   /// iterable.
   double get standardDeviation => NumbersHelper.standardDeviation(toList());
 
-  /// Computes the nearest-rank [percentile] (0 to 100) of the integers in
-  /// the iterable. The result is always one of the elements.
+  /// Computes the [percentile] (0 to 100) of the integers in the iterable:
+  /// the sorted element at index `(percentile / 100 * (length - 1)).round()`,
+  /// so the result is always one of the elements.
   int percentile(double percentile) =>
       NumbersHelper.percentile(toList(), percentile).toInt();
 }

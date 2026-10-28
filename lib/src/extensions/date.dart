@@ -695,11 +695,11 @@ extension DHUDateExtensions on DateTime {
   /// alignment to whole hours also holds in zones with a half-hour offset.
   /// Returns this date unchanged for [Duration.zero]; a negative [duration]
   /// behaves like its magnitude.
-  DateTime roundTo(Duration duration) => _alignWallClock(
-    this,
-    duration,
-    (micros, step) => _floorDiv(2 * micros + step, 2 * step) * step,
-  );
+  DateTime roundTo(Duration duration) =>
+      _alignWallClock(this, duration, (micros, step) {
+        final floor = _floorDiv(micros, step) * step;
+        return micros - floor >= step - (micros - floor) ? floor + step : floor;
+      });
 
   /// Rounds this date down to a multiple of [duration] on its own wall
   /// clock. See [roundTo].
@@ -823,27 +823,57 @@ DateTime _dateOnly(DateTime date) =>
 
 /// Rebuilds [date] on another calendar day while keeping its wall-clock time
 /// and time zone.
-DateTime _withDate(DateTime date, int year, int month, int day) => date.isUtc
-    ? DateTime.utc(
-        year,
-        month,
-        day,
-        date.hour,
-        date.minute,
-        date.second,
-        date.millisecond,
-        date.microsecond,
-      )
-    : DateTime(
-        year,
-        month,
-        day,
-        date.hour,
-        date.minute,
-        date.second,
-        date.millisecond,
-        date.microsecond,
-      );
+DateTime _withDate(DateTime date, int year, int month, int day) {
+  if (date.isUtc) {
+    return DateTime.utc(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
+  }
+  return _keepOffset(
+    DateTime(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    ),
+    date,
+  );
+}
+
+/// Resolves an ambiguous local wall-clock time to [reference]'s UTC offset.
+///
+/// When clocks fall back, one wall-clock hour happens twice, and the local
+/// [DateTime] constructor always picks the first (daylight-time) instance.
+/// If [candidate]'s wall-clock time also exists with [reference]'s offset,
+/// this returns that instance, so a receiver in the repeated hour stays in
+/// it; otherwise [candidate] is returned unchanged.
+DateTime _keepOffset(DateTime candidate, DateTime reference) {
+  final offset = reference.timeZoneOffset;
+  if (candidate.isUtc || candidate.timeZoneOffset == offset) return candidate;
+  final shifted = candidate.add(candidate.timeZoneOffset - offset);
+  final sameWallClock =
+      shifted.timeZoneOffset == offset &&
+      shifted.year == candidate.year &&
+      shifted.month == candidate.month &&
+      shifted.day == candidate.day &&
+      shifted.hour == candidate.hour &&
+      shifted.minute == candidate.minute &&
+      shifted.second == candidate.second &&
+      shifted.millisecond == candidate.millisecond &&
+      shifted.microsecond == candidate.microsecond;
+  return sameWallClock ? shifted : candidate;
+}
 
 DateTime _addCalendarDays(DateTime date, int days) =>
     _withDate(date, date.year, date.month, date.day + days);
@@ -881,15 +911,18 @@ DateTime _alignWallClock(
     isUtc: true,
   );
   if (date.isUtc) return aligned;
-  return DateTime(
-    aligned.year,
-    aligned.month,
-    aligned.day,
-    aligned.hour,
-    aligned.minute,
-    aligned.second,
-    aligned.millisecond,
-    aligned.microsecond,
+  return _keepOffset(
+    DateTime(
+      aligned.year,
+      aligned.month,
+      aligned.day,
+      aligned.hour,
+      aligned.minute,
+      aligned.second,
+      aligned.millisecond,
+      aligned.microsecond,
+    ),
+    date,
   );
 }
 

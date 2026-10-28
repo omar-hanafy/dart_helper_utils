@@ -751,5 +751,35 @@ void main() {
       expect(utc.copyWith(year: 2025), DateTime.utc(2025, 3, 1, 23, 59));
       expect(utc.copyWith(isUtc: false).isUtc, isFalse);
     });
+
+    test('the repeated fall-back hour keeps the receiver instance', () {
+      // 06:30:30 UTC on 2024-11-03 is 01:30:30 EST, the SECOND 01:30:30 in
+      // America/New_York. Rebuilding that wall-clock time with the local
+      // constructor would pick the first (EDT) one, an hour earlier. The
+      // assertions hold in every zone; CI runs them in New York too.
+      final repeated = DateTime.utc(2024, 11, 3, 6, 30, 30).toLocal();
+      const minute = Duration(minutes: 1);
+
+      final floor = repeated.floorTo(minute);
+      final ceil = repeated.ceilTo(minute);
+      expect(repeated.difference(floor), const Duration(seconds: 30));
+      expect(ceil.difference(repeated), const Duration(seconds: 30));
+      expect(floor.isAfter(repeated), isFalse);
+      expect(ceil.isBefore(repeated), isFalse);
+      expect(floor.roundTo(const Duration(seconds: 1)), floor);
+
+      expect(repeated.addDays(0), repeated);
+      expect(repeated.daysUpTo(repeated.add(minute)).first, repeated);
+      expect(repeated.firstDayOfWeek(startOfWeek: repeated.weekday), repeated);
+    });
+
+    test('roundTo does not overflow near the end of the DateTime range', () {
+      final late = DateTime.utc(200000, 1, 1, 0, 40);
+      expect(
+        late.roundTo(const Duration(hours: 1)),
+        DateTime.utc(200000, 1, 1, 1),
+      );
+      expect(late.floorTo(const Duration(hours: 1)), DateTime.utc(200000));
+    }, testOn: 'vm');
   });
 }

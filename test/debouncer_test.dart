@@ -521,5 +521,22 @@ void main() {
       expect(a, isNot(a.copyWith(isPaused: true)));
       expect(a.copyWith(), a);
     });
+
+    test('cancelling while paused clears the frozen remaining times', () {
+      final debouncer = Debouncer(
+        delay: const Duration(seconds: 5),
+        maxWait: const Duration(seconds: 10),
+      );
+      addTearDown(debouncer.dispose);
+      debouncer
+        ..run(() {})
+        ..pause();
+      expect(debouncer.remainingTime, isNotNull);
+      debouncer.cancel();
+      expect(debouncer.remainingTime, isNull);
+      expect(debouncer.remainingMaxWait, isNull);
+      expect(debouncer.currentState.remainingTime, isNull);
+      expect(debouncer.isRunning, isFalse);
+    });
   });
 }

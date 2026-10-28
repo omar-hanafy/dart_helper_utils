@@ -295,6 +295,28 @@ void main() {
       expect(nothing.isNegative, isFalse);
       expect(12.gcd(18), 6);
     });
+
+    test(
+      'bitCount works above 32 bits (bitwise ops are 32-bit on the web)',
+      () {
+        expect(8589934593.bitCount(), 2); // 2^33 + 1
+        expect(4294967295.bitCount(), 32); // 2^32 - 1
+      },
+    );
+
+    test('the most negative int does not break the magnitude helpers', () {
+      // Computed at run time so web compilers never constant-fold a value
+      // that only exists on native platforms (-9223372036854775808).
+      // ignore: prefer_const_declarations
+      final minInt = (-1) << 63;
+      expect(minInt.bitCount(), 1);
+      expect(minInt.primeFactors(), List.filled(63, 2));
+      expect(minInt.isPerfectCube(), isTrue); // (-2^21)^3
+      expect(minInt.asGreeks(), startsWith('-'));
+      expect((-12).primeFactors(), [2, 2, 3]);
+      expect((-15).primeFactors(), [3, 5]);
+      expect((-2).primeFactors(), [2]);
+    }, testOn: 'vm');
   });
 
   group('7.0.0 asBool comes from convert_object', () {

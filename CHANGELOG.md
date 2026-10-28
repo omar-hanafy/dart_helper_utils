@@ -113,12 +113,16 @@ These are removed outright, and `dart fix` still migrates them:
   (dart:core has the same signature), `int.gcd` and `num.isNegative` (SDK
   instance members already won), and `num?.asBool` (convert_object's
   `asBool` gives the same answer). Only explicit extension overrides of
-  these need editing.
+  these need editing. `isNegative` on a `num?` now delegates to the SDK
+  getter, so `-0.0` counts as negative there too, as it already did on a
+  `num`.
 
 ### Fixed
 
 - `httpDateFormat` took the weekday and month from local time while the rest
-  of the date came from UTC, so it printed wrong dates outside UTC+0.
+  of the date came from UTC, so a local date printed the wrong weekday and
+  month whenever its local and UTC calendar dates differed (for example,
+  shortly after midnight in Tokyo).
 - `addOrSubtractMonths` (now `addMonths`) landed in the wrong year for
   negative offsets: January minus 2 months gave November of the same year.
 - `isPowerOf` no longer loops forever on zero, and is `false` for
@@ -132,7 +136,6 @@ These are removed outright, and `dart fix` still migrates them:
   negative numbers instead of `true` or throwing.
 - `NumbersHelper.gcd` never returns a negative number.
 - `asGreeks` abbreviates negative numbers too: `-2500000000` is `-2.5B`.
-- `isPerfectCube` is exact and fast for large values.
 - `Debouncer.remainingTime` and `remainingMaxWait` report the frozen values
   while paused instead of `null`.
 - An unhandled error from a throttled action keeps its original stack trace.
