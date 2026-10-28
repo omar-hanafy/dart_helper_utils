@@ -55,6 +55,10 @@ extension DHUBidiStringExtensions on String {
   /// `dart fix --apply` migrates callers.
   String enforceRtl() => Bidi.enforceRtlInText(this);
 
+  /// Deprecated alias of [enforceRtl].
+  @Deprecated('Use enforceRtl. This alias will be removed in 8.0.0.')
+  String enforceRtlIn() => enforceRtl();
+
   /// Enforces left-to-right (LTR) directionality in HTML markup.
   String enforceLtrInHtml() => Bidi.enforceLtrInHtml(this);
 

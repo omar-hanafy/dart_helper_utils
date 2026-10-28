@@ -238,6 +238,10 @@ extension DHUNullableDateExtensions on DateTime? {
   /// Returns the number of days passed since this DateTime.
   /// Returns a positive number for past dates, and negative for future dates.
   int? get passedDays => this?.passedDays;
+
+  /// Deprecated alias of [isFuture]: "present" never meant "now".
+  @Deprecated('Use isFuture. This alias will be removed in 8.0.0.')
+  bool get isPresent => isFuture;
 }
 
 /// Calendar arithmetic, comparisons, and formatting helpers for [DateTime].
@@ -732,6 +736,81 @@ extension DHUDateExtensions on DateTime {
     }
     return current;
   }
+
+  // ---------------------------------------------------------------------
+  // 7.0.0 aliases, removed in 8.0.0. `dart fix --apply` rewrites callers to
+  // the replacement named in each deprecation message.
+  // ---------------------------------------------------------------------
+
+  /// Deprecated alias of [isSameYearAs].
+  @Deprecated('Use isSameYearAs. This alias will be removed in 8.0.0.')
+  bool isAtSameYearAs(DateTime other) => isSameYearAs(other);
+
+  /// Deprecated alias of [isSameMonthAs].
+  @Deprecated('Use isSameMonthAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMonthAs(DateTime other) => isSameMonthAs(other);
+
+  /// Deprecated alias of [isSameDayAs].
+  @Deprecated('Use isSameDayAs. This alias will be removed in 8.0.0.')
+  bool isAtSameDayAs(DateTime other) => isSameDayAs(other);
+
+  /// Deprecated alias of [isSameHourAs].
+  @Deprecated('Use isSameHourAs. This alias will be removed in 8.0.0.')
+  bool isAtSameHourAs(DateTime other) => isSameHourAs(other);
+
+  /// Deprecated alias of [isSameMinuteAs].
+  @Deprecated('Use isSameMinuteAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMinuteAs(DateTime other) => isSameMinuteAs(other);
+
+  /// Deprecated alias of [isSameSecondAs].
+  @Deprecated('Use isSameSecondAs. This alias will be removed in 8.0.0.')
+  bool isAtSameSecondAs(DateTime other) => isSameSecondAs(other);
+
+  /// Deprecated alias of [isSameMillisecondAs].
+  @Deprecated('Use isSameMillisecondAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMillisecondAs(DateTime other) => isSameMillisecondAs(other);
+
+  /// Deprecated alias of [isSameMicrosecondAs].
+  @Deprecated('Use isSameMicrosecondAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMicrosecondAs(DateTime other) => isSameMicrosecondAs(other);
+
+  /// Deprecated alias of [addYears].
+  @Deprecated('Use addYears. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractYears(int years) => addYears(years);
+
+  /// Deprecated alias of [addMonths].
+  @Deprecated('Use addMonths. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMonths(int months) => addMonths(months);
+
+  /// Deprecated alias of [addDays].
+  @Deprecated('Use addDays. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractDays(int days) => addDays(days);
+
+  /// Deprecated alias of [addMinutes].
+  @Deprecated('Use addMinutes. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMinutes(int minutes) => addMinutes(minutes);
+
+  /// Deprecated alias of [addSeconds].
+  @Deprecated('Use addSeconds. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractSeconds(int seconds) => addSeconds(seconds);
+
+  /// Deprecated alias of [addMilliseconds].
+  @Deprecated('Use addMilliseconds. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMilliseconds(int milliseconds) =>
+      addMilliseconds(milliseconds);
+
+  /// Deprecated alias of [addMicroseconds].
+  @Deprecated('Use addMicroseconds. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMicroseconds(int microseconds) =>
+      addMicroseconds(microseconds);
+
+  /// Deprecated alias of [nextDay].
+  @Deprecated('Use nextDay. This alias will be removed in 8.0.0.')
+  DateTime get tomorrow => nextDay;
+
+  /// Deprecated alias of [previousDay].
+  @Deprecated('Use previousDay. This alias will be removed in 8.0.0.')
+  DateTime get yesterday => previousDay;
 }
 
 /// Builds a date at midnight in UTC or local time; out-of-range months and

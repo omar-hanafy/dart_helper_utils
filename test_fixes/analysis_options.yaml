@@ -1,0 +1,6 @@
+# Standalone options for the dart fix fixtures (deliberately no `include:`).
+# Package lints must not add their own fixes to the goldens, and
+# deprecations from this package must stay fixable here.
+linter:
+  rules:
+    - deprecated_member_use_from_same_package

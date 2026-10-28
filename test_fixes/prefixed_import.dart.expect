@@ -1,0 +1,8 @@
+import 'package:dart_helper_utils/dart_helper_utils.dart' as dhu;
+
+bool sameDay(DateTime a, DateTime b) => a.isSameDayAs(b);
+
+DateTime next(DateTime a) => a.nextDay;
+
+String explicitPrefixed(DateTime a) =>
+    dhu.DHUDateFormatExtension(a).formatAsyQQQ();

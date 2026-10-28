@@ -110,6 +110,10 @@ extension DHUDateFormatExtension on DateTime {
   /// `dart fix --apply` migrates callers.
   String formatAsyQQQ([String? locale]) => DateFormat.yQQQ(locale).format(this);
 
+  /// Deprecated, misspelled alias of [formatAsyQQQ].
+  @Deprecated('Use formatAsyQQQ. This alias will be removed in 8.0.0.')
+  String formatASyQQQ([String? locale]) => formatAsyQQQ(locale);
+
   /// Formats the DateTime object using the yQQQQ format and optional locale.
   String formatAsyQQQQ([String? locale]) =>
       DateFormat.yQQQQ(locale).format(this);
