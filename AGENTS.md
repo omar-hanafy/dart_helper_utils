@@ -15,12 +15,15 @@ dart analyze --fatal-infos .               # every lint is a gate
 dart fix test_fixes --compare-to-golden    # dart fix migrations stay valid
 dart run tool/check_repo.dart              # em-dash, changelog, platform, deprecation rules
 dart run tool/validate_agent_plugin.dart   # AI plugin/marketplace consistency
+# After plugin changes (needs the claude, codex, and agy CLIs on PATH):
+dart run tool/verify_agent_hosts.dart --require claude,codex,agy
 dart test
 for z in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe \
          Atlantic/Azores America/St_Johns Antarctica/Troll Antarctica/Casey \
          Pacific/Chatham; do
   TZ=$z dart test test/date_extension_test.dart \
-    test/date_extension_additional_test.dart test/date_time_zone_test.dart
+    test/date_extension_additional_test.dart test/date_time_zone_test.dart \
+    test/readme_test.dart
 done
 for z in America/New_York Australia/Lord_Howe; do
   TZ=$z dart test --platform node test/date_time_zone_test.dart
@@ -28,10 +31,12 @@ done
 dart pub publish --dry-run                 # must stay at 0 warnings
 ```
 
-CI runs all of these (plus a lowest-dependency run on the minimum SDK) and
-requires a PERFECT pana score on PRs ("CI / Pana" is a required check, pinned
-pana version, `--exit-code-threshold 0`). Avoid changes that cost points
-(missing doc comments, dependency issues, format drift).
+CI runs all of these except the host check, which the Agent plugin workflow
+runs on plugin changes and weekly. CI also adds a lowest-dependency run on
+the minimum SDK and requires a PERFECT pana score on PRs ("CI / Pana" is a
+required check, pinned pana version, `--exit-code-threshold 0`). Avoid
+changes that cost points (missing doc comments, dependency issues, format
+drift).
 
 `analysis_options.yaml` is strict (strict-casts/inference/raw-types and 80
 validated rules); `test/` and `example/` relax only doc and API-shape rules.
@@ -78,6 +83,10 @@ the reason, `unnecessary_ignore` removes stale ones).
 - Any public API change needs matching tests in the flat `test/` directory
   (one file per domain) and doc comments on every public member. A bug fix
   needs a regression test that fails on the old code.
+- Every Dart block in README.md is copied verbatim into
+  `test/readme_test.dart`, which runs it and checks each
+  `print(...); // output` comment. Edit an example in both places; the test
+  fails when a README block has no copy.
 - Behavior quirks are load-bearing: `Iterable.intersect` (from
   convert_object) merges (union) on purpose, `waitConcurrency` and
   `mapConcurrent` return completion order unless `preserveOrder: true`,
@@ -124,18 +133,35 @@ the reason, `unnecessary_ignore` removes stale ones).
    data for every rename (see above), AND ship the corresponding migration
    hop in the AI plugin (see below) before tagging.
 
-## AI assistant plugin (Claude Code + Codex)
+## AI assistant plugin (Claude Code, Codex, Antigravity)
 
-- Canonical tree: `tooling/ai/dart-helper-utils/` (one shared `skills/`
-  set; manifests `.claude-plugin/plugin.json` + `.codex-plugin/plugin.json`).
-  Catalogs: `.claude-plugin/marketplace.json` and
-  `.agents/plugins/marketplace.json` at the repo root.
-- Both plugin manifests' `version` must equal the `pubspec.yaml` version -
-  bump them together (CI enforces via `tool/validate_agent_plugin.dart`).
+- Canonical tree: `tooling/ai/dart-helper-utils/` with one shared `skills/`
+  set, `assets/icon.png`, an `evals/` suite for `claude plugin eval`, and
+  three manifests: `plugin.json` (Agent Plugins 1.0, read by Codex,
+  Antigravity, and other Agent Plugins clients), `.claude-plugin/plugin.json`
+  (Claude Code), and `.codex-plugin/plugin.json` (legacy, for older Codex
+  releases). Catalogs: `.claude-plugin/marketplace.json` and
+  `.agents/plugins/marketplace.json` at the repo root; Antigravity has no
+  third-party marketplace and installs the plugin folder by its GitHub
+  `tree/main/...` URL.
+- All three manifests' `version` must equal the `pubspec.yaml` version, and
+  their shared metadata must match; the Codex interface appears in
+  `plugin.json` (`extensions["com.openai"].interface`) and in the legacy
+  manifest, identically. `tool/validate_agent_plugin.dart` enforces this,
+  plus the icon, the skill frontmatter, the eval layout, and the install
+  commands in both READMEs.
+- `tool/verify_agent_hosts.dart` installs the plugin in throwaway Claude
+  Code, Codex, and Antigravity profiles (never the real ones) and requires
+  the pubspec version and byte-identical skills; `--github <ref>` installs
+  from GitHub the way users do. The Agent plugin workflow runs it on plugin
+  pull requests and weekly with each host's current release; a weekly
+  failure usually means a host changed its plugin contract. The plugin
+  README's "Keeping it current" section is the refresh checklist.
 - Skill facts must match the source; when changing behavior in `lib/`,
   update the affected skill/reference files in the same PR.
   `test/agent_skill_claims_test.dart` asserts the skills' factual claims
-  against the API; extend it when a skill gains a claim.
+  against the API, including return types; extend it when a skill gains a
+  claim.
 - Any future BREAKING release must ship a migration hop in the plugin
   (a dedicated `migrate-dart-helper-utils-vX-to-vY` skill for large
   migrations, or a hop entry in `upgrade-dart-helper-utils`) before tagging.

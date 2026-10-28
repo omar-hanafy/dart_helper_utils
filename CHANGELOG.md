@@ -5,8 +5,8 @@
 A correctness release. It moves to Dart 3.13.5 and stringo 3, fixes a set of
 calendar, number, and stream bugs that only showed up in some time zones or
 edge cases, and gives every helper one name and one meaning. Most renames
-migrate automatically with `dart fix`, and the old names keep compiling (as
-deprecated aliases) until 8.0.0.
+migrate automatically with `dart fix`, and all but two of the old names keep
+compiling (as deprecated aliases) until 8.0.0.
 
 ### Upgrading
 
@@ -57,13 +57,15 @@ These are removed outright, and `dart fix` still migrates them:
 - **Requirements:** Dart 3.13.5 or later. The `equatable` dependency is gone,
   and the re-exported `stringo` moves from 1.x to 3.x. Its 2.0.0 behavior
   changes reach you through this package: `truncate` counts its suffix
-  against the length, `mask` and `insert` on a `String?` return `String?`,
+  against the length, `mask` and `insert` return `String?` even on a
+  non-null `String` (append `?? ''` where a `String` is required),
   `slugify` treats `-`, `_`, and whitespace alike, `toCharArray` splits by
   code point, and `toWords` drops empty words. See the
   [stringo changelog](https://pub.dev/packages/stringo/changelog).
 - **`Iterable<int>` statistics no longer truncate.** `mean`, `median`,
   `variance`, and `standardDeviation` return `double`, so `[1, 2].mean` is
-  `1.5` instead of `1`. `mode` and `percentile` still return `int`. The
+  `1.5` instead of `1`. `percentile` still returns an `int`, and `mode` a
+  `List<int>`. The
   `Iterable<num>` and `NumbersHelper` mean, variance, and standard deviation
   are typed `double` too. Where an `int` is required, add `.round()` or
   `.toInt()`.
@@ -164,7 +166,13 @@ These are removed outright, and `dart fix` still migrates them:
 - Precompiled validator patterns (`patternValidEmail`, `patternValidUrl`,
   `patternValidUuid`, and the rest) and the `regexValidUuid` source.
 - The AI coding-assistant plugin gains a `migrate-dart-helper-utils-v6-to-v7`
-  skill for this upgrade.
+  skill for this upgrade, and now installs in Google Antigravity as well as
+  Claude Code and Codex. The README lists the install commands.
+
+### Documentation
+
+- The README is rewritten for 7.0, and every Dart example in it runs as a
+  test that checks the printed output.
 
 ## 6.1.0
 
@@ -276,9 +284,8 @@ This release represents a massive overhaul of `dart_helper_utils`, focusing on p
   - **Duplicate Extensions:** Removed extensions that now exist in Dart SDK or `package:collection` (e.g., `firstOrNull`, `groupBy`).
   - **Renaming:**
     - `httpFormat` → `httpDateFormat`
-    - `flatJson` → `flatMap`
-    - `makeEncodable` → use `toJsonSafe()` / `toJsonMap()` from the re-exported `convert_object` package
-    - `safelyEncodedJson` → use `toJsonString(...)` or `encodeWithIndent` from the re-exported `convert_object` package
+    - `encodableCopy` → use `toJsonSafe()` / `toJsonMap()` from the re-exported `convert_object` package
+    - `encodedJsonString` → use `toJsonString(...)` or `encodeWithIndent` from the re-exported `convert_object` package
   - **Throttling:** `TimeUtils.throttle` now returns a callable `ThrottledCallback` object with disposal support.
 
 ### ✨ New Features

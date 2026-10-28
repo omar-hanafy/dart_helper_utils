@@ -14,7 +14,10 @@ dart analyze
 ```
 
 Every renamed member keeps working as a deprecated alias until 8.0.0, so the
-project compiles before and after `dart fix`. The automatic migration was
+project compiles before and after `dart fix`. The two exceptions are the last
+rows of the table: `find` and `DHUNullableSetExtensions` are removed, so code
+that uses them fails to compile until `dart fix` rewrites it. The automatic
+migration was
 verified on Dart 3.13.5 against code written for 6.1.0, including nullable
 receivers, prefixed and `show` imports, tear-offs, and explicit extension
 overrides.
@@ -104,8 +107,8 @@ None of these raise a compile error, unless noted.
 
 10. **stringo 3.** The re-exported string helpers changed behavior in stringo
     2.0.0, most visibly `'Hello World'.truncate(5)`, which is now `'He...'`.
-    `mask` and `insert` on a `String?` return `String?`; append `?? ''`
-    where a `String` is required. See the
+    `mask` and `insert` now return `String?` even on a non-null `String`;
+    append `?? ''` where a `String` is required. See the
     [stringo changelog](https://pub.dev/packages/stringo/changelog).
 
 ## 3. Removed duplicates (no action in normal code)
@@ -284,25 +287,14 @@ The `.convertTo<T>()` extension method has been removed from `List` to avoid amb
 ### 8. Behavior Differences (Defaults)
 - `tryToBool` returns `null` for unknown values. Use `defaultValue: false` or
   `?? false` if you want a false fallback.
-- Numeric parsing is **lenient** by default (commas/spaces/underscores and
-  `(123)` → `-123`). You can enforce strict parsing:
+- Numeric parsing is **lenient** (commas/spaces/underscores and
+  `(123)` → `-123`), and convert_object has no strict switch. Where v5
+  strictness matters, check the input with `int.tryParse` or `num.tryParse`
+  first.
+- `Convert.toUri` turns emails and phone numbers into `mailto:` and `tel:`
+  URIs. To parse the text as-is, pass a converter or use `Uri.tryParse`:
   ```dart
-  Convert.configure(
-    ConvertConfig(
-      numbers: const NumberOptions(strictParsing: true),
-    ),
-  );
-  ```
-- URI parsing auto-detects emails and phone numbers. You can disable either:
-  ```dart
-  Convert.configure(
-    ConvertConfig(
-      uri: const UriOptions(
-        detectEmails: false,
-        detectPhoneNumbers: false,
-      ),
-    ),
-  );
+  final uri = Convert.toUri(value, converter: (o) => Uri.parse('$o'));
   ```
 - `tryToType<T>` returns `null` for unsupported target types. Use
   `Convert.toType<T>` if you need exceptions.
@@ -358,15 +350,15 @@ print(romanNumerals); // Map<int, String>
 
 ### 10.5. JSON Encoding Helpers Moved to `convert_object`
 
-The old map helpers did not move over as `encodableCopy` and
-`encodedJsonString`.
+The 5.x map helpers `encodableCopy` and `encodedJsonString` (named
+`makeEncodable` and `safelyEncodedJson` before 2.0) did not move over.
 
 Use the JSON helpers re-exported from `convert_object` instead:
 
 | v5 (Old) | v6 (New) |
 |:---|:---|
-| `map.makeEncodable` | `map.toJsonSafe()` or `map.toJsonMap()` |
-| `map.safelyEncodedJson` | `map.toJsonString(indent: '  ')` or `map.encodeWithIndent` |
+| `map.encodableCopy` | `map.toJsonSafe()` or `map.toJsonMap()` |
+| `map.encodedJsonString` | `map.toJsonString(indent: '  ')` or `map.encodeWithIndent` |
 
 Example:
 
