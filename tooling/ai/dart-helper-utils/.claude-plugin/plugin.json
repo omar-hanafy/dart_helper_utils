@@ -10,6 +10,7 @@
   "homepage": "https://github.com/omar-hanafy/dart_helper_utils#ai-coding-assistant-support",
   "repository": "https://github.com/omar-hanafy/dart_helper_utils",
   "license": "MIT",
+  "icon": "./assets/icon.png",
   "keywords": [
     "dart",
     "flutter",

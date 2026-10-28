@@ -21,8 +21,18 @@
   "skills": "./skills/",
   "interface": {
     "displayName": "Dart Helper Utils",
-    "shortDescription": "Skills for the dart_helper_utils Dart utility package",
+    "shortDescription": "Exact APIs and migrations for dart_helper_utils",
+    "longDescription": "Teaches the agent the dart_helper_utils 7 API: member names and semantics for maps, strings, collections, numbers, dates, durations, intl formatting, and URIs; Debouncer, throttle, and stream lifecycles; and version-aware upgrades, including the dart fix-assisted 6.x to 7.x migration. Skills only: no MCP servers, hooks, or network access.",
     "developerName": "Omar Hanafy",
-    "category": "Developer Tools"
+    "category": "Developer Tools",
+    "websiteURL": "https://pub.dev/packages/dart_helper_utils",
+    "defaultPrompt": [
+      "Upgrade this project to dart_helper_utils 7",
+      "Debounce this search input with dart_helper_utils",
+      "Read a nested config value with dart_helper_utils"
+    ],
+    "brandColor": "#2BB7F6",
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png"
   }
 }
