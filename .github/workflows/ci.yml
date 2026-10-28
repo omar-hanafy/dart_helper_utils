@@ -14,24 +14,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Dart (stable)
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
         with:
           sdk: stable
 
       - name: Version channel check
         if: github.event_name == 'pull_request' && (github.base_ref == 'main' || github.base_ref == 'dev')
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
-          base_sha="${{ github.event.pull_request.base.sha }}"
-          head_sha="${{ github.event.pull_request.head.sha }}"
-          if git diff --name-only "$base_sha" "$head_sha" | grep -q '^pubspec.yaml$'; then
+          if git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -q '^pubspec.yaml$'; then
             version=$(awk '/^version:/ {print $2}' pubspec.yaml)
-            if [[ "${{ github.base_ref }}" == "main" ]]; then
+            if [[ "$BASE_REF" == "main" ]]; then
               if [[ "$version" == *-* ]]; then
                 echo "Main requires a stable version (no pre-release suffix)."
                 exit 1
@@ -52,8 +55,16 @@ jobs:
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed .
 
+      # Every enabled lint is a gate, not a suggestion.
       - name: Analyze
-        run: dart analyze
+        run: dart analyze --fatal-infos
+
+      # Proves every lib/fix_data.yaml transform against test_fixes/ goldens.
+      - name: Verify dart fix migrations
+        run: dart fix test_fixes --compare-to-golden
+
+      - name: Repository checks
+        run: dart run tool/check_repo.dart
 
       - name: Validate agent plugin
         run: dart run tool/validate_agent_plugin.dart
@@ -61,16 +72,55 @@ jobs:
       - name: Test
         run: dart test
 
+      # Runners use UTC, where daylight-saving and half-hour-offset bugs
+      # cannot show up. Re-run the calendar suites where they can.
+      - name: Test calendar logic in other time zones
+        run: |
+          set -euo pipefail
+          for zone in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe; do
+            echo "::group::TZ=$zone"
+            TZ="$zone" dart test test/date_extension_test.dart test/date_extension_additional_test.dart
+            echo "::endgroup::"
+          done
+
+  test-minimum:
+    name: CI / Test on minimum SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Dart (minimum supported)
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+        with:
+          sdk: '3.13.5'
+
+      # Proves the lower bounds in pubspec.yaml still compile and pass.
+      - name: Resolve lowest supported dependencies
+        run: dart pub downgrade
+
+      - name: Analyze
+        run: dart analyze
+
+      # Older allowed test_core releases need a frontend snapshot that newer
+      # SDKs removed; source mode runs the same suites on the downgraded graph.
+      - name: Test
+        run: dart test --compiler source
+
   test-beta:
     name: CI / Test on beta
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Dart (beta)
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
         with:
           sdk: beta
 
@@ -88,33 +138,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Dart (stable)
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
         with:
           sdk: stable
 
       - name: Install dependencies
         run: dart pub get
 
+      # Pinned so a pana release cannot change the gate between two runs of
+      # the same commit; bump it deliberately.
       - name: Install pana
-        run: dart pub global activate pana
+        run: dart pub global activate pana 0.23.19
 
       - name: Run pana (full score required)
-        run: |
-          set -euo pipefail
-          pana --json . 2>/dev/null | python3 -c "
-          import json, sys
-          data = json.load(sys.stdin)
-          sections = data.get('report', {}).get('sections', [])
-          granted = sum(s.get('grantedPoints', 0) for s in sections)
-          maximum = sum(s.get('maxPoints', 0) for s in sections)
-          status = 'PASS' if granted == maximum else 'FAIL'
-          print(f'{status}: pana score {granted}/{maximum}')
-          if granted != maximum:
-              for s in sections:
-                  if s.get('grantedPoints', 0) < s.get('maxPoints', 0):
-                      print(f\"  - {s.get('title', '?')}: {s.get('grantedPoints', 0)}/{s.get('maxPoints', 0)}\")
-              sys.exit(1)
-          "
+        run: pana --exit-code-threshold 0 .
