@@ -12,6 +12,8 @@ jobs:
   test-stable:
     name: CI / Test on stable
     runs-on: ubuntu-latest
+    # A hung test fails in minutes instead of holding a runner for hours.
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -99,6 +101,7 @@ jobs:
   test-minimum:
     name: CI / Test on minimum SDK
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -125,6 +128,7 @@ jobs:
   test-beta:
     name: CI / Test on beta
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     continue-on-error: true
     steps:
       - name: Checkout
@@ -149,6 +153,7 @@ jobs:
   pana:
     name: CI / Pana
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

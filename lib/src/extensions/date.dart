@@ -364,12 +364,18 @@ extension DHUDateExtensions on DateTime {
       isSameMillisecondAs(other) && microsecond == other.microsecond;
 
   /// Midnight at the start of this date's day, in the same time zone.
+  ///
+  /// Where the clocks skip that midnight, this is the moment they jump to
+  /// (01:00 on a day that starts with a forward jump); where they repeat it,
+  /// its first occurrence. The other start-of helpers resolve the same way.
   DateTime get startOfDay => _dateOnly(this);
 
   /// Midnight on the first day of this date's month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
   DateTime get startOfMonth => _date(isUtc, year, month);
 
   /// Midnight on January 1 of this date's year, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
   DateTime get startOfYear => _date(isUtc, year);
 
   /// This date at midnight, in the same time zone. Same as [startOfDay].
@@ -380,17 +386,20 @@ extension DHUDateExtensions on DateTime {
   /// The grid starts on the Monday on or before the first day of the month
   /// and ends on the Sunday on or after the last day, so its length is
   /// always a multiple of seven and it includes days from the neighboring
-  /// months. Each entry is midnight in this date's time zone.
+  /// months. Each entry is the [startOfDay] of its date in this date's time
+  /// zone. A date the clocks skipped entirely (Apia skipped 2011-12-30) has
+  /// no moment of its own, so its entry is the start of the next date.
   List<DateTime> get daysInMonth {
-    final first = firstDayOfMonth;
     // Mon(1) -> 0 leading days, Sun(7) -> 6 leading days (ISO 8601 weeks).
-    final daysBefore = (first.weekday - 1) % DateTime.daysPerWeek;
-    final firstToDisplay = _addCalendarDays(first, -daysBefore);
-    final last = lastDayOfMonth;
-    // Fill the last week through Sunday; the end bound is exclusive.
-    final daysAfter = DateTime.daysPerWeek - last.weekday + 1;
-    final lastToDisplay = _addCalendarDays(last, daysAfter);
-    return firstToDisplay.daysUpTo(lastToDisplay).toList();
+    final leading =
+        (DateTime.utc(year, month).weekday - 1) % DateTime.daysPerWeek;
+    final last = DateTime.utc(year, month + 1, 0);
+    // Fill the last week through Sunday.
+    final count = leading + last.day + DateTime.daysPerWeek - last.weekday;
+    return [
+      for (var i = 0; i < count; i++)
+        _date(isUtc, year, month, 1 - leading + i),
+    ];
   }
 
   /// The previous calendar day at the same wall-clock time.
@@ -441,9 +450,11 @@ extension DHUDateExtensions on DateTime {
   }
 
   /// Midnight on the first day of the previous month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
   DateTime get previousMonth => _date(isUtc, year, month - 1);
 
   /// Midnight on the first day of the next month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
   DateTime get nextMonth => _date(isUtc, year, month + 1);
 
   /// Midnight on the first day of this date's month, in the same time zone.
@@ -451,6 +462,7 @@ extension DHUDateExtensions on DateTime {
   DateTime get firstDayOfMonth => _date(isUtc, year, month);
 
   /// Midnight on the last day of this date's month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
   DateTime get lastDayOfMonth => _date(isUtc, year, month + 1, 0);
 
   /// Moves this date by [years] calendar years, keeping the wall-clock time.
@@ -639,7 +651,9 @@ extension DHUDateExtensions on DateTime {
   /// time that does not exist on one day (a skipped hour) is shifted on that
   /// day only, and one that happens twice (a repeated hour) resolves to its
   /// first occurrence, unless this moment is itself such a repeat: then its
-  /// offset is kept, so the first entry is always this moment.
+  /// offset is kept, so the first entry is always this moment. A date the
+  /// clocks skipped entirely (Apia skipped 2011-12-30) has no moment of its
+  /// own, so its entry lands on the next date and repeats that entry.
   Iterable<DateTime> daysUpTo(DateTime end) sync* {
     final repeat = _isRepeat(this);
     for (var offset = 0; ; offset++) {
@@ -853,8 +867,8 @@ DateTime _dateOnly(DateTime date) =>
     _date(date.isUtc, date.year, date.month, date.day);
 
 /// The first moment of a local calendar date: the first occurrence of its
-/// midnight, or the moment the clocks jumped into the date when they skipped
-/// midnight.
+/// midnight, or the moment the clocks jumped to when they skipped midnight.
+/// That moment is on a later date when the clocks skipped the whole date.
 DateTime _startOfDate(int year, int month, int day) {
   final start = _local(year, month, day);
   final micros = start.microsecondsSinceEpoch;
@@ -893,10 +907,11 @@ DateTime _local(
     microsecond,
   );
   // The VM looks for an earlier occurrence only two hours back, but clocks
-  // have repeated up to 23 hours (Kwajalein, 1969). Clock changes are about
-  // a week apart or more, so an earlier occurrence needs a larger offset a
-  // day before.
+  // have repeated up to 23 hours (Kwajalein, 1969). Clock changes are more
+  // than a day apart (see _changeFreeSpan), so an earlier occurrence needs a
+  // larger offset a day before. Nothing exists before the earliest DateTime.
   final micros = resolved.microsecondsSinceEpoch;
+  if (micros - Duration.microsecondsPerDay < _earliestMicros) return resolved;
   final dayBefore = DateTime.fromMicrosecondsSinceEpoch(
     micros - Duration.microsecondsPerDay,
   );
@@ -996,13 +1011,11 @@ DateTime _addCalendarDays(DateTime date, int days, {bool? repeat}) =>
 /// [b] must be positive.
 int _floorDiv(int a, int b) => (a - a % b) ~/ b;
 
-/// Whether every time field of [date] is zero.
-bool _isMidnight(DateTime date) =>
-    date.hour == 0 &&
-    date.minute == 0 &&
-    date.second == 0 &&
-    date.millisecond == 0 &&
-    date.microsecond == 0;
+/// The earliest microseconds since the epoch a [DateTime] can hold.
+const _earliestMicros = -8640000000000000000;
+
+/// The latest microseconds since the epoch a [DateTime] can hold.
+const _latestMicros = 8640000000000000000;
 
 /// [date]'s calendar date as a count of days from January 1, 1970.
 int _dayIndex(DateTime date) =>
@@ -1014,6 +1027,26 @@ int _dayIndex(DateTime date) =>
 DateTime _startOfDayIndex(int index) {
   final date = DateTime.utc(1970, 1, 1 + index);
   return _startOfDate(date.year, date.month, date.day);
+}
+
+/// The moment the local date [index], which first started at [start], starts
+/// a second time, or null.
+///
+/// A date starts again when the clocks fall back past its midnight into the
+/// day before (St. John's until 2011, Casey in 2010). A midnight the clocks
+/// repeat within its own date (the Azores) starts nothing.
+DateTime? _restartOfDate(DateTime start, int index) {
+  final micros = start.microsecondsSinceEpoch;
+  if (micros + Duration.microsecondsPerDay > _latestMicros) return null;
+  final again = _keepOffset(
+    start,
+    DateTime.fromMicrosecondsSinceEpoch(micros + Duration.microsecondsPerDay),
+  );
+  if (again == start) return null;
+  final before = DateTime.fromMicrosecondsSinceEpoch(
+    again.microsecondsSinceEpoch - 1,
+  );
+  return _dayIndex(before) < index ? again : null;
 }
 
 /// [date] aligned down to a multiple of [step] microseconds, as
@@ -1048,23 +1081,19 @@ DateTime _ceilTo(DateTime date, int step) {
   if (step % Duration.microsecondsPerDay != 0) {
     return DateTime.fromMicrosecondsSinceEpoch(_ceilLocal(micros, step));
   }
+  // The earliest start of an aligned date at or after date. A date can
+  // start twice, so the aligned date that floorTo returned may start again.
   final days = step ~/ Duration.microsecondsPerDay;
   final index = _dayIndex(date);
-  // A repeated midnight that starts its date again, after the clocks fell
-  // back past it into the day before, is aligned too; floorTo returns the
-  // first occurrence instead. (A repeat inside its own date, as in the
-  // Azores, starts nothing.)
-  if (index % days == 0 &&
-      _isMidnight(date) &&
-      _dayIndex(DateTime.fromMicrosecondsSinceEpoch(micros - 1)) < index) {
-    return date;
-  }
-  for (var next = index - index % days + days; ; next += days) {
+  final aligned = index - index % days;
+  final restart = _restartOfDate(_startOfDayIndex(aligned), aligned);
+  if (restart != null && !restart.isBefore(date)) return restart;
+  for (var next = aligned + days; ; next += days) {
     final start = _startOfDayIndex(next);
     if (!start.isBefore(date)) return start;
     // The clocks showed that midnight before date, then fell back past it.
-    final again = _keepOffset(start, date);
-    if (!again.isBefore(date)) return again;
+    final again = _restartOfDate(start, next);
+    if (again != null && !again.isBefore(date)) return again;
   }
 }
 
@@ -1099,6 +1128,9 @@ int _offsetChange(int from, int to) {
   var high = to;
   while (high - low > 1) {
     final middle = low + (high - low) ~/ 2;
+    // On the web, integers past 2^53 microseconds (after mid-2255) are not
+    // exact, so the halves can stop shrinking before they meet.
+    if (middle <= low || middle >= high) break;
     if (_offsetAt(middle) == offset) {
       low = middle;
     } else {
@@ -1108,9 +1140,14 @@ int _offsetChange(int from, int to) {
   return high;
 }
 
-/// The longest stretch checked for a clock change at once. Changes are at
-/// least six days apart in the time zone database (the closest since 1900
-/// were in Cambridge Bay in 2000), so a day holds at most one.
+/// The longest stretch checked for a clock change at once.
+///
+/// From 1900 to 2038, changes in the time zone database are at least six
+/// days apart (the closest were in Cambridge Bay in 2000), so a day holds at
+/// most one. Outside 1901-2038 the VM reuses the rules of an equivalent
+/// year, which can put two changes an hour apart at the turn of a year
+/// (Africa/Sao_Tome after 2040); an aligned time between such a pair can be
+/// missed there.
 const _changeFreeSpan = Duration.microsecondsPerDay;
 
 /// The latest instant at or before [micros] whose local wall clock shows a
@@ -1136,8 +1173,13 @@ int _floorLocal(int micros, int step) {
     final change = _offsetChange(probe, receiver);
     // Jumped forward over the aligned time: it was skipped.
     if (wall >= change + probeOffset) return change;
-    // The aligned time, or a later one, happened before the change.
-    receiver = change - 1;
+    // The aligned time, or a later one, happened before the change. On the
+    // web past 2^53 microseconds, change - 1 can round back to change, and a
+    // millisecond earlier is the closest instant that is still before it.
+    final before = change - 1;
+    receiver = before < change
+        ? before
+        : change - Duration.microsecondsPerMillisecond;
     offset = probeOffset;
   }
 }

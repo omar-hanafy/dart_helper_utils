@@ -74,15 +74,14 @@ void main() {
           if (floor != starts.first) {
             failures.add('floorTo is not the date start', step, x, floor);
           }
-          // x itself when it starts an aligned date; otherwise the first
-          // start of the next aligned date at or after x, which is that
-          // midnight's repeat when the clocks fell back past the first one.
-          final expectedCeil = starts.contains(x)
-              ? x
-              : [
-                  ..._startsOfDate(aligned + days),
-                  ..._startsOfDate(aligned + 2 * days),
-                ].firstWhere((start) => !start.isBefore(x));
+          // The earliest start of an aligned date at or after x. A date can
+          // start twice where the clocks fall back past its midnight, so
+          // the aligned date of x itself can still start again after x.
+          final expectedCeil = [
+            ...starts,
+            ..._startsOfDate(aligned + days),
+            ..._startsOfDate(aligned + 2 * days),
+          ].firstWhere((start) => !start.isBefore(x));
           final ceil = x.ceilTo(step);
           if (ceil != expectedCeil) {
             failures.add('ceilTo is not the next date start', step, x, ceil);
@@ -97,6 +96,90 @@ void main() {
       }
     }
     expect(failures.messages, isEmpty, reason: failures.summary);
+  });
+
+  test('ceilTo never goes back as the receiver moves forward', () {
+    final failures = _Failures();
+    for (final transition in _transitions) {
+      for (final step in const [_day, Duration(hours: 1), Duration(days: 7)]) {
+        DateTime? previous;
+        for (final x in _receiversAround(transition)) {
+          final ceil = x.ceilTo(step);
+          if (previous != null && ceil.isBefore(previous)) {
+            failures.add('ceilTo went back', step, x, ceil);
+          }
+          previous = ceil;
+        }
+      }
+    }
+    expect(failures.messages, isEmpty, reason: failures.summary);
+  });
+
+  test('daysInMonth is a grid of whole weeks of date starts', () {
+    final failures = _Failures();
+    final months = {
+      for (final transition in _transitions)
+        for (final shift in const [-1, 0, 1])
+          DateTime.utc(transition.year, transition.month + shift),
+    };
+    for (final month in months) {
+      final grid = DateTime(month.year, month.month, 15, 12).daysInMonth;
+      final first = DateTime.utc(month.year, month.month);
+      final firstIndex =
+          _dayIndex(first) - (first.weekday - 1) % DateTime.daysPerWeek;
+      final last = DateTime.utc(month.year, month.month + 1, 0);
+      final count =
+          _dayIndex(last) +
+          DateTime.daysPerWeek -
+          last.weekday -
+          firstIndex +
+          1;
+      if (grid.length != count) {
+        failures.add(
+          '${grid.length} entries, not $count',
+          _day,
+          first,
+          grid.last,
+        );
+        continue;
+      }
+      for (var i = 0; i < count; i++) {
+        final expected = _startsOfDate(firstIndex + i).first;
+        if (grid[i] != expected) failures.add('entry $i', _day, first, grid[i]);
+      }
+    }
+    expect(failures.messages, isEmpty, reason: failures.summary);
+  });
+
+  test('clock changes far in the future still resolve', () {
+    // On the web, microseconds past 2^53 (mid-2255) are not exact integers,
+    // which once stalled the search for a clock change. Results there are
+    // only as precise as the platform, so this checks they come back and
+    // land within a step of the receiver.
+    const hour = Duration(hours: 1);
+    for (final change in _changesInMilliseconds(2300)) {
+      for (final minutes in const [-10, 10]) {
+        final x = change.add(Duration(minutes: minutes));
+        for (final step in const [hour, Duration(hours: 2), _day]) {
+          final floor = x.floorTo(step);
+          final ceil = x.ceilTo(step);
+          final round = x.roundTo(step);
+          expect(x.difference(floor) <= step + hour, isTrue, reason: '$x');
+          expect(ceil.difference(x) <= step + hour, isTrue, reason: '$x');
+          expect(round == floor || round == ceil, isTrue, reason: '$x');
+        }
+        expect(x.difference(x.startOfDay) <= _day + hour, isTrue);
+      }
+    }
+  }, timeout: const Timeout(Duration(seconds: 60)));
+
+  test('day moves next to the earliest DateTime stay in range', () {
+    final x = DateTime.fromMicrosecondsSinceEpoch(
+      -8640000000000000000 + 6 * Duration.microsecondsPerHour,
+    );
+    expect(x.addDays(0), x);
+    expect(x.daysUpTo(x.add(const Duration(microseconds: 1))).first, x);
+    expect(x.nextDay.difference(x).inHours, inInclusiveRange(23, 25));
   });
 
   test('a long step finds aligned times inside a repeated stretch', () {
@@ -265,6 +348,36 @@ final List<int> _changes = () {
   }
   return result;
 }();
+
+/// The local clock changes during [year], found to the millisecond, which
+/// stays exact on the web even where microseconds do not.
+List<DateTime> _changesInMilliseconds(int year) {
+  int offsetAt(int millis) =>
+      DateTime.fromMillisecondsSinceEpoch(millis).timeZoneOffset.inMinutes;
+  const probe = 12 * Duration.millisecondsPerHour;
+  final result = <DateTime>[];
+  final to = DateTime.utc(year + 1).millisecondsSinceEpoch;
+  for (
+    var low = DateTime.utc(year).millisecondsSinceEpoch;
+    low < to;
+    low += probe
+  ) {
+    final offset = offsetAt(low);
+    if (offsetAt(low + probe) == offset) continue;
+    var before = low;
+    var after = low + probe;
+    while (after - before > 1) {
+      final middle = before + (after - before) ~/ 2;
+      if (offsetAt(middle) == offset) {
+        before = middle;
+      } else {
+        after = middle;
+      }
+    }
+    result.add(DateTime.fromMillisecondsSinceEpoch(after));
+  }
+  return result;
+}
 
 /// The changes the receivers sit around: those of 2010 (the last year St.
 /// John's changed clocks past midnight, with Casey shifting by 3 hours) and

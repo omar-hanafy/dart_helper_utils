@@ -180,6 +180,11 @@ void main() {
       0,
     );
     check(
+      'daysInMonth entries are date starts',
+      DateTime(2024, 3, 15).daysInMonth.every((d) => d == d.startOfDay),
+      true,
+    );
+    check(
       'addBusinessDays negative',
       DateTime(2024, 6, 10).addBusinessDays(-1),
       DateTime(2024, 6, 7),

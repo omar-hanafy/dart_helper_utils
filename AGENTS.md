@@ -69,8 +69,9 @@ the reason, `unnecessary_ignore` removes stale ones).
   midnights. `floorTo`/`ceilTo` return the latest/earliest instant whose wall
   clock shows an aligned time (a skipped aligned time counts at the jump);
   whole-day steps count calendar dates, so `floorTo(1 day) == startOfDay`.
-  Local offsets come from the wall-clock fields, because the web rounds
-  `timeZoneOffset` to whole minutes. `test/date_time_zone_test.dart` checks
+  Offset arithmetic reads offsets from the wall-clock fields, because the
+  web rounds `timeZoneOffset` to whole minutes; `daysInMonth` entries are
+  each date's `startOfDay`. `test/date_time_zone_test.dart` checks
   all of this against expectations built from the clock changes of whatever
   zone it runs in; CI runs it in nine zones and on Node because the runners
   use UTC, where these bugs cannot appear.

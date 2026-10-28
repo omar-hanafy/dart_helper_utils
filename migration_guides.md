@@ -60,7 +60,8 @@ None of these raise a compile error, unless noted.
    `addDays(1)` on 00:00 local time is 00:00 the next day, even across a DST
    change (6.x gave 01:00 or 23:00). The same applies to `subtractDays`,
    `nextDay`, `previousDay`, `nextWeek`, `previousWeek`, `firstDayOfWeek`,
-   `lastDayOfWeek`, `addBusinessDays`, `daysUpTo`, and `daysInMonth`. On the
+   `lastDayOfWeek`, `addBusinessDays`, and `daysUpTo`, and every
+   `daysInMonth` entry is the `startOfDay` of its date. On the
    day of a change, a skipped time moves forward by the jump and a repeated
    time resolves to its first occurrence, unless the receiver is itself the
    repeat, which keeps its offset. For an exact 24-hour step, use

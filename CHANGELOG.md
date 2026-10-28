@@ -74,9 +74,10 @@ These are removed outright, and `dart fix` still migrates them:
   receivers.
 - **Day arithmetic moves by calendar days.** `addDays`, `subtractDays`,
   `nextDay`, `previousDay`, `nextWeek`, `previousWeek`, `firstDayOfWeek`,
-  `lastDayOfWeek`, `addBusinessDays`, `daysUpTo`, and `daysInMonth` keep the
-  wall-clock time across daylight-saving changes. 6.x added 24-hour
-  durations, so the time shifted by an hour across a transition. On the day
+  `lastDayOfWeek`, `addBusinessDays`, and `daysUpTo` keep the wall-clock
+  time across daylight-saving changes, and every `daysInMonth` entry is the
+  `startOfDay` of its date. 6.x added 24-hour durations, so the time
+  shifted by an hour across a transition. On the day
   of a change, a time the clocks skip moves forward by the jump, and a time
   they repeat resolves to its first occurrence, unless the receiver is
   itself the repeat, which keeps its offset. Use

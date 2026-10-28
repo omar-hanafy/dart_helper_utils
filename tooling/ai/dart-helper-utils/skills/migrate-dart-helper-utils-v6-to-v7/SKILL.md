@@ -68,7 +68,7 @@ grep -rnE "isDOC|isXLSX|isValidPhoneNumber|executionHistory|DebouncerState|buffe
 |---|---|
 | `Iterable<int>` `mean`/`median`/`variance`/`standardDeviation` return `double` (no truncation) | Analyzer flags `int` assignments; add `.round()`/`.toInt()` only if truncation was intended |
 | UTC receivers stay UTC in `startOfDay`, `dateOnly`, `startOfMonth`, `startOfYear`, `firstDayOfMonth`, `lastDayOfMonth`, `previousMonth`, `nextMonth`, `addMonths`, `addYears` | Remove `toUtc()`/`toLocal()` workarounds around these calls |
-| Day arithmetic (`addDays`, `nextDay`, `nextWeek`, `firstDayOfWeek`, `addBusinessDays`, `daysUpTo`, `daysInMonth`, ...) keeps wall-clock time across DST | Use `date.add(const Duration(days: n))` where exact 24-hour steps are required |
+| Day arithmetic (`addDays`, `nextDay`, `nextWeek`, `firstDayOfWeek`, `addBusinessDays`, `daysUpTo`, ...) keeps wall-clock time across DST; every `daysInMonth` entry is the `startOfDay` of its date | Use `date.add(const Duration(days: n))` where exact 24-hour steps are required |
 | `remainingDays`, `passedDays`, `daysDifferenceTo`, `isTomorrow`, `isYesterday` count calendar days | Drop off-by-one compensation around DST |
 | `roundTo`/`floorTo`/`ceilTo` align to the receiver's wall clock; whole-day steps match `startOfDay` | Matters in half-hour zones, around clock changes, and for pre-1970 dates |
 | `httpDateFormat` takes every field from UTC | Drop manual `toUtc()` workarounds |
