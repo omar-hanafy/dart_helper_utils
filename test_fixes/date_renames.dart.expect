@@ -52,5 +52,4 @@ class Calendar {
 
 DateTime controlGetter(Calendar calendar) => calendar.tomorrow;
 
-bool controlMethod(Calendar calendar, DateTime b) =>
-    calendar.isAtSameDayAs(b);
+bool controlMethod(Calendar calendar, DateTime b) => calendar.isAtSameDayAs(b);
