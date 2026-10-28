@@ -2,23 +2,36 @@
 
 Pure-Dart utility package (no Flutter dependency). Public API is
 `lib/dart_helper_utils.dart`, which re-exports ALL of `package:collection`,
-ALL of `package:convert_object`, five intl symbols (`Bidi`, `BidiFormatter`,
-`DateFormat`, `Intl`, `NumberFormat`), and this package's own
-`lib/src/` tree (extensions, Debouncer/TimeUtils, raw_data constants).
+ALL of `package:convert_object`, ALL of `package:stringo`, five intl symbols
+(`Bidi`, `BidiFormatter`, `DateFormat`, `Intl`, `NumberFormat`), and this
+package's own `lib/src/` tree (extensions, Debouncer/TimeUtils, raw_data
+constants).
 
 ## Validation gates (run before claiming any change done)
 
 ```bash
 dart format --output=none --set-exit-if-changed .
-dart analyze .                        # public_member_api_docs is enforced
-dart test
+dart analyze --fatal-infos .               # every lint is a gate
+dart fix test_fixes --compare-to-golden    # dart fix migrations stay valid
+dart run tool/check_repo.dart              # em-dash, changelog, platform, deprecation rules
 dart run tool/validate_agent_plugin.dart   # AI plugin/marketplace consistency
-dart pub publish --dry-run            # must stay at 0 warnings
+dart test
+for z in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe; do
+  TZ=$z dart test test/date_extension_test.dart test/date_extension_additional_test.dart
+done
+dart pub publish --dry-run                 # must stay at 0 warnings
 ```
 
-CI requires a PERFECT pana score on PRs ("CI / Pana" is a required check);
-avoid changes that cost points (missing doc comments, dependency issues,
-format drift).
+CI runs all of these (plus a lowest-dependency run on the minimum SDK) and
+requires a PERFECT pana score on PRs ("CI / Pana" is a required check, pinned
+pana version, `--exit-code-threshold 0`). Avoid changes that cost points
+(missing doc comments, dependency issues, format drift).
+
+`analysis_options.yaml` is strict (strict-casts/inference/raw-types and 81
+validated rules); `test/` and `example/` relax only doc and API-shape rules.
+Never weaken a rule to get a green run; fix the code, or add an
+`// ignore:` whose preceding comment says why (`document_ignores` enforces
+the reason, `unnecessary_ignore` removes stale ones).
 
 ## Conventions
 
@@ -30,17 +43,57 @@ format drift).
   whitespace, blank/character checks).
 - The `stringo` split follows one rule: `stringo` transforms text, this
   package judges domain formats. Validators (`isValidEmail`, `isUuid`,
-  `isValidIp4`), MIME checks, and `parseDuration` stay here. Never define the
-  same member name in both packages - both are exported from
-  `dart_helper_utils.dart`, so a duplicate becomes an ambiguous-extension
-  compile error for every user.
+  `isValidIp4`), MIME checks, and `parseDuration` stay here.
+- **The partition rule.** No extension member here may share its name with
+  an extension member of `convert_object`, `stringo`, `collection`, or the
+  SDK on an overlapping type. On the same type it is an ambiguity compile
+  error for every user; on related types (`List` vs `Iterable`, `String` vs
+  `String?`) the receiver's static type silently picks the implementation,
+  which shipped as real bugs (`swap`, `isValidPhoneNumber`).
+  `test/api_surface_guard_test.dart` enforces this and also fails when an
+  instance member of the extended type makes a member unreachable. An
+  exception needs an allowlist entry whose reason proves the two can never
+  disagree (for example, a null-safe member that delegates to the other).
+- **Date semantics.** Helpers that build a date keep the receiver's time zone
+  (UTC in, UTC out). Day-based arithmetic moves by calendar days and keeps
+  the wall-clock time across daylight-saving changes; hours and smaller add
+  exact durations; day counts project both dates onto UTC midnights. CI
+  re-runs the calendar suites in DST and half-hour-offset zones because the
+  runners use UTC, where these bugs cannot appear.
 - Any public API change needs matching tests in the flat `test/` directory
-  (one file per domain) and doc comments on every public member.
-- Behavior quirks are load-bearing: `Iterable.intersect` merges (union) on
-  purpose, `waitConcurrency`/`mapConcurrent` return completion order,
+  (one file per domain) and doc comments on every public member. A bug fix
+  needs a regression test that fails on the old code.
+- Behavior quirks are load-bearing: `Iterable.intersect` (from
+  convert_object) merges (union) on purpose, `waitConcurrency` and
+  `mapConcurrent` return completion order unless `preserveOrder: true`,
   `daysInMonth` returns a padded calendar grid. Do not "fix" these without
   a major release and a migration entry.
-- Never use the em-dash character in this repo's files; use '-' instead.
+- Never use the em-dash character in this repo's files; use '-' instead
+  (`tool/check_repo.dart` enforces it).
+
+## Breaking changes and `dart fix`
+
+- Every rename or removal ships a transform in `lib/fix_data.yaml` and a
+  fixture pair in `test_fixes/` (`<case>.dart` compiles against the previous
+  release, `<case>.dart.expect` is the hand-written result). Keep every
+  transform from earlier releases.
+- Extension members match by the receiver's static type, so each rename
+  needs an `inClass: <type>` transform (ordinary calls) and an
+  `inExtension: <Extension>` transform (explicit overrides).
+- `dart fix` cannot act on two diagnostics: a removed getter on a nullable
+  receiver (`unchecked_use_of_nullable_value`) and a removed method through
+  an explicit extension override (`undefined_extension_method`). For those,
+  keep a `@Deprecated` forwarding alias for one major so the usage raises
+  `deprecated_member_use`, which `dart fix` handles. Skip the alias when the
+  rewritten explicit form would not compile (as for `Iterable.find`).
+- Every `@Deprecated` message says "removed in X.0.0"; `tool/check_repo.dart`
+  fails once the package reaches that major, so the aliases cannot outlive
+  their release. Delete them together with `test/deprecated_aliases_test.dart`
+  entries.
+- Prove a migration with the dart-tools data-driven-fixes verifier
+  (`verify_fixes.py . --baseline <previous version>`): fixtures compile
+  against the baseline, and a separate consumer reaches every golden with no
+  errors left.
 
 ## Release process
 
@@ -49,11 +102,12 @@ format drift).
    pushes).
 2. `CHANGELOG.md` entry + `pubspec.yaml` version in the same PR.
 3. Merge -> auto-release workflow creates tag
-   `dart_helper_utils-vX.Y.Z` + GitHub release; the tag triggers trusted
-   publishing to pub.dev (OIDC, no manual credentials). Never re-use or
-   overwrite an existing tag.
-4. Breaking releases must update `migration_guides.md` AND ship the
-   corresponding migration hop in the AI plugin (see below) before tagging.
+   `dart_helper_utils-vX.Y.Z` + GitHub release when the version VALUE
+   changed; the tag triggers trusted publishing to pub.dev (OIDC, no manual
+   credentials). Never re-use or overwrite an existing tag.
+4. Breaking releases must update `migration_guides.md`, ship `dart fix`
+   data for every rename (see above), AND ship the corresponding migration
+   hop in the AI plugin (see below) before tagging.
 
 ## AI assistant plugin (Claude Code + Codex)
 
@@ -65,6 +119,8 @@ format drift).
   bump them together (CI enforces via `tool/validate_agent_plugin.dart`).
 - Skill facts must match the source; when changing behavior in `lib/`,
   update the affected skill/reference files in the same PR.
+  `test/agent_skill_claims_test.dart` asserts the skills' factual claims
+  against the API; extend it when a skill gains a claim.
 - Any future BREAKING release must ship a migration hop in the plugin
   (a dedicated `migrate-dart-helper-utils-vX-to-vY` skill for large
   migrations, or a hop entry in `upgrade-dart-helper-utils`) before tagging.
