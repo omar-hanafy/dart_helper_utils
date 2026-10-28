@@ -160,10 +160,17 @@ extension DHUNullSafeStringExtensions on String? {
   /// Checks if the string is a valid currency format.
   bool get isValidCurrency => _matches(patternValidCurrency);
 
-  /// Checks if the string is a valid phone number.
+  /// Whether the string resembles a telephone number: an optional leading
+  /// `+`, then at least three digits, spaces, hyphens, or parentheses.
+  ///
+  /// This is the null-safe form of convert_object's `String`
+  /// `isValidPhoneNumber`, which a non-null receiver resolves to, so both
+  /// receivers always agree. Before 7.0.0 a `String?` receiver applied the
+  /// stricter, North-American [regexValidPhoneNumber] instead; match that
+  /// pattern yourself if you need it.
   bool get isValidPhoneNumber {
-    if (isBlank || this!.length > 16 || this!.length < 9) return false;
-    return _matches(patternValidPhoneNumber);
+    final value = this;
+    return value != null && UriParsingX(value).isValidPhoneNumber;
   }
 
   /// Checks if the string is a valid email address.

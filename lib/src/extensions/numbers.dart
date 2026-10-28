@@ -111,7 +111,8 @@ extension DHUHttpEx on num? {
         : (httpStatusDevMessage[statusCode] ?? 'Not Found');
   }
 
-  /// Returns `true` if the string representation of this number is a valid phone number.
+  /// Whether this number, written out with `toString()`, passes the same
+  /// `isValidPhoneNumber` check as a string. Returns `false` for `null`.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 }
 
@@ -143,9 +144,6 @@ extension DHUNullSafeNumExtensions on num? {
   /// Returns `true` if the number is either `null` or zero.
   bool get isZeroOrNull => this == null || this! == 0;
 
-  /// Returns `true` if the number is greater than 0.
-  bool get asBool => (this ?? 0) > 0;
-
   /// Returns a string representation of the number with a given number of decimal places.
   ///
   /// If [keepTrailingZeros] is `true`, trailing zeros will be kept in the result, otherwise, they will be removed.
@@ -171,7 +169,8 @@ extension DHUNumExtensions on num {
   /// Returns `true` if the number is zero.
   bool get isZero => this == 0;
 
-  /// Returns `true` if the string representation of this number is a valid phone number.
+  /// Whether this number, written out with `toString()`, passes the same
+  /// `isValidPhoneNumber` check as a string.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 
   /// Returns the number of digits in this number.

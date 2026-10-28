@@ -296,4 +296,14 @@ void main() {
       expect(12.gcd(18), 6);
     });
   });
+
+  group('7.0.0 asBool comes from convert_object', () {
+    test('numbers keep the > 0 rule', () {
+      expect(1.asBool, isTrue);
+      expect(0.asBool, isFalse);
+      expect((-1).asBool, isFalse);
+      const num? none = null;
+      expect(none.asBool, isFalse);
+    });
+  });
 }

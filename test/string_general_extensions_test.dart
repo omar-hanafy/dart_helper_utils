@@ -134,4 +134,33 @@ void main() {
       expect('   '.isPalindrome, isFalse);
     });
   });
+
+  group('7.0.0 isValidPhoneNumber agrees across nullability', () {
+    bool viaNullable(String? value) => value.isValidPhoneNumber;
+    bool viaNonNull(String value) => value.isValidPhoneNumber;
+
+    test('nullable and non-null receivers give the same answer', () {
+      for (final value in [
+        '123',
+        '555-1234',
+        '+1 (555) 123-4567',
+        '+44 20 7946 0958',
+        '1-800-FLOWERS',
+        'abc',
+        '',
+        '   ',
+      ]) {
+        expect(viaNullable(value), viaNonNull(value), reason: value);
+      }
+      expect(viaNullable(null), isFalse);
+      expect(viaNullable('+44 20 7946 0958'), isTrue);
+      expect(viaNullable('1-800-FLOWERS'), isFalse);
+    });
+
+    test('number receivers use the same check', () {
+      expect(5551234567.isValidPhoneNumber, '5551234567'.isValidPhoneNumber);
+      const num? none = null;
+      expect(none.isValidPhoneNumber, isFalse);
+    });
+  });
 }

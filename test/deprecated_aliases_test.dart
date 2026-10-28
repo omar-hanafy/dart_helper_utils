@@ -46,6 +46,11 @@ void main() {
       expect('abc'.enforceRtlIn(), 'abc'.enforceRtl());
     });
 
+    test('Iterable.swap on a non-List receiver', () {
+      final Iterable<int> values = {1, 2, 3};
+      expect(values.swap(0, 2), values.swapped(0, 2));
+    });
+
     test('String? isEmptyOrNull and isNotEmptyOrNull', () {
       String? none;
       expect(none.isEmptyOrNull, isTrue);

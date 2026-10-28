@@ -453,3 +453,25 @@ transforms:
     changes:
       - kind: 'rename'
         newName: 'isNotBlank'
+
+  # Iterable.swap returned a copy, but on List receivers the name already
+  # resolved to package:collection's in-place ListExtensions.swap. The copying
+  # variant is now swapped (like collection's sorted/shuffled).
+  - title: "Rename to 'swapped'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'swap'
+      inClass: 'Iterable'
+    changes:
+      - kind: 'rename'
+        newName: 'swapped'
+  - title: "Rename to 'swapped'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'swap'
+      inExtension: 'DHUCollectionsExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'swapped'

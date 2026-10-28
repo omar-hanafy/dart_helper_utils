@@ -56,10 +56,18 @@ void main() {
       expect(list.secondHalf(), [3, 4]);
     });
 
-    test('swap swaps elements', () {
+    test("swap on a List is collection's in-place swap", () {
       final list = [1, 2, 3];
       list.swap(0, 2);
       expect(list, [3, 2, 1]);
+    });
+
+    test('swapped returns a copy and leaves the source alone', () {
+      final list = [1, 2, 3];
+      expect(list.swapped(0, 2), [3, 2, 1]);
+      expect(list, [1, 2, 3]);
+      expect({1, 2, 3}.swapped(0, 1), [2, 1, 3]);
+      expect(() => list.swapped(0, 5), throwsRangeError);
     });
 
     test('getRandom is deterministic with seed', () {

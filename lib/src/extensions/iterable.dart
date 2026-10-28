@@ -323,14 +323,26 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Returns the second half of the iterable.
   List<E> secondHalf() => drop(halfLength).toList();
 
-  /// Returns a list with elements at [i] and [j] swapped.
-  List<E> swap(int i, int j) {
+  /// Returns a new list with the elements at [i] and [j] swapped; this
+  /// iterable is not modified.
+  ///
+  /// To swap two elements of a [List] in place, use `swap` from the
+  /// re-exported `package:collection`.
+  List<E> swapped(int i, int j) {
     final list = toList();
     final aux = list[i];
     list[i] = list[j];
     list[j] = aux;
     return list;
   }
+
+  /// Deprecated alias of [swapped].
+  ///
+  /// On a [List] receiver, `swap` already resolved to collection's in-place
+  /// `ListExtensions.swap`; this copying variant only ever ran for other
+  /// iterables, so the name meant two different things.
+  @Deprecated('Use swapped. This alias will be removed in 8.0.0.')
+  List<E> swap(int i, int j) => swapped(i, j);
 
   /// Returns a random element.
   ///
