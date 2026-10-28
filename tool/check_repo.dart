@@ -70,7 +70,7 @@ void _checkEmDashes() {
     }
     final lines = text.split('\n');
     for (var i = 0; i < lines.length; i++) {
-      if (lines[i].contains('—')) {
+      if (lines[i].contains('\u2014')) {
         _errors.add("$path:${i + 1}: em-dash character; use '-' instead.");
       }
     }

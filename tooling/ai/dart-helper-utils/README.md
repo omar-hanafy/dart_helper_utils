@@ -12,7 +12,8 @@ skills only - no hooks, no MCP servers, no telemetry, no network access.
 | `use-dart-helper-utils` | Correct member names and semantics across the utility surface (maps, strings, casing, MIME, collections, numbers, dates, intl, URI) plus the one-import re-export model |
 | `async-with-dart-helper-utils` | Debouncer/throttle lifecycle, stream transformers (rateLimit, bufferCount, asPausable, retry), Future minWait/timeoutOrNull/retry, bounded concurrency, and their ordering/disposal traps |
 | `migrate-dart-helper-utils-v5-to-v6` | The v6 breaking migration (conversion moved to convert_object, renames, removals, silent behavior changes) |
-| `upgrade-dart-helper-utils` | Version detection and hop sequencing for any upgrade (v2/v3/v4/v5/v6, patch bumps) |
+| `migrate-dart-helper-utils-v6-to-v7` | The v7 migration: `dart fix --apply` for the renames, then the behavior checklist (UTC and DST date semantics, exact int statistics, MIME precision, typed debouncer history, stringo 3) |
+| `upgrade-dart-helper-utils` | Version detection and hop sequencing for any upgrade (v2/v3/v4/v5/v6/v7, patch bumps) |
 
 ## Install in Claude Code
 
@@ -41,8 +42,8 @@ The Codex IDE extension does not support plugins; there, ask the
 - "Debounce this search field with dart_helper_utils and make sure nothing
   leaks when the widget is disposed."
 - "Read `db.pool.size` from this nested config map, defaulting to 10."
-- "We are upgrading dart_helper_utils from 5.4.2 to 6.x - audit the repo and
-  do the migration."
+- "We are upgrading dart_helper_utils from 6.1.0 to 7.x - run the migration
+  and check the behavior changes that affect us."
 
 ## Updating and uninstalling
 
@@ -63,8 +64,8 @@ phones home to nothing.
 
 ## Compatibility
 
-- Documents dart_helper_utils 6.x (plugin version tracks the package
-  version). The migration/upgrade skills additionally cover 1.x-5.x
+- Documents dart_helper_utils 7.x (plugin version tracks the package
+  version). The migration/upgrade skills additionally cover 1.x-6.x
   codebases.
 - Claude Code with plugin support; Codex CLI 0.44+ (plugin + marketplace
   commands).

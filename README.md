@@ -4,7 +4,7 @@
 
 A batteries-included utility package for Dart. One import gives you type-safe
 conversions, ergonomic extensions, a serious debouncer, stream superpowers,
-and the APIs you already know from [`convert_object`](https://pub.dev/packages/convert_object), `collection`, and `intl`.
+and the APIs you already know from [`convert_object`](https://pub.dev/packages/convert_object), [`stringo`](https://pub.dev/packages/stringo), `collection`, and `intl`.
 
 - Repository: https://github.com/omar-hanafy/dart_helper_utils
 - Full API: https://pub.dev/documentation/dart_helper_utils/latest/dart_helper_utils/
@@ -16,8 +16,8 @@ This repository ships a package-specific **agent plugin** for
 **Claude Code** and **OpenAI Codex** (this is tooling for coding agents, not
 a runtime feature of the Dart package). It teaches the agent the exact
 dart_helper_utils APIs - utility member names and semantics, the
-Debouncer/throttle/stream lifecycles, the v5-to-v6 breaking migration, and
-version-aware upgrades.
+Debouncer/throttle/stream lifecycles, the v5-to-v6 and v6-to-v7 breaking
+migrations, and version-aware upgrades.
 
 Install in **Claude Code**:
 
@@ -36,7 +36,7 @@ codex plugin add dart-helper-utils@dart-helper-utils-tools
 
 Start a new agent session after installing so the skills load. Then try
 prompts like "debounce this search field with dart_helper_utils and clean it
-up on dispose" or "migrate this project from dart_helper_utils 5.x to 6.x",
+up on dispose" or "migrate this project from dart_helper_utils 6.x to 7.x",
 or invoke a skill explicitly in Claude Code, e.g.
 `/dart-helper-utils:use-dart-helper-utils`.
 
@@ -126,8 +126,14 @@ final replay = priceStream.withLatestValue();
 ### Bounded concurrency and soft timeouts
 
 ```dart
-// Run at most 4 uploads at once, results in completion order.
+// Run at most 4 uploads at once. Results arrive in completion order;
+// pass preserveOrder: true to get them in input order.
 final urls = await files.mapConcurrent(upload, parallelism: 4);
+final ordered = await files.mapConcurrent(
+  upload,
+  parallelism: 4,
+  preserveOrder: true,
+);
 
 // Soft timeout: the original task keeps running in the background.
 try {
@@ -162,8 +168,8 @@ Everyday sugar that you would otherwise write by hand: the full
 [`stringo`](https://pub.dev/packages/stringo) string toolkit (case conversion,
 `slugify`, `truncate`, `mask`, whitespace normalization) re-exported here,
 format validators (`isValidEmail`, `isUuid`), `parseDuration`, MIME checks
-(`isPDF`, `isImage`, `isFont`), date helpers (`isBetween`, `addBusinessDays`,
-`daysInMonth`), Intl formatters (`formatAsCurrency`, `formatAsCompact`,
+(`isPDF`, `isImage`, `isFont`), daylight-saving-safe date helpers
+(`isSameDayAs`, `addMonths`, `addBusinessDays`, `isBetween`, `daysInMonth`), Intl formatters (`formatAsCurrency`, `formatAsCompact`,
 `toOrdinal`, `pluralize`), URI builders (`rebuild`, `mergeQueryParameters`,
 `appendPathSegment`), and `Iterable<num>` statistics (`mean`, `median`,
 `percentile`, `standardDeviation`).
@@ -172,6 +178,14 @@ Browse the full API: https://pub.dev/documentation/dart_helper_utils/latest/
 
 ## Migration notes
 
+- 7.0.0 requires Dart 3.13.5 and stringo 3. Run `dart fix --apply` after
+  upgrading: it migrates the renamed members (`isAtSameDayAs` to
+  `isSameDayAs`, `addOrSubtractMonths` to `addMonths`, `tomorrow` to
+  `nextDay`, and others), and the old names keep compiling as deprecated
+  aliases until 8.0.0. Calendar helpers now keep UTC values in UTC and move
+  by calendar days across daylight-saving changes. Read the
+  [v7 migration guide](https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides.md)
+  for the manual steps.
 - 6.1.0 moved string text transformations into
   [`stringo`](https://pub.dev/packages/stringo), which is re-exported here.
   Call sites are unchanged; only explicit extension *type* names differ (see

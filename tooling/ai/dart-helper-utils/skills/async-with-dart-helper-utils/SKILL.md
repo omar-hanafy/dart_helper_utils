@@ -19,7 +19,7 @@ wrong result ordering). Use the exact contracts below.
 | Batch stream events by count / by time | `bufferCount(n)` / `window(duration)` |
 | Hold stream events until ready | `stream.asPausable()` |
 | Late subscribers need the last value | `stream.withLatestValue()` |
-| Bound how many futures run at once | `thunks.waitConcurrency(concurrency: 5)` or `items.mapConcurrent(fn, parallelism: 3)` |
+| Bound how many futures run at once | `thunks.waitConcurrency(concurrency: 5)` or `items.mapConcurrent(fn, parallelism: 3)`; add `preserveOrder: true` for input-order results |
 | Retry a flaky async call | `(() => call()).retry(retries: 3)` |
 | Anti-flicker minimum spinner time | `future.minWait(duration)` |
 | Timeout as null instead of an exception | `future.timeoutOrNull(duration)` |
@@ -45,7 +45,14 @@ debounced.dispose();  // REQUIRED cleanup (idempotent)
   directly: `run(action)`, `flush()`, `tryFlush()`, `runIfNotPending()`,
   `cancel()`, `reset()`, `pause()`, `resume()`, `dispose()`, plus
   `stateStream` (broadcast `Stream<DebouncerState>`), `executionCount`,
-  `remainingTime`, `remainingMaxWait`, `isPaused`.
+  `remainingTime`, `remainingMaxWait` (both FROZEN while paused, `null` when
+  nothing is scheduled), `isPaused`.
+- `executionHistory` (only with `maxHistorySize > 0`) is an unmodifiable
+  `List<DebouncerExecutionRecord>`: `startTime`, `endTime`, `duration`,
+  `success`, `error`, and `toMap()` for logging. Before 7.0 it was a list of
+  maps.
+- `DebouncerState` has value equality (`==`/`hashCode`) and `copyWith`; since
+  7.0 it is a plain immutable class, not an `Equatable`.
 - `Debouncer` validates `delay > 0`, `maxWait > delay`, and throws
   `StateError` if used after `dispose()`. `stateStream` is closed by
   `dispose()` - in Flutter, dispose in `State.dispose()`.
@@ -54,7 +61,7 @@ debounced.dispose();  // REQUIRED cleanup (idempotent)
 
 ```dart
 final throttled = TimeUtils.throttle(
-  onScroll,                       // void Function()
+  onScroll,                       // FutureOr<void> Function(); async is fine
   const Duration(milliseconds: 200),
   leading: true,                  // default
   trailing: false,                // DEFAULT false: burst calls are DROPPED
@@ -68,14 +75,20 @@ throttled.dispose();  // REQUIRED cleanup
   and `dispose` are separate members and dispose is the terminal one.
 - Set `trailing: true` when the LAST call of a burst must run; the default
   leading-only mode silently drops it.
+- Errors (sync or async) go to `onError`; without one they surface in the
+  current zone with their original stack trace.
 
 ## Streams
 
 - `bufferCount(int count)` - emits `List<T>`; flushes the remainder on done;
-  throws `ArgumentError` when count <= 0.
+  throws `ArgumentError` when count <= 0. State is per subscription: each
+  listener of a broadcast stream gets its own batches.
 - `window(Duration)` - time-based batches.
 - `rateLimit(int maxEvents, Duration duration)` - positional args (there is
   no `per:` parameter); events beyond the cap inside a window are DROPPED.
+  The source is listened to only when the result is; pause and cancel
+  propagate to it; each broadcast listener gets its own budget, and the
+  result is broadcast when the source is.
 - `asPausable()` returns `PausableStream<T>`: listen on `.stream`, control
   with `pause()`/`resume()` (events are held with backpressure, not lost);
   cleanup happens when the subscription on `.stream` is cancelled.
@@ -125,13 +138,15 @@ final results = await tasks.waitConcurrency(concurrency: 5);
 - `items.mapConcurrent(action, {parallelism = 1})` maps with a limit; note
   `parallelism:` here vs `concurrency:` on waitConcurrency.
 - ORDERING TRAP: both `waitConcurrency` and `mapConcurrent` return results
-  in COMPLETION order, not input order. If order matters, carry the index:
+  in COMPLETION order by default, not input order. Since 7.0, pass
+  `preserveOrder: true` when order matters (same concurrency limit):
 
 ```dart
-final indexed = await items
-    .mapIndexed((i, e) => () async => (i, await process(e)))
-    .waitConcurrency(concurrency: 4);
-indexed.sortBy<num>((r) => r.$1);
+final pages = await urls.mapConcurrent(
+  fetch,
+  parallelism: 4,
+  preserveOrder: true,
+);
 ```
 
 - `TimeUtils.runWithTimeout(task: ..., timeout: ...)` is a SOFT deadline: on
@@ -145,7 +160,8 @@ indexed.sortBy<num>((r) => r.$1);
 ## Step 0: Inspect the project first
 
 1. Resolved version: `grep -A2 'dart_helper_utils' pubspec.lock` (this skill
-   documents 6.x; TimeUtils.throttle had a DIFFERENT signature in 5.x).
+   documents 7.x; `preserveOrder` and typed `executionHistory` are 7.0
+   additions, and TimeUtils.throttle had a DIFFERENT signature in 5.x).
 2. In Flutter, find where the enclosing State/BLoC disposes resources and
    wire `dispose()` of any Debouncer/DebouncedCallback/ThrottledCallback
    there; creating them per-build is a leak.
@@ -164,8 +180,9 @@ indexed.sortBy<num>((r) => r.$1);
   extension: you retried a listened single-subscription stream - switch to
   the factory form above.
 - Results in unexpected order after waitConcurrency/mapConcurrent: that is
-  the documented completion-order contract; index-tag as shown.
-- Undefined member errors: check the resolved version; 5.x names differ
-  (use the migrate-dart-helper-utils-v5-to-v6 skill).
+  the documented completion-order default; pass `preserveOrder: true`.
+- Undefined member errors: check the resolved version; 6.x lacks the 7.0
+  additions (migrate-dart-helper-utils-v6-to-v7) and 5.x names differ
+  (migrate-dart-helper-utils-v5-to-v6).
 - For non-async utility APIs (strings, maps, dates, formatting), use the
   use-dart-helper-utils skill.

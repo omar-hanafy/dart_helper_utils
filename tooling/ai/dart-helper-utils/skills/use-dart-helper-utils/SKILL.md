@@ -1,6 +1,6 @@
 ---
 name: use-dart-helper-utils
-description: Use when writing or reviewing Dart/Flutter code that uses the dart_helper_utils package - deep map utilities (flatMap, unflatten, getPath, setPath, deepMerge), string casing/slugify/masking/parseDuration/truncate, MIME filename checks, iterable chunks/windowed/partition/distinctBy, number stats and HTTP status helpers, DateTime and Duration extensions, intl formatting wrappers (formatAsReadableNumber, dateFormat, pluralize), Uri rebuild, or deciding between dart_helper_utils and direct collection/intl/convert_object imports.
+description: Use when writing or reviewing Dart/Flutter code that uses the dart_helper_utils package - deep map utilities (flatMap, unflatten, getPath, setPath, deepMerge), string casing/slugify/masking/parseDuration/truncate, MIME filename checks, iterable chunks/windowed/partition/distinctBy/swapped, number stats and HTTP status helpers, DateTime and Duration extensions (isSameDayAs, addMonths, calendar-day arithmetic), intl formatting wrappers (formatAsReadableNumber, dateFormat, pluralize), Uri rebuild, or deciding between dart_helper_utils and direct collection/intl/convert_object/stringo imports.
 ---
 
 # Use dart_helper_utils correctly
@@ -35,8 +35,10 @@ Consequences:
 ## Step 0: Inspect the project first
 
 1. Resolved version: `grep -A2 'dart_helper_utils' pubspec.lock`. This skill
-   documents 6.x. For 5.x-or-older projects, use the
-   migrate-dart-helper-utils-v5-to-v6 skill before writing new code.
+   documents 7.x. For a 6.x project, use the
+   migrate-dart-helper-utils-v6-to-v7 skill before writing new code (it is
+   mostly `dart fix --apply`); for 5.x or older, start with
+   migrate-dart-helper-utils-v5-to-v6.
 2. Match existing style: `grep -rn "dart_helper_utils" lib/ | head` to see how
    the project already uses it; do not mix idioms in one file.
 
@@ -54,6 +56,13 @@ Consequences:
 | HTTP date header | `httpFormat` (v5) | `dateTime.httpDateFormat` (getter, RFC-1123) |
 | Retry delay for status | `suggestedRetryDelay` | `statusCode.statusCodeRetryDelay` (408 5s, 429 1m, 503 5m, 504 10s; zero for non-retryable) |
 | UUID check | `isValidUuid` | `'...'.isUuid` (getter) |
+| Same calendar day | `isAtSameDayAs` (deprecated 7.0) | `date.isSameDayAs(other)` (also `isSameYearAs` ... `isSameMicrosecondAs`, `isSameWeekAs`) |
+| Calendar months/years | `addOrSubtractMonths` (deprecated 7.0) | `date.addMonths(n)`, `addYears(n)`, `subtractMonths(n)`, `subtractYears(n)` (clamp to the month's last day) |
+| Next/previous day | `tomorrow`/`yesterday` (deprecated 7.0) | `date.nextDay` / `date.previousDay` (getters) |
+| "Is in the future" | `isPresent` (deprecated 7.0) | `date.isFuture` (getter on `DateTime?`) |
+| Copy with two elements swapped | `swap` (deprecated 7.0 for non-lists) | `iterable.swapped(i, j)`; `list.swap(i, j)` is collection's IN-PLACE swap |
+| First match or null | `find` (removed 7.0) | `iterable.firstWhereOrNull(test)` (collection) |
+| Blank string check | `isEmptyOrNull` on `String?` (deprecated 7.0) | `text.isBlank` / `text.isNotBlank` (stringo) |
 
 ## Casing, slugify, masking (all on String)
 
@@ -73,12 +82,19 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
 - `maskEmail` (getter) keeps the first two chars of the local part
   (`'johndoe@gmail.com'` becomes `'jo****@gmail.com'`); returns the original
   string unchanged when it is not a valid email.
-- `truncate(10)` appends the `'...'` suffix ON TOP of the length (result is up
-  to `length + suffix.length` chars) and only when the string is longer than
-  `length`.
+- `truncate(length)` counts the suffix AGAINST `length` (stringo 2+):
+  `'Hello World'.truncate(5)` is `'He...'`, never longer than `length`. It
+  only truncates when the string is longer than `length`.
+- On `String?`, `mask(...)` and `insert(...)` return `String?`; append `?? ''`
+  where a `String` is required.
 - MIME checks are filename/extension based getters on `String?`: `isImage`,
   `isVideo`, `isPDF`, `isJSON`, ... They do not read file contents unless you
-  pass `headerBytes` to `mimeType()`.
+  pass `headerBytes` to `mimeType()`. Office checks are precise since 7.0:
+  `isDOCX` is only .docx, `isDOC` only .doc, `isXLSX` only .xlsx; use
+  `isWord` / `isExcel` / `isPowerPoint` for either format.
+- `isValidPhoneNumber` is a permissive "looks like a phone number" check
+  (optional `+`, 3+ digits/spaces/hyphens/parentheses) for both `String` and
+  `String?`. For anything stricter, validate with your own rule.
 
 ## Map and collection semantics worth knowing
 
@@ -92,10 +108,19 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
   on nullable iterables.
 - Stats (`mean`, `median`, `percentile`, `standardDeviation`) exist on
   `Iterable<num>` directly; `percentile(90)` takes the 0-100 range (v6 change
-  from 0-1).
+  from 0-1). On `Iterable<int>`, `mean`/`median`/`variance`/
+  `standardDeviation` return exact `double`s (`[1, 2].mean` is `1.5`; 6.x
+  truncated); `mode` and `percentile` return elements, so they stay `int`.
 
 ## Dates and durations
 
+- Every date-building helper keeps the receiver's time zone: a UTC input
+  gives a UTC result (`startOfDay`, `startOfMonth`, `lastDayOfMonth`,
+  `nextMonth`, `addMonths`, ...).
+- Day arithmetic (`addDays`, `nextDay`, `nextWeek`, `firstDayOfWeek`,
+  `addBusinessDays`, `daysUpTo`) moves by CALENDAR days and keeps the
+  wall-clock time across DST; `add(Duration(days: 1))` is the exact-24-hour
+  alternative. `addHours` and smaller add exact durations.
 - `date.isBetween(start, end)` is start-INclusive, end-EXclusive by default.
 - `daysInMonth` returns a full CALENDAR GRID (padded to whole Mon-Sun weeks),
   not just the month's days - use `lastDayOfMonth.day` for the day count.
@@ -124,8 +149,11 @@ errors on undefined members mean a wrong name or a pre-6 DHU version).
 ## Failure handling
 
 - Undefined-member analyzer errors on names from this skill: check the
-  resolved package version first (`pubspec.lock`); 5.x has different names
-  (see the migrate-dart-helper-utils-v5-to-v6 skill).
+  resolved package version first (`pubspec.lock`); 6.x lacks the 7.0
+  additions (`isSameMinuteAs`, `addMonths`, `swapped`, `isFuture`, ...) and
+  5.x has different names (see the migrate skills).
+- `deprecated_member_use` warnings on dart_helper_utils members: the code
+  uses a 7.0 alias; run `dart fix --apply`.
 - Ambiguous-extension errors: the file probably imports `collection`,
   `convert_object`, or an old DHU alongside the DHU import - keep exactly one
   provider per file.
