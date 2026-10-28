@@ -3,13 +3,13 @@ import 'package:test/test.dart';
 
 void main() {
   group('String Extensions', () {
-    test('truncate shortens string', () {
-      expect('Hello World'.truncate(5), 'Hello...');
+    test('truncate counts the suffix against the length (stringo 2+)', () {
+      expect('Hello World'.truncate(5), 'He...');
       expect('Hello'.truncate(10), 'Hello');
     });
 
     test('truncate custom suffix', () {
-      expect('Hello World'.truncate(5, suffix: '!'), 'Hello!');
+      expect('Hello World'.truncate(5, suffix: '!'), 'Hell!');
     });
 
     test('maskEmail hides characters', () {

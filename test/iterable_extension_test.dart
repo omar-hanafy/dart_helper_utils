@@ -28,7 +28,7 @@ void main() {
 
     test('associate creates map', () {
       final list = ['a', 'bb', 'ccc'];
-      final map = list.associate((s) => s.length);
+      final map = list.associate<int, String>((s) => s.length);
       expect(map, {1: 'a', 2: 'bb', 3: 'ccc'});
     });
 

@@ -1,0 +1,8 @@
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+String implicitCall(String text) => text.enforceRtl();
+
+String onExpression(String text) => text.trim().enforceRtl();
+
+String explicitCall(String text) =>
+    DHUBidiStringExtensions(text).enforceRtl();

@@ -15,11 +15,11 @@ void main() {
     test('re-exports stringo string extensions', () {
       // These members moved to the `stringo` package in 6.1.0. They must stay
       // reachable from the `dart_helper_utils` import alone, with no extra
-      // dependency or import, or the extraction is a breaking change.
+      // dependency or import. Expectations follow stringo 3.x semantics.
       expect('hello_world'.toCamelCase, 'helloWorld');
       expect('helloWorld'.toSnakeCase, 'hello_world');
       expect('Hello, World!'.slugify(), 'hello-world');
-      expect('Hello World'.truncate(5), 'Hello...');
+      expect('Hello World'.truncate(5), 'He...');
       expect('   '.isBlank, isTrue);
       expect('12345'.isNumeric, isTrue);
       expect(RegExp(regexNumeric).hasMatch('42'), isTrue);

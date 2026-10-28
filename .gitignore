@@ -133,3 +133,5 @@ app.*.map.json
 !.idea/runConfigurations/
 /pubspec.lock
 lib/core/config/api_keys.dart
+# Claude Code plugin eval output
+tooling/ai/dart-helper-utils/evals/results/

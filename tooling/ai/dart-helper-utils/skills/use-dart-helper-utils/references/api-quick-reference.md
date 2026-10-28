@@ -1,8 +1,9 @@
-# dart_helper_utils API quick reference (v6.x)
+# dart_helper_utils API quick reference (v7.x)
 
-Exact member names by domain, verified against the 6.x source. Getters are
+Exact member names by domain, verified against the 7.x source. Getters are
 marked (g); everything else is a method. Extensions on nullable receivers are
-marked `T?`.
+marked `T?`. Members deprecated in 7.0.0 (removed in 8.0.0) are listed only
+in the last section; `dart fix --apply` rewrites them.
 
 ## Exports
 
@@ -40,25 +41,33 @@ explicitly (`show ...`, or `Ext('x').member`).
   tokens `2d 3h 4m 5s` (units d/h/m/s, case-insensitive, leading `-`
   negates); anything else throws `FormatException`. Any `:` in the string
   selects the clock parser.
-- On `String?`: `isEmptyOrNull`(g)/`isBlank`(g), `isNotEmptyOrNull`(g),
-  `toCharArray()`, `insert(index, str)`, `isPalindrome`(g),
+- On `String?`: `isBlank`(g), `isNotBlank`(g), `toCharArray()` (by code
+  point), `insert(index, str)`, `isPalindrome`(g),
   `isAlphanumeric`(g), `hasSpecialChars`(g), `startsWithNumber`(g),
   `containsDigits`(g), `isValidUsername`(g), `isValidCurrency`(g),
-  `isValidPhoneNumber`(g), `isValidEmail`(g), `isValidIp4`(g),
+  `isValidPhoneNumber`(g) (permissive; same answer as on `String`),
+  `isValidEmail`(g), `isValidIp4`(g),
   `isValidUrl`(g), `isNumeric`(g) (ASCII digits only), `isAlphabet`(g),
   `hasCapitalLetter`(g), `isBool`(g),
   `hasMatch(pattern, {multiLine, caseSensitive, unicode, dotAll})`,
   `equalsIgnoreCase(other)`, `removeSurrounding(delimiter)`,
   `replaceAfter`/`replaceBefore`, `orEmpty`(g), `ifEmpty(action)`,
-  `lastIndex`(g), `limitFromEnd(n)`/`limitFromStart(n)`,
-  `truncate(int length, {String suffix = '...'})`,
+  `lastIndex`(g) (the last character, not an index),
+  `limitFromEnd(n)`/`limitFromStart(n)`,
+  `truncate(int length, {String suffix = '...'})` (suffix counts against
+  `length`: `'Hello World'.truncate(5)` is `'He...'`),
   `wrapString({wordCount, wrapEach, delimiter})`.
-- `isUuid`(g), `maskEmail`(g),
-  `mask({visibleStart = 0, visibleEnd = 0, char = '*'})`.
+- `isUuid`(g), `maskEmail`(g) (keeps two chars of the local part, one when
+  it has two or fewer), `mask({visibleStart = 0, visibleEnd = 0,
+  char = '*'})`.
+- `insert`, `mask`, `truncate`, `removeSurrounding`, `replaceAfter`, and
+  `replaceBefore` exist only on `String?` and return `String?` for every
+  receiver, including a non-null `String`; append `?? ''` or use the
+  `Stringo.truncate(text, n)`/`Stringo.mask(...)` statics for a `String`.
 
 ## Casing (`String`, ALL getters except noted)
 
-`toWords`, `toPascalCase`, `toTitleCase`, `toCamelCase`, `toSnakeCase`,
+`toWords` (`List<String>`), `toPascalCase`, `toTitleCase`, `toCamelCase`, `toSnakeCase`,
 `toKebabCase`, `toScreamingSnakeCase`, `toScreamingKebabCase`,
 `toPascalSnakeCase`, `toPascalKebabCase`, `toTrainCase` (same output as
 `toPascalKebabCase`), `toCamelSnakeCase`, `toCamelKebabCase`, `toDotCase`,
@@ -83,9 +92,10 @@ now returns `'The Lord of the Rings'`.
   `isFLV`.
 - Image: `isImage`, `isPNG`, `isJPEG`/`isJPG`, `isSVG`, `isGIF`, `isWebP`,
   `isBMP`, `isTIFF`/`isTIF`, `isHEIC`, `isHEIF`, `isIcon`, `isICO`, `isICNS`.
-- Documents: `isPDF`, `isDOCX`, `isDOC` (alias of `isDOCX`), `isExcel`,
-  `isXLSX`, `isXLS`, `isPowerPoint`, `isPPTX`, `isPPT`, `isTXT`,
-  `isMarkdown`, `isRTF`.
+- Documents: `isPDF`, `isWord` (.doc or .docx), `isDOCX` (.docx only),
+  `isDOC` (.doc only), `isExcel` (.xls or .xlsx), `isXLSX` (.xlsx only),
+  `isXLS`, `isPowerPoint`, `isPPTX`, `isPPT`, `isTXT`, `isMarkdown`,
+  `isRTF`.
 - Audio: `isAudio`, `isMP3`, `isWAV`, `isAAC`, `isFLAC`, `isOGG`, `isAIFF`.
 - Archive: `isArchive`, `isZIP`, `isRAR`, `is7Z`, `isTAR`, `isGZIP`/`isGZ`,
   `isDeb`, `isISO`.
@@ -109,8 +119,12 @@ now returns `'The Lord of the Rings'`.
     returns a new map.
   - `getPath(path, {delimiter = '.', parseIndices = true})` - supports
     `items[0].id`; null on miss.
-  - `setPath(path, value, {delimiter = '.', parseIndices = true})` - creates
-    intermediate maps/lists, pads lists with nulls, returns bool success.
+  - `setPath(path, value, {delimiter = '.', parseIndices = true})` - mutates
+    in place, creates intermediate maps/lists, pads lists with nulls, and
+    returns false for an unusable path. It throws `TypeError` when an
+    existing nested map's value type cannot hold the value
+    (`{'db': {'host': 'x'}}` is a `Map<String, String>` inside); use
+    `Map<String, dynamic>` or `Object?` maps, as `jsonDecode` returns.
 - Typed getters (`getInt`, `tryGetString`, `getList<T>`, ...) come from
   convert_object; `tryGetRaw(key, alternativeKeys: [...])` returns the first
   NON-null raw value.
@@ -122,20 +136,24 @@ now returns `'The Lord of the Rings'`.
   `pairwise()` -> `List<(E, E)>`, `intersperse(element)`,
   `associate<K2, V>(keySelector, [valueSelector])`,
   `distinctBy<R>(keySelector, {equals, hashCode, isValidKey})` (equals and
-  hashCode go together), `subtract(other)`, `find(predicate)`,
+  hashCode go together), `subtract(other)`,
   `takeOnly(n)`, `drop(n)`, `firstHalf()`, `secondHalf()`, `halfLength`(g),
-  `swap(i, j)`, `getRandom([seed])` (throws on empty), `containsAll(other)`,
-  `filter`/`filterNot` (skip nulls), `orEmpty()`,
+  `swapped(i, j)` (returns a copy; on a `List`, collection's `swap(i, j)`
+  swaps IN PLACE), `getRandom([seed])` (throws on empty),
+  `containsAll(other)`, `filter`/`filterNot` (skip nulls),
   `concatWithSingleList`/`concatWithMultipleList` (return the non-empty side
   when one side is empty), `toListConverted<R>()`/`toSetConverted<R>()`,
-  `mapConcurrent<R>(action, {parallelism = 1})` (async; COMPLETION order).
+  `mapConcurrent<R>(action, {parallelism = 1, preserveOrder = false})`
+  (async; COMPLETION order unless `preserveOrder: true`).
 - `Iterable<E>?`: `of(index)` (bounds-safe), `isEmptyOrNull`(g),
-  `firstOrDefault(default)`/`lastOrDefault(default)`, `tryGetRandom([seed])`,
-  `isEqual(other)` (deep), `totalBy(selector)`.
+  `isNotEmptyOrNull`(g), `orEmpty()` (empty for null),
+  `firstOrDefault(default)`/`lastOrDefault(default)` (both non-nullable),
+  `tryGetRandom([seed])`, `isEqual(other)` (deep), `totalBy(selector)`.
 - `List<E>?`: `tryRemoveAt(i)`, `indexOfOrNull(e)`,
   `indexWhereOrNull(test, [start])`, `tryRemoveWhere(predicate)`.
 - SDK/`collection` provides `firstOrNull`, `firstWhereOrNull`, `groupBy`,
-  `mapIndexed`, `sorted`, ... via the re-export; DHU does not duplicate them.
+  `mapIndexed`, `sorted`, `slices`, `swap` (List, in place), ... via the
+  re-export; DHU does not duplicate them.
 
 ## Numbers
 
@@ -145,11 +163,13 @@ now returns `'The Lord of the Rings'`.
   (401/403), `isValidationError` (422), `isRateLimitError` (429),
   `isTimeoutError` (408/504), `isConflictError` (409), `isNotFoundError`,
   `isRetryableError` (408/429/503/504), `statusCodeRetryDelay` (408 5s,
-  429 1m, 503 5m, 504 10s, else zero unless retryable),
+  429 1m, 503 5m, 504 10s, zero for every other code),
   `toHttpStatusMessage`, `toHttpStatusUserMessage`, `toHttpStatusDevMessage`.
 - `num?`: `tryToInt()`, `tryToDouble()`,
   `percentage(total, {allowDecimals = true})`, `isZeroOrNull`(g),
-  `asBool`(g) (> 0), `toDecimalString(places, {keepTrailingZeros})`.
+  `isPositive`(g), `isNegative`(g) (null-safe `num.isNegative`),
+  `toDecimalString(places, {keepTrailingZeros})`. `asBool`(g) (> 0) comes
+  from convert_object.
 - `num`: `numberOfDigits`(g), `removeTrailingZero`(g), `half`(g)/`third`(g)/
   `fourth`(g)/`tenth`(g), `getRandom`(g), `random([seed])`,
   `asGreeks([zerosFractionDigits, fractionDigits])`,
@@ -164,13 +184,16 @@ now returns `'The Lord of the Rings'`.
   `scaleBetween(min, max)`, `toFractionString()`, `isInteger`(g),
   `toOrdinal({asWord = false, includeAnd = false})` (21st / twenty-first;
   negatives throw).
-- `int`: `inRangeOf(min, max)`, `factorial()`, `gcd(other)`, `lcm(other)`,
+- `int`: `inRangeOf(min, max)`, `factorial()`, `gcd(other)` (SDK), `lcm(other)`,
   `isPrime()`, `primeFactors()`, `isPerfectSquare()`, `isPerfectCube()`,
   `isFibonacci()`, `isPowerOf(base)`, `toBinaryString()`, `toHexString()`,
   `bitCount()`, `isDivisibleBy(d)`, `squared`(g)/`doubled`(g)/`tripled`(g).
 - Stats on `Iterable<num>` (and int/double variants): `mean`(g),
   `median`(g), `mode`(g), `variance`(g), `standardDeviation`(g),
-  `percentile(double p)` with p in 0-100. `Iterable<num?>?.total`(g) treats
+  `percentile(double p)` with p in 0-100. Mean, variance, and standard
+  deviation are `double` everywhere; on `Iterable<int>` the median is a
+  `double` too, `percentile` returns an `int` element, and `mode` returns a
+  `List<int>` of every most-frequent value. `Iterable<num?>?.total`(g) treats
   null as 0. Static twins on `NumbersHelper` (`safeDivide`, `mean`,
   `median`, `percentile(values, p)`, `gcd`, `isPerfectSquare`).
 - Top-level: `randomInRange(min, max, [seed])` (inclusive; throws when
@@ -178,30 +201,42 @@ now returns `'The Lord of the Rings'`.
 
 ## Dates (`DateTime` / `DateTime?`)
 
-- Formatting: `httpDateFormat`(g) (RFC-1123), `toUtcIso`(g), `toIso`(g),
-  `format(pattern, [locale])`, `dateFormatUtc(pattern, [locale])`, ~30
-  `formatAsX([locale])` shortcuts (`formatAsyMMMMd`, `formatAsEEEE`,
-  `formatAsMMMEd`, `formatAsHms`, ...; note the odd casings `formatASyQQQ`
-  and `formatAsyQQQQ`). On `DateTime?`: `tryFormat(format)`.
-- Navigation: `startOfDay`(g)/`startOfMonth`(g)/`startOfYear`(g),
-  `tomorrow`(g)/`yesterday`(g)/`dateOnly`(g), `previousDay`(g)/`nextDay`(g),
+- Formatting: `httpDateFormat`(g) (RFC-1123, every field from UTC),
+  `toUtcIso`(g), `toIso`(g), `format(pattern, [locale])`,
+  `dateFormatUtc(pattern, [locale])`, ~30 `formatAsX([locale])` shortcuts
+  (`formatAsyMMMMd`, `formatAsEEEE`, `formatAsMMMEd`, `formatAsHms`,
+  `formatAsyQQQ`, ...). On `DateTime?`: `tryFormat(pattern, [locale])`.
+- Navigation (each keeps the receiver's time zone; day steps are calendar
+  days that keep the wall-clock time across DST; the `startOf*`, month,
+  `firstDayOf*`, and `lastDayOf*` getters return midnight, so use
+  `addMonths(1)` for the same day and time next month):
+  `startOfDay`(g)/`startOfMonth`(g)/`startOfYear`(g), `dateOnly`(g),
+  `previousDay`(g)/`nextDay`(g),
   `previousWeek`(g)/`nextWeek`(g), `firstDayOfMonth`(g)/`lastDayOfMonth`(g),
   `previousMonth`(g)/`nextMonth`(g),
   `firstDayOfWeek({startOfWeek = DateTime.monday})`,
   `lastDayOfWeek({startOfWeek = DateTime.monday})`,
   `daysInMonth`(g) - CALENDAR GRID padded to whole Mon-Sun weeks.
-- Arithmetic: `+`/`-` with Duration, `addDays(n)`...`addMicroseconds(n)`,
-  `subtractDays(n)`..., `addOrSubtractYears(n)`...,
-  `addBusinessDays(n)` (skips weekends, negatives ok), `min(other)`/
-  `max(other)`, `roundTo(Duration)`/`floorTo`/`ceilTo`, `clampBetween(a, b)`.
+- Arithmetic: `+`/`-` with Duration, `addYears(n)`/`addMonths(n)`/
+  `subtractYears(n)`/`subtractMonths(n)` (clamp to the month's last day),
+  `addDays(n)`/`subtractDays(n)` (calendar days),
+  `addHours(n)`...`addMicroseconds(n)` and `subtractHours(n)`... (exact
+  durations), `addBusinessDays(n)` (skips weekends, negatives ok),
+  `min(other)`/`max(other)`, `roundTo(Duration)`/`floorTo`/`ceilTo` (on the
+  receiver's wall clock; `floorTo(const Duration(days: 1))` equals
+  `startOfDay`; multi-day steps count calendar dates from 1970-01-01, a
+  Thursday, so use `firstDayOfWeek` for weeks),
+  `clampBetween(a, b)`.
 - Queries: `isToday`(g), `isTomorrow`(g), `isYesterday`(g), `isPast`(g),
-  `isPresent`(g), `isInPastWeek`(g), `isInThisMonth`(g), `isLeapYear`(g),
-  `isWeekend`(g)/`isWeekday`(g), `isSameDayAs(other)`/`isSameWeekAs`/
-  `isSameHourAs`, `isAtSameYearAs(other)`...`isAtSameMicrosecondAs`,
+  `isFuture`(g), `isInPastWeek`(g), `isInThisMonth`(g), `isLeapYear`(g),
+  `isWeekend`(g)/`isWeekday`(g), `isSameYearAs(other)`, `isSameMonthAs`,
+  `isSameWeekAs`, `isSameDayAs`, `isSameHourAs`, `isSameMinuteAs`,
+  `isSameSecondAs`, `isSameMillisecondAs`, `isSameMicrosecondAs`,
   `isBetween(start, end, {inclusiveStart = true, inclusiveEnd = false,
-  ignoreTime = false, normalize = false})`, `passedDuration`(g)/
-  `remainingDuration`(g), `passedDays`(g)/`remainingDays`(g),
-  `daysDifferenceTo([other])`, `daysUpTo(end)` (DST-aware iterable),
+  ignoreTime = false, normalize = false})` (throws `ArgumentError` when
+  start is after end), `passedDuration`(g)/
+  `remainingDuration`(g), `passedDays`(g)/`remainingDays`(g) (calendar
+  days), `daysDifferenceTo([other])`, `daysUpTo(end)` (DST-aware iterable),
   `calculateAge()` -> `({int years, int months, int days})` record.
 - On `num`: `toFullMonthName`(g), `toSmallMonthName`(g),
   `toFullDayName`(g)/`toSmallDayName`(g) (ISO 1 = Monday),
@@ -242,16 +277,20 @@ Iterable query values expand to repeated keys (`?ids=1&ids=2`).
   `formatAsScientific`, `formatWithCustomPattern(pattern, {locale})`,
   `formatAsReadableNumber({locale, decimalDigits = 2, groupingSeparator,
   decimalSeparator, trimTrailingZeros = false})`.
-- String: `symbolCurrencyFormat`(g), `simpleCurrencyFormat`(g),
-  `compactCurrencyFormat`(g), `numberFormat({locale})` on `String?`,
-  `dateFormat([locale])` on `String?` -> `DateFormat`.
+- String (the receiver is the currency symbol or name; all methods returning
+  `NumberFormat`): `symbolCurrencyFormat({locale, name, decimalDigits,
+  customPattern})`, `simpleCurrencyFormat({locale, decimalDigits})`,
+  `compactCurrencyFormat({locale, decimalDigits})`. On `String?`:
+  `numberFormat({locale})`, and `dateFormat([locale])` -> `DateFormat` with
+  the receiver as its pattern.
 - Plural/gender: `count.pluralize({required other, zero, one, two, few,
   many, locale, ...})`, `count.getPluralCategory(...)`,
-  `'f'.genderSelect({required other, female, male, ...})`,
+  `gender.genderSelect({required other, female, male, ...})` (the receiver
+  is the gender: `'female'`, `'male'`, or `'other'`),
   `'locale'.setAsDefaultLocale()`, `translate({...})`.
 - Bidi on String: `stripHtmlIfNeeded()`, `startsWithLtr`/`startsWithRtl`,
   `hasAnyLtr`/`hasAnyRtl`, `isRtlLanguage([lang])`, `enforceRtlInHtml()`,
-  `enforceRtlIn()`, `enforceLtrInHtml()`, `enforceLtr()`,
+  `enforceRtl()`, `enforceLtrInHtml()`, `enforceLtr()`,
   `guessDirection({isHtml = false})`, `wrapWithSpan({...})`,
   `wrapWithUnicode({...})`; constants `textDirectionLTR`,
   `textDirectionRTL`, `textDirectionUNKNOWN`.
@@ -261,11 +300,30 @@ Iterable query values expand to repeated keys (`?ids=1&ids=2`).
 `fullWeekdays`/`smallWeekdays`, `fullMonthsNames`/`smallMonthsNames`
 (1-indexed maps), `cssColorNamesToArgb`, `greekNumberSuffixes`,
 `oneSecond`/`oneMinute`/`oneHour`/`oneDay`, `httpStatusMessages`/
-`httpStatusUserMessage`/`httpStatusDevMessage`, regex constants
-(`regexValidEmail`, `regexValidIp4`, `regexValidHexColor`, ...).
+`httpStatusUserMessage`/`httpStatusDevMessage`, regex source constants
+(`regexValidEmail`, `regexValidIp4`, `regexValidUuid`, `regexValidHexColor`,
+...). The validator regexes have precompiled `RegExp` twins
+(`patternValidEmail`, `patternValidIp4`, `patternValidUuid`,
+`patternValidUrl`, `patternValidPhoneNumber`, ...; prefer these over
+`RegExp(regexX)`, which recompiles on every call); the color regexes have
+none.
 
 ## Exceptions
 
 `RException` (`message`; `RException.steps()` thrown by `num.until` on a
 zero step). Conversion failures throw convert_object's
 `ConversionException` (read `e.fullReport()`).
+
+## Deprecated in 7.0.0 (removed in 8.0.0)
+
+Each still compiles and forwards to its replacement; `dart fix --apply`
+rewrites callers: `isAtSameYearAs` ... `isAtSameMicrosecondAs` to
+`isSameYearAs` ... `isSameMicrosecondAs`; `addOrSubtractYears`/`Months`/
+`Days`/`Minutes`/`Seconds`/`Milliseconds`/`Microseconds` to
+`addYears`/`addMonths`/`addDays`/...; `tomorrow`/`yesterday` to
+`nextDay`/`previousDay`; `isPresent` to `isFuture`; `formatASyQQQ` to
+`formatAsyQQQ`; `enforceRtlIn` to `enforceRtl`; `swap` (non-List) to
+`swapped`; `String?` `isEmptyOrNull`/`isNotEmptyOrNull` to
+`isBlank`/`isNotBlank`. Removed outright (dart fix still migrates):
+`Iterable.find` to `firstWhereOrNull`, `DHUNullableSetExtensions` to
+`DHUCollectionsExtensionsNS`.

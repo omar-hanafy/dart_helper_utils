@@ -80,13 +80,12 @@ extension DHUStringExtensions on String {
     }
 
     Duration parseTokens(String value) {
-      final regex = RegExp(r'(\d+)\s*([dhms])', caseSensitive: false);
-      final matches = regex.allMatches(value);
+      final matches = _durationToken.allMatches(value);
       if (matches.isEmpty) {
         throw invalid();
       }
 
-      final leftover = value.replaceAll(regex, '').trim();
+      final leftover = value.replaceAll(_durationToken, '').trim();
       if (leftover.isNotEmpty) {
         throw invalid();
       }
@@ -102,16 +101,12 @@ extension DHUStringExtensions on String {
         switch (unit) {
           case 'd':
             days += amount;
-            break;
           case 'h':
             hours += amount;
-            break;
           case 'm':
             minutes += amount;
-            break;
           case 's':
             seconds += amount;
-            break;
         }
       }
 
@@ -125,7 +120,7 @@ extension DHUStringExtensions on String {
 
     final duration = input.contains(':')
         ? parseClock(input)
-        : parseTokens(input.replaceAll(RegExp(r'\s+'), ' '));
+        : parseTokens(input.replaceAll(_whitespaceRun, ' '));
 
     return isNegative
         ? Duration(microseconds: -duration.inMicroseconds)
@@ -140,12 +135,9 @@ extension DHUStringExtensions on String {
 extension DHUNullSafeStringExtensions on String? {
   /// Checks if the string is a palindrome.
   bool get isPalindrome {
-    if (isEmptyOrNull) return false;
+    if (isBlank) return false;
 
-    final cleanString = this!
-        .toLowerCase()
-        .replaceAll(RegExp(r'\s+'), '')
-        .replaceAll(RegExp('[^0-9a-zA-Z]+'), '');
+    final cleanString = this!.toLowerCase().replaceAll(_nonAlphanumeric, '');
 
     // Iterate only up to half the length of the string
     for (var i = 0; i < cleanString.length ~/ 2; i++) {
@@ -157,35 +149,44 @@ extension DHUNullSafeStringExtensions on String? {
   }
 
   /// Checks if the string contains any characters that are not letters, numbers, or spaces (i.e., special characters).
-  bool get hasSpecialChars => hasMatch(regexSpecialChars);
+  bool get hasSpecialChars => _matches(patternSpecialChars);
 
   /// Checks if the string does NOT contain any characters that are not letters, numbers, or spaces (i.e., special characters).
   bool get hasNoSpecialChars => !hasSpecialChars;
 
   /// Checks if the string is a valid username.
-  bool get isValidUsername => hasMatch(regexValidUsername);
+  bool get isValidUsername => _matches(patternValidUsername);
 
   /// Checks if the string is a valid currency format.
-  bool get isValidCurrency => hasMatch(regexValidCurrency);
+  bool get isValidCurrency => _matches(patternValidCurrency);
 
-  /// Checks if the string is a valid phone number.
+  /// Whether the string resembles a telephone number: an optional leading
+  /// `+`, then at least three digits, spaces, hyphens, or parentheses.
+  ///
+  /// This is the null-safe form of convert_object's `String`
+  /// `isValidPhoneNumber`, which a non-null receiver resolves to, so both
+  /// receivers always agree. Before 7.0.0 a `String?` receiver applied the
+  /// stricter, North-American [regexValidPhoneNumber] instead; match that
+  /// pattern yourself if you need it.
   bool get isValidPhoneNumber {
-    if (isEmptyOrNull || this!.length > 16 || this!.length < 9) return false;
-    return hasMatch(regexValidPhoneNumber);
+    final value = this;
+    return value != null && UriParsingX(value).isValidPhoneNumber;
   }
 
   /// Checks if the string is a valid email address.
-  bool get isValidEmail => hasMatch(regexValidEmail);
+  bool get isValidEmail => _matches(patternValidEmail);
 
   /// Checks if the string is an HTML file or URL.
   bool get isValidHTML => (this ?? ' ').toLowerCase().endsWith('.html');
 
   /// Checks if the string is a valid IPv4 address.
-  bool get isValidIp4 => hasMatch(regexValidIp4);
+  bool get isValidIp4 => _matches(patternValidIp4);
 
   /// Checks if the string is a valid URL.
-  bool get isValidUrl =>
-      tryToLowerCase().clean?.hasMatch(regexValidUrl) ?? false;
+  bool get isValidUrl {
+    final candidate = tryToLowerCase().clean;
+    return candidate != null && patternValidUrl.hasMatch(candidate);
+  }
 
   /// Checks if the string is a boolean literal (`true`/`false`, case-insensitive).
   bool get isBool {
@@ -202,10 +203,10 @@ extension DHUNullSafeStringExtensions on String? {
     bool wrapEach = false,
     String delimiter = '\n',
   }) {
-    if (isEmptyOrNull) return '';
+    if (isBlank) return '';
     final wrapCount = wordCount <= 0 ? 1 : wordCount;
     // Handling strings with multiple consecutive spaces by reducing them to single spaces.
-    final words = this!.trim().replaceAll(RegExp(' +'), ' ').split(' ');
+    final words = this!.trim().replaceAll(_spaceRun, ' ').split(' ');
     if (words.isEmpty) return '';
     final buffer = StringBuffer();
 
@@ -235,20 +236,17 @@ extension DHUNullSafeStringExtensions on String? {
   /// Returns true if at least one character matches the given [predicate].
   /// The [predicate] should have only one character.
   bool anyChar(bool Function(String element) predicate) =>
-      isNotEmptyOrNull && this!.split('').any((s) => predicate(s));
+      isNotBlank && this!.split('').any((s) => predicate(s));
 
   /// If the string is empty, performs an action.
   Future<T>? ifEmpty<T>(Future<T> Function() action) =>
-      isEmptyOrNull ? action() : null;
+      isBlank ? action() : null;
 
   /// Returns the last character of the string.
   String get lastIndex {
-    if (isEmptyOrNull) return '';
+    if (isBlank) return '';
     return this![this!.length - 1];
   }
-
-  // Numeric conversions moved to convert_object. Use:
-  //   toNum(this), toDouble(this), toInt(this), tryToNum(this), tryToDouble(this), tryToInt(this)
 
   /// Shrinks the string to be no more than [maxSize] in length, extending from the end.
   /// Example: In a string with 10 characters, a [maxSize] of 3 would return the last 3 characters.
@@ -262,12 +260,7 @@ extension DHUNullSafeStringExtensions on String? {
       (this?.length ?? 0) < maxSize ? this : this!.substring(0, maxSize);
 
   /// Checks if the string is a valid UUID.
-  bool get isUuid {
-    if (isEmptyOrNull) return false;
-    return RegExp(
-      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-    ).hasMatch(this!);
-  }
+  bool get isUuid => _matches(patternValidUuid);
 
   /// Masks the email address for privacy.
   /// Example: "johndoe@gmail.com" -> "jo****@gmail.com"
@@ -277,4 +270,29 @@ extension DHUNullSafeStringExtensions on String? {
     if (index <= 2) return '${this![0]}****${this!.substring(index)}';
     return '${this!.substring(0, 2)}****${this!.substring(index)}';
   }
+
+  /// Deprecated alias of `isBlank` (from the re-exported stringo package).
+  ///
+  /// stringo 2.0.0 removed this synonym; dart_helper_utils keeps it on
+  /// `String?` through 7.x so `dart fix --apply` can migrate every caller,
+  /// including nullable receivers.
+  @Deprecated('Use isBlank. This alias will be removed in 8.0.0.')
+  bool get isEmptyOrNull => isBlank;
+
+  /// Deprecated alias of `isNotBlank` (from the re-exported stringo package).
+  ///
+  /// See [isEmptyOrNull] for why this alias still exists.
+  @Deprecated('Use isNotBlank. This alias will be removed in 8.0.0.')
+  bool get isNotEmptyOrNull => isNotBlank;
+
+  /// Whether this string is non-null and [pattern] matches it.
+  bool _matches(RegExp pattern) {
+    final value = this;
+    return value != null && pattern.hasMatch(value);
+  }
 }
+
+final RegExp _durationToken = RegExp(r'(\d+)\s*([dhms])', caseSensitive: false);
+final RegExp _whitespaceRun = RegExp(r'\s+');
+final RegExp _spaceRun = RegExp(' +');
+final RegExp _nonAlphanumeric = RegExp('[^0-9a-zA-Z]+');

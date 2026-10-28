@@ -63,7 +63,7 @@ void main() {
     test('handles self-referential maps safely', () {
       final map = <String, Object?>{};
       map['self'] = map;
-      expect(() => map.flatMap(), returnsNormally);
+      expect(map.flatMap, returnsNormally);
     });
   });
 }

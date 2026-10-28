@@ -1,5 +1,179 @@
 # CHANGELOG
 
+## 7.0.0
+
+A correctness release. It moves to Dart 3.13.5 and stringo 3, fixes a set of
+calendar, number, and stream bugs that only showed up in some time zones or
+edge cases, and gives every helper one name and one meaning. Most renames
+migrate automatically with `dart fix`, and all but two of the old names keep
+compiling (as deprecated aliases) until 8.0.0.
+
+### Upgrading
+
+1. Require `dart_helper_utils: ^7.0.0` (Dart 3.13.5 or later; Flutter 3.47.7
+   or later) and run `dart pub get` or `flutter pub get`.
+2. Run `dart fix --dry-run`, then `dart fix --apply`.
+3. Review the manual steps below, then run `dart analyze` and your tests.
+
+The automatic migration was verified on Dart 3.13.5 against code written for
+6.1.0. The [migration guide](https://github.com/omar-hanafy/dart_helper_utils/blob/main/migration_guides.md)
+lists every rename and manual step.
+
+### Breaking changes migrated by `dart fix`
+
+The old names are deprecated aliases until 8.0.0, so code keeps compiling
+while you migrate:
+
+- `isAtSameYearAs` through `isAtSameMicrosecondAs` are `isSameYearAs` through
+  `isSameMicrosecondAs`. The `isSame*As` family was incomplete before;
+  `isSameMinuteAs`, `isSameSecondAs`, `isSameMillisecondAs`, and
+  `isSameMicrosecondAs` are new.
+- `addOrSubtractYears` and `addOrSubtractMonths` are `addYears` and
+  `addMonths`; `addOrSubtractDays`, `addOrSubtractMinutes`,
+  `addOrSubtractSeconds`, `addOrSubtractMilliseconds`, and
+  `addOrSubtractMicroseconds` are the existing `addDays`, `addMinutes`,
+  `addSeconds`, `addMilliseconds`, and `addMicroseconds`.
+  `subtractYears` and `subtractMonths` are new.
+- `DateTime.tomorrow` and `yesterday` are `nextDay` and `previousDay`.
+- `DateTime?.isPresent` is `isFuture`. It always meant "later than now".
+- `formatASyQQQ` is `formatAsyQQQ`, and `enforceRtlIn` is `enforceRtl`, to
+  pair with `enforceLtr`.
+- `Iterable.swap` is `swapped`, because it returns a copy. On a `List`,
+  `swap` already meant collection's in-place swap, and still does.
+- `isEmptyOrNull` and `isNotEmptyOrNull` on `String?` are `isBlank` and
+  `isNotBlank`. stringo 2.0.0 removed these synonyms; this package keeps
+  them as deprecated aliases so nullable receivers migrate too. The
+  collection versions on `Iterable?` and `Map?` are unchanged.
+
+These are removed outright, and `dart fix` still migrates them:
+
+- `Iterable.find` becomes collection's identical `firstWhereOrNull`. Rewrite
+  an explicit `DHUCollectionsExtensions(x).find(...)` call by hand.
+- `DHUNullableSetExtensions` becomes `DHUCollectionsExtensionsNS`, which
+  already declared the same members for any `Iterable?`.
+
+### Breaking changes that need a manual check
+
+- **Requirements:** Dart 3.13.5 or later. The `equatable` dependency is gone,
+  and the re-exported `stringo` moves from 1.x to 3.x. Its 2.0.0 behavior
+  changes reach you through this package: `truncate` counts its suffix
+  against the length, `mask` and `insert` return `String?` even on a
+  non-null `String` (append `?? ''` where a `String` is required),
+  `slugify` treats `-`, `_`, and whitespace alike, `toCharArray` splits by
+  code point, and `toWords` drops empty words. See the
+  [stringo changelog](https://pub.dev/packages/stringo/changelog).
+- **`Iterable<int>` statistics no longer truncate.** `mean`, `median`,
+  `variance`, and `standardDeviation` return `double`, so `[1, 2].mean` is
+  `1.5` instead of `1`. `percentile` still returns an `int`, and `mode` a
+  `List<int>`. The
+  `Iterable<num>` and `NumbersHelper` mean, variance, and standard deviation
+  are typed `double` too. Where an `int` is required, add `.round()` or
+  `.toInt()`.
+- **Calendar helpers keep the receiver's time zone.** `startOfDay`,
+  `dateOnly`, `startOfMonth`, `startOfYear`, `firstDayOfMonth`,
+  `lastDayOfMonth`, `previousMonth`, `nextMonth`, `addMonths`, and `addYears`
+  return a UTC value for a UTC receiver. 6.x returned local time for UTC
+  receivers.
+- **Day arithmetic moves by calendar days.** `addDays`, `subtractDays`,
+  `nextDay`, `previousDay`, `nextWeek`, `previousWeek`, `firstDayOfWeek`,
+  `lastDayOfWeek`, `addBusinessDays`, and `daysUpTo` keep the wall-clock
+  time across daylight-saving changes, and every `daysInMonth` entry is the
+  `startOfDay` of its date. 6.x added 24-hour durations, so the time
+  shifted by an hour across a transition. On the day
+  of a change, a time the clocks skip moves forward by the jump, and a time
+  they repeat resolves to its first occurrence, unless the receiver is
+  itself the repeat, which keeps its offset. Use
+  `add(Duration(days: n))` for exact 24-hour steps. `addHours` and smaller
+  units still add exact durations.
+- **Day counts are calendar-based.** `remainingDays`, `passedDays`,
+  `daysDifferenceTo`, `isTomorrow`, and `isYesterday` no longer come out one
+  short when a daylight-saving day of 23 hours lies between the dates.
+- **`roundTo`, `floorTo`, and `ceilTo` align to the receiver's wall clock.**
+  In zones with a half-hour offset, 6.x rounded local times to the wrong
+  boundary (`floorTo(1 hour)` returned 12:30). Dates before 1970 now floor
+  down instead of toward the epoch. Around a clock change, `floorTo` and
+  `ceilTo` return the latest and earliest instant whose wall clock shows an
+  aligned time (an aligned time the clocks skip counts at the jump), and
+  whole-day steps count calendar dates, so
+  `floorTo(const Duration(days: 1))` equals `startOfDay`.
+- **Office MIME checks are precise.** `isDOCX` is only `.docx`, `isDOC` is
+  only `.doc` (it was an alias of `isDOCX`), and `isXLSX` is only `.xlsx`.
+  Use the new `isWord`, or the existing `isExcel`, for either format.
+- **`isValidPhoneNumber` on a `String?` matches the `String` check.** A
+  non-null receiver has always resolved to convert_object's permissive
+  check, but a `String?` receiver got a stricter, North-American pattern, so
+  the same text could pass or fail depending on the static type. Every
+  receiver now gets the permissive check. `regexValidPhoneNumber` is
+  unchanged if you want the strict pattern.
+- **`Debouncer.executionHistory` is typed.** It returns
+  `List<DebouncerExecutionRecord>` (`startTime`, `endTime`, `duration`,
+  `success`, `error`) instead of maps. Call `toMap()` where you need the old
+  shape.
+- **`DebouncerState` no longer extends `Equatable`.** Equality and
+  `hashCode` behave as before; `props` is gone.
+- **`bufferCount` and `rateLimit` keep state per subscription.** Each
+  listener of a broadcast stream gets its own batches and its own rate
+  budget, and the result is a broadcast stream when the source is.
+  `rateLimit` no longer listens to the source before the result is listened
+  to, and pausing or cancelling the result now pauses or cancels the source.
+- **`TimeUtils` and `NumbersHelper` are `abstract final`** and can no longer
+  be extended or implemented.
+- **Removed duplicates of SDK and re-exported members.** Calls compile
+  unchanged because the replacement has the same name: `DateTime.copyWith`
+  (dart:core has the same signature), `int.gcd` and `num.isNegative` (SDK
+  instance members already won), and `num?.asBool` (convert_object's
+  `asBool` gives the same answer). Only explicit extension overrides of
+  these need editing. `isNegative` on a `num?` now delegates to the SDK
+  getter, so `-0.0` counts as negative there too, as it already did on a
+  `num`.
+
+### Fixed
+
+- `httpDateFormat` took the weekday and month from local time while the rest
+  of the date came from UTC, so a local date printed the wrong weekday and
+  month whenever its local and UTC calendar dates differed (for example,
+  shortly after midnight in Tokyo).
+- `addOrSubtractMonths` (now `addMonths`) landed in the wrong year for
+  negative offsets: January minus 2 months gave November of the same year.
+- `isPowerOf` no longer loops forever on zero, and is `false` for
+  non-positive numbers.
+- `toFileSize` no longer throws for values between 0 and 1 byte.
+- `bitCount` no longer counts the minus sign of a negative number.
+- `lcm` returns `0` for a zero operand instead of throwing.
+- `primeFactors` factors the magnitude of negative numbers instead of
+  throwing.
+- `isFibonacci` and `NumbersHelper.isPerfectSquare` return `false` for
+  negative numbers instead of `true` or throwing.
+- `NumbersHelper.gcd` never returns a negative number.
+- `asGreeks` abbreviates negative numbers too: `-2500000000` is `-2.5B`.
+- `Debouncer.remainingTime` and `remainingMaxWait` report the frozen values
+  while paused instead of `null`.
+- An unhandled error from a throttled action keeps its original stack trace.
+- `DateTime.min` and `max` compare at microsecond precision.
+- The format validators compile their regular expressions once instead of on
+  every call.
+
+### Added
+
+- `preserveOrder` on `mapConcurrent` and `waitConcurrency` returns results in
+  input order. Completion order stays the default.
+- `TimeUtils.throttle` accepts asynchronous callbacks; their errors go to
+  `onError`.
+- `DateTime?.tryFormat` takes an optional locale, like `format`.
+- `Iterable?.orEmpty()` works on a `null` iterable. Before, it was declared
+  only for non-null iterables, where it did nothing. `lastOrDefault` returns
+  a non-nullable element.
+- Precompiled validator patterns (`patternValidEmail`, `patternValidUrl`,
+  `patternValidUuid`, and the rest) and the `regexValidUuid` source.
+- The AI coding-assistant plugin gains a `migrate-dart-helper-utils-v6-to-v7`
+  skill for this upgrade, and now installs in Google Antigravity as well as
+  Claude Code and Codex. The README lists the install commands.
+
+### Documentation
+
+- The README is rewritten for 7.0, and every Dart example in it runs as a
+  test that checks the printed output.
+
 ## 6.1.0
 
 String text-transformation helpers now live in the new zero-dependency
@@ -110,9 +284,8 @@ This release represents a massive overhaul of `dart_helper_utils`, focusing on p
   - **Duplicate Extensions:** Removed extensions that now exist in Dart SDK or `package:collection` (e.g., `firstOrNull`, `groupBy`).
   - **Renaming:**
     - `httpFormat` → `httpDateFormat`
-    - `flatJson` → `flatMap`
-    - `makeEncodable` → use `toJsonSafe()` / `toJsonMap()` from the re-exported `convert_object` package
-    - `safelyEncodedJson` → use `toJsonString(...)` or `encodeWithIndent` from the re-exported `convert_object` package
+    - `encodableCopy` → use `toJsonSafe()` / `toJsonMap()` from the re-exported `convert_object` package
+    - `encodedJsonString` → use `toJsonString(...)` or `encodeWithIndent` from the re-exported `convert_object` package
   - **Throttling:** `TimeUtils.throttle` now returns a callable `ThrottledCallback` object with disposal support.
 
 ### ✨ New Features

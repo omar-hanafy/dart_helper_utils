@@ -60,4 +60,24 @@ void main() {
       expect(randomDouble(1), inInclusiveRange(0, 1));
     });
   });
+
+  group('7.0.0 global function signatures', () {
+    test('isValuePrimitive and isEqual accept any Object?', () {
+      expect(isValuePrimitive(null), isFalse);
+      expect(isValuePrimitive([1, 'a']), isTrue);
+      expect(isValuePrimitive(Object()), isFalse);
+      expect(isEqual(null, null), isTrue);
+      expect(
+        isEqual(
+          {
+            'a': [1],
+          },
+          {
+            'a': [1],
+          },
+        ),
+        isTrue,
+      );
+    });
+  });
 }

@@ -83,9 +83,9 @@ void main() {
       });
     });
 
-    test('isAtSameYearAs', () {
+    test('isSameYearAs', () {
       final otherDate = DateTime(2022, 12, 31);
-      expect(testDate.isAtSameYearAs(otherDate), true);
+      expect(testDate.isSameYearAs(otherDate), true);
     });
 
     test('isSameYearAs', () {
@@ -93,9 +93,9 @@ void main() {
       expect(testDate.isSameYearAs(otherDate), true);
     });
 
-    test('isAtSameMonthAs', () {
+    test('isSameMonthAs', () {
       final otherDate = DateTime(2022, 5);
-      expect(testDate.isAtSameMonthAs(otherDate), true);
+      expect(testDate.isSameMonthAs(otherDate), true);
     });
 
     test('isSameMonthAs', () {
@@ -103,34 +103,34 @@ void main() {
       expect(testDate.isSameMonthAs(otherDate), true);
     });
 
-    test('isAtSameDayAs', () {
+    test('isSameDayAs', () {
       final otherDate = DateTime(2022, 5, 10);
-      expect(testDate.isAtSameDayAs(otherDate), true);
+      expect(testDate.isSameDayAs(otherDate), true);
     });
 
-    test('isAtSameHourAs', () {
+    test('isSameHourAs', () {
       final otherDate = DateTime(2022, 5, 10, 10);
-      expect(testDate.isAtSameHourAs(otherDate), true);
+      expect(testDate.isSameHourAs(otherDate), true);
     });
 
-    test('isAtSameMinuteAs', () {
+    test('isSameMinuteAs', () {
       final otherDate = DateTime(2022, 5, 10, 10, 30);
-      expect(testDate.isAtSameMinuteAs(otherDate), true);
+      expect(testDate.isSameMinuteAs(otherDate), true);
     });
 
-    test('isAtSameSecondAs', () {
+    test('isSameSecondAs', () {
       final otherDate = DateTime(2022, 5, 10, 10, 30);
-      expect(testDate.isAtSameSecondAs(otherDate), true);
+      expect(testDate.isSameSecondAs(otherDate), true);
     });
 
-    test('isAtSameMillisecondAs', () {
+    test('isSameMillisecondAs', () {
       final otherDate = DateTime(2022, 5, 10, 10, 30);
-      expect(testDate.isAtSameMillisecondAs(otherDate), true);
+      expect(testDate.isSameMillisecondAs(otherDate), true);
     });
 
-    test('isAtSameMicrosecondAs', () {
+    test('isSameMicrosecondAs', () {
       final otherDate = DateTime(2022, 5, 10, 10, 30);
-      expect(testDate.isAtSameMicrosecondAs(otherDate), true);
+      expect(testDate.isSameMicrosecondAs(otherDate), true);
     });
 
     test('startOfDay', () {
@@ -148,14 +148,14 @@ void main() {
       expect(testDate.startOfYear, startOfYear);
     });
 
-    test('tomorrow', () {
+    test('nextDay', () {
       final tomorrow = testDate.add(const Duration(days: 1));
-      expect(testDate.tomorrow, tomorrow);
+      expect(testDate.nextDay, tomorrow);
     });
 
-    test('yesterday', () {
+    test('previousDay', () {
       final yesterday = testDate.subtract(const Duration(days: 1));
-      expect(testDate.yesterday, yesterday);
+      expect(testDate.previousDay, yesterday);
     });
 
     test('dateOnly', () {
@@ -257,37 +257,37 @@ void main() {
       expect(testDate.lastDayOfMonth, lastDayOfMonth);
     });
 
-    test('addOrSubtractYears', () {
-      final nextYear = testDate.addOrSubtractYears(1);
-      final previousYear = testDate.addOrSubtractYears(-1);
+    test('addYears', () {
+      final nextYear = testDate.addYears(1);
+      final previousYear = testDate.addYears(-1);
       expect(nextYear, DateTime(2023, 5, 10, 10, 30));
       expect(previousYear, DateTime(2021, 5, 10, 10, 30));
     });
 
-    test('addOrSubtractMonths', () {
-      final nextMonth = testDate.addOrSubtractMonths(1);
-      final previousMonth = testDate.addOrSubtractMonths(-1);
+    test('addMonths', () {
+      final nextMonth = testDate.addMonths(1);
+      final previousMonth = testDate.addMonths(-1);
       expect(nextMonth, DateTime(2022, 6, 10, 10, 30));
       expect(previousMonth, DateTime(2022, 4, 10, 10, 30));
     });
 
-    test('addOrSubtractDays', () {
-      final nextDay = testDate.addOrSubtractDays(1);
-      final previousDay = testDate.addOrSubtractDays(-1);
+    test('addDays', () {
+      final nextDay = testDate.addDays(1);
+      final previousDay = testDate.addDays(-1);
       expect(nextDay, DateTime(2022, 5, 11, 10, 30));
       expect(previousDay, DateTime(2022, 5, 9, 10, 30));
     });
 
-    test('addOrSubtractMinutes', () {
-      final nextMinute = testDate.addOrSubtractMinutes(1);
-      final previousMinute = testDate.addOrSubtractMinutes(-1);
+    test('addMinutes', () {
+      final nextMinute = testDate.addMinutes(1);
+      final previousMinute = testDate.addMinutes(-1);
       expect(nextMinute, DateTime(2022, 5, 10, 10, 31));
       expect(previousMinute, DateTime(2022, 5, 10, 10, 29));
     });
 
-    test('addOrSubtractSeconds', () {
-      final nextSecond = testDate.addOrSubtractSeconds(1);
-      final previousSecond = testDate.addOrSubtractSeconds(-1);
+    test('addSeconds', () {
+      final nextSecond = testDate.addSeconds(1);
+      final previousSecond = testDate.addSeconds(-1);
       expect(nextSecond, DateTime(2022, 5, 10, 10, 30, 1));
       expect(previousSecond, DateTime(2022, 5, 10, 10, 29, 59));
     });
@@ -569,10 +569,12 @@ void main() {
 
     group('DST transitions', () {
       test('handles dates across daylight savings transitions', () {
-        // Create dates around DST transition (example for US DST)
+        // Dates around the US spring-forward transition. 02:xx local does not
+        // exist in zones that observe it, so derive the middle instant from
+        // real elapsed time instead of constructing a wall-clock 02:30.
         final beforeDST = DateTime(2024, 3, 10, 1, 59);
         final afterDST = DateTime(2024, 3, 10, 3, 1);
-        final duringTransition = DateTime(2024, 3, 10, 2, 30);
+        final duringTransition = beforeDST.add(const Duration(minutes: 1));
 
         expect(
           duringTransition.isBetween(beforeDST, afterDST, normalize: true),
@@ -580,5 +582,215 @@ void main() {
         );
       });
     });
+  });
+
+  group('7.0.0 calendar corrections', () {
+    test('httpDateFormat takes every field from UTC', () {
+      // 15:30 UTC on Dec 31 is already Jan 1 in zones east of UTC+8:30;
+      // weekday and month must still come from the UTC side.
+      final instant = DateTime.utc(2023, 12, 31, 15, 30, 5);
+      expect(instant.httpDateFormat, 'Sun, 31 Dec 2023 15:30:05 GMT');
+      expect(instant.toLocal().httpDateFormat, 'Sun, 31 Dec 2023 15:30:05 GMT');
+      expect(
+        DateTime.utc(1970).httpDateFormat,
+        'Thu, 01 Jan 1970 00:00:00 GMT',
+      );
+    });
+
+    test('date-building helpers keep a UTC receiver in UTC', () {
+      final utc = DateTime.utc(2024, 3, 15, 22, 45);
+      final results = <String, DateTime>{
+        'startOfDay': utc.startOfDay,
+        'dateOnly': utc.dateOnly,
+        'startOfMonth': utc.startOfMonth,
+        'startOfYear': utc.startOfYear,
+        'firstDayOfMonth': utc.firstDayOfMonth,
+        'lastDayOfMonth': utc.lastDayOfMonth,
+        'previousMonth': utc.previousMonth,
+        'nextMonth': utc.nextMonth,
+        'addMonths': utc.addMonths(1),
+        'addYears': utc.addYears(1),
+        'addDays': utc.addDays(1),
+      };
+      for (final entry in results.entries) {
+        expect(entry.value.isUtc, isTrue, reason: entry.key);
+      }
+      expect(utc.startOfDay, DateTime.utc(2024, 3, 15));
+      expect(utc.startOfMonth, DateTime.utc(2024, 3));
+      expect(utc.startOfYear, DateTime.utc(2024));
+      expect(utc.lastDayOfMonth, DateTime.utc(2024, 3, 31));
+      expect(utc.previousMonth, DateTime.utc(2024, 2));
+      expect(utc.nextMonth, DateTime.utc(2024, 4));
+      expect(DateTime.utc(2024, 12, 5).nextMonth, DateTime.utc(2025));
+      expect(DateTime.utc(2024, 1, 5).previousMonth, DateTime.utc(2023, 12));
+    });
+
+    test('addMonths crosses year boundaries in both directions', () {
+      final jan15 = DateTime(2024, 1, 15, 9, 30);
+      expect(jan15.addMonths(-1), DateTime(2023, 12, 15, 9, 30));
+      expect(jan15.addMonths(-2), DateTime(2023, 11, 15, 9, 30));
+      expect(jan15.addMonths(-13), DateTime(2022, 12, 15, 9, 30));
+      expect(jan15.addMonths(13), DateTime(2025, 2, 15, 9, 30));
+      expect(jan15.subtractMonths(2), DateTime(2023, 11, 15, 9, 30));
+      expect(jan15.addMonths(0), jan15);
+    });
+
+    test('addMonths and addYears clamp to the end of shorter months', () {
+      // Noon exists everywhere; midnight on 2024-03-31 does not in the Azores,
+      // where the clocks jump from 00:00 to 01:00 that night.
+      expect(
+        DateTime(2024, 3, 31, 12).addMonths(-1),
+        DateTime(2024, 2, 29, 12),
+      );
+      expect(
+        DateTime(2023, 3, 31, 12).addMonths(-1),
+        DateTime(2023, 2, 28, 12),
+      );
+      expect(DateTime(2024, 1, 31, 12).addMonths(1), DateTime(2024, 2, 29, 12));
+      expect(DateTime(2024, 5, 31, 12).addMonths(1), DateTime(2024, 6, 30, 12));
+      expect(DateTime(2024, 2, 29, 12).addYears(1), DateTime(2025, 2, 28, 12));
+      expect(DateTime(2024, 2, 29, 12).addYears(4), DateTime(2028, 2, 29, 12));
+      expect(
+        DateTime(2024, 2, 29, 12).subtractYears(1),
+        DateTime(2023, 2, 28, 12),
+      );
+    });
+
+    test('day arithmetic keeps the wall-clock time across DST changes', () {
+      // US spring-forward and fall-back days of 2024. In zones without DST
+      // these are ordinary days and the expectations still hold.
+      expect(DateTime(2024, 3, 10).addDays(1), DateTime(2024, 3, 11));
+      expect(DateTime(2024, 3, 10).nextDay, DateTime(2024, 3, 11));
+      expect(DateTime(2024, 11, 3).addDays(1), DateTime(2024, 11, 4));
+      expect(DateTime(2024, 11, 4).previousDay, DateTime(2024, 11, 3));
+      expect(DateTime(2024, 3, 5, 8).nextWeek, DateTime(2024, 3, 12, 8));
+      expect(DateTime(2024, 3, 12, 8).previousWeek, DateTime(2024, 3, 5, 8));
+      expect(DateTime(2024, 3, 12, 8).subtractDays(7), DateTime(2024, 3, 5, 8));
+    });
+
+    test('daysUpTo and daysInMonth do not drift after a DST change', () {
+      final days = DateTime(2024, 3, 1).daysUpTo(DateTime(2024, 4, 1)).toList();
+      expect(days, hasLength(31));
+      expect(days.last, DateTime(2024, 3, 31));
+      final november = DateTime(2024, 11, 15).daysInMonth;
+      expect(november.length % DateTime.daysPerWeek, 0);
+      expect(november.last, DateTime(2024, 12, 1));
+    });
+
+    test('calendar-day differences ignore 23- and 25-hour days', () {
+      expect(DateTime(2024, 3, 10).daysDifferenceTo(DateTime(2024, 3, 11)), 1);
+      expect(DateTime(2024, 11, 3).daysDifferenceTo(DateTime(2024, 11, 4)), 1);
+      expect(
+        DateTime(2024, 3, 11, 23).daysDifferenceTo(DateTime(2024, 3, 9, 1)),
+        2,
+      );
+    });
+
+    test('isSame*As compares down to the requested unit', () {
+      final base = DateTime(2024, 6, 1, 10, 20, 30, 400, 500);
+      expect(base.isSameMinuteAs(base.copyWith(second: 59)), isTrue);
+      expect(base.isSameMinuteAs(base.copyWith(minute: 21)), isFalse);
+      expect(base.isSameSecondAs(base.copyWith(millisecond: 999)), isTrue);
+      expect(base.isSameSecondAs(base.copyWith(second: 31)), isFalse);
+      expect(base.isSameMillisecondAs(base.copyWith(microsecond: 1)), isTrue);
+      expect(
+        base.isSameMillisecondAs(base.copyWith(millisecond: 401)),
+        isFalse,
+      );
+      expect(base.isSameMicrosecondAs(base.copyWith()), isTrue);
+      expect(
+        base.isSameMicrosecondAs(base.copyWith(microsecond: 501)),
+        isFalse,
+      );
+      expect(base.isSameHourAs(base.copyWith(day: 2)), isFalse);
+    });
+
+    test('min and max compare at microsecond precision', () {
+      final earlier = DateTime.utc(2024);
+      final later = earlier.add(const Duration(microseconds: 1));
+      expect(earlier.min(later), earlier);
+      expect(later.min(earlier), earlier);
+      expect(earlier.max(later), later);
+      expect(later.max(earlier), later);
+    });
+
+    test('rounding helpers floor correctly before the epoch', () {
+      final beforeEpoch = DateTime.utc(1969, 12, 31, 23, 30);
+      const hour = Duration(hours: 1);
+      expect(beforeEpoch.floorTo(hour), DateTime.utc(1969, 12, 31, 23));
+      expect(beforeEpoch.ceilTo(hour), DateTime.utc(1970));
+      expect(beforeEpoch.roundTo(hour), DateTime.utc(1970));
+      expect(beforeEpoch.floorTo(-hour), DateTime.utc(1969, 12, 31, 23));
+      expect(beforeEpoch.floorTo(Duration.zero), beforeEpoch);
+    });
+
+    test('rounding helpers align to the local wall clock', () {
+      final local = DateTime(2024, 1, 1, 12, 34);
+      expect(local.floorTo(const Duration(hours: 1)), DateTime(2024, 1, 1, 12));
+      expect(
+        local.ceilTo(const Duration(minutes: 15)),
+        DateTime(2024, 1, 1, 12, 45),
+      );
+      expect(
+        local.roundTo(const Duration(minutes: 30)),
+        DateTime(2024, 1, 1, 12, 30),
+      );
+      expect(local.floorTo(const Duration(hours: 1)).isUtc, isFalse);
+    });
+
+    test('addBusinessDays skips weekends in both directions', () {
+      final friday = DateTime(2024, 6, 7, 9);
+      final monday = DateTime(2024, 6, 10, 9);
+      expect(friday.addBusinessDays(1), monday);
+      expect(monday.addBusinessDays(-1), friday);
+      expect(friday.addBusinessDays(5), DateTime(2024, 6, 14, 9));
+      expect(friday.addBusinessDays(0), friday);
+    });
+
+    test('isFuture replaces isPresent', () {
+      final now = DateTime.now();
+      expect(now.add(const Duration(hours: 1)).isFuture, isTrue);
+      expect(now.subtract(const Duration(hours: 1)).isFuture, isFalse);
+      const DateTime? none = null;
+      expect(none.isFuture, isFalse);
+    });
+
+    test('copyWith now resolves to the SDK implementation', () {
+      // dart_helper_utils dropped its own copyWith in 7.0.0 because
+      // dart:core ships an identical DateTime.copyWith.
+      final utc = DateTime.utc(2024, 2, 29, 23, 59);
+      expect(utc.copyWith(year: 2025), DateTime.utc(2025, 3, 1, 23, 59));
+      expect(utc.copyWith(isUtc: false).isUtc, isFalse);
+    });
+
+    test('the repeated fall-back hour keeps the receiver instance', () {
+      // 06:30:30 UTC on 2024-11-03 is 01:30:30 EST, the SECOND 01:30:30 in
+      // America/New_York. Rebuilding that wall-clock time with the local
+      // constructor would pick the first (EDT) one, an hour earlier. The
+      // assertions hold in every zone; CI runs them in New York too.
+      final repeated = DateTime.utc(2024, 11, 3, 6, 30, 30).toLocal();
+      const minute = Duration(minutes: 1);
+
+      final floor = repeated.floorTo(minute);
+      final ceil = repeated.ceilTo(minute);
+      expect(repeated.difference(floor), const Duration(seconds: 30));
+      expect(ceil.difference(repeated), const Duration(seconds: 30));
+      expect(floor.isAfter(repeated), isFalse);
+      expect(ceil.isBefore(repeated), isFalse);
+      expect(floor.roundTo(const Duration(seconds: 1)), floor);
+
+      expect(repeated.addDays(0), repeated);
+      expect(repeated.daysUpTo(repeated.add(minute)).first, repeated);
+      expect(repeated.firstDayOfWeek(startOfWeek: repeated.weekday), repeated);
+    });
+
+    test('roundTo does not overflow near the end of the DateTime range', () {
+      final late = DateTime.utc(200000, 1, 1, 0, 40);
+      expect(
+        late.roundTo(const Duration(hours: 1)),
+        DateTime.utc(200000, 1, 1, 1),
+      );
+      expect(late.floorTo(const Duration(hours: 1)), DateTime.utc(200000));
+    }, testOn: 'vm');
   });
 }

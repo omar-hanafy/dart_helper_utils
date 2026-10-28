@@ -1,3 +1,7 @@
+// These wrappers mirror the positional `bool` parameters of intl's `Bidi`
+// and `BidiFormatter` APIs on purpose, so calls translate one to one.
+// ignore_for_file: avoid_positional_boolean_parameters
+
 import 'package:intl/intl.dart';
 
 /// Provides extensions for [TextDirection] to support bidirectional text formatting.
@@ -46,7 +50,14 @@ extension DHUBidiStringExtensions on String {
   String enforceRtlInHtml() => Bidi.enforceRtlInHtml(this);
 
   /// Enforces right-to-left (RTL) directionality in plain text.
-  String enforceRtlIn() => Bidi.enforceRtlInText(this);
+  ///
+  /// Renamed from `enforceRtlIn` in 7.0.0 to pair with [enforceLtr];
+  /// `dart fix --apply` migrates callers.
+  String enforceRtl() => Bidi.enforceRtlInText(this);
+
+  /// Deprecated alias of [enforceRtl].
+  @Deprecated('Use enforceRtl. This alias will be removed in 8.0.0.')
+  String enforceRtlIn() => enforceRtl();
 
   /// Enforces left-to-right (LTR) directionality in HTML markup.
   String enforceLtrInHtml() => Bidi.enforceLtrInHtml(this);

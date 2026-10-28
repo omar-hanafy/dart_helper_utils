@@ -11,7 +11,11 @@ int? _asHttpStatusCode(num? value) {
   return null;
 }
 
-/// DHUHttpEx
+/// HTTP status-code checks and messages for a number that holds a status
+/// code.
+///
+/// Every check returns `false` for `null`. Non-integral values never match a
+/// specific code.
 extension DHUHttpEx on num? {
   /// Checks if the status code represents a successful response (2xx)
   bool get isSuccessCode => this != null && this! >= 200 && this! < 300;
@@ -107,11 +111,12 @@ extension DHUHttpEx on num? {
         : (httpStatusDevMessage[statusCode] ?? 'Not Found');
   }
 
-  /// Returns `true` if the string representation of this number is a valid phone number.
+  /// Whether this number, written out with `toString()`, passes the same
+  /// `isValidPhoneNumber` check as a string. Returns `false` for `null`.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 }
 
-/// DHUNullSafeNumExtensions
+/// Null-safe numeric helpers for a number that may be `null`.
 extension DHUNullSafeNumExtensions on num? {
   /// Returns the integer value of the number, or `null` if the number is `null`.
   int? tryToInt() => this?.toInt();
@@ -130,17 +135,17 @@ extension DHUNullSafeNumExtensions on num? {
     }
   }
 
-  /// Returns `true` if the number is negative.
-  bool get isNegative => this != null && this! < 0;
+  /// Whether the number is non-null and negative.
+  ///
+  /// The null-safe form of [num.isNegative], which non-null receivers
+  /// resolve to, so `-0.0` counts as negative on both.
+  bool get isNegative => this?.isNegative ?? false;
 
   /// Returns `true` if the number is positive.
   bool get isPositive => this != null && this! > 0;
 
   /// Returns `true` if the number is either `null` or zero.
   bool get isZeroOrNull => this == null || this! == 0;
-
-  /// Returns `true` if the number is greater than 0.
-  bool get asBool => (this ?? 0) > 0;
 
   /// Returns a string representation of the number with a given number of decimal places.
   ///
@@ -159,18 +164,16 @@ extension DHUNullSafeNumExtensions on num? {
   }
 }
 
-/// DHUNumExtensions
+/// Arithmetic, rounding, formatting, and delay helpers for [num].
 extension DHUNumExtensions on num {
   /// Returns `true` if the number is positive.
   bool get isPositive => this > 0;
 
-  /// Returns `true` if the number is negative.
-  bool get isNegative => this < 0;
-
   /// Returns `true` if the number is zero.
   bool get isZero => this == 0;
 
-  /// Returns `true` if the string representation of this number is a valid phone number.
+  /// Whether this number, written out with `toString()`, passes the same
+  /// `isValidPhoneNumber` check as a string.
   bool get isValidPhoneNumber => toString().isValidPhoneNumber;
 
   /// Returns the number of digits in this number.
@@ -220,13 +223,24 @@ extension DHUNumExtensions on num {
     return math.Random(seed).nextInt(toInt());
   }
 
-  /// Converts a number to a string with Greek symbols for thousands, millions, etc.
+  /// Abbreviates the number with a magnitude suffix from
+  /// [greekNumberSuffixes]: K for thousands, M for millions, B for billions,
+  /// and so on.
   ///
-  /// Example usage:
-  ///   print(1000.asGreeks); // Output: 1.0K
-  ///   print(1500000.asGreeks); // Output: 1.5M
-  ///   print(2500000000.asGreeks); // Output: 2.5B
+  /// Values below 1000 are printed with [zerosFractionDigits] decimals;
+  /// abbreviated values use [fractionDigits] decimals. Negative numbers keep
+  /// their sign.
+  ///
+  /// ```dart
+  /// 1000.asGreeks(); // '1.0K'
+  /// 1500000.asGreeks(); // '1.5M'
+  /// (-2500000000).asGreeks(); // '-2.5B'
+  /// ```
   String asGreeks([int zerosFractionDigits = 0, int fractionDigits = 1]) {
+    // Negate as a double: negating the most negative int overflows.
+    if (this < 0) {
+      return '-${(-toDouble()).asGreeks(zerosFractionDigits, fractionDigits)}';
+    }
     if (this < 1000) {
       return zerosFractionDigits <= 0
           ? toInt().toString()
@@ -247,15 +261,21 @@ extension DHUNumExtensions on num {
         : '${reducedNum.toStringAsFixed(fractionDigits)}$symbol';
   }
 
-  /// Converts bytes to a human-readable string (e.g., "1.5 MB").
+  /// Formats this byte count with binary (1024-based) units, e.g.
+  /// `1536.toFileSize()` is `'1.50 KB'`.
+  ///
+  /// Values of zero or less return `'0 B'`; values below one byte are shown
+  /// in bytes.
   String toFileSize({int decimals = 2}) {
     if (this <= 0) return '0 B';
     const suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    var i = (math.log(this) / math.log(1024)).floor();
-    if (i >= suffixes.length) {
-      i = suffixes.length - 1;
+    var value = toDouble();
+    var unit = 0;
+    while (value >= 1024 && unit < suffixes.length - 1) {
+      value /= 1024;
+      unit++;
     }
-    return '${(this / math.pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
+    return '${value.toStringAsFixed(decimals)} ${suffixes[unit]}';
   }
 
   /// Delay equivalent to the number of days.
@@ -653,7 +673,7 @@ extension DHUNumExtensions on num {
   }
 }
 
-/// DHUIntExtensions
+/// Integer arithmetic and number-theory helpers for [int].
 extension DHUIntExtensions on int {
   /// Return the min if this number is smaller then minimum
   /// Return the max if this number is bigger the the maximum
@@ -682,6 +702,10 @@ extension DHUIntExtensions on int {
   int get squared => this * this;
 
   /// Returns the factorial of this integer.
+  ///
+  /// Throws [ArgumentError] for negative numbers. Results above 20! exceed
+  /// the 64-bit integer range and wrap on native platforms (and lose
+  /// precision above 18! on the web).
   int factorial() {
     if (this < 0) throw ArgumentError('Negative numbers are not allowed.');
     var result = 1;
@@ -691,26 +715,41 @@ extension DHUIntExtensions on int {
     return result;
   }
 
-  /// Returns the greatest common divisor of this integer and [other].
-  int gcd(int other) => NumbersHelper.gcd(this, other);
-
   /// Returns the least common multiple of this integer and [other].
-  int lcm(int other) => (this * other).abs() ~/ gcd(other);
+  ///
+  /// The result is never negative, and is `0` when either value is `0`.
+  int lcm(int other) {
+    if (this == 0 || other == 0) return 0;
+    return (this * other).abs() ~/ gcd(other);
+  }
 
   /// Checks if this integer is a prime number.
   bool isPrime() {
     if (this <= 1) return false;
-    for (var i = 2; i <= math.sqrt(this).toInt(); i++) {
+    final limit = math.sqrt(this).toInt();
+    for (var i = 2; i <= limit; i++) {
       if (this % i == 0) return false;
     }
     return true;
   }
 
-  /// Returns the prime factors of this integer.
+  /// Returns the prime factors of this integer's magnitude, in ascending
+  /// order with repetition (`12.primeFactors()` is `[2, 2, 3]`).
+  ///
+  /// Returns an empty list for `-1`, `0`, and `1`.
   List<int> primeFactors() {
-    var n = this;
     final factors = <int>[];
-    for (var i = 2; i <= math.sqrt(n).toInt(); i++) {
+    var n = this;
+    if (n.isNegative) {
+      // abs() overflows for the most negative int, so take one factor of two
+      // out first when there is one; the rest of the magnitude then fits.
+      if (n.isEven) {
+        factors.add(2);
+        n ~/= 2;
+      }
+      n = n.abs();
+    }
+    for (var i = 2; i * i <= n; i++) {
       while (n % i == 0) {
         factors.add(i);
         n ~/= i;
@@ -727,27 +766,37 @@ extension DHUIntExtensions on int {
     return root * root == this;
   }
 
-  /// Checks if this integer is a perfect cube.
+  /// Checks if this integer is a perfect cube (negative cubes included).
   bool isPerfectCube() {
-    final n = abs();
-    var cubeRoot = 0;
-    while (cubeRoot * cubeRoot * cubeRoot < n) {
-      cubeRoot++;
+    // Estimate from the magnitude as a double: abs() overflows for the most
+    // negative int. Exact integer checks around the estimate settle it.
+    final estimate = math.pow(isNegative ? -toDouble() : toDouble(), 1 / 3);
+    final rounded = estimate.round();
+    for (var root = rounded - 1; root <= rounded + 1; root++) {
+      if (root < 0) continue;
+      final cube = root * root * root;
+      if (cube == this || -cube == this) return true;
     }
-    return cubeRoot * cubeRoot * cubeRoot == n;
+    return false;
   }
 
-  /// Checks if this integer is a Fibonacci number.
+  /// Checks if this integer is a Fibonacci number. Negative numbers are not.
   bool isFibonacci() {
+    if (this < 0) return false;
     final n1 = 5 * this * this + 4;
     final n2 = 5 * this * this - 4;
     return NumbersHelper.isPerfectSquare(n1) ||
         NumbersHelper.isPerfectSquare(n2);
   }
 
-  /// Checks if this integer is a power of [base].
+  /// Checks if this integer equals [base] raised to a non-negative integer
+  /// power.
+  ///
+  /// For a [base] above 1, only positive integers can match (`1` is
+  /// `base^0`). For a [base] of 1 or less, only the base itself matches.
   bool isPowerOf(int base) {
     if (base <= 1) return this == base;
+    if (this < 1) return false;
     var n = this;
     while (n % base == 0) {
       n ~/= base;
@@ -761,14 +810,24 @@ extension DHUIntExtensions on int {
   /// Converts this integer to a hexadecimal string.
   String toHexString() => toRadixString(16).toUpperCase();
 
-  /// Returns the number of set bits in this integer's binary representation.
-  int bitCount() => toBinaryString().replaceAll('0', '').length;
+  /// Returns the number of set bits in the binary representation of this
+  /// integer's magnitude (`(-5).bitCount()` is `2`, like `5.bitCount()`).
+  ///
+  /// Counts the digits of [toRadixString] rather than shifting bits, because
+  /// bitwise operators work on 32 bits on the web.
+  int bitCount() {
+    var count = 0;
+    for (final unit in toRadixString(2).codeUnits) {
+      if (unit == 0x31) count++; // '1'
+    }
+    return count;
+  }
 
   /// Checks if this integer is divisible by [divisor].
   bool isDivisibleBy(int divisor) => this % divisor == 0;
 }
 
-/// DHUDoubleExtensions
+/// Rounding and clamping helpers for [double].
 extension DHUDoubleExtensions on double {
   /// Return the min if this number is smaller then minimum
   /// Return the max if this number is bigger the the maximum
@@ -836,8 +895,11 @@ extension DHUDoubleExtensions on double {
   }
 }
 
-/// A utility class for numerical helper methods.
-abstract class NumbersHelper {
+/// Static numeric helpers: safe division, statistics over lists, and
+/// number theory.
+///
+/// The statistics functions throw [ArgumentError] for an empty list.
+abstract final class NumbersHelper {
   /// Safely divides two numbers with custom handling for division by zero and zero values.
   ///
   /// - Returns [whenBothZero] if both `a` and `b` are zero.
@@ -871,8 +933,8 @@ abstract class NumbersHelper {
     return a / b;
   }
 
-  /// Calculates the mean of a list of [values].
-  static num mean(List<num> values) {
+  /// Calculates the arithmetic mean of a list of [values].
+  static double mean(List<num> values) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
     num sum = 0;
     for (final value in values) {
@@ -907,17 +969,20 @@ abstract class NumbersHelper {
         .toList();
   }
 
-  /// Calculates the variance of a list of [values].
-  static num variance(List<num> values) {
+  /// Calculates the population variance of a list of [values].
+  static double variance(List<num> values) {
     if (values.isEmpty) throw ArgumentError('The list cannot be empty.');
     final m = mean(values);
-    return mean(values.map((value) => math.pow(value - m, 2)).toList());
+    return mean([for (final value in values) (value - m) * (value - m)]);
   }
 
-  /// Calculates the standard deviation of a list of [values].
-  static num standardDeviation(List<num> values) => math.sqrt(variance(values));
+  /// Calculates the population standard deviation of a list of [values].
+  static double standardDeviation(List<num> values) =>
+      math.sqrt(variance(values));
 
-  /// Calculates the specified [percentile] of a list of [values].
+  /// Returns the [percentile] of [values]: the sorted element at index
+  /// `(percentile / 100 * (values.length - 1)).round()`, so the result is
+  /// always one of the values.
   ///
   /// [percentile] must be between 0 and 100 inclusive.
   static num percentile(List<num> values, double percentile) {
@@ -931,23 +996,25 @@ abstract class NumbersHelper {
     return sortedValues[index];
   }
 
-  /// Calculates the greatest common divisor (GCD) of two integers [a] and [b].
-  static int gcd(int a, int b) => b == 0 ? a : gcd(b, a % b);
+  /// Calculates the greatest common divisor (GCD) of two integers [a] and
+  /// [b]. The result is never negative.
+  static int gcd(int a, int b) => a.gcd(b);
 
-  /// Checks if a number [n] is a perfect square.
+  /// Checks if a number [n] is a perfect square. Negative numbers are not.
   static bool isPerfectSquare(int n) {
-    final sqrtN = math.sqrt(n).toInt();
+    if (n < 0) return false;
+    final sqrtN = math.sqrt(n).round();
     return sqrtN * sqrtN == n;
   }
 }
 
-/// Extension on [Iterable<num>] providing statistical operations.
+/// Statistics over an `Iterable<num>`: mean, median, mode, population
+/// variance and standard deviation, and percentiles.
 ///
-/// This extension adds properties to calculate the mean, median, mode,
-/// variance, standard deviation, and percentiles of a numeric iterable.
+/// Every member throws [ArgumentError] for an empty iterable.
 extension DHUListNumStats on Iterable<num> {
   /// Calculates the mean (average) of the numbers in the iterable.
-  num get mean => NumbersHelper.mean(toList());
+  double get mean => NumbersHelper.mean(toList());
 
   /// Determines the median value of the numbers in the iterable.
   num get median => NumbersHelper.median(toList());
@@ -957,11 +1024,12 @@ extension DHUListNumStats on Iterable<num> {
   /// Returns a list of numbers that appear most frequently.
   List<num> get mode => NumbersHelper.mode(toList());
 
-  /// Computes the variance of the numbers in the iterable.
-  num get variance => NumbersHelper.variance(toList());
+  /// Computes the population variance of the numbers in the iterable.
+  double get variance => NumbersHelper.variance(toList());
 
-  /// Calculates the standard deviation of the numbers in the iterable.
-  num get standardDeviation => NumbersHelper.standardDeviation(toList());
+  /// Calculates the population standard deviation of the numbers in the
+  /// iterable.
+  double get standardDeviation => NumbersHelper.standardDeviation(toList());
 
   /// Computes the specified [percentile] of the numbers in the iterable.
   ///
@@ -970,43 +1038,57 @@ extension DHUListNumStats on Iterable<num> {
       NumbersHelper.percentile(toList(), percentile);
 }
 
-/// Extension on [Iterable<int>] providing statistical operations.
+/// Statistics over an `Iterable<int>`, with exact (non-truncated) results.
 ///
-/// This extension adds properties to calculate the mean, median, mode,
-/// variance, standard deviation, and percentiles of an integer iterable.
+/// The mean, median, variance, and standard deviation are `double`s, because
+/// the statistics of integers are generally not integers: the mean of
+/// `[1, 2]` is `1.5`. The mode and percentiles are always elements of the
+/// iterable, so they stay `int`. Every member throws [ArgumentError] for an
+/// empty iterable.
 extension DHUListIntStats on Iterable<int> {
   /// Calculates the mean (average) of the integers in the iterable.
-  int get mean => NumbersHelper.mean(toList()).toInt();
+  double get mean => NumbersHelper.mean(toList());
 
-  /// Determines the median value of the integers in the iterable.
-  int get median => NumbersHelper.median(toList()).toInt();
+  /// Determines the median of the integers in the iterable; for an even
+  /// count this is the mean of the two middle values.
+  double get median => NumbersHelper.median(toList()).toDouble();
 
   /// Finds the mode(s) of the integers in the iterable.
   ///
   /// Returns a list of integers that appear most frequently.
-  List<int> get mode => convertToList<int>(NumbersHelper.mode(toList()));
+  List<int> get mode {
+    final frequency = <int, int>{};
+    for (final value in this) {
+      frequency[value] = (frequency[value] ?? 0) + 1;
+    }
+    if (frequency.isEmpty) throw ArgumentError('The list cannot be empty.');
+    final maxFrequency = frequency.values.reduce(math.max);
+    return [
+      for (final entry in frequency.entries)
+        if (entry.value == maxFrequency) entry.key,
+    ];
+  }
 
-  /// Computes the variance of the integers in the iterable.
-  int get variance => NumbersHelper.variance(toList()).toInt();
+  /// Computes the population variance of the integers in the iterable.
+  double get variance => NumbersHelper.variance(toList());
 
-  /// Calculates the standard deviation of the integers in the iterable.
-  int get standardDeviation =>
-      NumbersHelper.standardDeviation(toList()).toInt();
+  /// Calculates the population standard deviation of the integers in the
+  /// iterable.
+  double get standardDeviation => NumbersHelper.standardDeviation(toList());
 
-  /// Computes the specified [percentile] of the integers in the iterable.
-  ///
-  /// The [percentile] should be a value between 0 and 100.
+  /// Computes the [percentile] (0 to 100) of the integers in the iterable:
+  /// the sorted element at index `(percentile / 100 * (length - 1)).round()`,
+  /// so the result is always one of the elements.
   int percentile(double percentile) =>
       NumbersHelper.percentile(toList(), percentile).toInt();
 }
 
-/// Extension on [Iterable<double>] providing statistical operations.
+/// Statistics over an `Iterable<double>`, typed as `double`.
 ///
-/// This extension adds properties to calculate the mean, median, mode,
-/// variance, standard deviation, and percentiles of a double iterable.
+/// Every member throws [ArgumentError] for an empty iterable.
 extension DHUListDoubleStats on Iterable<double> {
   /// Calculates the mean (average) of the doubles in the iterable.
-  double get mean => NumbersHelper.mean(toList()).toDouble();
+  double get mean => NumbersHelper.mean(toList());
 
   /// Determines the median value of the doubles in the iterable.
   double get median => NumbersHelper.median(toList()).toDouble();
@@ -1014,14 +1096,16 @@ extension DHUListDoubleStats on Iterable<double> {
   /// Finds the mode(s) of the doubles in the iterable.
   ///
   /// Returns a list of doubles that appear most frequently.
-  List<double> get mode => convertToList<double>(NumbersHelper.mode(toList()));
+  List<double> get mode => [
+    for (final value in NumbersHelper.mode(toList())) value.toDouble(),
+  ];
 
-  /// Computes the variance of the doubles in the iterable.
-  double get variance => NumbersHelper.variance(toList()).toDouble();
+  /// Computes the population variance of the doubles in the iterable.
+  double get variance => NumbersHelper.variance(toList());
 
-  /// Calculates the standard deviation of the doubles in the iterable.
-  double get standardDeviation =>
-      NumbersHelper.standardDeviation(toList()).toDouble();
+  /// Calculates the population standard deviation of the doubles in the
+  /// iterable.
+  double get standardDeviation => NumbersHelper.standardDeviation(toList());
 
   /// Computes the specified [percentile] of the doubles in the iterable.
   ///

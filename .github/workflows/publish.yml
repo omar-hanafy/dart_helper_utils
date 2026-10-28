@@ -10,4 +10,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    # dart.dev's canonical trusted-publishing workflow, tracked at @v1 as the
+    # automated publishing docs require.
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1 # zizmor: ignore[unpinned-uses]

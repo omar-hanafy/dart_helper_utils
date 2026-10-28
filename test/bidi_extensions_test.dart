@@ -16,4 +16,11 @@ void main() {
       expect('en'.isRtlLanguage(), isFalse);
     });
   });
+
+  group('7.0.0 renamed bidi helper', () {
+    test('enforceRtl pairs with enforceLtr', () {
+      expect('abc'.enforceRtl(), Bidi.enforceRtlInText('abc'));
+      expect('abc'.enforceLtr(), Bidi.enforceLtrInText('abc'));
+    });
+  });
 }

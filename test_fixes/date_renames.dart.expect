@@ -1,0 +1,55 @@
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+void comparisons(DateTime a, DateTime b) {
+  print(a.isSameYearAs(b));
+  print(a.isSameMonthAs(b));
+  print(a.isSameDayAs(b));
+  print(a.isSameHourAs(b));
+  print(a.isSameMinuteAs(b));
+  print(a.isSameSecondAs(b));
+  print(a.isSameMillisecondAs(b));
+  print(a.isSameMicrosecondAs(b));
+}
+
+void arithmetic(DateTime a) {
+  print(a.addYears(1));
+  print(a.addMonths(-2));
+  print(a.addDays(3));
+  print(a.addMinutes(4));
+  print(a.addSeconds(5));
+  print(a.addMilliseconds(6));
+  print(a.addMicroseconds(7));
+  print(a.toUtc().addDays(1));
+}
+
+String quarter(DateTime a) => a.formatAsyQQQ() + a.formatAsyQQQ('en_US');
+
+DateTime next(DateTime date) => date.nextDay;
+
+DateTime previousFromExpression(DateTime date) => date.toUtc().previousDay;
+
+bool futureNonNull(DateTime date) => date.isFuture;
+
+bool futureNullable(DateTime? date) => date.isFuture;
+
+bool Function(DateTime) tearOff(DateTime date) => date.isSameDayAs;
+
+bool explicitMethod(DateTime a, DateTime b) =>
+    DHUDateExtensions(a).isSameDayAs(b);
+
+DateTime explicitGetter(DateTime a) => DHUDateExtensions(a).nextDay;
+
+bool explicitNullable(DateTime? a) => DHUNullableDateExtensions(a).isFuture;
+
+String explicitFormat(DateTime a) => DHUDateFormatExtension(a).formatAsyQQQ();
+
+// Controls: same-named members on other types must not change.
+class Calendar {
+  DateTime get tomorrow => DateTime(2000);
+
+  bool isAtSameDayAs(DateTime other) => false;
+}
+
+DateTime controlGetter(Calendar calendar) => calendar.tomorrow;
+
+bool controlMethod(Calendar calendar, DateTime b) => calendar.isAtSameDayAs(b);

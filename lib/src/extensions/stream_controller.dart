@@ -49,11 +49,9 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     }
   }
 
-  /// Handles dynamic errors and passes them through [safeAddError].
-  void _handleDynamicOnError(dynamic error, dynamic stackTrace) {
-    if (error is Object) {
-      safeAddError(error, stackTrace is StackTrace ? stackTrace : null);
-    }
+  /// Forwards a source stream's error through [safeAddError].
+  void _forwardError(Object error, StackTrace stackTrace) {
+    safeAddError(error, stackTrace);
   }
 
   /// Closes this controller if it is still open.
@@ -99,7 +97,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
       (event) {
         if (safeAdd(event)) addedCount++;
       },
-      onError: _handleDynamicOnError,
+      onError: _forwardError,
       onDone: () {
         if (!completer.isCompleted) {
           completer.complete(addedCount);
@@ -148,7 +146,7 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
     for (final stream in streams) {
       final subscription = stream.listen(
         safeAdd,
-        onError: _handleDynamicOnError,
+        onError: _forwardError,
         onDone: () {
           completedCount++;
           if (completedCount == streams.length && !completer.isCompleted) {
@@ -185,38 +183,35 @@ extension StreamControllerSafeExtensions<T> on StreamController<T> {
   }
 }
 
-/// Additional stream transformations not covered by the official Dart `RateLimit` extension.
+/// Batching, windowing, rate limiting, pausing, and replay transformations
+/// for [Stream].
+///
+/// Transformers that keep state ([bufferCount], [rateLimit]) keep it per
+/// subscription: each listener of a broadcast stream gets its own batches
+/// and its own rate budget, and the source is not listened to until the
+/// returned stream is.
 extension StreamTransformations<T> on Stream<T> {
   /// Buffers incoming events into lists of size [count].
   ///
   /// When the buffer reaches [count] elements, it is emitted. Any remaining
-  /// events are emitted when the stream closes.
+  /// events are emitted when the stream closes. Errors are forwarded
+  /// immediately without flushing the buffer.
+  ///
+  /// The returned stream is a broadcast stream if this stream is.
   ///
   /// Example:
   /// ```dart
-  /// myStream.buffer(3).listen((chunk) {
+  /// myStream.bufferCount(3).listen((chunk) {
   ///   print('Received a chunk of ${chunk.length} items');
   /// });
   /// ```
   Stream<List<T>> bufferCount(int count) {
     if (count <= 0) {
-      throw ArgumentError('Buffer count must be greater than zero');
+      throw ArgumentError.value(count, 'count', 'must be greater than zero');
     }
-    final bucket = <T>[];
-    return transform(
-      StreamTransformer<T, List<T>>.fromHandlers(
-        handleData: (data, sink) {
-          bucket.add(data);
-          if (bucket.length >= count) {
-            sink.add(List<T>.from(bucket));
-            bucket.clear();
-          }
-        },
-        handleDone: (sink) {
-          if (bucket.isNotEmpty) sink.add(List<T>.from(bucket));
-          sink.close();
-        },
-      ),
+    return Stream<List<T>>.eventTransformed(
+      this,
+      (sink) => _BufferCountSink<T>(sink, count),
     );
   }
 
@@ -250,14 +245,14 @@ extension StreamTransformations<T> on Stream<T> {
         timer = Timer.periodic(windowDuration, (_) => emitBuffer());
         final subscription = listen(
           buffer.add,
-          onError: (dynamic error, dynamic stackTrace) {
+          onError: (Object error, StackTrace stackTrace) {
             timer?.cancel();
-            controller?._handleDynamicOnError(error, stackTrace);
+            controller?._forwardError(error, stackTrace);
           },
           onDone: () {
             timer?.cancel();
             emitBuffer();
-            controller?.close();
+            unawaited(controller?.close());
           },
           cancelOnError: false,
         );
@@ -272,7 +267,14 @@ extension StreamTransformations<T> on Stream<T> {
   }
 
   /// Limits the rate of event emissions, allowing at most [maxEvents]
-  /// during each [duration] window.
+  /// during each [duration] window. Events over the budget are dropped.
+  ///
+  /// A window opens with the first event after the previous window expired
+  /// and is measured with a monotonic clock, so wall-clock changes do not
+  /// affect it. The source is listened to only when the returned stream is,
+  /// and pausing or cancelling the returned subscription pauses or cancels
+  /// the source. The returned stream is a broadcast stream if this stream
+  /// is.
   ///
   /// Example:
   /// ```dart
@@ -281,45 +283,23 @@ extension StreamTransformations<T> on Stream<T> {
   /// ```
   Stream<T> rateLimit(int maxEvents, Duration duration) {
     if (maxEvents <= 0) {
-      throw ArgumentError('maxEvents must be greater than zero');
+      throw ArgumentError.value(
+        maxEvents,
+        'maxEvents',
+        'must be greater than zero',
+      );
     }
-    if (duration.inMilliseconds <= 0) {
-      throw ArgumentError('Duration must be greater than zero');
+    if (duration <= Duration.zero) {
+      throw ArgumentError.value(
+        duration,
+        'duration',
+        'must be greater than zero',
+      );
     }
-
-    var eventCount = 0;
-    var windowStart = DateTime.now();
-    final controller = StreamController<T>();
-    late StreamSubscription<T> subscription;
-
-    void resetCounter() {
-      eventCount = 0;
-      windowStart = DateTime.now();
-    }
-
-    subscription = listen(
-      (data) {
-        final now = DateTime.now();
-        if (now.difference(windowStart) >= duration) {
-          resetCounter();
-        }
-        if (eventCount < maxEvents) {
-          eventCount++;
-          controller.add(data);
-        }
-      },
-      onError: (dynamic error, dynamic stackTrace) {
-        controller._handleDynamicOnError(error, stackTrace);
-      },
-      onDone: controller.close,
-      cancelOnError: false,
+    return Stream<T>.eventTransformed(
+      this,
+      (sink) => _RateLimitSink<T>(sink, maxEvents, duration),
     );
-
-    controller.onCancel = () async {
-      await subscription.cancel();
-    };
-
-    return controller.stream;
   }
 
   /// Returns a pausable version of this stream.
@@ -365,7 +345,7 @@ extension StreamTransformations<T> on Stream<T> {
         onError: multiController.addError,
         onDone: multiController.close,
       );
-      multiController.onCancel = () => subscription.cancel();
+      multiController.onCancel = subscription.cancel;
     });
   }
 }
@@ -467,8 +447,7 @@ extension StreamErrorRecovery<T> on Stream<T> {
         break;
       } catch (error) {
         if (error is StateError) {
-          final message = error.message.toString();
-          if (message.contains('already been listened')) {
+          if (error.message.contains('already been listened')) {
             throw StateError(
               'Cannot retry a single-subscription stream that has already been listened to. '
               'Use a broadcast stream or the "retry" extension on a Stream Factory function (Stream<T> Function()) instead.',
@@ -573,12 +552,12 @@ class PausableStream<T> {
           _controller.add(data);
         }
       },
-      onError: (dynamic error, dynamic stackTrace) {
-        _controller._handleDynamicOnError(error, stackTrace);
+      onError: (Object error, StackTrace stackTrace) {
+        _controller._forwardError(error, stackTrace);
       },
       onDone: () {
         if (!_controller.isClosed) {
-          _controller.close();
+          unawaited(_controller.close());
         }
       },
       cancelOnError: false,
@@ -605,4 +584,69 @@ class PausableStream<T> {
   Future<void> _cancel() async {
     await _subscription?.cancel();
   }
+}
+
+/// Per-subscription state for [StreamTransformations.bufferCount].
+final class _BufferCountSink<T> implements EventSink<T> {
+  _BufferCountSink(this._out, this._count);
+
+  final EventSink<List<T>> _out;
+  final int _count;
+  List<T> _bucket = <T>[];
+
+  @override
+  void add(T event) {
+    _bucket.add(event);
+    if (_bucket.length >= _count) {
+      final full = _bucket;
+      _bucket = <T>[];
+      _out.add(full);
+    }
+  }
+
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) =>
+      _out.addError(error, stackTrace);
+
+  @override
+  void close() {
+    if (_bucket.isNotEmpty) {
+      _out.add(_bucket);
+      _bucket = <T>[];
+    }
+    _out.close();
+  }
+}
+
+/// Per-subscription state for [StreamTransformations.rateLimit].
+final class _RateLimitSink<T> implements EventSink<T> {
+  _RateLimitSink(this._out, this._maxEvents, this._window);
+
+  final EventSink<T> _out;
+  final int _maxEvents;
+  final Duration _window;
+  final Stopwatch _clock = Stopwatch()..start();
+  Duration? _windowStart;
+  int _eventsInWindow = 0;
+
+  @override
+  void add(T event) {
+    final now = _clock.elapsed;
+    final windowStart = _windowStart;
+    if (windowStart == null || now - windowStart >= _window) {
+      _windowStart = now;
+      _eventsInWindow = 0;
+    }
+    if (_eventsInWindow < _maxEvents) {
+      _eventsInWindow++;
+      _out.add(event);
+    }
+  }
+
+  @override
+  void addError(Object error, [StackTrace? stackTrace]) =>
+      _out.addError(error, stackTrace);
+
+  @override
+  void close() => _out.close();
 }

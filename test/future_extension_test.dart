@@ -97,7 +97,7 @@ void main() {
         (i) => () async {
           activeCount++;
           if (activeCount > maxActive) maxActive = activeCount;
-          await Future.delayed(const Duration(milliseconds: 10));
+          await Future<void>.delayed(const Duration(milliseconds: 10));
           activeCount--;
           return i;
         },
@@ -118,6 +118,76 @@ void main() {
         tasks.waitConcurrency(concurrency: 2),
         throwsA(isA<StateError>()),
       );
+    });
+  });
+
+  group('7.0.0 ordered concurrency', () {
+    test('waitConcurrency returns input order when asked', () async {
+      final delays = [30, 10, 20, 0];
+      final tasks = [
+        for (final (index, delay) in delays.indexed)
+          () => Future<int>.delayed(Duration(milliseconds: delay), () => index),
+      ];
+      expect(await tasks.waitConcurrency(concurrency: 4), [3, 1, 2, 0]);
+      expect(await tasks.waitConcurrency(concurrency: 4, preserveOrder: true), [
+        0,
+        1,
+        2,
+        3,
+      ]);
+    });
+
+    test('mapConcurrent keeps input order and the concurrency limit', () async {
+      var active = 0;
+      var peak = 0;
+      final result = await [40, 0, 20, 10, 30].mapConcurrent(
+        (ms) async {
+          active++;
+          if (active > peak) peak = active;
+          await Future<void>.delayed(Duration(milliseconds: ms));
+          active--;
+          return ms;
+        },
+        parallelism: 2,
+        preserveOrder: true,
+      );
+      expect(result, [40, 0, 20, 10, 30]);
+      expect(peak, 2);
+    });
+
+    test('preserveOrder keeps null results in place', () async {
+      final tasks = <Future<int?> Function()>[() async => null, () async => 1];
+      expect(await tasks.waitConcurrency(preserveOrder: true), [null, 1]);
+    });
+
+    test('invalid limits fail the returned future', () async {
+      await expectLater(
+        [1].mapConcurrent((e) async => e, parallelism: 0),
+        throwsArgumentError,
+      );
+      await expectLater(
+        <Future<int> Function()>[].waitConcurrency(concurrency: 0),
+        throwsArgumentError,
+      );
+    });
+
+    test('the first failure wins and later failures stay handled', () async {
+      final tasks = <Future<int> Function()>[
+        () => Future<int>.delayed(
+          const Duration(milliseconds: 5),
+          () => throw StateError('first'),
+        ),
+        () => Future<int>.delayed(
+          const Duration(milliseconds: 30),
+          () => throw StateError('second'),
+        ),
+      ];
+      await expectLater(
+        tasks.waitConcurrency(concurrency: 2, preserveOrder: true),
+        throwsA(isA<StateError>()),
+      );
+      // Let the second task fail; the test zone would report it if unhandled.
+      await Future<void>.delayed(const Duration(milliseconds: 40));
     });
   });
 }

@@ -15,53 +15,7 @@ import 'package:dart_helper_utils/src/other_utils/global_functions.dart' as gf;
 /// ```
 typedef Predicate<T> = bool Function(T);
 
-/// Extension methods for nullable [Set] collections.
-///
-/// Provides utility methods that can be used on [Set] objects that may be null.
-/// These extensions help handle null cases gracefully while working with sets.
-///
-/// Example usage:
-/// ```dart
-/// Set<int>? nullableSet = {1, 2, 3};
-/// nullableSet.someUtilityMethod();
-/// ```
-extension DHUNullableSetExtensions<E> on Set<E>? {
-  /// Checks if the iterable is either `null` or empty.
-  ///
-  /// Returns `true` if the iterable is `null` or empty, otherwise `false`.
-  ///
-  /// Example:
-  /// ```dart
-  /// List<int>? list = null;
-  /// print(list.isEmptyOrNull); // true
-  ///
-  /// list = [];
-  /// print(list.isEmptyOrNull); // true
-  ///
-  /// list = [1, 2, 3];
-  /// print(list.isEmptyOrNull); // false
-  /// ```
-  bool get isEmptyOrNull => this == null || this!.isEmpty;
-
-  /// Checks if the iterable is neither `null` nor empty.
-  ///
-  /// Returns `true` if the iterable is not `null` and not empty, otherwise `false`.
-  ///
-  /// Example:
-  /// ```dart
-  /// List<int>? list = null;
-  /// print(list.isNotEmptyOrNull); // false
-  ///
-  /// list = [];
-  /// print(list.isNotEmptyOrNull); // false
-  ///
-  /// list = [1, 2, 3];
-  /// print(list.isNotEmptyOrNull); // true
-  /// ```
-  bool get isNotEmptyOrNull => !isEmptyOrNull;
-}
-
-/// Enhanced documentation for nullable List extensions.
+/// Null-safe index lookups and removals for a [List] that may be `null`.
 extension DHUNullableListExtensions<E> on List<E>? {
   /// Safely removes the element at the specified [index] if the list is non-null and non-empty.
   ///
@@ -104,6 +58,9 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
     return null;
   }
 
+  /// Returns this iterable, or an empty iterable when it is `null`.
+  Iterable<E> orEmpty() => this ?? Iterable<E>.empty();
+
   /// Returns `true` if this nullable iterable is either null or empty.
   bool get isEmptyOrNull => this == null || this!.isEmpty;
 
@@ -111,7 +68,7 @@ extension DHUCollectionsExtensionsNS<E> on Iterable<E>? {
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 
   /// Returns the last element or [defaultValue] when null or empty.
-  E? lastOrDefault(E defaultValue) =>
+  E lastOrDefault(E defaultValue) =>
       isNotEmptyOrNull ? this!.last : defaultValue;
 
   /// Returns the first element or [defaultValue] when null or empty.
@@ -178,9 +135,6 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
   /// Converts this iterable to a set of type [R] using convert_object logic.
   Set<R> toSetConverted<R>() => convertToSet<R>(this);
-
-  /// Returns this iterable (as is) if it is non-null; otherwise, returns an empty iterable.
-  Iterable<E> orEmpty() => this;
 
   /// Returns a list that concatenates this iterable with [iterable].
   ///
@@ -342,7 +296,9 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
 
   /// Executes [action] on each element with at most [parallelism] concurrent tasks.
   ///
-  /// Results are returned in completion order, not input order.
+  /// By default results are returned in completion order, not input order.
+  /// Pass `preserveOrder: true` to get them in input order instead; the
+  /// concurrency limit is the same either way.
   ///
   /// If any task throws, the returned future completes with that error. Any
   /// in-flight tasks continue running and their errors are handled internally
@@ -350,40 +306,15 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   Future<List<R>> mapConcurrent<R>(
     Future<R> Function(E item) action, {
     int parallelism = 1,
+    bool preserveOrder = false,
   }) async {
-    if (parallelism <= 0) throw ArgumentError('Parallelism must be positive');
-    final results = <R>[];
-    final active = <Future<void>>{};
-    final iterator = this.iterator;
-
-    try {
-      while (iterator.moveNext()) {
-        while (active.length >= parallelism) {
-          await Future.any(active);
-        }
-
-        final item = iterator.current;
-        late Future<void> task;
-        task = action(item)
-            .then((result) {
-              results.add(result);
-            })
-            .whenComplete(() {
-              active.remove(task);
-            });
-
-        active.add(task);
-      }
-
-      await Future.wait(active);
-    } catch (_) {
-      for (final task in active) {
-        // ignore: unawaited_futures
-        task.catchError((_) {});
-      }
-      rethrow;
+    if (parallelism <= 0) {
+      throw ArgumentError.value(parallelism, 'parallelism', 'must be positive');
     }
-    return results;
+    return map(
+      (item) =>
+          () => action(item),
+    ).waitConcurrency(concurrency: parallelism, preserveOrder: preserveOrder);
   }
 
   /// Returns the first half of the iterable.
@@ -392,14 +323,26 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// Returns the second half of the iterable.
   List<E> secondHalf() => drop(halfLength).toList();
 
-  /// Returns a list with elements at [i] and [j] swapped.
-  List<E> swap(int i, int j) {
+  /// Returns a new list with the elements at [i] and [j] swapped; this
+  /// iterable is not modified.
+  ///
+  /// To swap two elements of a [List] in place, use `swap` from the
+  /// re-exported `package:collection`.
+  List<E> swapped(int i, int j) {
     final list = toList();
     final aux = list[i];
     list[i] = list[j];
     list[j] = aux;
     return list;
   }
+
+  /// Deprecated alias of [swapped].
+  ///
+  /// On a [List] receiver, `swap` already resolved to collection's in-place
+  /// `ListExtensions.swap`; this copying variant only ever ran for other
+  /// iterables, so the name meant two different things.
+  @Deprecated('Use swapped. This alias will be removed in 8.0.0.')
+  List<E> swap(int i, int j) => swapped(i, j);
 
   /// Returns a random element.
   ///
@@ -531,18 +474,5 @@ extension DHUCollectionsExtensions<E> on Iterable<E> {
   /// final result = [1, 2, 3, 4, 5, 6].subtract([4, 5, 6]);
   /// // result: {1, 2, 3}
   /// ```
-
   Set<E> subtract(Iterable<E> other) => toSet()..removeAll(other);
-
-  /// Returns the first element matching [predicate], or `null`
-  /// if element was not found.
-  E? find(Predicate<E> predicate) {
-    for (final element in this) {
-      if (predicate(element)) {
-        return element;
-      }
-    }
-
-    return null;
-  }
 }

@@ -1,3 +1,124 @@
+# Migration Guide (v7)
+
+Version 7.0.0 needs Dart 3.13.5 or later (Flutter 3.47.7 or later). Most of
+the migration is automatic.
+
+## 1. Upgrade and let `dart fix` do the renames
+
+```bash
+# pubspec.yaml: dart_helper_utils: ^7.0.0
+dart pub get          # or: flutter pub get
+dart fix --dry-run    # preview
+dart fix --apply
+dart analyze
+```
+
+Every renamed member keeps working as a deprecated alias until 8.0.0, so the
+project compiles before and after `dart fix`. The two exceptions are the last
+rows of the table: `find` and `DHUNullableSetExtensions` are removed, so code
+that uses them fails to compile until `dart fix` rewrites it. The automatic
+migration was
+verified on Dart 3.13.5 against code written for 6.1.0, including nullable
+receivers, prefixed and `show` imports, tear-offs, and explicit extension
+overrides.
+
+| 6.x | 7.x |
+| --- | --- |
+| `isAtSameYearAs` ... `isAtSameMicrosecondAs` | `isSameYearAs` ... `isSameMicrosecondAs` |
+| `addOrSubtractYears` / `addOrSubtractMonths` | `addYears` / `addMonths` |
+| `addOrSubtractDays` / `Minutes` / `Seconds` / `Milliseconds` / `Microseconds` | `addDays` / `addMinutes` / `addSeconds` / `addMilliseconds` / `addMicroseconds` |
+| `date.tomorrow` / `date.yesterday` | `date.nextDay` / `date.previousDay` |
+| `date.isPresent` | `date.isFuture` |
+| `formatASyQQQ` | `formatAsyQQQ` |
+| `enforceRtlIn` | `enforceRtl` |
+| `iterable.swap(i, j)` (copying) | `iterable.swapped(i, j)` |
+| `text.isEmptyOrNull` / `text.isNotEmptyOrNull` on `String?` | `text.isBlank` / `text.isNotBlank` |
+| `iterable.find(test)` | `iterable.firstWhereOrNull(test)` (from `package:collection`) |
+| `DHUNullableSetExtensions(set)` | `DHUCollectionsExtensionsNS(set)` |
+
+`list.swap(i, j)` on a `List` is collection's in-place swap and is not
+renamed. The collection members `isEmptyOrNull` and `isNotEmptyOrNull` on
+`Iterable?` and `Map?` are unchanged.
+
+`dart fix` cannot rewrite one form: an explicit
+`DHUCollectionsExtensions(x).find(test)`. Replace it with
+`IterableExtension(x).firstWhereOrNull(test)` or `x.firstWhereOrNull(test)`.
+
+## 2. Check these by hand
+
+None of these raise a compile error, unless noted.
+
+1. **Integer statistics are exact.** On an `Iterable<int>`, `mean`, `median`,
+   `variance`, and `standardDeviation` return `double`: `[1, 2].mean` is
+   `1.5`, not `1`. Assigning them to an `int` is now a compile error; add
+   `.round()` or `.toInt()` if you relied on the truncation.
+
+2. **UTC stays UTC.** `startOfDay`, `dateOnly`, `startOfMonth`, `startOfYear`,
+   `firstDayOfMonth`, `lastDayOfMonth`, `previousMonth`, `nextMonth`,
+   `addMonths`, and `addYears` return a UTC value for a UTC receiver. If you
+   converted the result with `toUtc()` or compared it with local dates,
+   review those call sites.
+
+3. **Day arithmetic keeps the time of day across daylight saving.**
+   `addDays(1)` on 00:00 local time is 00:00 the next day, even across a DST
+   change (6.x gave 01:00 or 23:00). The same applies to `subtractDays`,
+   `nextDay`, `previousDay`, `nextWeek`, `previousWeek`, `firstDayOfWeek`,
+   `lastDayOfWeek`, `addBusinessDays`, and `daysUpTo`, and every
+   `daysInMonth` entry is the `startOfDay` of its date. On the
+   day of a change, a skipped time moves forward by the jump and a repeated
+   time resolves to its first occurrence, unless the receiver is itself the
+   repeat, which keeps its offset. For an exact 24-hour step, use
+   `date.add(const Duration(days: 1))`.
+
+4. **Day counts, rounding, and HTTP dates are corrected.** `remainingDays`,
+   `passedDays`, `daysDifferenceTo`, `isTomorrow`, and `isYesterday` count
+   calendar days. `roundTo`, `floorTo`, and `ceilTo` align to the receiver's
+   wall clock, never land on the wrong side of the receiver around a clock
+   change, and count whole-day steps as calendar dates
+   (`floorTo(const Duration(days: 1))` equals `startOfDay`).
+   `httpDateFormat` takes every field from UTC. If you compensated for the
+   old results, remove the workaround.
+
+5. **Office MIME checks are precise.** `isDOCX` no longer matches `.doc`,
+   `isDOC` no longer matches `.docx`, and `isXLSX` no longer matches `.xls`.
+   To accept either format, use `isWord` or `isExcel`:
+
+   ```bash
+   grep -rnE "isDOC|isXLSX" lib/ test/
+   ```
+
+6. **`isValidPhoneNumber` gives one answer.** A `String?` receiver now uses
+   the same permissive check as a `String` receiver (convert_object's), so it
+   accepts more input than in 6.x. For the old strict pattern, use
+   `RegExp(regexValidPhoneNumber)` or `patternValidPhoneNumber` directly.
+
+7. **Typed debouncer history.** `Debouncer.executionHistory` is a
+   `List<DebouncerExecutionRecord>`. Replace `record['success']` with
+   `record.success`, or call `record.toMap()` for the old map shape.
+   `DebouncerState` no longer extends `Equatable`; equality is unchanged.
+
+8. **Per-subscription stream state.** `bufferCount` and `rateLimit` give
+   each listener of a broadcast stream its own state. `rateLimit` listens to
+   its source only once you listen to its result, and it forwards pause and
+   cancel.
+
+9. **Class modifiers.** `TimeUtils` and `NumbersHelper` are `abstract final`;
+   code that extended or implemented them no longer compiles.
+
+10. **stringo 3.** The re-exported string helpers changed behavior in stringo
+    2.0.0, most visibly `'Hello World'.truncate(5)`, which is now `'He...'`.
+    `mask` and `insert` now return `String?` even on a non-null `String`;
+    append `?? ''` where a `String` is required. See the
+    [stringo changelog](https://pub.dev/packages/stringo/changelog).
+
+## 3. Removed duplicates (no action in normal code)
+
+`DateTime.copyWith`, `int.gcd`, `num.isNegative` on non-null numbers, and
+`num?.asBool` were removed because the SDK or convert_object already provides
+a member with the same name and result. Calls resolve to those and compile
+unchanged. Only an explicit extension override such as
+`DHUDateExtensions(d).copyWith(...)` needs editing: drop the override.
+
 # Migration Guide (v6)
 
 Version 6.0.0 is a major release that refactors all conversion logic into a
@@ -166,25 +287,14 @@ The `.convertTo<T>()` extension method has been removed from `List` to avoid amb
 ### 8. Behavior Differences (Defaults)
 - `tryToBool` returns `null` for unknown values. Use `defaultValue: false` or
   `?? false` if you want a false fallback.
-- Numeric parsing is **lenient** by default (commas/spaces/underscores and
-  `(123)` → `-123`). You can enforce strict parsing:
+- Numeric parsing is **lenient** (commas/spaces/underscores and
+  `(123)` → `-123`), and convert_object has no strict switch. Where v5
+  strictness matters, check the input with `int.tryParse` or `num.tryParse`
+  first.
+- `Convert.toUri` turns emails and phone numbers into `mailto:` and `tel:`
+  URIs. To parse the text as-is, pass a converter or use `Uri.tryParse`:
   ```dart
-  Convert.configure(
-    ConvertConfig(
-      numbers: const NumberOptions(strictParsing: true),
-    ),
-  );
-  ```
-- URI parsing auto-detects emails and phone numbers. You can disable either:
-  ```dart
-  Convert.configure(
-    ConvertConfig(
-      uri: const UriOptions(
-        detectEmails: false,
-        detectPhoneNumbers: false,
-      ),
-    ),
-  );
+  final uri = Convert.toUri(value, converter: (o) => Uri.parse('$o'));
   ```
 - `tryToType<T>` returns `null` for unsupported target types. Use
   `Convert.toType<T>` if you need exceptions.
@@ -240,15 +350,15 @@ print(romanNumerals); // Map<int, String>
 
 ### 10.5. JSON Encoding Helpers Moved to `convert_object`
 
-The old map helpers did not move over as `encodableCopy` and
-`encodedJsonString`.
+The 5.x map helpers `encodableCopy` and `encodedJsonString` (named
+`makeEncodable` and `safelyEncodedJson` before 2.0) did not move over.
 
 Use the JSON helpers re-exported from `convert_object` instead:
 
 | v5 (Old) | v6 (New) |
 |:---|:---|
-| `map.makeEncodable` | `map.toJsonSafe()` or `map.toJsonMap()` |
-| `map.safelyEncodedJson` | `map.toJsonString(indent: '  ')` or `map.encodeWithIndent` |
+| `map.encodableCopy` | `map.toJsonSafe()` or `map.toJsonMap()` |
+| `map.encodedJsonString` | `map.toJsonString(indent: '  ')` or `map.encodeWithIndent` |
 
 Example:
 

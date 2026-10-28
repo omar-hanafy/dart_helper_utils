@@ -1,12 +1,13 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-/// This file contains extensions for the [NumberFormat] class from the intl package.
+/// Builds a [NumberFormat] from a pattern string.
 extension DHUNumberFormatNullableStringExtensions on String? {
   /// Creates a [NumberFormat] object using the string as the pattern, along with the given [locale].
   NumberFormat numberFormat({String? locale}) => NumberFormat(this, locale);
 }
 
-/// Extension methods for the [String] type to format numbers using the [intl] package.
+/// Builds currency [NumberFormat]s that use this string as the symbol or
+/// currency name.
 extension DHUNumberFormatStringExtensions on String {
   /// Creates a [NumberFormat] object as currency using the string as the currency symbol, along with the given locale and optional decimal digits.
   NumberFormat symbolCurrencyFormat({
@@ -43,7 +44,8 @@ extension DHUNumberFormatStringExtensions on String {
   }
 }
 
-/// Extension methods for the [num] type to format numbers using the [intl] package.
+/// `intl` number formatting for [num]: currency, compact, decimal,
+/// percent, scientific, and custom patterns.
 extension DHUNumberFormatExtensions on num {
   /// Formats the number as currency with the given [locale], [symbol], and [decimalDigits].
   String formatAsCurrency({
@@ -99,7 +101,7 @@ extension DHUNumberFormatExtensions on num {
     ).format(this);
   }
 
-  /// Formats the number as a decimal with the given [locale] and [decimalDigits].
+  /// Formats the number with the locale's decimal pattern.
   String formatAsDecimal({String? locale}) {
     return NumberFormat.decimalPattern(locale).format(this);
   }

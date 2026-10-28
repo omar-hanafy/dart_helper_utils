@@ -1,0 +1,477 @@
+# Data-driven fixes for `dart fix --apply`.
+#
+# Every transform here migrates a member that a breaking release renamed or
+# removed. Keep every transform from earlier releases; add new ones at the
+# end of the section for their release. The fixtures in test_fixes/ prove
+# each transform in CI (`dart fix test_fixes --compare-to-golden`).
+#
+# Extension members match by the receiver's static type, so each rename has
+# an `inClass` transform for ordinary calls (`date.isAtSameDayAs(other)`) and
+# an `inExtension` transform for explicit extension overrides
+# (`DHUDateExtensions(date).isAtSameDayAs(other)`).
+version: 1
+transforms:
+  # ---------------------------------------------------------------- 7.0.0
+  - title: "Rename to 'isSameYearAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameYearAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameYearAs'
+  - title: "Rename to 'isSameYearAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameYearAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameYearAs'
+  - title: "Rename to 'isSameMonthAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMonthAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMonthAs'
+  - title: "Rename to 'isSameMonthAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMonthAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMonthAs'
+  - title: "Rename to 'isSameDayAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameDayAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameDayAs'
+  - title: "Rename to 'isSameDayAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameDayAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameDayAs'
+  - title: "Rename to 'isSameHourAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameHourAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameHourAs'
+  - title: "Rename to 'isSameHourAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameHourAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameHourAs'
+  - title: "Rename to 'isSameMinuteAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMinuteAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMinuteAs'
+  - title: "Rename to 'isSameMinuteAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMinuteAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMinuteAs'
+  - title: "Rename to 'isSameSecondAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameSecondAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameSecondAs'
+  - title: "Rename to 'isSameSecondAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameSecondAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameSecondAs'
+  - title: "Rename to 'isSameMillisecondAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMillisecondAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMillisecondAs'
+  - title: "Rename to 'isSameMillisecondAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMillisecondAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMillisecondAs'
+  - title: "Rename to 'isSameMicrosecondAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMicrosecondAs'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMicrosecondAs'
+  - title: "Rename to 'isSameMicrosecondAs'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'isAtSameMicrosecondAs'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isSameMicrosecondAs'
+  - title: "Rename to 'addYears'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractYears'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addYears'
+  - title: "Rename to 'addYears'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractYears'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addYears'
+  - title: "Rename to 'addMonths'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMonths'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addMonths'
+  - title: "Rename to 'addMonths'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMonths'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addMonths'
+  - title: "Rename to 'addDays'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractDays'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addDays'
+  - title: "Rename to 'addDays'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractDays'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addDays'
+  - title: "Rename to 'addMinutes'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMinutes'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addMinutes'
+  - title: "Rename to 'addMinutes'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMinutes'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addMinutes'
+  - title: "Rename to 'addSeconds'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractSeconds'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addSeconds'
+  - title: "Rename to 'addSeconds'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractSeconds'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addSeconds'
+  - title: "Rename to 'addMilliseconds'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMilliseconds'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addMilliseconds'
+  - title: "Rename to 'addMilliseconds'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMilliseconds'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addMilliseconds'
+  - title: "Rename to 'addMicroseconds'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMicroseconds'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'addMicroseconds'
+  - title: "Rename to 'addMicroseconds'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'addOrSubtractMicroseconds'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'addMicroseconds'
+  - title: "Rename to 'formatAsyQQQ'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'formatASyQQQ'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'formatAsyQQQ'
+  - title: "Rename to 'formatAsyQQQ'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'formatASyQQQ'
+      inExtension: 'DHUDateFormatExtension'
+    changes:
+      - kind: 'rename'
+        newName: 'formatAsyQQQ'
+  - title: "Rename to 'nextDay'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'tomorrow'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'nextDay'
+  - title: "Rename to 'nextDay'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'tomorrow'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'nextDay'
+  - title: "Rename to 'previousDay'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'yesterday'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'previousDay'
+  - title: "Rename to 'previousDay'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'yesterday'
+      inExtension: 'DHUDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'previousDay'
+  - title: "Rename to 'isFuture'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isPresent'
+      inClass: 'DateTime'
+    changes:
+      - kind: 'rename'
+        newName: 'isFuture'
+  - title: "Rename to 'isFuture'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isPresent'
+      inExtension: 'DHUNullableDateExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isFuture'
+  - title: "Rename to 'enforceRtl'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'enforceRtlIn'
+      inClass: 'String'
+    changes:
+      - kind: 'rename'
+        newName: 'enforceRtl'
+  - title: "Rename to 'enforceRtl'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'enforceRtlIn'
+      inExtension: 'DHUBidiStringExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'enforceRtl'
+  # Iterable.find duplicated package:collection's firstWhereOrNull, which this
+  # package re-exports. Explicit `DHUCollectionsExtensions(x).find(...)` calls
+  # are a manual step: the replacement lives in collection's IterableExtension.
+  - title: "Replace with 'firstWhereOrNull'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'find'
+      inClass: 'Iterable'
+    changes:
+      - kind: 'rename'
+        newName: 'firstWhereOrNull'
+  # The Set-specific nullable extension duplicated the Iterable one exactly.
+  - title: "Rename to 'DHUCollectionsExtensionsNS'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      extension: 'DHUNullableSetExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'DHUCollectionsExtensionsNS'
+
+  # stringo 2.0.0 removed the String? synonyms isEmptyOrNull and
+  # isNotEmptyOrNull, which this package re-exported. 7.x keeps deprecated
+  # aliases on String? (see DHUNullSafeStringExtensions) so these transforms
+  # also reach nullable receivers. Explicit overrides name stringo's
+  # StringChecksExtensions, which still declares isBlank and isNotBlank.
+  - title: "Rename to 'isBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isEmptyOrNull'
+      inClass: 'String'
+    changes:
+      - kind: 'rename'
+        newName: 'isBlank'
+  - title: "Rename to 'isBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isEmptyOrNull'
+      inExtension: 'StringChecksExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isBlank'
+  - title: "Rename to 'isBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isEmptyOrNull'
+      inExtension: 'DHUNullSafeStringExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isBlank'
+  - title: "Rename to 'isNotBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isNotEmptyOrNull'
+      inClass: 'String'
+    changes:
+      - kind: 'rename'
+        newName: 'isNotBlank'
+  - title: "Rename to 'isNotBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isNotEmptyOrNull'
+      inExtension: 'StringChecksExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isNotBlank'
+  - title: "Rename to 'isNotBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isNotEmptyOrNull'
+      inExtension: 'DHUNullSafeStringExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isNotBlank'
+
+  # Iterable.swap returned a copy, but on List receivers the name already
+  # resolved to package:collection's in-place ListExtensions.swap. The copying
+  # variant is now swapped (like collection's sorted/shuffled).
+  - title: "Rename to 'swapped'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'swap'
+      inClass: 'Iterable'
+    changes:
+      - kind: 'rename'
+        newName: 'swapped'
+  - title: "Rename to 'swapped'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      method: 'swap'
+      inExtension: 'DHUCollectionsExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'swapped'

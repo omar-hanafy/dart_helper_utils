@@ -1,7 +1,8 @@
-import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'dart:collection';
 
-///  DHUMapExtension
+import 'package:dart_helper_utils/dart_helper_utils.dart';
+
+/// Key/value transformations and lookups for [Map].
 extension DHUMapExtension<K, V> on Map<K, V> {
   /// Swaps the keys with values in the map.
   /// Note: If there are duplicate values, the last key-value pair will be kept.
@@ -44,7 +45,7 @@ extension DHUMapExtension<K, V> on Map<K, V> {
   }
 }
 
-/// DHUMapNullableExtension
+/// Null-safe checks for a [Map] that may be `null`.
 extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   /// Returns `true` when every key and value is a primitive value.
   bool isPrimitive() {
@@ -60,7 +61,8 @@ extension DHUMapNullableExtension<K, V> on Map<K, V>? {
   bool get isNotEmptyOrNull => !isEmptyOrNull;
 }
 
-/// DHUMapExt
+/// Nested-structure helpers for string-keyed maps: flattening, deep
+/// merging, and dotted-path reads and writes.
 extension DHUMapExt<K extends String, V> on Map<K, V> {
   /// Flattens a nested map into a single-level map.
   ///

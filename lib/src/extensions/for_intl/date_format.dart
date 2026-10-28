@@ -1,18 +1,19 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-/// extension DHUNDateFormatExtension on DateTime?
+/// Null-safe `intl` date formatting for a [DateTime] that may be `null`.
 extension DHUNDateFormatExtension on DateTime? {
-  /// Formats the DateTime object using the provided pattern and optional locale.
-  /// respects null dates.
-  String? tryFormat(String format) =>
-      this == null ? null : format.dateFormat().format(this!);
+  /// Formats this date with the [DateFormat] [pattern] and optional
+  /// [locale], or returns `null` when the date is `null`.
+  String? tryFormat(String pattern, [String? locale]) =>
+      this == null ? null : DateFormat(pattern, locale).format(this!);
 
   /// Formats the DateTime object in UTC using the provided pattern and optional locale.
   String? tryDateFormatUtc(String pattern, [String? locale]) =>
       this == null ? null : DateFormat(pattern, locale).format(this!.toUtc());
 }
 
-/// extension DHUDateFormatExtension on DateTime
+/// `intl` date formatting for [DateTime], one shortcut per [DateFormat]
+/// skeleton. Every method takes an optional locale.
 extension DHUDateFormatExtension on DateTime {
   /// Formats the DateTime object using the provided pattern and optional locale.
   String format(String pattern, [String? locale]) =>
@@ -104,7 +105,14 @@ extension DHUDateFormatExtension on DateTime {
       DateFormat.yMMMMEEEEd(locale).format(this);
 
   /// Formats the DateTime object using the yQQQ format and optional locale.
-  String formatASyQQQ([String? locale]) => DateFormat.yQQQ(locale).format(this);
+  ///
+  /// Renamed from the misspelled `formatASyQQQ` in 7.0.0;
+  /// `dart fix --apply` migrates callers.
+  String formatAsyQQQ([String? locale]) => DateFormat.yQQQ(locale).format(this);
+
+  /// Deprecated, misspelled alias of [formatAsyQQQ].
+  @Deprecated('Use formatAsyQQQ. This alias will be removed in 8.0.0.')
+  String formatASyQQQ([String? locale]) => formatAsyQQQ(locale);
 
   /// Formats the DateTime object using the yQQQQ format and optional locale.
   String formatAsyQQQQ([String? locale]) =>
@@ -120,7 +128,7 @@ extension DHUDateFormatExtension on DateTime {
   String formatAsHms([String? locale]) => DateFormat.Hms(locale).format(this);
 }
 
-/// extension DHUDateFormatNStringExtension on String?
+/// Builds a [DateFormat] from a pattern string.
 extension DHUDateFormatNStringExtension on String? {
   /// Creates a DateFormat object using the string as the pattern and optional locale.
   DateFormat dateFormat([String? locale]) => DateFormat(this, locale);

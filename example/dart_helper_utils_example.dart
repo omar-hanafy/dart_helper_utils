@@ -1,4 +1,3 @@
-// ignore_for_file: avoid_print
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
 Future<void> main() async {

@@ -1,6 +1,6 @@
 ---
 name: migrate-dart-helper-utils-v5-to-v6
-description: Use when upgrading a project from dart_helper_utils 5.x or earlier to 6.x, or fixing compile errors after that bump - ConvertObject/toString1/ParsingException renames, altKeys to alternativeKeys, firstValueForKeys to tryGetRaw, removed Paginator/DoublyLinkedList/country data/StringSimilarity, httpFormat to httpDateFormat, flatJson to flatMap, TimeUtils.throttle signature change, percentile 0-100 range, delay methods, or helpers that moved to convert_object or package collection.
+description: Use when upgrading a project from dart_helper_utils 5.x or earlier to 6.x, or fixing compile errors after that bump - ConvertObject/toString1/ParsingException renames, altKeys to alternativeKeys, firstValueForKeys to tryGetRaw, removed Paginator/DoublyLinkedList/country data/StringSimilarity, httpFormat to httpDateFormat, encodedJsonString to toJsonString, TimeUtils.throttle signature change, percentile 0-100 range, delay methods, or helpers that moved to convert_object or package collection.
 ---
 
 # Migrate dart_helper_utils v5 to v6
@@ -17,7 +17,9 @@ covers 4.x code, which mostly compiled unchanged under 5.x) to 6.x.
    discarding that branch - never reset user work without explicit
    confirmation.
 2. Run the test suite BEFORE migrating and record the baseline.
-3. Confirm the current version: `grep -A2 'dart_helper_utils' pubspec.lock`.
+3. Confirm the current version:
+   `dart pub deps --style=compact | grep '^- dart_helper_utils '`
+   (`flutter pub deps` in a Flutter app).
    Already >= 6.0.0 means only leftover compile errors need the tables here,
    not the dependency change.
 
@@ -26,9 +28,9 @@ covers 4.x code, which mostly compiled unchanged under 5.x) to 6.x.
 ```bash
 grep -rln "package:dart_helper_utils" lib/ test/
 # v5-only symbols that will break:
-grep -rnE "ConvertObject\.|ParsingException|toString1|altKeys|firstValueForKeys|firstElementForIndices|httpFormat|flatJson|makeEncodable|safelyEncodedJson|DoublyLinkedList|Paginator|InfinitePaginator|AsyncPaginator|StringSimilarity|similarityTo|compareWith|DHUCountry|DHUTimezone|convertTo<" lib/ test/
+grep -rnE "ConvertObject\.|ParsingException|toString1|altKeys|firstValueForKeys|firstElementForIndices|httpFormat|encodableCopy|encodedJsonString|flatJson|makeEncodable|safelyEncodedJson|DoublyLinkedList|Paginator|InfinitePaginator|AsyncPaginator|StringSimilarity|similarityTo|compareWith|DHUCountry|DHUTimezone|convertTo<" lib/ test/
 # bare top-level conversion helpers (v5):
-grep -rnE "\b(toNum|toInt|toDouble|toBool|toDateTime|toUri|toList|toSet|toMap|toBigInt|toType|tryTo[A-Z][a-zA-Z]*)\(" lib/ test/
+grep -rnE "(^|[^.[:alnum:]_])(toNum|toInt|toDouble|toBool|toDateTime|toUri|toList|toSet|toMap|toBigInt|toType|tryTo[A-Z][a-zA-Z]*)\(" lib/ test/
 ```
 
 For a large codebase, delegate the sweep to a read-only search subagent and
@@ -45,8 +47,9 @@ have it return the file list with per-symbol counts.
    `Convert.string`, bare `toInt(x)` to `convertToInt(x)`,
    `ParsingException` to `ConversionException` (context is `e.context`),
    `altKeys:` to `alternativeKeys:`, `firstValueForKeys` to `tryGetRaw`,
-   `httpFormat` to `httpDateFormat`, `flatJson` to `flatMap`,
-   `makeEncodable`/`safelyEncodedJson` to `toJsonSafe()`/`toJsonString()`.
+   `httpFormat` to `httpDateFormat`, `encodableCopy`/`encodedJsonString`
+   to `toJsonSafe()`/`toJsonString()`. Code older than 2.0 has `flatJson`
+   (now `flatMap`) and `makeEncodable`/`safelyEncodedJson` instead.
 3. Replace REMOVED features (each needs a decision, not a rename):
    - Paginator/AsyncPaginator/InfinitePaginator: no v6 equivalent; move to
      a pagination package or inline the logic.
@@ -61,9 +64,11 @@ have it return the file list with per-symbol counts.
      `convertTo`).
 4. Fix duplicate-helper removals: `firstOrNull`, `groupBy`, `mapIndexed`,
    `whereNotNull`, ... now come from the re-exported `package:collection`;
-   the same names keep working with ONE DHU import. Ambiguous-extension
-   errors mean a file imports both DHU and `collection` (or old DHU
-   leftovers) - keep a single provider per file.
+   the same names keep working with ONE DHU import. A leftover direct
+   `collection` import is only an `unnecessary_import` info; remove it.
+   Ambiguous-extension errors come from another package or the project's
+   own extensions declaring the same member; disambiguate with `hide` or an
+   explicit extension override.
 5. `dart analyze` and iterate until clean.
 
 ## Behavior changes to audit (compile-clean but different at runtime)
@@ -73,11 +78,12 @@ have it return the file list with per-symbol counts.
   relied on the old behavior; use `containsKey` to distinguish absence.
 - `tryToBool` returns null (not false) for unknown values; add `?? false`
   where a false fallback was assumed.
-- Numeric parsing is LENIENT by default (commas, spaces, `(123)` as -123);
-  set `NumberOptions(strictParsing: true)` via `Convert.configure` to keep
-  strict v5 behavior.
-- URI parsing auto-detects emails/phones into mailto and tel URIs; disable
-  with `UriOptions(detectEmails: false, detectPhoneNumbers: false)`.
+- Numeric parsing is LENIENT (commas, spaces, `(123)` as -123), and
+  convert_object has no strict switch. Where v5 strictness matters, check
+  the input with `int.tryParse`/`num.tryParse` first.
+- `Convert.toUri` always turns emails and phone numbers into mailto: and
+  tel: URIs. To avoid that, pass `converter: (o) => Uri.parse('$o')` or call
+  `Uri.tryParse` directly.
 - `toDateTime` now accepts numeric epochs (seconds or milliseconds by
   magnitude).
 - `percentile` now takes 0-100 (v5 took 0-1): `values.percentile(0.5)`
@@ -94,7 +100,7 @@ have it return the file list with per-symbol counts.
 - `concatWithSingleList`/`concatWithMultipleList` return the non-empty side
   when one side is empty.
 - Delay helpers are methods now: `2.secondsDelay()`, not `2.secDelay`
-  (a v4-to-v5 change that often surfaces here).
+  (a v3-to-v4 change that often surfaces here).
 
 ## Cases requiring human judgment
 

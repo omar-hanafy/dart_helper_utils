@@ -1,0 +1,82 @@
+name: Agent plugin
+
+# Installs the AI coding-assistant plugin in the current Claude Code, Codex,
+# and Antigravity CLIs. The hosts change often, so this also runs weekly: a
+# host contract change should fail here before a user reports it. It is not a
+# required check, because a host outage must not block a package release.
+on:
+  pull_request:
+    paths:
+      - ".agents/**"
+      - ".claude-plugin/**"
+      - ".github/workflows/agent-plugin.yml"
+      - "pubspec.yaml"
+      - "README.md"
+      - "tool/validate_agent_plugin.dart"
+      - "tool/verify_agent_hosts.dart"
+      - "tooling/ai/**"
+  push:
+    branches: [main]
+    paths:
+      - ".agents/**"
+      - ".claude-plugin/**"
+      - ".github/workflows/agent-plugin.yml"
+      - "pubspec.yaml"
+      - "README.md"
+      - "tool/validate_agent_plugin.dart"
+      - "tool/verify_agent_hosts.dart"
+      - "tooling/ai/**"
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  hosts:
+    name: Agent plugin / Hosts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Dart (stable)
+        uses: dart-lang/setup-dart@6afc89df92d6eb3834022f73cd65adc8cdfcb92d # v1.8.1
+        with:
+          sdk: stable
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - name: Install the current hosts
+        # Current releases on purpose: upstream contract drift must fail here.
+        run: | # zizmor: ignore[adhoc-packages]
+          npm install --global @anthropic-ai/claude-code @openai/codex
+          curl -fsSL https://antigravity.google/cli/install.sh | bash -s -- --dir "$HOME/.local/bin"
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Validate the plugin files
+        run: dart run tool/validate_agent_plugin.dart
+
+      - name: Install the plugin from this checkout
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          dart run tool/verify_agent_hosts.dart --require claude,codex,agy
+
+      - name: Install the published plugin from GitHub
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          dart run tool/verify_agent_hosts.dart --require claude,codex,agy --github main

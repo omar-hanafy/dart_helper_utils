@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:dart_helper_utils/src/other_utils/debouncer.dart';
 
-/// A utility class that provides helper methods for working with time.
-abstract class TimeUtils {
+/// Static helpers for timing work: measuring execution time, debouncing,
+/// throttling, periodic execution, and soft timeouts.
+abstract final class TimeUtils {
   /// Calculates the execution duration of a task, accommodating both synchronous
   /// and asynchronous operations.
   ///
@@ -104,8 +105,10 @@ abstract class TimeUtils {
   /// Creates a throttled callback that invokes [func] at most once per [interval].
   ///
   /// The returned object is callable like a function and supports `cancel`/`dispose`.
+  /// [func] may be synchronous or return a [Future]; errors from either are
+  /// passed to [onError], or rethrown in the current zone when it is `null`.
   static ThrottledCallback throttle(
-    void Function() func,
+    FutureOr<void> Function() func,
     Duration interval, {
     bool leading = true,
     bool trailing = false,
@@ -176,21 +179,23 @@ abstract class TimeUtils {
     });
 
     final taskFuture = Future<T>.sync(task);
-    taskFuture
-        .then((value) {
-          if (!completer.isCompleted) {
-            timeoutTimer?.cancel();
-            completer.complete(value);
-          }
-        })
-        .catchError((error, stackTrace) {
-          if (!completer.isCompleted) {
-            timeoutTimer?.cancel();
-            completer.completeError(error, stackTrace);
-          }
-          // Once the completer finished because the timeout elapsed, swallow
-          // remaining errors to keep the zone clean.
-        });
+    unawaited(
+      taskFuture
+          .then((value) {
+            if (!completer.isCompleted) {
+              timeoutTimer?.cancel();
+              completer.complete(value);
+            }
+          })
+          .catchError((Object error, StackTrace stackTrace) {
+            if (!completer.isCompleted) {
+              timeoutTimer?.cancel();
+              completer.completeError(error, stackTrace);
+            }
+            // Once the completer finished because the timeout elapsed, swallow
+            // remaining errors to keep the zone clean.
+          }),
+    );
 
     return completer.future.whenComplete(() => timeoutTimer?.cancel());
   }
@@ -205,14 +210,15 @@ typedef ThrottlerErrorHandler = void Function(Object error, StackTrace stack);
 /// A lightweight throttler for rate-limiting actions over time.
 class Throttler {
   /// Creates a [Throttler] that enforces a minimum delay between executions.
+  ///
+  /// `timerFactory` replaces [Timer.new], which is useful for tests.
   Throttler({
     required this.interval,
     this.leading = true,
     this.trailing = false,
-    ThrottlerErrorHandler? onError,
-    Timer Function(Duration duration, void Function() callback)? timerFactory,
-  }) : _onError = onError,
-       _timerFactory = timerFactory ?? Timer.new;
+    this._onError,
+    TimerFactory? timerFactory,
+  }) : _timerFactory = timerFactory ?? Timer.new;
 
   /// Minimum delay between executions.
   final Duration interval;
@@ -224,8 +230,7 @@ class Throttler {
   final bool trailing;
 
   final ThrottlerErrorHandler? _onError;
-  final Timer Function(Duration duration, void Function() callback)
-  _timerFactory;
+  final TimerFactory _timerFactory;
   Timer? _timer;
   bool _isThrottled = false;
   bool _isDisposed = false;
@@ -288,14 +293,13 @@ class Throttler {
   }
 
   void _executeAction(ThrottlerAction action) {
-    Future.sync(action).catchError((Object error, StackTrace stackTrace) {
-      final handler = _onError;
-      if (handler != null) {
+    unawaited(
+      Future.sync(action).catchError((Object error, StackTrace stackTrace) {
+        final handler = _onError;
+        if (handler == null) Error.throwWithStackTrace(error, stackTrace);
         handler(error, stackTrace);
-      } else {
-        throw error;
-      }
-    });
+      }),
+    );
   }
 
   void _ensureNotDisposed() {
@@ -311,7 +315,7 @@ class ThrottledCallback {
   ThrottledCallback(this._throttler, this._action);
 
   final Throttler _throttler;
-  final void Function() _action;
+  final ThrottlerAction _action;
 
   /// Invokes the throttled action.
   void call() => _throttler.run(_action);

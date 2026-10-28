@@ -1,0 +1,8 @@
+import 'package:dart_helper_utils/dart_helper_utils.dart'
+    show DHUDateExtensions, DHUNullableDateExtensions;
+
+bool sameMonth(DateTime a, DateTime b) => a.isSameMonthAs(b);
+
+DateTime monthLater(DateTime a) => a.addMonths(1);
+
+bool future(DateTime? a) => a.isFuture;

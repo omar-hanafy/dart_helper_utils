@@ -1,8 +1,10 @@
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 
-// String→DateTime conversions moved to convert_object.
-
-/// NumberToDateUtils
+/// Calendar lookups on numbers: month and weekday names, and checks against
+/// the current date.
+///
+/// Weekday numbers follow ISO 8601 and [DateTime.weekday]: Monday is 1 and
+/// Sunday is 7. Month numbers are 1-based.
 extension NumberToDateUtils on num {
   /// Gets the full month name (e.g., "January") corresponding to this number (1-12).
   ///
@@ -51,14 +53,6 @@ extension NumberToDateUtils on num {
   /// ```
   /// If the number is outside the range 1-12, it will be clamped within this range.
   String get toSmallMonthName => toFullMonthName.substring(0, 3);
-
-  /// Converts a numeric timestamp (in milliseconds since epoch) to a DateTime object.
-  ///
-  /// Example:
-  /// ```dart
-  /// 1609459200000.timestampToDate; // Returns DateTime for 2021-01-01 00:00:00.000
-  /// ```
-  // Removed: prefer ConvertObject.toDateTime(this) for epoch values.
 
   /// Checks if the number (assumed to represent a month, 1-based) is within the specified range of months.
   ///
@@ -128,7 +122,11 @@ extension NumberToDateUtils on num {
   }
 }
 
-/// DHUNullableDateExtensions
+/// Null-safe checks and conversions for a [DateTime] that may be `null`.
+///
+/// Every check returns `false` for a `null` receiver, and every conversion
+/// returns `null`. Checks against "today" compare the receiver's calendar
+/// fields with the local current date.
 extension DHUNullableDateExtensions on DateTime? {
   /// Converts this DateTime to the local time zone.
   ///
@@ -141,13 +139,13 @@ extension DHUNullableDateExtensions on DateTime? {
   /// Example: "2024-01-15T10:30:00.000Z"
   String? get toUtcIso => this?.toUtc().toIso8601String();
 
-  /// checks isTomorrow
+  /// Whether this date falls on the calendar day after today.
   bool get isTomorrow {
     if (this == null) return false;
     return this!.remainingDays == 1;
   }
 
-  /// return true if the date is today
+  /// Whether this date falls on today's calendar day.
   bool get isToday {
     if (this == null) return false;
     final now = DateTime.now();
@@ -156,36 +154,39 @@ extension DHUNullableDateExtensions on DateTime? {
         this!.day == now.day;
   }
 
-  /// checks isYesterday
+  /// Whether this date falls on the calendar day before today.
   bool get isYesterday {
     if (this == null) return false;
     return this!.remainingDays == -1;
   }
 
-  /// checks isPresent
-  bool get isPresent => this != null && this!.isAfter(DateTime.now());
+  /// Whether this moment is later than now.
+  ///
+  /// Renamed from `isPresent` in 7.0.0; `dart fix --apply` migrates callers.
+  bool get isFuture => this != null && this!.isAfter(DateTime.now());
 
-  /// checks isPast
+  /// Whether this moment is earlier than now.
   bool get isPast => this != null && this!.isBefore(DateTime.now());
 
-  /// checks isInPastWeek
+  /// Whether this moment is earlier than now and no more than a week before
+  /// the start of today.
   bool get isInPastWeek {
     if (this == null) return false;
     final now = DateTime.now();
     return now.dateOnly.previousWeek.isBefore(this!) && now.isAfter(this!);
   }
 
-  /// checks isInThisYear
+  /// Whether this date falls in the current calendar year.
   bool get isInThisYear => this != null && this!.year == DateTime.now().year;
 
-  /// checks isInThisMonth
+  /// Whether this date falls in the current calendar month of the current year.
   bool get isInThisMonth {
     if (this == null) return false;
     final now = DateTime.now();
     return this!.month == now.month && this!.year == now.year;
   }
 
-  /// checks isLeapYear
+  /// Whether this date's year is a leap year in the Gregorian calendar.
   bool get isLeapYear {
     if (this == null) return false;
     return (this!.year % 4 == 0) &&
@@ -219,11 +220,15 @@ extension DHUNullableDateExtensions on DateTime? {
     );
   }
 
-  /// checks passedDuration
+  /// The time elapsed since this moment, or `null` for a `null` receiver.
+  ///
+  /// Negative when this moment is in the future.
   Duration? get passedDuration =>
       this == null ? null : DateTime.now().difference(this!);
 
-  /// checks remainingDuration
+  /// The time left until this moment, or `null` for a `null` receiver.
+  ///
+  /// Negative when this moment is in the past.
   Duration? get remainingDuration => this?.difference(DateTime.now());
 
   /// Returns the number of days remaining until this DateTime.
@@ -233,38 +238,40 @@ extension DHUNullableDateExtensions on DateTime? {
   /// Returns the number of days passed since this DateTime.
   /// Returns a positive number for past dates, and negative for future dates.
   int? get passedDays => this?.passedDays;
+
+  /// Deprecated alias of [isFuture]: "present" never meant "now".
+  @Deprecated('Use isFuture. This alias will be removed in 8.0.0.')
+  bool get isPresent => isFuture;
 }
 
-/// DHUDateExtensions
+/// Calendar arithmetic, comparisons, and formatting helpers for [DateTime].
+///
+/// Day-based arithmetic (`addDays`, `nextDay`, `firstDayOfWeek`,
+/// `addBusinessDays`, and friends) moves by calendar days and keeps the
+/// wall-clock time, so it stays correct across daylight-saving transitions.
+/// On the day of a change, a time the clocks skip moves forward by the
+/// length of the jump, and a time they repeat resolves to its first
+/// occurrence (unless the receiver is itself the repeat, so `addDays(0)`
+/// returns it). Sub-day arithmetic (`addHours` and smaller) adds exact
+/// durations.
+/// Every helper that builds a new date keeps the receiver's time zone: a UTC
+/// input produces a UTC result.
 extension DHUDateExtensions on DateTime {
   /// Converts this DateTime to local time.
   DateTime get local => toLocal();
 
-  /// Format a date to "DAY, DD MON YYYY hh:mm:ss GMT" according to
-  /// [RFC-1123](https://tools.ietf.org/html/rfc1123 "RFC-1123"),
-  /// e.g. `Thu, 1 Jan 1970 00:00:00 GMT`.
+  /// Formats this moment as an HTTP date (RFC 7231 IMF-fixdate, the RFC 1123
+  /// format) in GMT, e.g. `Thu, 01 Jan 1970 00:00:00 GMT`.
+  ///
+  /// Every field, including the weekday and month names, is taken from the
+  /// UTC representation of this moment.
   String get httpDateFormat {
-    final weekday = smallWeekdays[this.weekday];
-    final month = smallMonthsNames[this.month];
     final d = toUtc();
-    final sb = StringBuffer()
-      ..write(weekday)
-      ..write(', ')
-      ..write(d.day <= 9 ? '0' : '')
-      ..write(d.day)
-      ..write(' ')
-      ..write(month)
-      ..write(' ')
-      ..write(d.year)
-      ..write(d.hour <= 9 ? ' 0' : ' ')
-      ..write(d.hour)
-      ..write(d.minute <= 9 ? ':0' : ':')
-      ..write(d.minute)
-      ..write(d.second <= 9 ? ':0' : ':')
-      ..write(d.second)
-      ..write(' GMT');
-
-    return sb.toString();
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${smallWeekdays[d.weekday]}, ${twoDigits(d.day)} '
+        '${smallMonthsNames[d.month]} ${d.year.toString().padLeft(4, '0')} '
+        '${twoDigits(d.hour)}:${twoDigits(d.minute)}:${twoDigits(d.second)} '
+        'GMT';
   }
 
   /// Converts this DateTime to UTC and returns an ISO 8601 string.
@@ -288,54 +295,13 @@ extension DHUDateExtensions on DateTime {
   /// * `uuu` are microseconds in the range 001 to 999. If [microsecond] equals
   ///   0, then this part is omitted.
   ///
-  /// The resulting string can be parsed back using [parse].
+  /// The resulting string can be parsed back using [DateTime.parse].
   /// ```dart
   /// final moonLanding = DateTime.utc(1969, 7, 20, 20, 18, 04);
   /// final isoDate = moonLanding.toIso8601String();
   /// print(isoDate); // 1969-07-20T20:18:04.000Z
   /// ```
   String get toIso => toIso8601String();
-
-  /// Returns a new DateTime with the provided fields replaced.
-  ///
-  /// If [isUtc] is provided, the returned value will be constructed in UTC
-  /// or local time accordingly. Otherwise, it preserves the current timezone.
-  DateTime copyWith({
-    int? year,
-    int? month,
-    int? day,
-    int? hour,
-    int? minute,
-    int? second,
-    int? millisecond,
-    int? microsecond,
-    bool? isUtc,
-  }) {
-    final useUtc = isUtc ?? this.isUtc;
-    if (useUtc) {
-      return DateTime.utc(
-        year ?? this.year,
-        month ?? this.month,
-        day ?? this.day,
-        hour ?? this.hour,
-        minute ?? this.minute,
-        second ?? this.second,
-        millisecond ?? this.millisecond,
-        microsecond ?? this.microsecond,
-      );
-    }
-
-    return DateTime(
-      year ?? this.year,
-      month ?? this.month,
-      day ?? this.day,
-      hour ?? this.hour,
-      minute ?? this.minute,
-      second ?? this.second,
-      millisecond ?? this.millisecond,
-      microsecond ?? this.microsecond,
-    );
-  }
 
   /// Adds the specified duration to this DateTime.
   DateTime operator +(Duration duration) => add(duration);
@@ -346,110 +312,114 @@ extension DHUDateExtensions on DateTime {
   /// Returns the duration that has passed since this DateTime.
   Duration get passedDuration => DateTime.now().difference(this);
 
-  /// Returns the number of days that have passed since this DateTime.
-  int get passedDays {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final self = DateTime(year, month, day);
-    return today.difference(self).inDays;
-  }
+  /// The number of calendar days from this date to today.
+  ///
+  /// Positive for past dates, negative for future dates, `0` for today.
+  /// Daylight-saving transitions do not affect the count.
+  int get passedDays => _calendarDaysBetween(this, DateTime.now());
 
   /// Returns the duration remaining until this DateTime.
   Duration get remainingDuration => difference(DateTime.now());
 
-  /// Returns the number of days remaining until this DateTime.
-  int get remainingDays {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final self = DateTime(year, month, day);
-    return self.difference(today).inDays;
-  }
+  /// The number of calendar days from today to this date.
+  ///
+  /// Positive for future dates, negative for past dates, `0` for today.
+  /// Daylight-saving transitions do not affect the count.
+  int get remainingDays => _calendarDaysBetween(DateTime.now(), this);
 
-  /// Checks if this DateTime is in the same year as [other].
-  bool isAtSameYearAs(DateTime other) => year == other.year;
+  /// Whether this date and [other] fall in the same calendar year.
+  bool isSameYearAs(DateTime other) => year == other.year;
 
-  /// Checks if this DateTime is in the same year as [other].
-  bool isSameYearAs(DateTime other) => isAtSameYearAs(other);
+  /// Whether this date and [other] fall in the same calendar month of the
+  /// same year.
+  bool isSameMonthAs(DateTime other) =>
+      isSameYearAs(other) && month == other.month;
 
-  /// Checks if this DateTime is in the same month and year as [other].
-  bool isAtSameMonthAs(DateTime other) =>
-      isAtSameYearAs(other) && month == other.month;
+  /// Whether this date and [other] fall on the same calendar day.
+  ///
+  /// Compares the year, month, and day fields as they are; it does not
+  /// convert either value to another time zone first.
+  bool isSameDayAs(DateTime other) => isSameMonthAs(other) && day == other.day;
 
-  /// Checks if this DateTime is in the same month and year as [other].
-  bool isSameMonthAs(DateTime other) => isAtSameMonthAs(other);
+  /// Whether this date and [other] fall in the same hour of the same day.
+  bool isSameHourAs(DateTime other) => isSameDayAs(other) && hour == other.hour;
 
-  /// Checks if this DateTime is on the same day, month, and year as [other].
-  bool isAtSameDayAs(DateTime other) =>
-      isAtSameMonthAs(other) && day == other.day;
+  /// Whether this date and [other] fall in the same minute of the same hour.
+  bool isSameMinuteAs(DateTime other) =>
+      isSameHourAs(other) && minute == other.minute;
 
-  /// Checks if this DateTime is in the same hour, day, month, and year as [other].
-  bool isAtSameHourAs(DateTime other) =>
-      isAtSameDayAs(other) && hour == other.hour;
+  /// Whether this date and [other] fall in the same second of the same
+  /// minute.
+  bool isSameSecondAs(DateTime other) =>
+      isSameMinuteAs(other) && second == other.second;
 
-  /// Checks if this DateTime is in the same minute, hour, day, month, and year as [other].
-  bool isAtSameMinuteAs(DateTime other) =>
-      isAtSameHourAs(other) && minute == other.minute;
+  /// Whether this date and [other] fall in the same millisecond of the same
+  /// second.
+  bool isSameMillisecondAs(DateTime other) =>
+      isSameSecondAs(other) && millisecond == other.millisecond;
 
-  /// Checks if this DateTime is in the same second, minute, hour, day, month, and year as [other].
-  bool isAtSameSecondAs(DateTime other) =>
-      isAtSameMinuteAs(other) && second == other.second;
+  /// Whether this date and [other] share every field down to the
+  /// microsecond.
+  bool isSameMicrosecondAs(DateTime other) =>
+      isSameMillisecondAs(other) && microsecond == other.microsecond;
 
-  /// Checks if this DateTime is in the same millisecond, second, minute, hour, day, month, and year as [other].
-  bool isAtSameMillisecondAs(DateTime other) =>
-      isAtSameSecondAs(other) && millisecond == other.millisecond;
+  /// Midnight at the start of this date's day, in the same time zone.
+  ///
+  /// Where the clocks skip that midnight, this is the moment they jump to
+  /// (01:00 on a day that starts with a forward jump); where they repeat it,
+  /// its first occurrence. The other start-of helpers resolve the same way.
+  DateTime get startOfDay => _dateOnly(this);
 
-  /// Checks if this DateTime is in the same microsecond, millisecond, second, minute, hour, day, month, and year as [other].
-  bool isAtSameMicrosecondAs(DateTime other) =>
-      isAtSameMillisecondAs(other) && microsecond == other.microsecond;
+  /// Midnight on the first day of this date's month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
+  DateTime get startOfMonth => _date(isUtc, year, month);
 
-  /// Returns a DateTime representing the start of the day for this DateTime.
-  DateTime get startOfDay => DateTime(year, month, day);
+  /// Midnight on January 1 of this date's year, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
+  DateTime get startOfYear => _date(isUtc, year);
 
-  /// Returns a DateTime representing the start of the month for this DateTime.
-  DateTime get startOfMonth => DateTime(year, month);
+  /// This date at midnight, in the same time zone. Same as [startOfDay].
+  DateTime get dateOnly => _dateOnly(this);
 
-  /// Returns a DateTime representing the start of the year for this DateTime.
-  DateTime get startOfYear => DateTime(year);
-
-  /// Returns a DateTime representing tomorrow relative to this DateTime.
-  DateTime get tomorrow => add(const Duration(days: 1));
-
-  /// Returns a DateTime representing yesterday relative to this DateTime.
-  DateTime get yesterday => subtract(const Duration(days: 1));
-
-  /// Returns a DateTime representing only the date part of this DateTime.
-  DateTime get dateOnly => DateTime(year, month, day);
-
-  /// Returns a list of DateTimes representing the days in the same month as this DateTime.
+  /// The days of a month calendar grid that contains this date's month.
+  ///
+  /// The grid starts on the Monday on or before the first day of the month
+  /// and ends on the Sunday on or after the last day, so its length is
+  /// always a multiple of seven and it includes days from the neighboring
+  /// months. Each entry is the [startOfDay] of its date in this date's time
+  /// zone. A date the clocks skipped entirely (Apia skipped 2011-12-30) has
+  /// no moment of its own, so its entry is the start of the next date.
   List<DateTime> get daysInMonth {
-    final first = firstDayOfMonth;
-    // Calculate days before to align with Monday (ISO 8601 default).
-    // Mon(1) -> 0, Sun(7) -> 6.
-    final daysBefore = (first.weekday - 1) % DateTime.daysPerWeek;
-    final firstToDisplay = first.subtract(Duration(days: daysBefore));
-    final last = lastDayOfMonth;
-    // Add days to include the last day and fill the week through Sunday.
-    final daysAfter = DateTime.daysPerWeek - last.weekday + 1;
-    final lastToDisplay = last.add(Duration(days: daysAfter));
-    return firstToDisplay.daysUpTo(lastToDisplay).toList();
+    // Mon(1) -> 0 leading days, Sun(7) -> 6 leading days (ISO 8601 weeks).
+    final leading =
+        (DateTime.utc(year, month).weekday - 1) % DateTime.daysPerWeek;
+    final last = DateTime.utc(year, month + 1, 0);
+    // Fill the last week through Sunday.
+    final count = leading + last.day + DateTime.daysPerWeek - last.weekday;
+    return [
+      for (var i = 0; i < count; i++)
+        _date(isUtc, year, month, 1 - leading + i),
+    ];
   }
 
-  /// Returns a DateTime representing the previous day relative to this DateTime.
+  /// The previous calendar day at the same wall-clock time.
   DateTime get previousDay => addDays(-1);
 
-  /// Returns a DateTime representing the next day relative to this DateTime.
+  /// The next calendar day at the same wall-clock time.
   DateTime get nextDay => addDays(1);
 
-  /// Returns a DateTime representing the previous week relative to this DateTime.
-  DateTime get previousWeek => subtract(const Duration(days: 7));
+  /// The same weekday one week earlier, at the same wall-clock time.
+  DateTime get previousWeek => addDays(-DateTime.daysPerWeek);
 
-  /// Returns a DateTime representing the next week relative to this DateTime.
-  DateTime get nextWeek => add(const Duration(days: 7));
+  /// The same weekday one week later, at the same wall-clock time.
+  DateTime get nextWeek => addDays(DateTime.daysPerWeek);
 
   /// Returns a DateTime representing the first day of the week for this DateTime.
   ///
   /// [startOfWeek] is an optional parameter specifying the weekday that is considered
   /// the start of the week (1 for Monday, 7 for Sunday, etc.). Defaults to Monday.
+  ///
+  /// The result keeps this date's wall-clock time and time zone.
   DateTime firstDayOfWeek({int startOfWeek = DateTime.monday}) {
     // Normalize the startOfWeek value to be within the range of 1-7
     final normalizedStartOfWeek =
@@ -461,7 +431,7 @@ extension DHUDateExtensions on DateTime {
         (weekday - normalizedStartOfWeek + DateTime.daysPerWeek) %
         DateTime.daysPerWeek;
 
-    return subtract(Duration(days: daysToSubtract));
+    return addDays(-daysToSubtract);
   }
 
   /// Returns a DateTime representing the last day of the week for this DateTime.
@@ -469,141 +439,73 @@ extension DHUDateExtensions on DateTime {
   /// [startOfWeek] is an optional parameter specifying the weekday that is considered
   /// the start of the week (1 for Monday, 7 for Sunday, etc.). Defaults to Monday.
   ///
-  /// Preserves the original time zone: UTC stays UTC, local stays local.
+  /// The result keeps this date's wall-clock time and time zone.
   DateTime lastDayOfWeek({int startOfWeek = DateTime.monday}) {
     final normalizedStartOfWeek =
         ((startOfWeek - 1) % DateTime.daysPerWeek) + 1;
     final daysToAdd =
         (DateTime.daysPerWeek - weekday + normalizedStartOfWeek - 1) %
         DateTime.daysPerWeek;
-
-    // Convert to UTC and then back to the original timezone to ensure correct midnight
-    final utcLastDayOfWeek = toUtc().add(Duration(days: daysToAdd));
-    return isUtc ? utcLastDayOfWeek : utcLastDayOfWeek.toLocal();
+    return addDays(daysToAdd);
   }
 
-  /// Returns a DateTime representing the previous month relative to this Date Time.
-  DateTime get previousMonth {
-    var year = this.year;
-    var month = this.month;
-    if (month == 1) {
-      year--;
-      month = 12;
-    } else {
-      month--;
-    }
-    return DateTime(year, month);
+  /// Midnight on the first day of the previous month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
+  DateTime get previousMonth => _date(isUtc, year, month - 1);
+
+  /// Midnight on the first day of the next month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
+  DateTime get nextMonth => _date(isUtc, year, month + 1);
+
+  /// Midnight on the first day of this date's month, in the same time zone.
+  /// Same as [startOfMonth].
+  DateTime get firstDayOfMonth => _date(isUtc, year, month);
+
+  /// Midnight on the last day of this date's month, in the same time zone.
+  /// Resolves around clock changes like [startOfDay].
+  DateTime get lastDayOfMonth => _date(isUtc, year, month + 1, 0);
+
+  /// Moves this date by [years] calendar years, keeping the wall-clock time.
+  ///
+  /// When the target month is shorter, the day is clamped to its last day,
+  /// so February 29 plus one year is February 28. Negative values move back.
+  DateTime addYears(int years) => addMonths(years * 12);
+
+  /// Moves this date by [months] calendar months, keeping the wall-clock
+  /// time.
+  ///
+  /// When the target month is shorter, the day is clamped to its last day,
+  /// so March 31 minus one month is the last day of February. Negative values
+  /// move back across year boundaries.
+  DateTime addMonths(int months) {
+    final monthIndex = year * 12 + (month - 1) + months;
+    final newMonth = monthIndex % 12 + 1;
+    final newYear = (monthIndex - (newMonth - 1)) ~/ 12;
+    final lastDay = DateTime.utc(newYear, newMonth + 1, 0).day;
+    return _withDate(this, newYear, newMonth, day < lastDay ? day : lastDay);
   }
 
-  /// Returns a DateTime representing the next month relative to this DateTime.
-  DateTime get nextMonth {
-    var year = this.year;
-    var month = this.month;
-    if (month == 12) {
-      year++;
-      month = 1;
-    } else {
-      month++;
-    }
-    return DateTime(year, month);
-  }
+  /// Moves this date back by [years] calendar years. See [addYears].
+  DateTime subtractYears(int years) => addYears(-years);
 
-  /// Returns a DateTime representing the first day of the month for this DateTime.
-  DateTime get firstDayOfMonth => DateTime(year, month);
+  /// Moves this date back by [months] calendar months. See [addMonths].
+  DateTime subtractMonths(int months) => addMonths(-months);
 
-  /// Returns a DateTime representing the last day of the month for this DateTime.
-  DateTime get lastDayOfMonth {
-    final beginningNextMonth = (month < 12)
-        ? DateTime(year, month + 1)
-        : DateTime(year + 1);
-    return beginningNextMonth.subtract(const Duration(days: 1));
-  }
+  /// Returns the earlier of this DateTime and [that].
+  ///
+  /// Returns [that] when both are the same moment.
+  DateTime min(DateTime that) => isBefore(that) ? this : that;
 
-  /// Adds or subtracts the specified number of years from this DateTime.
-  /// Using a positive value (e.g., 1) adds years, while a negative value (e.g., -1) subtracts years.
-  DateTime addOrSubtractYears(int years) {
-    final newYear = year + years;
-    final newMonth = month;
-    var newDay = day;
-    // Adjust the day if it exceeds the number of days in the new month
-    while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
-      newDay--;
-    }
-    return DateTime(
-      newYear,
-      newMonth,
-      newDay,
-      hour,
-      minute,
-      second,
-      millisecond,
-      microsecond,
-    );
-  }
+  /// Returns the later of this DateTime and [that].
+  ///
+  /// Returns [that] when both are the same moment.
+  DateTime max(DateTime that) => isAfter(that) ? this : that;
 
-  /// Adds or subtracts the specified number of months from this DateTime.
-  /// Using a positive value (e.g., 1) adds months, while a negative value (e.g., -1) subtracts months.
-  DateTime addOrSubtractMonths(int months) {
-    final totalMonths = month + months;
-    var newYear = year + (totalMonths ~/ 12);
-    var newMonth = totalMonths % 12;
-
-    // Handle the case where totalMonths is a multiple of 12 (e.g., adding/subtracting 12, 24, etc. months)
-    if (newMonth == 0) {
-      newMonth = 12;
-      newYear -=
-          1; // Adjust the year if we "wrapped around" to December of the previous year
-    }
-
-    var newDay = day;
-    // Adjust the day if it exceeds the number of days in the new month
-    while (newDay > DateTime(newYear, newMonth + 1, 0).day) {
-      newDay--;
-    }
-    return DateTime(
-      newYear,
-      newMonth,
-      newDay,
-      hour,
-      minute,
-      second,
-      millisecond,
-      microsecond,
-    );
-  }
-
-  /// Adds or subtracts the specified number of days from this DateTime.
-  /// Using a positive value (e.g., 1) adds days, while a negative value (e.g., -1) subtracts days.
-  DateTime addOrSubtractDays(int days) => add(Duration(days: days));
-
-  /// Adds or subtracts the specified number of minutes from this DateTime.
-  /// Using a positive value (e.g., 1) adds minutes, while a negative value (e.g., -1) subtracts minutes.
-  DateTime addOrSubtractMinutes(int minutes) => add(Duration(minutes: minutes));
-
-  /// Adds or subtracts the specified number of seconds from this DateTime.
-  /// Using a positive value (e.g., 1) adds seconds, while a negative value (e.g., -1) subtracts seconds.
-  DateTime addOrSubtractSeconds(int seconds) => add(Duration(seconds: seconds));
-
-  /// Adds or subtracts the specified number of milliseconds from this DateTime.
-  /// Using a positive value (e.g., 1) adds milliseconds, while a negative value (e.g., -1) subtracts milliseconds.
-  DateTime addOrSubtractMilliseconds(int milliseconds) =>
-      add(Duration(milliseconds: milliseconds));
-
-  /// Adds or subtracts the specified number of microseconds from this DateTime.
-  /// Using a positive value (e.g., 1) adds microseconds, while a negative value (e.g., -1) subtracts microseconds.
-  DateTime addOrSubtractMicroseconds(int microseconds) =>
-      add(Duration(microseconds: microseconds));
-
-  /// Returns the minimum of this DateTime and [that].
-  DateTime min(DateTime that) =>
-      (millisecondsSinceEpoch < that.millisecondsSinceEpoch) ? this : that;
-
-  /// Returns the maximum of this DateTime and [that].
-  DateTime max(DateTime that) =>
-      (millisecondsSinceEpoch > that.millisecondsSinceEpoch) ? this : that;
-
-  /// Adds the specified number of days to this DateTime.
-  DateTime addDays(int amount) => add(Duration(days: amount));
+  /// Moves this date by [amount] calendar days, keeping the wall-clock time.
+  ///
+  /// Negative values move back. Unlike `add(Duration(days: amount))`, the
+  /// result keeps its time of day across daylight-saving transitions.
+  DateTime addDays(int amount) => _addCalendarDays(this, amount);
 
   /// Adds the specified number of hours to this DateTime.
   DateTime addHours(int amount) => add(Duration(hours: amount));
@@ -620,8 +522,8 @@ extension DHUDateExtensions on DateTime {
   /// Adds the specified number of microseconds to this DateTime.
   DateTime addMicroseconds(int amount) => add(Duration(microseconds: amount));
 
-  /// Subtracts the specified number of days from this DateTime.
-  DateTime subtractDays(int amount) => subtract(Duration(days: amount));
+  /// Moves this date back by [amount] calendar days. See [addDays].
+  DateTime subtractDays(int amount) => addDays(-amount);
 
   /// Subtracts the specified number of hours from this DateTime.
   DateTime subtractHours(int amount) => subtract(Duration(hours: amount));
@@ -639,15 +541,6 @@ extension DHUDateExtensions on DateTime {
   /// Subtracts the specified number of microseconds from this DateTime.
   DateTime subtractMicroseconds(int amount) =>
       subtract(Duration(microseconds: amount));
-
-  /// Checks if this DateTime occurs on the same hour as another DateTime,
-  /// regardless of time zone.
-  bool isSameHourAs(DateTime other) => hour == other.hour && isSameDayAs(other);
-
-  /// Checks if this DateTime occurs on the same day as another DateTime,
-  /// regardless of time zone.
-  bool isSameDayAs(DateTime other) =>
-      day == other.day && month == other.month && year == other.year;
 
   /// Checks if this DateTime occurs within the same week as another DateTime,
   /// regardless of time zone.  Considers a week to start on Monday.
@@ -685,10 +578,8 @@ extension DHUDateExtensions on DateTime {
   /// [normalize] if true, converts all dates to UTC before comparison
   /// (defaults to `false`).
   ///
-  /// Throws [ArgumentError] if:
-  /// - Either [start] or [end] is null
-  /// - [start] date is after [end] date
-  ///
+  /// Throws [ArgumentError] if [start] is after [end] (after any
+  /// normalization and time stripping).
   bool isBetween(
     DateTime start,
     DateTime end, {
@@ -697,11 +588,6 @@ extension DHUDateExtensions on DateTime {
     bool ignoreTime = false,
     bool normalize = false,
   }) {
-    // Validate inputs
-    ArgumentError.checkNotNull(start, 'start');
-    ArgumentError.checkNotNull(end, 'end');
-
-    // Prepare dates for comparison
     var self = this;
     var compareStart = start;
     var compareEnd = end;
@@ -720,14 +606,12 @@ extension DHUDateExtensions on DateTime {
       compareEnd = _dateOnly(compareEnd);
     }
 
-    // Validate range
     if (compareStart.isAfter(compareEnd)) {
       throw ArgumentError(
         'Start date ($compareStart) must be before or equal to end date ($compareEnd)',
       );
     }
 
-    // Perform comparison
     return (inclusiveStart
             ? !self.isBefore(compareStart)
             : self.isAfter(compareStart)) &&
@@ -751,46 +635,38 @@ extension DHUDateExtensions on DateTime {
     return this;
   }
 
-  /// Calculates the absolute difference in whole days between this DateTime
-  /// and another DateTime (or the current time if none is provided).
-  /// Ignores hours, minutes, seconds, and milliseconds.
-  int daysDifferenceTo([DateTime? other]) {
-    final comparisonDate = other ?? DateTime.now();
-    return DateTime(year, month, day)
-        .difference(
-          DateTime(
-            comparisonDate.year,
-            comparisonDate.month,
-            comparisonDate.day,
-          ),
-        )
-        .inDays
-        .abs(); // Ensure positive result
-  }
-
-  /// Generates a sequence of DateTime objects representing each day in the range
-  /// starting from `this` DateTime (inclusive) up to but not including the `end` DateTime.
+  /// The absolute number of calendar days between this date and [other]
+  /// (or today when [other] is omitted).
   ///
-  /// Handles time zone adjustments to ensure accurate day boundaries.
-  Iterable<DateTime> daysUpTo(DateTime end) sync* {
-    var current = this;
-    var currentOffset = current.timeZoneOffset; // Store initial offset
-    while (current.isBefore(end)) {
-      yield current;
-      current = current.add(const Duration(days: 1));
+  /// Ignores the time of day, and daylight-saving transitions do not affect
+  /// the count.
+  int daysDifferenceTo([DateTime? other]) =>
+      _calendarDaysBetween(this, other ?? DateTime.now()).abs();
 
-      // Adjust for potential time zone changes during iteration
-      final offsetDifference = current.timeZoneOffset - currentOffset;
-      if (offsetDifference.inSeconds != 0) {
-        currentOffset = current.timeZoneOffset; // Update offset
-        current = current.subtract(
-          Duration(seconds: offsetDifference.inSeconds),
-        );
-      }
+  /// Generates one [DateTime] per calendar day, starting at this moment
+  /// (inclusive) and stopping before [end] (exclusive).
+  ///
+  /// Each entry is computed from this moment's wall-clock time, so the
+  /// sequence stays aligned across daylight-saving transitions. A wall-clock
+  /// time that does not exist on one day (a skipped hour) is shifted on that
+  /// day only, and one that happens twice (a repeated hour) resolves to its
+  /// first occurrence, unless this moment is itself such a repeat: then its
+  /// offset is kept, so the first entry is always this moment. A date the
+  /// clocks skipped entirely (Apia skipped 2011-12-30) has no moment of its
+  /// own, so its entry lands on the next date and repeats that entry.
+  Iterable<DateTime> daysUpTo(DateTime end) sync* {
+    final repeat = _isRepeat(this);
+    for (var offset = 0; ; offset++) {
+      final current = _addCalendarDays(this, offset, repeat: repeat);
+      if (!current.isBefore(end)) return;
+      yield current;
     }
   }
 
-  /// calculates the age of a person based on the current date
+  /// Calculates a person's age from this birth date to today, as whole
+  /// years, months, and days.
+  ///
+  /// A February 29 birthday counts as February 28 in non-leap years.
   ({int years, int months, int days}) calculateAge() {
     // Helper function to determine the number of days in a month
     int daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
@@ -833,53 +709,520 @@ extension DHUDateExtensions on DateTime {
   /// Returns true if this date falls on a weekday.
   bool get isWeekday => !isWeekend;
 
-  /// Rounds the DateTime to the nearest interval of the given [duration].
+  /// Rounds this date to the nearest instant whose wall clock shows a
+  /// multiple of [duration]; exact halves round up.
+  ///
+  /// The result is [floorTo] or [ceilTo], whichever is closer in elapsed
+  /// time; [floorTo] describes the alignment. Returns this date unchanged for
+  /// [Duration.zero]; a negative [duration] behaves like its magnitude.
   DateTime roundTo(Duration duration) {
-    if (duration == Duration.zero) return this;
-    final half = duration.inMicroseconds / 2;
-    final micros = microsecondsSinceEpoch;
-    final newMicros =
-        ((micros + half) ~/ duration.inMicroseconds) * duration.inMicroseconds;
-    return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
+    final step = duration.inMicroseconds.abs();
+    if (step == 0) return this;
+    final floor = _floorTo(this, step);
+    if (floor == this) return this;
+    final ceil = _ceilTo(this, step);
+    return difference(floor) < ceil.difference(this) ? floor : ceil;
   }
 
-  /// Floors the DateTime to the nearest interval of the given [duration].
+  /// The latest instant at or before this date whose wall clock shows a
+  /// multiple of [duration], counted from midnight on January 1, 1970.
+  ///
+  /// A local date aligns to the local wall clock, so whole hours stay whole
+  /// in zones with a half-hour offset. Around a clock change, an aligned
+  /// time the clocks skip counts as reached at the moment they jump forward,
+  /// and one they show again after falling back counts again, so by the
+  /// hour the second 01:30 of the night floors to the second 01:00.
+  ///
+  /// Whole-day steps count calendar dates instead: the result is the first
+  /// moment of this date, or of the aligned date before it, so
+  /// `floorTo(const Duration(days: 1))` always equals [startOfDay]. Because
+  /// the count starts on January 1, 1970, a Thursday, a 7-day step lands on
+  /// Thursdays; use [firstDayOfWeek] for calendar weeks.
+  ///
+  /// Returns this date unchanged for [Duration.zero]; a negative [duration]
+  /// behaves like its magnitude.
   DateTime floorTo(Duration duration) {
-    if (duration == Duration.zero) return this;
-    final micros = microsecondsSinceEpoch;
-    final newMicros =
-        (micros ~/ duration.inMicroseconds) * duration.inMicroseconds;
-    return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
+    final step = duration.inMicroseconds.abs();
+    return step == 0 ? this : _floorTo(this, step);
   }
 
-  /// Ceils the DateTime to the nearest interval of the given [duration].
+  /// The earliest instant at or after this date whose wall clock shows a
+  /// multiple of [duration]. Clock changes are handled as in [floorTo].
+  ///
+  /// For whole-day steps the result is the earliest start of an aligned date
+  /// at or after this date. A date starts twice where the clocks fall back
+  /// past its midnight, so the result can be the second start of this
+  /// date's own day.
+  ///
+  /// Returns this date unchanged for [Duration.zero]; a negative [duration]
+  /// behaves like its magnitude.
   DateTime ceilTo(Duration duration) {
-    if (duration == Duration.zero) return this;
-    final micros = microsecondsSinceEpoch;
-    final newMicros =
-        ((micros + duration.inMicroseconds - 1) ~/ duration.inMicroseconds) *
-        duration.inMicroseconds;
-    return DateTime.fromMicrosecondsSinceEpoch(newMicros, isUtc: isUtc);
+    final step = duration.inMicroseconds.abs();
+    if (step == 0 || _floorTo(this, step) == this) return this;
+    return _ceilTo(this, step);
   }
 
-  /// Adds [days] business days to the current date, skipping weekends.
+  /// Moves [days] business days forward (or back, when negative), skipping
+  /// Saturdays and Sundays. Keeps the wall-clock time.
   DateTime addBusinessDays(int days) {
     var current = this;
     var remaining = days.abs();
-    final forward = days >= 0;
+    final step = days >= 0 ? 1 : -1;
+    var offset = 0;
+    final repeat = _isRepeat(this);
 
     while (remaining > 0) {
-      current = forward
-          ? current.add(const Duration(days: 1))
-          : current.subtract(const Duration(days: 1));
+      offset += step;
+      // Always step from the original wall-clock time so a skipped hour on
+      // one day cannot shift every later day.
+      current = _addCalendarDays(this, offset, repeat: repeat);
       if (current.isWeekday) {
         remaining--;
       }
     }
     return current;
   }
+
+  // ---------------------------------------------------------------------
+  // 7.0.0 aliases, removed in 8.0.0. `dart fix --apply` rewrites callers to
+  // the replacement named in each deprecation message.
+  // ---------------------------------------------------------------------
+
+  /// Deprecated alias of [isSameYearAs].
+  @Deprecated('Use isSameYearAs. This alias will be removed in 8.0.0.')
+  bool isAtSameYearAs(DateTime other) => isSameYearAs(other);
+
+  /// Deprecated alias of [isSameMonthAs].
+  @Deprecated('Use isSameMonthAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMonthAs(DateTime other) => isSameMonthAs(other);
+
+  /// Deprecated alias of [isSameDayAs].
+  @Deprecated('Use isSameDayAs. This alias will be removed in 8.0.0.')
+  bool isAtSameDayAs(DateTime other) => isSameDayAs(other);
+
+  /// Deprecated alias of [isSameHourAs].
+  @Deprecated('Use isSameHourAs. This alias will be removed in 8.0.0.')
+  bool isAtSameHourAs(DateTime other) => isSameHourAs(other);
+
+  /// Deprecated alias of [isSameMinuteAs].
+  @Deprecated('Use isSameMinuteAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMinuteAs(DateTime other) => isSameMinuteAs(other);
+
+  /// Deprecated alias of [isSameSecondAs].
+  @Deprecated('Use isSameSecondAs. This alias will be removed in 8.0.0.')
+  bool isAtSameSecondAs(DateTime other) => isSameSecondAs(other);
+
+  /// Deprecated alias of [isSameMillisecondAs].
+  @Deprecated('Use isSameMillisecondAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMillisecondAs(DateTime other) => isSameMillisecondAs(other);
+
+  /// Deprecated alias of [isSameMicrosecondAs].
+  @Deprecated('Use isSameMicrosecondAs. This alias will be removed in 8.0.0.')
+  bool isAtSameMicrosecondAs(DateTime other) => isSameMicrosecondAs(other);
+
+  /// Deprecated alias of [addYears].
+  @Deprecated('Use addYears. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractYears(int years) => addYears(years);
+
+  /// Deprecated alias of [addMonths].
+  @Deprecated('Use addMonths. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMonths(int months) => addMonths(months);
+
+  /// Deprecated alias of [addDays].
+  @Deprecated('Use addDays. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractDays(int days) => addDays(days);
+
+  /// Deprecated alias of [addMinutes].
+  @Deprecated('Use addMinutes. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMinutes(int minutes) => addMinutes(minutes);
+
+  /// Deprecated alias of [addSeconds].
+  @Deprecated('Use addSeconds. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractSeconds(int seconds) => addSeconds(seconds);
+
+  /// Deprecated alias of [addMilliseconds].
+  @Deprecated('Use addMilliseconds. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMilliseconds(int milliseconds) =>
+      addMilliseconds(milliseconds);
+
+  /// Deprecated alias of [addMicroseconds].
+  @Deprecated('Use addMicroseconds. This alias will be removed in 8.0.0.')
+  DateTime addOrSubtractMicroseconds(int microseconds) =>
+      addMicroseconds(microseconds);
+
+  /// Deprecated alias of [nextDay].
+  @Deprecated('Use nextDay. This alias will be removed in 8.0.0.')
+  DateTime get tomorrow => nextDay;
+
+  /// Deprecated alias of [previousDay].
+  @Deprecated('Use previousDay. This alias will be removed in 8.0.0.')
+  DateTime get yesterday => previousDay;
 }
 
-DateTime _dateOnly(DateTime date) => date.isUtc
-    ? DateTime.utc(date.year, date.month, date.day)
-    : DateTime(date.year, date.month, date.day);
+/// Builds a date at midnight in UTC or local time; out-of-range months and
+/// days roll over the way the [DateTime] constructors do.
+DateTime _date(bool isUtc, int year, [int month = 1, int day = 1]) =>
+    isUtc ? DateTime.utc(year, month, day) : _startOfDate(year, month, day);
+
+DateTime _dateOnly(DateTime date) =>
+    _date(date.isUtc, date.year, date.month, date.day);
+
+/// The first moment of a local calendar date: the first occurrence of its
+/// midnight, or the moment the clocks jumped to when they skipped midnight.
+/// That moment is on a later date when the clocks skipped the whole date.
+DateTime _startOfDate(int year, int month, int day) {
+  final start = _local(year, month, day);
+  final micros = start.microsecondsSinceEpoch;
+  final offset = _offsetAt(micros);
+  final midnight = DateTime.utc(year, month, day).microsecondsSinceEpoch;
+  if (micros + offset == midnight) return start;
+  // Midnight was skipped, and start is where it would have been before the
+  // jump; the jump itself came earlier.
+  return DateTime.fromMicrosecondsSinceEpoch(
+    _offsetChange(midnight - offset, micros),
+  );
+}
+
+/// The local time that shows these wall-clock fields, resolved like the
+/// local [DateTime] constructor resolves it: a time the clocks repeat gives
+/// its first occurrence, and a time they skip gives the moment it would have
+/// been before the jump, which is later by the length of the jump.
+DateTime _local(
+  int year,
+  int month,
+  int day, [
+  int hour = 0,
+  int minute = 0,
+  int second = 0,
+  int millisecond = 0,
+  int microsecond = 0,
+]) {
+  final resolved = DateTime(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    millisecond,
+    microsecond,
+  );
+  // The VM looks for an earlier occurrence only two hours back, but clocks
+  // have repeated up to 23 hours (Kwajalein, 1969). Clock changes are more
+  // than a day apart (see _changeFreeSpan), so an earlier occurrence needs a
+  // larger offset a day before. Nothing exists before the earliest DateTime.
+  final micros = resolved.microsecondsSinceEpoch;
+  if (micros - Duration.microsecondsPerDay < _earliestMicros) return resolved;
+  final dayBefore = DateTime.fromMicrosecondsSinceEpoch(
+    micros - Duration.microsecondsPerDay,
+  );
+  if (dayBefore.timeZoneOffset <= resolved.timeZoneOffset) return resolved;
+  final earlierOffset = _offsetAt(dayBefore.microsecondsSinceEpoch);
+  final first =
+      DateTime.utc(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        millisecond,
+        microsecond,
+      ).microsecondsSinceEpoch -
+      earlierOffset;
+  return first < micros && _offsetAt(first) == earlierOffset
+      ? DateTime.fromMicrosecondsSinceEpoch(first)
+      : resolved;
+}
+
+/// Rebuilds [date] on another calendar day while keeping its wall-clock time
+/// and time zone.
+///
+/// A time the clocks skip moves forward by the length of the jump, and a
+/// time they repeat resolves to its first occurrence. The exception is a
+/// [date] that is itself the repeat ([repeat], computed when omitted): the
+/// result keeps its offset when the target time has that offset too, so
+/// `addDays(0)` returns [date].
+DateTime _withDate(
+  DateTime date,
+  int year,
+  int month,
+  int day, {
+  bool? repeat,
+}) {
+  if (date.isUtc) {
+    return DateTime.utc(
+      year,
+      month,
+      day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+      date.microsecond,
+    );
+  }
+  final moved = _local(
+    year,
+    month,
+    day,
+    date.hour,
+    date.minute,
+    date.second,
+    date.millisecond,
+    date.microsecond,
+  );
+  return (repeat ?? _isRepeat(date)) ? _keepOffset(moved, date) : moved;
+}
+
+/// The other occurrence of [candidate]'s wall-clock time when that one has
+/// [reference]'s offset, otherwise [candidate].
+DateTime _keepOffset(DateTime candidate, DateTime reference) {
+  final offset = _offsetAt(reference.microsecondsSinceEpoch);
+  final micros = candidate.microsecondsSinceEpoch;
+  final candidateOffset = _offsetAt(micros);
+  if (candidateOffset == offset) return candidate;
+  final shifted = micros + candidateOffset - offset;
+  // With that offset, shifted shows the same wall clock as candidate.
+  return _offsetAt(shifted) == offset
+      ? DateTime.fromMicrosecondsSinceEpoch(shifted)
+      : candidate;
+}
+
+/// Whether [date] is a local time that is the second occurrence of a
+/// repeated wall-clock time.
+bool _isRepeat(DateTime date) =>
+    !date.isUtc &&
+    _local(
+          date.year,
+          date.month,
+          date.day,
+          date.hour,
+          date.minute,
+          date.second,
+          date.millisecond,
+          date.microsecond,
+        ) !=
+        date;
+
+DateTime _addCalendarDays(DateTime date, int days, {bool? repeat}) =>
+    _withDate(date, date.year, date.month, date.day + days, repeat: repeat);
+
+/// Floor division that rounds toward negative infinity for any sign of [a];
+/// [b] must be positive.
+int _floorDiv(int a, int b) => (a - a % b) ~/ b;
+
+/// The earliest microseconds since the epoch a [DateTime] can hold.
+const _earliestMicros = -8640000000000000000;
+
+/// The latest microseconds since the epoch a [DateTime] can hold.
+const _latestMicros = 8640000000000000000;
+
+/// [date]'s calendar date as a count of days from January 1, 1970.
+int _dayIndex(DateTime date) =>
+    DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
+    Duration.millisecondsPerDay;
+
+/// The first moment of the local calendar date [index] days after
+/// January 1, 1970.
+DateTime _startOfDayIndex(int index) {
+  final date = DateTime.utc(1970, 1, 1 + index);
+  return _startOfDate(date.year, date.month, date.day);
+}
+
+/// The moment the local date [index], which first started at [start], starts
+/// a second time, or null.
+///
+/// A date starts again when the clocks fall back past its midnight into the
+/// day before (St. John's until 2011, Casey in 2010). A midnight the clocks
+/// repeat within its own date (the Azores) starts nothing.
+DateTime? _restartOfDate(DateTime start, int index) {
+  final micros = start.microsecondsSinceEpoch;
+  if (micros + Duration.microsecondsPerDay > _latestMicros) return null;
+  final again = _keepOffset(
+    start,
+    DateTime.fromMicrosecondsSinceEpoch(micros + Duration.microsecondsPerDay),
+  );
+  if (again == start) return null;
+  final before = DateTime.fromMicrosecondsSinceEpoch(
+    again.microsecondsSinceEpoch - 1,
+  );
+  return _dayIndex(before) < index ? again : null;
+}
+
+/// [date] aligned down to a multiple of [step] microseconds, as
+/// [DHUDateExtensions.floorTo] describes.
+DateTime _floorTo(DateTime date, int step) {
+  final micros = date.microsecondsSinceEpoch;
+  if (date.isUtc) {
+    return DateTime.fromMicrosecondsSinceEpoch(
+      _floorDiv(micros, step) * step,
+      isUtc: true,
+    );
+  }
+  if (step % Duration.microsecondsPerDay != 0) {
+    return DateTime.fromMicrosecondsSinceEpoch(_floorLocal(micros, step));
+  }
+  final index = _dayIndex(date);
+  return _startOfDayIndex(
+    index - index % (step ~/ Duration.microsecondsPerDay),
+  );
+}
+
+/// [date], which [_floorTo] moves, aligned up to a multiple of [step]
+/// microseconds, as [DHUDateExtensions.ceilTo] describes.
+DateTime _ceilTo(DateTime date, int step) {
+  final micros = date.microsecondsSinceEpoch;
+  if (date.isUtc) {
+    return DateTime.fromMicrosecondsSinceEpoch(
+      -_floorDiv(-micros, step) * step,
+      isUtc: true,
+    );
+  }
+  if (step % Duration.microsecondsPerDay != 0) {
+    return DateTime.fromMicrosecondsSinceEpoch(_ceilLocal(micros, step));
+  }
+  // The earliest start of an aligned date at or after date. A date can
+  // start twice, so the aligned date that floorTo returned may start again.
+  final days = step ~/ Duration.microsecondsPerDay;
+  final index = _dayIndex(date);
+  final aligned = index - index % days;
+  final restart = _restartOfDate(_startOfDayIndex(aligned), aligned);
+  if (restart != null && !restart.isBefore(date)) return restart;
+  for (var next = aligned + days; ; next += days) {
+    final start = _startOfDayIndex(next);
+    if (!start.isBefore(date)) return start;
+    // The clocks showed that midnight before date, then fell back past it.
+    final again = _restartOfDate(start, next);
+    if (again != null && !again.isBefore(date)) return again;
+  }
+}
+
+/// The local UTC offset, in microseconds, at [micros] since the epoch, as
+/// the local wall-clock fields show it.
+///
+/// On the web, [DateTime.timeZoneOffset] is rounded to whole minutes, while
+/// the fields use the exact offset, such as a local mean time with seconds.
+int _offsetAt(int micros) {
+  final date = DateTime.fromMicrosecondsSinceEpoch(micros);
+  return DateTime.utc(
+        date.year,
+        date.month,
+        date.day,
+        date.hour,
+        date.minute,
+        date.second,
+        date.millisecond,
+        date.microsecond,
+      ).microsecondsSinceEpoch -
+      micros;
+}
+
+/// The first instant after [from], at or before [to], whose local offset
+/// differs from the offset at [from]. The offset at [to] must differ, and at
+/// most one change may lie in between.
+///
+/// The instant just before the result has the offset at [from].
+int _offsetChange(int from, int to) {
+  final offset = _offsetAt(from);
+  var low = from;
+  var high = to;
+  while (high - low > 1) {
+    final middle = low + (high - low) ~/ 2;
+    // On the web, integers past 2^53 microseconds (after mid-2255) are not
+    // exact, so the halves can stop shrinking before they meet.
+    if (middle <= low || middle >= high) break;
+    if (_offsetAt(middle) == offset) {
+      low = middle;
+    } else {
+      high = middle;
+    }
+  }
+  return high;
+}
+
+/// The longest stretch checked for a clock change at once.
+///
+/// From 1900 to 2038, changes in the time zone database are at least six
+/// days apart (the closest were in Cambridge Bay in 2000), so a day holds at
+/// most one. Outside 1901-2038 the VM reuses the rules of an equivalent
+/// year, which can put two changes an hour apart at the turn of a year
+/// (Africa/Sao_Tome after 2040). There, an aligned time between such a pair
+/// can be missed, and a day move into the repeated hour can resolve to its
+/// second occurrence: [_local] compares with the offset a day earlier, which
+/// already equals the offset after the pair.
+const _changeFreeSpan = Duration.microsecondsPerDay;
+
+/// The latest instant at or before [micros] whose local wall clock shows a
+/// multiple of [step]; an aligned time skipped by a forward jump counts as
+/// reached at the jump.
+int _floorLocal(int micros, int step) {
+  var receiver = micros;
+  var offset = _offsetAt(receiver);
+  while (true) {
+    final wall = _floorDiv(receiver + offset, step) * step;
+    final candidate = wall - offset;
+    // Check at most a day at once, so a change cannot hide in between.
+    final probe = candidate > receiver - _changeFreeSpan
+        ? candidate
+        : receiver - _changeFreeSpan;
+    final probeOffset = _offsetAt(probe);
+    if (probeOffset == offset) {
+      if (probe == candidate) return candidate;
+      receiver = probe; // nothing aligned in between
+      continue;
+    }
+    // The clocks changed between the probe and the receiver.
+    final change = _offsetChange(probe, receiver);
+    // Jumped forward over the aligned time: it was skipped.
+    if (wall >= change + probeOffset) return change;
+    // The aligned time, or a later one, happened before the change. On the
+    // web past 2^53 microseconds, change - 1 can round back to change, and a
+    // millisecond earlier is the closest instant that is still before it.
+    final before = change - 1;
+    receiver = before < change
+        ? before
+        : change - Duration.microsecondsPerMillisecond;
+    offset = probeOffset;
+  }
+}
+
+/// The earliest instant at or after [micros] whose local wall clock shows a
+/// multiple of [step]; an aligned time skipped by a forward jump counts as
+/// reached at the jump.
+int _ceilLocal(int micros, int step) {
+  var receiver = micros;
+  var offset = _offsetAt(receiver);
+  while (true) {
+    final wall = -_floorDiv(-(receiver + offset), step) * step;
+    final candidate = wall - offset;
+    // Check at most a day at once, so a change cannot hide in between.
+    final probe = candidate < receiver + _changeFreeSpan
+        ? candidate
+        : receiver + _changeFreeSpan;
+    final probeOffset = _offsetAt(probe);
+    if (probeOffset == offset) {
+      if (probe == candidate) return candidate;
+      receiver = probe; // nothing aligned in between
+      continue;
+    }
+    // The clocks change between the receiver and the probe.
+    final change = _offsetChange(receiver, probe);
+    final laterOffset = _offsetAt(change);
+    // Jumping forward over the aligned time: it is skipped.
+    if (wall < change + laterOffset) return change;
+    // The aligned time, or an earlier one, happens after the change.
+    receiver = change;
+    offset = laterOffset;
+  }
+}
+
+/// Calendar days from [from]'s date to [to]'s date, ignoring the time of day.
+///
+/// Both dates are projected onto UTC midnights, so a daylight-saving day of
+/// 23 or 25 hours still counts as one day.
+int _calendarDaysBetween(DateTime from, DateTime to) => DateTime.utc(
+  to.year,
+  to.month,
+  to.day,
+).difference(DateTime.utc(from.year, from.month, from.day)).inDays;
