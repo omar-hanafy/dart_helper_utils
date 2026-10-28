@@ -17,11 +17,14 @@ dart run tool/check_repo.dart              # em-dash, changelog, platform, depre
 dart run tool/validate_agent_plugin.dart   # AI plugin/marketplace consistency
 dart test
 for z in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe \
-         Atlantic/Azores Antarctica/Troll Pacific/Chatham; do
+         Atlantic/Azores America/St_Johns Antarctica/Troll Antarctica/Casey \
+         Pacific/Chatham; do
   TZ=$z dart test test/date_extension_test.dart \
     test/date_extension_additional_test.dart test/date_time_zone_test.dart
 done
-TZ=America/New_York dart test --platform node test/date_time_zone_test.dart
+for z in America/New_York Australia/Lord_Howe; do
+  TZ=$z dart test --platform node test/date_time_zone_test.dart
+done
 dart pub publish --dry-run                 # must stay at 0 warnings
 ```
 
@@ -65,10 +68,12 @@ the reason, `unnecessary_ignore` removes stale ones).
   smaller add exact durations; day counts project both dates onto UTC
   midnights. `floorTo`/`ceilTo` return the latest/earliest instant whose wall
   clock shows an aligned time (a skipped aligned time counts at the jump);
-  whole-day steps count calendar days, so `floorTo(1 day) == startOfDay`.
-  `test/date_time_zone_test.dart` checks these invariants around every clock
-  change of whatever zone it runs in; CI runs it in seven zones and on Node
-  because the runners use UTC, where these bugs cannot appear.
+  whole-day steps count calendar dates, so `floorTo(1 day) == startOfDay`.
+  Local offsets come from the wall-clock fields, because the web rounds
+  `timeZoneOffset` to whole minutes. `test/date_time_zone_test.dart` checks
+  all of this against expectations built from the clock changes of whatever
+  zone it runs in; CI runs it in nine zones and on Node because the runners
+  use UTC, where these bugs cannot appear.
 - Any public API change needs matching tests in the flat `test/` directory
   (one file per domain) and doc comments on every public member. A bug fix
   needs a regression test that fails on the old code.

@@ -638,10 +638,12 @@ extension DHUDateExtensions on DateTime {
   /// sequence stays aligned across daylight-saving transitions. A wall-clock
   /// time that does not exist on one day (a skipped hour) is shifted on that
   /// day only, and one that happens twice (a repeated hour) resolves to its
-  /// first occurrence.
+  /// first occurrence, unless this moment is itself such a repeat: then its
+  /// offset is kept, so the first entry is always this moment.
   Iterable<DateTime> daysUpTo(DateTime end) sync* {
+    final repeat = _isRepeat(this);
     for (var offset = 0; ; offset++) {
-      final current = _addCalendarDays(this, offset);
+      final current = _addCalendarDays(this, offset, repeat: repeat);
       if (!current.isBefore(end)) return;
       yield current;
     }
@@ -700,9 +702,11 @@ extension DHUDateExtensions on DateTime {
   /// time; [floorTo] describes the alignment. Returns this date unchanged for
   /// [Duration.zero]; a negative [duration] behaves like its magnitude.
   DateTime roundTo(Duration duration) {
-    final floor = floorTo(duration);
+    final step = duration.inMicroseconds.abs();
+    if (step == 0) return this;
+    final floor = _floorTo(this, step);
     if (floor == this) return this;
-    final ceil = ceilTo(duration);
+    final ceil = _ceilTo(this, step);
     return difference(floor) < ceil.difference(this) ? floor : ceil;
   }
 
@@ -710,64 +714,37 @@ extension DHUDateExtensions on DateTime {
   /// multiple of [duration], counted from midnight on January 1, 1970.
   ///
   /// A local date aligns to the local wall clock, so whole hours stay whole
-  /// in zones with a half-hour offset. Around a clock change:
+  /// in zones with a half-hour offset. Around a clock change, an aligned
+  /// time the clocks skip counts as reached at the moment they jump forward,
+  /// and one they show again after falling back counts again, so by the
+  /// hour the second 01:30 of the night floors to the second 01:00.
   ///
-  /// * an aligned time the clocks skip counts as reached at the moment they
-  ///   jump forward;
-  /// * an aligned time the clocks show again after falling back counts
-  ///   again, so by the hour the second 01:30 of the night floors to the
-  ///   second 01:00;
-  /// * whole-day steps count calendar days instead, so
-  ///   `floorTo(const Duration(days: 1))` always equals [startOfDay].
+  /// Whole-day steps count calendar dates instead: the result is the first
+  /// moment of this date, or of the aligned date before it, so
+  /// `floorTo(const Duration(days: 1))` always equals [startOfDay]. Because
+  /// the count starts on January 1, 1970, a Thursday, a 7-day step lands on
+  /// Thursdays; use [firstDayOfWeek] for calendar weeks.
   ///
   /// Returns this date unchanged for [Duration.zero]; a negative [duration]
   /// behaves like its magnitude.
   DateTime floorTo(Duration duration) {
     final step = duration.inMicroseconds.abs();
-    if (step == 0) return this;
-    if (isUtc) {
-      return DateTime.fromMicrosecondsSinceEpoch(
-        _floorDiv(microsecondsSinceEpoch, step) * step,
-        isUtc: true,
-      );
-    }
-    final floor = DateTime.fromMicrosecondsSinceEpoch(
-      _floorLocal(microsecondsSinceEpoch, step),
-    );
-    // A whole-day step counts a repeated midnight once, at its first
-    // occurrence, the way startOfDay does.
-    return step % Duration.microsecondsPerDay == 0
-        ? _firstOccurrence(floor)
-        : floor;
+    return step == 0 ? this : _floorTo(this, step);
   }
 
   /// The earliest instant at or after this date whose wall clock shows a
   /// multiple of [duration]. Clock changes are handled as in [floorTo].
   ///
+  /// For whole-day steps the result is the first moment of the next aligned
+  /// date, or that date's repeated midnight when the clocks fell back past
+  /// the first one before this date.
+  ///
   /// Returns this date unchanged for [Duration.zero]; a negative [duration]
   /// behaves like its magnitude.
   DateTime ceilTo(Duration duration) {
     final step = duration.inMicroseconds.abs();
-    if (step == 0) return this;
-    if (isUtc) {
-      return DateTime.fromMicrosecondsSinceEpoch(
-        -_floorDiv(-microsecondsSinceEpoch, step) * step,
-        isUtc: true,
-      );
-    }
-    // floorTo keeps exactly the aligned instants, including a forward jump
-    // that skipped an aligned time.
-    if (floorTo(duration) == this) return this;
-    final ceil = DateTime.fromMicrosecondsSinceEpoch(
-      _ceilLocal(microsecondsSinceEpoch, step),
-    );
-    if (step % Duration.microsecondsPerDay != 0 || !_isRepeat(ceil)) {
-      return ceil;
-    }
-    // A whole-day step already counted this midnight at its first occurrence.
-    return DateTime.fromMicrosecondsSinceEpoch(
-      _ceilLocal(ceil.microsecondsSinceEpoch + 1, step),
-    );
+    if (step == 0 || _floorTo(this, step) == this) return this;
+    return _ceilTo(this, step);
   }
 
   /// Moves [days] business days forward (or back, when negative), skipping
@@ -777,12 +754,13 @@ extension DHUDateExtensions on DateTime {
     var remaining = days.abs();
     final step = days >= 0 ? 1 : -1;
     var offset = 0;
+    final repeat = _isRepeat(this);
 
     while (remaining > 0) {
       offset += step;
       // Always step from the original wall-clock time so a skipped hour on
       // one day cannot shift every later day.
-      current = _addCalendarDays(this, offset);
+      current = _addCalendarDays(this, offset, repeat: repeat);
       if (current.isWeekday) {
         remaining--;
       }
@@ -869,20 +847,93 @@ extension DHUDateExtensions on DateTime {
 /// Builds a date at midnight in UTC or local time; out-of-range months and
 /// days roll over the way the [DateTime] constructors do.
 DateTime _date(bool isUtc, int year, [int month = 1, int day = 1]) =>
-    isUtc ? DateTime.utc(year, month, day) : DateTime(year, month, day);
+    isUtc ? DateTime.utc(year, month, day) : _startOfDate(year, month, day);
 
 DateTime _dateOnly(DateTime date) =>
     _date(date.isUtc, date.year, date.month, date.day);
 
+/// The first moment of a local calendar date: the first occurrence of its
+/// midnight, or the moment the clocks jumped into the date when they skipped
+/// midnight.
+DateTime _startOfDate(int year, int month, int day) {
+  final start = _local(year, month, day);
+  final micros = start.microsecondsSinceEpoch;
+  final offset = _offsetAt(micros);
+  final midnight = DateTime.utc(year, month, day).microsecondsSinceEpoch;
+  if (micros + offset == midnight) return start;
+  // Midnight was skipped, and start is where it would have been before the
+  // jump; the jump itself came earlier.
+  return DateTime.fromMicrosecondsSinceEpoch(
+    _offsetChange(midnight - offset, micros),
+  );
+}
+
+/// The local time that shows these wall-clock fields, resolved like the
+/// local [DateTime] constructor resolves it: a time the clocks repeat gives
+/// its first occurrence, and a time they skip gives the moment it would have
+/// been before the jump, which is later by the length of the jump.
+DateTime _local(
+  int year,
+  int month,
+  int day, [
+  int hour = 0,
+  int minute = 0,
+  int second = 0,
+  int millisecond = 0,
+  int microsecond = 0,
+]) {
+  final resolved = DateTime(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    millisecond,
+    microsecond,
+  );
+  // The VM looks for an earlier occurrence only two hours back, but clocks
+  // have repeated up to 23 hours (Kwajalein, 1969). Clock changes are about
+  // a week apart or more, so an earlier occurrence needs a larger offset a
+  // day before.
+  final micros = resolved.microsecondsSinceEpoch;
+  final dayBefore = DateTime.fromMicrosecondsSinceEpoch(
+    micros - Duration.microsecondsPerDay,
+  );
+  if (dayBefore.timeZoneOffset <= resolved.timeZoneOffset) return resolved;
+  final earlierOffset = _offsetAt(dayBefore.microsecondsSinceEpoch);
+  final first =
+      DateTime.utc(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        millisecond,
+        microsecond,
+      ).microsecondsSinceEpoch -
+      earlierOffset;
+  return first < micros && _offsetAt(first) == earlierOffset
+      ? DateTime.fromMicrosecondsSinceEpoch(first)
+      : resolved;
+}
+
 /// Rebuilds [date] on another calendar day while keeping its wall-clock time
 /// and time zone.
 ///
-/// Like the local [DateTime] constructor, a time the clocks skip moves
-/// forward by the length of the jump, and a time they repeat resolves to its
-/// first occurrence. The exception is a [date] that is itself the repeat: the
+/// A time the clocks skip moves forward by the length of the jump, and a
+/// time they repeat resolves to its first occurrence. The exception is a
+/// [date] that is itself the repeat ([repeat], computed when omitted): the
 /// result keeps its offset when the target time has that offset too, so
 /// `addDays(0)` returns [date].
-DateTime _withDate(DateTime date, int year, int month, int day) {
+DateTime _withDate(
+  DateTime date,
+  int year,
+  int month,
+  int day, {
+  bool? repeat,
+}) {
   if (date.isUtc) {
     return DateTime.utc(
       year,
@@ -895,7 +946,7 @@ DateTime _withDate(DateTime date, int year, int month, int day) {
       date.microsecond,
     );
   }
-  final moved = DateTime(
+  final moved = _local(
     year,
     month,
     day,
@@ -905,52 +956,141 @@ DateTime _withDate(DateTime date, int year, int month, int day) {
     date.millisecond,
     date.microsecond,
   );
-  return _isRepeat(date) ? _keepOffset(moved, date) : moved;
+  return (repeat ?? _isRepeat(date)) ? _keepOffset(moved, date) : moved;
 }
 
 /// The other occurrence of [candidate]'s wall-clock time when that one has
 /// [reference]'s offset, otherwise [candidate].
 DateTime _keepOffset(DateTime candidate, DateTime reference) {
-  final offset = reference.timeZoneOffset;
-  if (candidate.timeZoneOffset == offset) return candidate;
-  final shifted = candidate.add(candidate.timeZoneOffset - offset);
+  final offset = _offsetAt(reference.microsecondsSinceEpoch);
+  final micros = candidate.microsecondsSinceEpoch;
+  final candidateOffset = _offsetAt(micros);
+  if (candidateOffset == offset) return candidate;
+  final shifted = micros + candidateOffset - offset;
   // With that offset, shifted shows the same wall clock as candidate.
-  return shifted.timeZoneOffset == offset ? shifted : candidate;
+  return _offsetAt(shifted) == offset
+      ? DateTime.fromMicrosecondsSinceEpoch(shifted)
+      : candidate;
 }
 
-/// The first instant whose local wall clock shows [date]'s wall-clock time.
-///
-/// When clocks fall back they repeat a stretch of wall-clock time, and the
-/// local [DateTime] constructor resolves a repeated time to its first
-/// occurrence.
-DateTime _firstOccurrence(DateTime date) => DateTime(
-  date.year,
-  date.month,
-  date.day,
-  date.hour,
-  date.minute,
-  date.second,
-  date.millisecond,
-  date.microsecond,
-);
+/// Whether [date] is a local time that is the second occurrence of a
+/// repeated wall-clock time.
+bool _isRepeat(DateTime date) =>
+    !date.isUtc &&
+    _local(
+          date.year,
+          date.month,
+          date.day,
+          date.hour,
+          date.minute,
+          date.second,
+          date.millisecond,
+          date.microsecond,
+        ) !=
+        date;
 
-/// Whether local [date] is the second occurrence of a repeated wall-clock
-/// time.
-bool _isRepeat(DateTime date) => _firstOccurrence(date) != date;
-
-DateTime _addCalendarDays(DateTime date, int days) =>
-    _withDate(date, date.year, date.month, date.day + days);
+DateTime _addCalendarDays(DateTime date, int days, {bool? repeat}) =>
+    _withDate(date, date.year, date.month, date.day + days, repeat: repeat);
 
 /// Floor division that rounds toward negative infinity for any sign of [a];
 /// [b] must be positive.
 int _floorDiv(int a, int b) => (a - a % b) ~/ b;
 
-/// The local UTC offset, in microseconds, at [micros] since the epoch.
-int _offsetAt(int micros) =>
-    DateTime.fromMicrosecondsSinceEpoch(micros).timeZoneOffset.inMicroseconds;
+/// Whether every time field of [date] is zero.
+bool _isMidnight(DateTime date) =>
+    date.hour == 0 &&
+    date.minute == 0 &&
+    date.second == 0 &&
+    date.millisecond == 0 &&
+    date.microsecond == 0;
+
+/// [date]'s calendar date as a count of days from January 1, 1970.
+int _dayIndex(DateTime date) =>
+    DateTime.utc(date.year, date.month, date.day).millisecondsSinceEpoch ~/
+    Duration.millisecondsPerDay;
+
+/// The first moment of the local calendar date [index] days after
+/// January 1, 1970.
+DateTime _startOfDayIndex(int index) {
+  final date = DateTime.utc(1970, 1, 1 + index);
+  return _startOfDate(date.year, date.month, date.day);
+}
+
+/// [date] aligned down to a multiple of [step] microseconds, as
+/// [DHUDateExtensions.floorTo] describes.
+DateTime _floorTo(DateTime date, int step) {
+  final micros = date.microsecondsSinceEpoch;
+  if (date.isUtc) {
+    return DateTime.fromMicrosecondsSinceEpoch(
+      _floorDiv(micros, step) * step,
+      isUtc: true,
+    );
+  }
+  if (step % Duration.microsecondsPerDay != 0) {
+    return DateTime.fromMicrosecondsSinceEpoch(_floorLocal(micros, step));
+  }
+  final index = _dayIndex(date);
+  return _startOfDayIndex(
+    index - index % (step ~/ Duration.microsecondsPerDay),
+  );
+}
+
+/// [date], which [_floorTo] moves, aligned up to a multiple of [step]
+/// microseconds, as [DHUDateExtensions.ceilTo] describes.
+DateTime _ceilTo(DateTime date, int step) {
+  final micros = date.microsecondsSinceEpoch;
+  if (date.isUtc) {
+    return DateTime.fromMicrosecondsSinceEpoch(
+      -_floorDiv(-micros, step) * step,
+      isUtc: true,
+    );
+  }
+  if (step % Duration.microsecondsPerDay != 0) {
+    return DateTime.fromMicrosecondsSinceEpoch(_ceilLocal(micros, step));
+  }
+  final days = step ~/ Duration.microsecondsPerDay;
+  final index = _dayIndex(date);
+  // A repeated midnight that starts its date again, after the clocks fell
+  // back past it into the day before, is aligned too; floorTo returns the
+  // first occurrence instead. (A repeat inside its own date, as in the
+  // Azores, starts nothing.)
+  if (index % days == 0 &&
+      _isMidnight(date) &&
+      _dayIndex(DateTime.fromMicrosecondsSinceEpoch(micros - 1)) < index) {
+    return date;
+  }
+  for (var next = index - index % days + days; ; next += days) {
+    final start = _startOfDayIndex(next);
+    if (!start.isBefore(date)) return start;
+    // The clocks showed that midnight before date, then fell back past it.
+    final again = _keepOffset(start, date);
+    if (!again.isBefore(date)) return again;
+  }
+}
+
+/// The local UTC offset, in microseconds, at [micros] since the epoch, as
+/// the local wall-clock fields show it.
+///
+/// On the web, [DateTime.timeZoneOffset] is rounded to whole minutes, while
+/// the fields use the exact offset, such as a local mean time with seconds.
+int _offsetAt(int micros) {
+  final date = DateTime.fromMicrosecondsSinceEpoch(micros);
+  return DateTime.utc(
+        date.year,
+        date.month,
+        date.day,
+        date.hour,
+        date.minute,
+        date.second,
+        date.millisecond,
+        date.microsecond,
+      ).microsecondsSinceEpoch -
+      micros;
+}
 
 /// The first instant after [from], at or before [to], whose local offset
-/// differs from the offset at [from]. The offset at [to] must differ.
+/// differs from the offset at [from]. The offset at [to] must differ, and at
+/// most one change may lie in between.
 ///
 /// The instant just before the result has the offset at [from].
 int _offsetChange(int from, int to) {
@@ -968,6 +1108,11 @@ int _offsetChange(int from, int to) {
   return high;
 }
 
+/// The longest stretch checked for a clock change at once. Changes are at
+/// least six days apart in the time zone database (the closest since 1900
+/// were in Cambridge Bay in 2000), so a day holds at most one.
+const _changeFreeSpan = Duration.microsecondsPerDay;
+
 /// The latest instant at or before [micros] whose local wall clock shows a
 /// multiple of [step]; an aligned time skipped by a forward jump counts as
 /// reached at the jump.
@@ -977,15 +1122,23 @@ int _floorLocal(int micros, int step) {
   while (true) {
     final wall = _floorDiv(receiver + offset, step) * step;
     final candidate = wall - offset;
-    final earlierOffset = _offsetAt(candidate);
-    if (earlierOffset == offset) return candidate;
-    // The clocks changed between the aligned time and the receiver.
-    final change = _offsetChange(candidate, receiver);
+    // Check at most a day at once, so a change cannot hide in between.
+    final probe = candidate > receiver - _changeFreeSpan
+        ? candidate
+        : receiver - _changeFreeSpan;
+    final probeOffset = _offsetAt(probe);
+    if (probeOffset == offset) {
+      if (probe == candidate) return candidate;
+      receiver = probe; // nothing aligned in between
+      continue;
+    }
+    // The clocks changed between the probe and the receiver.
+    final change = _offsetChange(probe, receiver);
     // Jumped forward over the aligned time: it was skipped.
-    if (wall >= change + earlierOffset) return change;
+    if (wall >= change + probeOffset) return change;
     // The aligned time, or a later one, happened before the change.
     receiver = change - 1;
-    offset = earlierOffset;
+    offset = probeOffset;
   }
 }
 
@@ -998,9 +1151,18 @@ int _ceilLocal(int micros, int step) {
   while (true) {
     final wall = -_floorDiv(-(receiver + offset), step) * step;
     final candidate = wall - offset;
-    if (_offsetAt(candidate) == offset) return candidate;
-    // The clocks change between the receiver and the aligned time.
-    final change = _offsetChange(receiver, candidate);
+    // Check at most a day at once, so a change cannot hide in between.
+    final probe = candidate < receiver + _changeFreeSpan
+        ? candidate
+        : receiver + _changeFreeSpan;
+    final probeOffset = _offsetAt(probe);
+    if (probeOffset == offset) {
+      if (probe == candidate) return candidate;
+      receiver = probe; // nothing aligned in between
+      continue;
+    }
+    // The clocks change between the receiver and the probe.
+    final change = _offsetChange(receiver, probe);
     final laterOffset = _offsetAt(change);
     // Jumping forward over the aligned time: it is skipped.
     if (wall < change + laterOffset) return change;

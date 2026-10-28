@@ -62,14 +62,15 @@ None of these raise a compile error, unless noted.
    `nextDay`, `previousDay`, `nextWeek`, `previousWeek`, `firstDayOfWeek`,
    `lastDayOfWeek`, `addBusinessDays`, `daysUpTo`, and `daysInMonth`. On the
    day of a change, a skipped time moves forward by the jump and a repeated
-   time resolves to its first occurrence. For an exact 24-hour step, use
+   time resolves to its first occurrence, unless the receiver is itself the
+   repeat, which keeps its offset. For an exact 24-hour step, use
    `date.add(const Duration(days: 1))`.
 
 4. **Day counts, rounding, and HTTP dates are corrected.** `remainingDays`,
    `passedDays`, `daysDifferenceTo`, `isTomorrow`, and `isYesterday` count
    calendar days. `roundTo`, `floorTo`, and `ceilTo` align to the receiver's
    wall clock, never land on the wrong side of the receiver around a clock
-   change, and count whole-day steps as calendar days
+   change, and count whole-day steps as calendar dates
    (`floorTo(const Duration(days: 1))` equals `startOfDay`).
    `httpDateFormat` takes every field from UTC. If you compensated for the
    old results, remove the workaround.

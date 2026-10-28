@@ -75,11 +75,12 @@ jobs:
       # Runners use UTC, where daylight-saving and half-hour-offset bugs
       # cannot show up. Re-run the calendar suites where they can: changes at
       # 02:00, a half-hour offset, gaps at midnight, 30-minute shifts, a
-      # repeated midnight, 2-hour shifts, and a 45-minute offset.
+      # midnight repeated within its date, changes past midnight, 2- and
+      # 3-hour shifts, and a 45-minute offset.
       - name: Test calendar logic in other time zones
         run: |
           set -euo pipefail
-          for zone in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe Atlantic/Azores Antarctica/Troll Pacific/Chatham; do
+          for zone in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe Atlantic/Azores America/St_Johns Antarctica/Troll Antarctica/Casey Pacific/Chatham; do
             echo "::group::TZ=$zone"
             TZ="$zone" dart test test/date_extension_test.dart test/date_extension_additional_test.dart test/date_time_zone_test.dart
             echo "::endgroup::"

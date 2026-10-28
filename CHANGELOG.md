@@ -78,7 +78,8 @@ These are removed outright, and `dart fix` still migrates them:
   wall-clock time across daylight-saving changes. 6.x added 24-hour
   durations, so the time shifted by an hour across a transition. On the day
   of a change, a time the clocks skip moves forward by the jump, and a time
-  they repeat resolves to its first occurrence. Use
+  they repeat resolves to its first occurrence, unless the receiver is
+  itself the repeat, which keeps its offset. Use
   `add(Duration(days: n))` for exact 24-hour steps. `addHours` and smaller
   units still add exact durations.
 - **Day counts are calendar-based.** `remainingDays`, `passedDays`,
@@ -90,7 +91,7 @@ These are removed outright, and `dart fix` still migrates them:
   down instead of toward the epoch. Around a clock change, `floorTo` and
   `ceilTo` return the latest and earliest instant whose wall clock shows an
   aligned time (an aligned time the clocks skip counts at the jump), and
-  whole-day steps count calendar days, so
+  whole-day steps count calendar dates, so
   `floorTo(const Duration(days: 1))` equals `startOfDay`.
 - **Office MIME checks are precise.** `isDOCX` is only `.docx`, `isDOC` is
   only `.doc` (it was an alias of `isDOCX`), and `isXLSX` is only `.xlsx`.
