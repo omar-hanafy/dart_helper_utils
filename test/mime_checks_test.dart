@@ -35,4 +35,24 @@ void main() {
       expect(file.isTypeScript, isFalse);
     });
   });
+
+  group('7.0.0 Office format precision', () {
+    test('Word getters distinguish .doc from .docx', () {
+      expect('a.docx'.isDOCX, isTrue);
+      expect('a.doc'.isDOCX, isFalse);
+      expect('a.doc'.isDOC, isTrue);
+      expect('a.docx'.isDOC, isFalse);
+      expect('a.doc'.isWord, isTrue);
+      expect('a.docx'.isWord, isTrue);
+      expect('a.pdf'.isWord, isFalse);
+    });
+
+    test('Excel getters distinguish .xls from .xlsx', () {
+      expect('a.xlsx'.isXLSX, isTrue);
+      expect('a.xls'.isXLSX, isFalse);
+      expect('a.xls'.isXLS, isTrue);
+      expect('a.xls'.isExcel, isTrue);
+      expect('a.xlsx'.isExcel, isTrue);
+    });
+  });
 }

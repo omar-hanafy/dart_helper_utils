@@ -48,4 +48,33 @@ void main() {
       expect(values.percentile(0), 1.5);
     });
   });
+
+  group('7.0.0 integer statistics are exact', () {
+    test('mean, median, variance, and standardDeviation are not truncated', () {
+      final values = [1, 2];
+      expect(values.mean, 1.5);
+      expect(values.median, 1.5);
+      expect(values.variance, 0.25);
+      expect(values.standardDeviation, 0.5);
+    });
+
+    test('the num statistics return doubles', () {
+      final values = <num>[1, 2, 4];
+      expect(values.mean, isA<double>());
+      expect(values.variance, isA<double>());
+      expect(values.standardDeviation, isA<double>());
+    });
+
+    test('mode and percentile stay integral', () {
+      final values = [3, 1, 3, 2, 1];
+      expect(values.mode, [3, 1]);
+      expect(values.percentile(50), 2);
+    });
+
+    test('statistics on an empty iterable throw ArgumentError', () {
+      expect(() => <int>[].mean, throwsArgumentError);
+      expect(() => <int>[].mode, throwsArgumentError);
+      expect(() => <double>[].median, throwsArgumentError);
+    });
+  });
 }

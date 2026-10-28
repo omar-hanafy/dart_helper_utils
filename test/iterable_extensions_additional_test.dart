@@ -144,8 +144,37 @@ void main() {
 
     test('find returns first matching element', () {
       final list = [1, 2, 3, 4];
-      expect(list.find((e) => e.isEven), 2);
-      expect(list.find((e) => e > 10), isNull);
+      expect(list.firstWhereOrNull((e) => e.isEven), 2);
+      expect(list.firstWhereOrNull((e) => e > 10), isNull);
+    });
+  });
+
+  group('7.0.0 iterable changes', () {
+    test('orEmpty works on a null iterable', () {
+      Iterable<int>? maybe;
+      expect(maybe.orEmpty(), isEmpty);
+      maybe = [3];
+      expect(maybe.orEmpty().toList(), [3]);
+      expect([1, 2].orEmpty(), [1, 2]);
+    });
+
+    test('lastOrDefault returns a non-nullable element', () {
+      List<int>? none;
+      final int fallback = none.lastOrDefault(7);
+      expect(fallback, 7);
+      expect([1, 2].lastOrDefault(7), 2);
+    });
+
+    test('firstWhereOrNull from collection replaces find', () {
+      expect([1, 2, 3].firstWhereOrNull((e) => e > 1), 2);
+      expect([1, 2, 3].firstWhereOrNull((e) => e > 5), isNull);
+    });
+
+    test('a nullable Set uses the shared nullable iterable helpers', () {
+      Set<int>? none;
+      expect(none.isEmptyOrNull, isTrue);
+      expect(<int>{1}.isNotEmptyOrNull, isTrue);
+      expect(<int>{}.isEmptyOrNull, isTrue);
     });
   });
 }

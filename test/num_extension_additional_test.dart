@@ -214,4 +214,86 @@ void main() {
       expect(() => randomInRange(5, 1), throwsArgumentError);
     });
   });
+
+  group('7.0.0 number corrections', () {
+    test('isPowerOf terminates for zero and negative receivers', () {
+      expect(0.isPowerOf(2), isFalse);
+      expect((-8).isPowerOf(2), isFalse);
+      expect(1.isPowerOf(2), isTrue);
+      expect(1024.isPowerOf(2), isTrue);
+      expect(1000.isPowerOf(10), isTrue);
+      expect(12.isPowerOf(2), isFalse);
+      expect(1.isPowerOf(1), isTrue);
+    });
+
+    test('toFileSize handles fractional bytes and exact powers', () {
+      expect(0.5.toFileSize(), '0.50 B');
+      expect(0.toFileSize(), '0 B');
+      expect((-1).toFileSize(), '0 B');
+      expect(1536.toFileSize(), '1.50 KB');
+      expect((1024 * 1024).toFileSize(decimals: 0), '1 MB');
+      expect((1024 * 1024 * 1024).toFileSize(decimals: 1), '1.0 GB');
+    });
+
+    test('bitCount counts the set bits of the magnitude', () {
+      expect(5.bitCount(), 2);
+      expect((-5).bitCount(), 2);
+      expect(0.bitCount(), 0);
+      expect(255.bitCount(), 8);
+    });
+
+    test('lcm is zero for a zero operand and never negative', () {
+      expect(0.lcm(5), 0);
+      expect(5.lcm(0), 0);
+      expect((-4).lcm(6), 12);
+      expect(4.lcm(6), 12);
+    });
+
+    test('primeFactors factors the magnitude', () {
+      expect(12.primeFactors(), [2, 2, 3]);
+      expect((-12).primeFactors(), [2, 2, 3]);
+      expect(1.primeFactors(), isEmpty);
+      expect(0.primeFactors(), isEmpty);
+      expect(97.primeFactors(), [97]);
+    });
+
+    test('isPerfectCube is exact for large values', () {
+      expect(27.isPerfectCube(), isTrue);
+      expect((-27).isPerfectCube(), isTrue);
+      expect(26.isPerfectCube(), isFalse);
+      expect(1000000000000.isPerfectCube(), isTrue);
+      expect(999999999999.isPerfectCube(), isFalse);
+      expect(0.isPerfectCube(), isTrue);
+    });
+
+    test('isFibonacci rejects negative numbers', () {
+      expect((-1).isFibonacci(), isFalse);
+      expect(0.isFibonacci(), isTrue);
+      expect(21.isFibonacci(), isTrue);
+      expect(22.isFibonacci(), isFalse);
+    });
+
+    test('NumbersHelper.gcd and isPerfectSquare handle negatives', () {
+      expect(NumbersHelper.gcd(-4, 0), 4);
+      expect(NumbersHelper.gcd(-12, 18), 6);
+      expect(NumbersHelper.isPerfectSquare(-4), isFalse);
+      expect(NumbersHelper.isPerfectSquare(16), isTrue);
+    });
+
+    test('asGreeks keeps the sign of negative numbers', () {
+      expect((-2500000000).asGreeks(), '-2.5B');
+      expect((-500).asGreeks(), '-500');
+      expect(1500000.asGreeks(), '1.5M');
+    });
+
+    test('isNegative on a non-null num is the SDK getter', () {
+      // dart_helper_utils 6.x shadowed num.isNegative with an unreachable
+      // extension; the SDK getter has always answered for non-null numbers.
+      expect((-1).isNegative, isTrue);
+      expect((-0.0).isNegative, isTrue);
+      const num? nothing = null;
+      expect(nothing.isNegative, isFalse);
+      expect(12.gcd(18), 6);
+    });
+  });
 }

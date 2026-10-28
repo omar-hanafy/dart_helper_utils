@@ -1,13 +1,17 @@
 import 'package:mime/mime.dart';
 
-/// DHUMimeChecksExtensions
+/// MIME type lookup for a file path, file name, or URL.
+///
+/// The `is*` getters in the related extensions decide by the MIME type that
+/// `package:mime` derives from the extension (or from [mimeType]'s
+/// `headerBytes`). They return `false` for `null` and for unknown types.
 extension DHUMimeChecksExtensions on String? {
   /// Returns the MIME type of a file path or URL.
   String? mimeType({List<int>? headerBytes}) =>
       lookupMimeType(this ?? '', headerBytes: headerBytes);
 }
 
-/// DHUVideoMimeChecksExtensions
+/// Video file-type checks by MIME type.
 extension DHUVideoMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a video file.
   bool get isVideo {
@@ -58,7 +62,7 @@ extension DHUVideoMimeChecksExtensions on String? {
   }
 }
 
-/// DHUImageMimeChecksExtensions
+/// Image file-type checks by MIME type.
 extension DHUImageMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an image file.
   bool get isImage {
@@ -143,7 +147,7 @@ extension DHUImageMimeChecksExtensions on String? {
   }
 }
 
-/// DHUDocumentMimeChecksExtensions
+/// Document file-type checks by MIME type.
 extension DHUDocumentMimeChecksExtensions on String? {
   /// Checks if the file path or URL represents a PDF document.
   ///
@@ -153,19 +157,25 @@ extension DHUDocumentMimeChecksExtensions on String? {
     return mt == 'application/pdf';
   }
 
-  /// Checks if the file path or URL represents a Microsoft Word document.
-  ///
-  /// Returns `true` for both DOC and DOCX formats (`application/msword` and
-  /// `application/vnd.openxmlformats-officedocument.wordprocessingml.document`).
-  bool get isDOCX {
-    final mt = mimeType();
-    return mt ==
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        mt == 'application/msword';
-  }
+  /// Checks if the file path or URL represents any Microsoft Word document
+  /// (.doc or .docx).
+  bool get isWord => isDOC || isDOCX;
 
-  /// Alias for `isDOCX` to cover both DOC and DOCX formats.
-  bool get isDOC => isDOCX;
+  /// Checks if the file path or URL represents a modern Microsoft Word
+  /// document (.docx).
+  ///
+  /// Before 7.0.0 this was also `true` for legacy .doc files; use [isWord]
+  /// for either format.
+  bool get isDOCX =>
+      mimeType() ==
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+  /// Checks if the file path or URL represents a legacy Microsoft Word
+  /// document (.doc).
+  ///
+  /// Before 7.0.0 this was an alias of [isDOCX]; use [isWord] for either
+  /// format.
+  bool get isDOC => mimeType() == 'application/msword';
 
   /// Checks if the file path or URL represents any Microsoft Excel spreadsheet. (.xls or .xlsx)
   bool get isExcel {
@@ -175,15 +185,17 @@ extension DHUDocumentMimeChecksExtensions on String? {
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; // .xlsx
   }
 
-  /// Checks if the file path or URL represents a latest Microsoft Excel spreadsheet.
-  bool get isXLSX {
-    final mt = mimeType();
-    return mt ==
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        mt == 'application/vnd.ms-excel';
-  }
+  /// Checks if the file path or URL represents a modern Microsoft Excel
+  /// spreadsheet (.xlsx).
+  ///
+  /// Before 7.0.0 this was also `true` for legacy .xls files; use [isExcel]
+  /// for either format.
+  bool get isXLSX =>
+      mimeType() ==
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-  /// Checks if the file path or URL represents an old Microsoft Excel spreadsheet.
+  /// Checks if the file path or URL represents a legacy Microsoft Excel
+  /// spreadsheet (.xls).
   bool get isXLS {
     final mt = mimeType();
     return mt == 'application/vnd.ms-excel';
@@ -204,7 +216,7 @@ extension DHUDocumentMimeChecksExtensions on String? {
         'application/vnd.openxmlformats-officedocument.presentationml.presentation';
   }
 
-  /// Checks if a file path or URL represents an Old Microsoft PowerPoint presentation (.pptx).
+  /// Checks if a file path or URL represents a legacy Microsoft PowerPoint presentation (.ppt).
   bool get isPPT {
     final mt = mimeType();
     return mt == 'application/vnd.ms-powerpoint';
@@ -235,7 +247,7 @@ extension DHUDocumentMimeChecksExtensions on String? {
   }
 }
 
-/// DHUAudioMimeChecksExtensions
+/// Audio file-type checks by MIME type.
 extension DHUAudioMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an audio file.
   bool get isAudio {
@@ -280,7 +292,7 @@ extension DHUAudioMimeChecksExtensions on String? {
   }
 }
 
-/// DHUArchiveMimeChecksExtensions
+/// Archive file-type checks by MIME type.
 extension DHUArchiveMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an archive file.
   bool get isArchive {
@@ -299,7 +311,7 @@ extension DHUArchiveMimeChecksExtensions on String? {
     return mt == 'application/zip';
   }
 
-  /// Checks if a file path or URL represents a ZIP archive.
+  /// Checks if a file path or URL represents a Debian package (.deb).
   bool get isDeb {
     final mt = mimeType();
     return mt == 'application/x-debian-package';
@@ -339,7 +351,7 @@ extension DHUArchiveMimeChecksExtensions on String? {
   }
 }
 
-/// DHUProgrammingMimeChecksExtensions
+/// Source-code and markup file-type checks by MIME type.
 extension DHUProgrammingMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents an HTML file.
   bool get isHTML {
@@ -447,7 +459,7 @@ extension DHUProgrammingMimeChecksExtensions on String? {
   }
 }
 
-/// DHUContactMimeChecksExtensions
+/// Contact-card file-type checks by MIME type.
 extension DHUContactMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a contact file.
   bool get isContact {
@@ -456,7 +468,7 @@ extension DHUContactMimeChecksExtensions on String? {
   }
 }
 
-/// DHUFontMimeChecksExtensions
+/// Font file-type checks by MIME type.
 extension DHUFontMimeChecksExtensions on String? {
   /// Checks if a file path or URL represents a font file.
   bool get isFont {

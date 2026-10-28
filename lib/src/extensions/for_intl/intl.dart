@@ -1,7 +1,6 @@
 import 'package:intl/intl.dart';
 
-/// Provides extensions for [Map<Object, T>] to support internationalization (i18n) message formatting.
-/// IntlMapExtension
+/// `Intl.selectLogic` for a map of cases.
 extension IntlMapExtension<T> on Map<Object, T> {
   /// Internal: Implements the logic for `select` - use `intlSelect` for
   /// normal messages.
@@ -14,8 +13,7 @@ extension IntlMapExtension<T> on Map<Object, T> {
   T intlSelectLogic(Object choice) => Intl.selectLogic(choice, this);
 }
 
-/// Provides extensions for [Map<Object, String>] to support internationalization (i18n) message formatting.
-/// IntlMapStringExtension
+/// `Intl.select` messages built from a map of cases.
 extension IntlMapStringExtension on Map<Object, String> {
   /// Format a message differently depending on [choice].
   ///
@@ -85,7 +83,7 @@ extension IntlMapStringExtension on Map<Object, String> {
   }
 }
 
-/// on
+/// Plural selection (`Intl.plural` and `Intl.pluralLogic`) for numbers.
 extension DHUIntlNumExtensions on num {
   /// Returns a localized string based on the plural category of this number.
   ///
@@ -170,7 +168,8 @@ extension DHUIntlNumExtensions on num {
   );
 }
 
-/// DHUIntlNumExtensions
+/// Locale setup, message translation, and gender selection (`Intl.message`,
+/// `Intl.gender`) for strings.
 extension DHUIntlExtensions on String {
   /// Sets this string as the default locale for subsequent `Intl` operations.
   ///

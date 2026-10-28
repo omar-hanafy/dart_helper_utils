@@ -71,7 +71,7 @@ extension DHUFutureCallbackExtensions<T> on Future<T> Function() {
   }
 }
 
-/// Extensions for [Iterable] of Futures.
+/// Bounded-concurrency execution for an iterable of task factories.
 extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
   /// Executes the functions in this iterable, running at most [concurrency] futures simultaneously.
   ///
@@ -79,7 +79,8 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
   ///
   /// [concurrency] must be positive.
   ///
-  /// Results are returned in completion order, not input order.
+  /// By default results are returned in completion order, not input order.
+  /// Pass `preserveOrder: true` to get them in input order instead.
   ///
   /// If any task throws, the returned future completes with that error. Any
   /// in-flight tasks continue running and their errors are handled internally
@@ -87,12 +88,21 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
   ///
   /// Example:
   /// ```dart
-  /// await tasks.waitConcurrency(concurrency: 5);
+  /// final pages = await urls
+  ///     .map((url) => () => fetch(url))
+  ///     .waitConcurrency(concurrency: 4, preserveOrder: true);
   /// ```
-  Future<List<T>> waitConcurrency({int concurrency = 5}) async {
-    if (concurrency <= 0) throw ArgumentError('Concurrency must be positive');
-    final results = <T>[];
+  Future<List<T>> waitConcurrency({
+    int concurrency = 5,
+    bool preserveOrder = false,
+  }) async {
+    if (concurrency <= 0) {
+      throw ArgumentError.value(concurrency, 'concurrency', 'must be positive');
+    }
+    final inCompletionOrder = <T>[];
+    final byInputIndex = <int, T>{};
     final active = <Future<void>>{};
+    var started = 0;
 
     try {
       for (final task in this) {
@@ -100,24 +110,29 @@ extension DHUFutureIterableExtension<T> on Iterable<Future<T> Function()> {
           await Future.any(active);
         }
 
-        late Future<void> future;
-        future = task()
-            .then((r) {
-              results.add(r);
+        final index = started++;
+        late final Future<void> running;
+        running = task()
+            .then((result) {
+              if (preserveOrder) {
+                byInputIndex[index] = result;
+              } else {
+                inCompletionOrder.add(result);
+              }
             })
-            .whenComplete(() {
-              active.remove(future);
-            });
-        active.add(future);
+            .whenComplete(() => active.remove(running));
+        active.add(running);
       }
       await Future.wait(active);
     } catch (_) {
-      for (final task in active) {
-        // ignore: unawaited_futures
-        task.catchError((_) {});
+      // The first failure wins; later failures of tasks that are still
+      // running must not surface as unhandled errors.
+      for (final running in active) {
+        running.ignore();
       }
       rethrow;
     }
-    return results;
+    if (!preserveOrder) return inCompletionOrder;
+    return [for (var i = 0; i < started; i++) byInputIndex[i] as T];
   }
 }

@@ -69,7 +69,7 @@ void main() {
       );
       throttled.dispose();
       expect(throttled.isDisposed, isTrue);
-      expect(() => throttled(), throwsStateError);
+      expect(throttled.call, throwsStateError);
     });
   });
 
@@ -120,5 +120,45 @@ void main() {
 
       expect(zoneErrors, isEmpty);
     });
+  });
+
+  group('7.0.0 throttle changes', () {
+    test('throttle accepts async callbacks and reports their errors', () async {
+      final errors = <Object>[];
+      final throttled = TimeUtils.throttle(
+        () async => throw StateError('async'),
+        const Duration(milliseconds: 20),
+        onError: (error, _) => errors.add(error),
+      );
+      addTearDown(throttled.dispose);
+      throttled();
+      await pumpEventQueue();
+      expect(errors.single, isA<StateError>());
+    });
+
+    test(
+      'unhandled throttler errors keep their original stack trace',
+      () async {
+        final reported = Completer<StackTrace>();
+        StackTrace? original;
+        runZonedGuarded(
+          () {
+            Throttler(interval: const Duration(milliseconds: 10)).run(() {
+              try {
+                throw StateError('sync');
+              } on StateError catch (_, stackTrace) {
+                original = stackTrace;
+                rethrow;
+              }
+            });
+          },
+          (error, stackTrace) {
+            if (!reported.isCompleted) reported.complete(stackTrace);
+          },
+        );
+        final stackTrace = await reported.future;
+        expect(stackTrace.toString(), original.toString());
+      },
+    );
   });
 }

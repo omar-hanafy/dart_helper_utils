@@ -40,4 +40,16 @@ void main() {
       expect(category, 'she');
     });
   });
+
+  group('7.0.0 renamed and extended date formatting', () {
+    test('formatAsyQQQ formats the quarter', () {
+      expect(DateTime(2024, 5).formatAsyQQQ('en_US'), 'Q2 2024');
+    });
+
+    test('tryFormat accepts a locale', () {
+      DateTime? none;
+      expect(none.tryFormat('yyyy'), isNull);
+      expect(DateTime(2024, 5).tryFormat('MMM', 'en_US'), 'May');
+    });
+  });
 }

@@ -126,6 +126,38 @@ const String regexValidIp4 =
 const String regexValidUrl =
     r'^(https?:\/\/)?(www\.)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+([\/?#][^\s]*)?$';
 
+/// Matches canonical UUIDs (8-4-4-4-12 hexadecimal digits, any version).
+const String regexValidUuid =
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$';
+
+// Precompiled forms of the patterns above. Dart does not cache compiled
+// regular expressions, so `RegExp(regexValidEmail)` recompiles on every call;
+// these compile once, on first use.
+
+/// Precompiled [regexSpecialChars].
+final RegExp patternSpecialChars = RegExp(regexSpecialChars);
+
+/// Precompiled [regexValidUsername].
+final RegExp patternValidUsername = RegExp(regexValidUsername);
+
+/// Precompiled [regexValidCurrency].
+final RegExp patternValidCurrency = RegExp(regexValidCurrency);
+
+/// Precompiled [regexValidPhoneNumber].
+final RegExp patternValidPhoneNumber = RegExp(regexValidPhoneNumber);
+
+/// Precompiled [regexValidEmail].
+final RegExp patternValidEmail = RegExp(regexValidEmail);
+
+/// Precompiled [regexValidIp4].
+final RegExp patternValidIp4 = RegExp(regexValidIp4);
+
+/// Precompiled [regexValidUrl].
+final RegExp patternValidUrl = RegExp(regexValidUrl);
+
+/// Precompiled [regexValidUuid].
+final RegExp patternValidUuid = RegExp(regexValidUuid);
+
 /// A map of HTTP status codes to their corresponding messages.
 ///
 /// This map provides a quick reference for HTTP status codes and their standard
@@ -172,7 +204,7 @@ Map<int, String> get httpStatusMessages => const {
   415: 'Unsupported Media Type',
   416: 'Range Not Satisfiable',
   417: 'Expectation Failed',
-  418: 'I\'m a Teapot',
+  418: "I'm a Teapot",
   421: 'Misdirected Request',
   422: 'Unprocessable Entity',
   423: 'Locked',
@@ -209,8 +241,7 @@ Map<int, String> get httpStatusUserMessage => const {
 
   // 2xx - Success
   200: 'Success! Everything worked as expected.',
-  201:
-      'Success! Your request has been completed and a new resource was created.',
+  201: 'Success! Your request has been completed and a new resource was created.',
   202: 'Your request has been accepted and is being processed.',
   203: 'Request successful, but some information might have been modified.',
   204: "The request was successful, but there's nothing to show.",
@@ -218,8 +249,7 @@ Map<int, String> get httpStatusUserMessage => const {
   206: 'Showing partial content as requested.',
   207: 'Multiple operations completed with different results.',
   208: 'This information was already reported earlier.',
-  226:
-      'Your request was successful and the response has been modified for efficiency.',
+  226: 'Your request was successful and the response has been modified for efficiency.',
 
   // 3xx - Redirection
   300: 'Multiple options are available. Please choose one.',
@@ -284,76 +314,56 @@ Map<int, String> get httpStatusUserMessage => const {
 /// intended for developers, including common causes and troubleshooting hints.
 Map<int, String> get httpStatusDevMessage => const {
   // 1xx - Informational
-  100:
-      'Client should continue with request. Server received request headers and client should proceed with body.',
+  100: 'Client should continue with request. Server received request headers and client should proceed with body.',
   101: 'Server is switching protocols as requested by client Upgrade header.',
-  102:
-      'Server received and is processing request, but no response is available yet.',
-  103:
-      'Server is likely to send a final response with the headers included in this interim response.',
+  102: 'Server received and is processing request, but no response is available yet.',
+  103: 'Server is likely to send a final response with the headers included in this interim response.',
 
   // 2xx - Success
   200: 'Request successfully processed. Response includes payload.',
-  201:
-      'Resource successfully created. Response includes Location header or payload with resource URI.',
-  202:
-      'Request accepted for processing but not completed. Processing may occur asynchronously.',
+  201: 'Resource successfully created. Response includes Location header or payload with resource URI.',
+  202: 'Request accepted for processing but not completed. Processing may occur asynchronously.',
   203:
       'Request processed via proxy that modified the underlying response data.',
-  204:
-      'Request processed successfully but response intentionally empty. Common for DELETE operations.',
-  205:
-      'Request processed. Client should reset document view. No response payload.',
+  204: 'Request processed successfully but response intentionally empty. Common for DELETE operations.',
+  205: 'Request processed. Client should reset document view. No response payload.',
   206: 'Partial content delivered as per Range header requirements.',
   207: 'Multi-Status response. Payload contains XML MultiStatus (WebDAV).',
-  208:
-      'DAV binding member already enumerated in previous part of (207) Multi-Status.',
+  208: 'DAV binding member already enumerated in previous part of (207) Multi-Status.',
   226: 'Server fulfilled GET request, response is delta encoding result.',
 
   // 3xx - Redirection
-  300:
-      'Multiple representations available. Respond to Accept header or provide choice.',
-  301:
-      'Resource permanently moved. Update all references to new Location header URI.',
+  300: 'Multiple representations available. Respond to Accept header or provide choice.',
+  301: 'Resource permanently moved. Update all references to new Location header URI.',
   302: 'Resource temporarily moved. Maintain original URI for future requests.',
-  303:
-      'Response found at different URI. Use GET for redirect regardless of original method.',
+  303: 'Response found at different URI. Use GET for redirect regardless of original method.',
   304: 'Resource not modified since timestamp or ETag in conditional request.',
-  305:
-      'Resource must be accessed through proxy in Location header (deprecated).',
+  305: 'Resource must be accessed through proxy in Location header (deprecated).',
   306: 'Status code unused per IANA.',
   307: 'Resource temporarily moved. Maintain method and payload for redirect.',
   308: 'Resource permanently moved. Maintain method and payload for redirect.',
 
   // 4xx - Client Errors
-  400:
-      'Malformed request syntax, invalid request message framing, or deceptive request routing.',
-  401:
-      'Request lacks valid authentication credentials. Check Authorization header.',
+  400: 'Malformed request syntax, invalid request message framing, or deceptive request routing.',
+  401: 'Request lacks valid authentication credentials. Check Authorization header.',
   402: 'Payment required. Reserved for future use. Check API documentation.',
-  403:
-      "Server understood request but refuses to authorize. Authentication won't help.",
+  403: "Server understood request but refuses to authorize. Authentication won't help.",
   404: 'Resource not found at this location. Check URI path and method.',
-  405:
-      'HTTP method not allowed for resource. Check Allow header for valid methods.',
+  405: 'HTTP method not allowed for resource. Check Allow header for valid methods.',
   406: 'Resource cannot generate response matching Accept headers.',
   407: 'Proxy authentication required. Check Proxy-Authenticate header.',
   408: 'Server timed out waiting for complete request from client.',
-  409:
-      'Request conflicts with current resource state. Common in PUT/POST/DELETE.',
+  409: 'Request conflicts with current resource state. Common in PUT/POST/DELETE.',
   410: 'Resource permanently removed. Similar to 404 but more definitive.',
   411: 'Content-Length header required. Check request headers.',
-  412:
-      'Precondition in headers failed. Check If-Match/If-None-Match/If-Modified-Since.',
-  413:
-      'Request payload larger than server willing to process. Check Content-Length.',
+  412: 'Precondition in headers failed. Check If-Match/If-None-Match/If-Modified-Since.',
+  413: 'Request payload larger than server willing to process. Check Content-Length.',
   414: 'Request URI longer than server will interpret. Shorten URI.',
   415: 'Media type in Content-Type or Content-Encoding not supported.',
   416: 'Range header value invalid for resource. Check Content-Range.',
   417: 'Expectation in Expect header cannot be met by server.',
   418: 'Request refused - server is a teapot 🫖.',
-  421:
-      'Request directed to server unable to produce response. Check Host header.',
+  421: 'Request directed to server unable to produce response. Check Host header.',
   422: 'Request well-formed but semantically invalid. Common in WebDAV.',
   423: 'Resource locked. Check WebDAV lock-token header.',
   424: 'Request failed due to failure of previous request (WebDAV).',
@@ -370,8 +380,7 @@ Map<int, String> get httpStatusDevMessage => const {
   501: 'Server does not support functionality required to fulfill request.',
   502:
       'Invalid response received from upstream server while acting as gateway.',
-  503:
-      'Server temporarily unable to handle request due to overload or maintenance.',
+  503: 'Server temporarily unable to handle request due to overload or maintenance.',
   504: 'Gateway timeout waiting for response from upstream server.',
   505: 'HTTP version in request not supported by server.',
   506: 'Server has internal configuration error with content negotiation.',

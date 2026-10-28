@@ -60,8 +60,10 @@ typedef LoggerFunction = void Function(String message);
 /// A function signature for creating timers.
 /// `timerFactory` allows customizing timer creation, useful for testing or
 /// specialized timing behavior. Defaults to standard [Timer.new].
-typedef TimerFactory =
-    Timer Function(Duration duration, void Function() callback);
+typedef TimerFactory = Timer Function(
+  Duration duration,
+  void Function() callback,
+);
 
 /// A function signature for asynchronous actions.
 typedef AsyncAction = FutureOr<void> Function();
@@ -172,30 +174,26 @@ class Debouncer {
   ///   It must be greater than zero.
   /// - [maxWait] sets an upper limit on how long to wait before forcing execution.
   ///   If provided, it must be greater than [delay].
-  /// - When [immediate] is true, the first call in a burst executes immediately,
+  /// - When [_immediate] is true, the first call in a burst executes immediately,
   ///   and later calls during that burst are debounced with no trailing execution
   ///   until a new burst begins.
-  /// - [onError] is an optional callback to handle errors thrown during the action.
-  /// - [debugLabel] helps tag log messages.
+  /// - [_onError] is an optional callback to handle errors thrown during the action.
+  /// - [_debugLabel] helps tag log messages.
   /// - [maxHistorySize] defines how many past execution records to store (0 disables history).
-  /// - [logger] can be provided to inject a custom logging function.
+  /// - [_logger] can be provided to inject a custom logging function.
   /// - `timerFactory` allows for custom timer creation. Defaults to [Timer].
   Debouncer({
     required Duration delay,
     Duration? maxWait,
-    bool immediate = false,
-    void Function(Object error, StackTrace stackTrace)? onError,
-    String? debugLabel,
+    this._immediate = false,
+    this._onError,
+    this._debugLabel,
     int maxHistorySize = 0,
-    LoggerFunction? logger,
+    this._logger,
     TimerFactory? timerFactory,
   }) : _delay = delay,
        _maxWait = maxWait,
-       _immediate = immediate,
-       _onError = onError,
-       _debugLabel = debugLabel,
        _maxHistorySize = maxHistorySize,
-       _logger = logger,
        _timerFactory = timerFactory ?? Timer.new {
     if (delay <= Duration.zero) {
       throw ArgumentError('Delay must be greater than zero.');
@@ -327,7 +325,7 @@ class Debouncer {
     isPaused: isPaused,
   );
 
-  /// Schedules [action] to run after [delay]. In immediate mode, the first call
+  /// Schedules [action] to run after the configured `delay`. In immediate mode, the first call
   /// executes right away while subsequent calls during that burst are debounced
   /// (no trailing execution occurs until a new burst starts).
   ///
@@ -351,7 +349,7 @@ class Debouncer {
 
     // Leading edge for immediate mode is only triggered for a new burst.
     if (_immediate && isNewBurst) {
-      _executeAction(action);
+      unawaited(_executeAction(action));
     }
 
     // Cancel only the trailing timer to keep maxWait tracking intact.
@@ -363,7 +361,7 @@ class Debouncer {
     // Always schedule a trailing timer to close the burst after inactivity.
     _timer = _timerFactory(_delay, () {
       if (!_immediate && _lastAction != null) {
-        _executeAction(_lastAction!);
+        unawaited(_executeAction(_lastAction!));
       }
       _cancelTimers();
     });
@@ -372,7 +370,7 @@ class Debouncer {
     if (_maxWait != null && _maxWaitTimer == null) {
       _maxWaitTimer = _timerFactory(_maxWait, () {
         if (_lastAction != null) {
-          _executeAction(_lastAction!);
+          unawaited(_executeAction(_lastAction!));
         }
         _cancelTimers();
       });
@@ -498,14 +496,14 @@ class Debouncer {
     if (_lastAction != null) {
       _timer = _timerFactory(_remainingDelayOnPause ?? _delay, () {
         if (!_immediate && _lastAction != null) {
-          _executeAction(_lastAction!);
+          unawaited(_executeAction(_lastAction!));
         }
         _cancelTimers();
       });
       if (maxWait != null && remainingMaxWait != null) {
         _maxWaitTimer = _timerFactory(remainingMaxWait, () {
           if (_lastAction != null) {
-            _executeAction(_lastAction!);
+            unawaited(_executeAction(_lastAction!));
           }
           _cancelTimers();
         });
@@ -539,7 +537,7 @@ class Debouncer {
 
     if (!_stateController.isClosed) {
       _stateController.add(finalState);
-      _stateController.close();
+      unawaited(_stateController.close());
     }
     _logDebug('Debouncer disposed.');
   }

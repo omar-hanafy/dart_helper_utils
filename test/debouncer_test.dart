@@ -4,6 +4,7 @@ import 'dart:io';
 // Import your updated debouncer. Adjust the path as needed.
 import 'package:dart_helper_utils/dart_helper_utils.dart';
 import 'package:test/test.dart';
+
 // Adjust the import path as necessary.
 
 void main() {
@@ -129,29 +130,26 @@ void main() {
       );
     });
 
-    test(
-      'subsequent calls in burst do not trigger extra immediate executions',
-      () async {
-        var count = 0;
-        immediateDebouncer
-          ..run(() => count++)
-          // Immediately schedule more calls.
-          ..run(() => count++)
-          ..run(() => count++);
-        expect(
-          count,
-          equals(1),
-          reason:
-              'Only the first call should execute immediately in immediate mode.',
-        );
-        await 150.millisecondsDelay();
-        expect(
-          count,
-          equals(1),
-          reason: 'No additional execution should occur after delay.',
-        );
-      },
-    );
+    test('subsequent calls in burst do not trigger extra immediate executions', () async {
+      var count = 0;
+      immediateDebouncer
+        ..run(() => count++)
+        // Immediately schedule more calls.
+        ..run(() => count++)
+        ..run(() => count++);
+      expect(
+        count,
+        equals(1),
+        reason:
+            'Only the first call should execute immediately in immediate mode.',
+      );
+      await 150.millisecondsDelay();
+      expect(
+        count,
+        equals(1),
+        reason: 'No additional execution should occur after delay.',
+      );
+    });
   });
 
   group('MaxWait Functionality', () {
@@ -260,8 +258,7 @@ void main() {
       expect(
         secondRemaining,
         lessThan(firstRemaining!),
-        reason:
-            'remainingMaxWait should continue decreasing despite repeated runs.',
+        reason: 'remainingMaxWait should continue decreasing despite repeated runs.',
       );
 
       debouncer.dispose();
@@ -383,8 +380,7 @@ void main() {
       expect(
         executed,
         equals(2),
-        reason:
-            'Pending action scheduled during an execution should run after the burst.',
+        reason: 'Pending action scheduled during an execution should run after the burst.',
       );
       debouncer.dispose();
     });
@@ -447,5 +443,83 @@ void main() {
         debouncer.dispose();
       });
     }
+  });
+
+  group('7.0.0 debouncer state', () {
+    test('remaining times freeze while paused', () async {
+      final debouncer = Debouncer(
+        delay: const Duration(milliseconds: 200),
+        maxWait: const Duration(milliseconds: 500),
+      );
+      addTearDown(debouncer.dispose);
+      debouncer.run(() {});
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      debouncer.pause();
+
+      final frozenDelay = debouncer.remainingTime;
+      final frozenMaxWait = debouncer.remainingMaxWait;
+      expect(frozenDelay, isNotNull);
+      expect(frozenMaxWait, isNotNull);
+      expect(frozenDelay, lessThan(const Duration(milliseconds: 200)));
+
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      expect(debouncer.remainingTime, frozenDelay);
+      expect(debouncer.remainingMaxWait, frozenMaxWait);
+      expect(debouncer.currentState.remainingTime, frozenDelay);
+
+      debouncer.resume();
+      expect(debouncer.remainingTime, isNotNull);
+    });
+
+    test('remaining times are null while paused with nothing scheduled', () {
+      final debouncer = Debouncer(delay: const Duration(milliseconds: 100));
+      addTearDown(debouncer.dispose);
+      debouncer.pause();
+      expect(debouncer.remainingTime, isNull);
+      expect(debouncer.remainingMaxWait, isNull);
+    });
+
+    test('executionHistory returns typed, unmodifiable records', () async {
+      final debouncer = Debouncer(
+        delay: const Duration(milliseconds: 10),
+        maxHistorySize: 2,
+        onError: (_, _) {},
+      );
+      addTearDown(debouncer.dispose);
+      debouncer.run(() {});
+      await debouncer.flush();
+      debouncer.run(() => throw StateError('boom'));
+      await debouncer.flush();
+
+      final history = debouncer.executionHistory;
+      expect(history, hasLength(2));
+      expect(history.first.success, isTrue);
+      expect(history.first.error, isNull);
+      expect(history.last.success, isFalse);
+      expect(history.last.error, isA<StateError>());
+      expect(history.last.duration, greaterThanOrEqualTo(Duration.zero));
+      expect(history.last.toMap()['success'], isFalse);
+      expect(history.last.toMap()['error'], contains('boom'));
+      expect(() => history.add(history.first), throwsUnsupportedError);
+    });
+
+    test('DebouncerState has value equality', () {
+      const a = DebouncerState(
+        isRunning: false,
+        isDisposed: false,
+        executionCount: 1,
+        remainingTime: Duration(seconds: 1),
+      );
+      const b = DebouncerState(
+        isRunning: false,
+        isDisposed: false,
+        executionCount: 1,
+        remainingTime: Duration(seconds: 1),
+      );
+      expect(a, b);
+      expect(a.hashCode, b.hashCode);
+      expect(a, isNot(a.copyWith(isPaused: true)));
+      expect(a.copyWith(), a);
+    });
   });
 }

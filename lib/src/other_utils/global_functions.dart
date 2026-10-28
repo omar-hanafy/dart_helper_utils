@@ -12,7 +12,7 @@ import 'package:dart_helper_utils/dart_helper_utils.dart';
 /// final ok = isValuePrimitive(10); // true
 /// final nope = isValuePrimitive(Object()); // false
 /// ```
-bool isValuePrimitive(dynamic value) => value is Object && value.isPrimitive();
+bool isValuePrimitive(Object? value) => value.isPrimitive();
 
 /// Returns `true` when the static type [T] is a primitive type.
 bool isTypePrimitive<T>() => switch (T) {
@@ -27,7 +27,7 @@ bool isTypePrimitive<T>() => switch (T) {
 };
 
 /// Returns `true` when [a] and [b] are deeply equal.
-bool isEqual(dynamic a, dynamic b) =>
+bool isEqual(Object? a, Object? b) =>
     const DeepCollectionEquality().equals(a, b);
 
 /// Returns the current time in milliseconds since the Unix epoch.

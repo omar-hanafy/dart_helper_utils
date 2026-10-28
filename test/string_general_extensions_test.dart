@@ -31,7 +31,7 @@ void main() {
       expect('Hello World'.words, ['Hello', 'World']);
       expect('  Hello   World  '.words, ['Hello', 'World']);
       expect('Hello\nWorld'.words, ['Hello', 'World']);
-      expect(''.words, []);
+      expect(''.words, <String>[]);
 
       expect('Line 1\nLine 2'.lines, ['Line 1', 'Line 2']);
       expect('Line 1\r\nLine 2'.lines, ['Line 1', 'Line 2']);
@@ -39,7 +39,7 @@ void main() {
     });
 
     test('base64Encode/base64Decode round-trip', () {
-      final original = 'hello';
+      const original = 'hello';
       final encoded = original.base64Encode();
       expect(base64.decode(encoded), isNotEmpty);
       expect(encoded.base64Decode(), original);
@@ -103,6 +103,35 @@ void main() {
     test('limitFromEnd and limitFromStart', () {
       expect('abcdef'.limitFromEnd(3), 'def');
       expect('abcdef'.limitFromStart(3), 'abc');
+    });
+  });
+
+  group('7.0.0 precompiled validation patterns', () {
+    test('each pattern compiles its exported source string', () {
+      final pairs = <RegExp, String>{
+        patternSpecialChars: regexSpecialChars,
+        patternValidUsername: regexValidUsername,
+        patternValidCurrency: regexValidCurrency,
+        patternValidPhoneNumber: regexValidPhoneNumber,
+        patternValidEmail: regexValidEmail,
+        patternValidIp4: regexValidIp4,
+        patternValidUrl: regexValidUrl,
+        patternValidUuid: regexValidUuid,
+      };
+      for (final entry in pairs.entries) {
+        expect(entry.key.pattern, entry.value);
+      }
+    });
+
+    test('validators keep their 6.x answers', () {
+      expect('user@example.com'.isValidEmail, isTrue);
+      expect('not-an-email'.isValidEmail, isFalse);
+      expect('123e4567-e89b-12d3-a456-426614174000'.isUuid, isTrue);
+      expect('   '.isUuid, isFalse);
+      expect('HTTPS://Example.com/path'.isValidUrl, isTrue);
+      expect('a b'.isValidUrl, isFalse);
+      expect('A man, a plan, a canal: Panama'.isPalindrome, isTrue);
+      expect('   '.isPalindrome, isFalse);
     });
   });
 }
