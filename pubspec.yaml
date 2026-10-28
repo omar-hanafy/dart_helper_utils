@@ -25,5 +25,6 @@ dependencies:
   stringo: ^3.0.0
 
 dev_dependencies:
+  analyzer: ^14.6.0
   lints: ^6.1.0
   test: ^1.33.0

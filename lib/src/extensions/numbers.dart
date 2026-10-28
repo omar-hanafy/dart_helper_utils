@@ -135,8 +135,11 @@ extension DHUNullSafeNumExtensions on num? {
     }
   }
 
-  /// Returns `true` if the number is negative.
-  bool get isNegative => this != null && this! < 0;
+  /// Whether the number is non-null and negative.
+  ///
+  /// The null-safe form of [num.isNegative], which non-null receivers
+  /// resolve to, so `-0.0` counts as negative on both.
+  bool get isNegative => this?.isNegative ?? false;
 
   /// Returns `true` if the number is positive.
   bool get isPositive => this != null && this! > 0;
