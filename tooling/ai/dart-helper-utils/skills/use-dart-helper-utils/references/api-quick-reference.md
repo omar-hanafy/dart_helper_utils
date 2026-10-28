@@ -211,7 +211,8 @@ now returns `'The Lord of the Rings'`.
   `addHours(n)`...`addMicroseconds(n)` and `subtractHours(n)`... (exact
   durations), `addBusinessDays(n)` (skips weekends, negatives ok),
   `min(other)`/`max(other)`, `roundTo(Duration)`/`floorTo`/`ceilTo` (on the
-  receiver's wall clock), `clampBetween(a, b)`.
+  receiver's wall clock; whole-day steps match `startOfDay`),
+  `clampBetween(a, b)`.
 - Queries: `isToday`(g), `isTomorrow`(g), `isYesterday`(g), `isPast`(g),
   `isFuture`(g), `isInPastWeek`(g), `isInThisMonth`(g), `isLeapYear`(g),
   `isWeekend`(g)/`isWeekday`(g), `isSameYearAs(other)`, `isSameMonthAs`,

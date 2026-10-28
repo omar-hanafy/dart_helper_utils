@@ -194,6 +194,12 @@ void main() {
       DateTime.utc(2024, 3, 15, 22).startOfDay.isUtc,
       true,
     );
+    final changeDay = DateTime(2024, 3, 10, 15);
+    check(
+      'whole-day floorTo matches startOfDay',
+      changeDay.floorTo(const Duration(days: 1)),
+      changeDay.startOfDay,
+    );
     const span = Duration(hours: 1, minutes: 3, seconds: 4);
     check('toClockString', span.toClockString(), '01:03:04');
     check('toHumanShort', span.toHumanShort(), '1h 3m 4s');

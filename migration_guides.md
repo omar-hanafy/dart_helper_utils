@@ -60,14 +60,19 @@ None of these raise a compile error, unless noted.
    `addDays(1)` on 00:00 local time is 00:00 the next day, even across a DST
    change (6.x gave 01:00 or 23:00). The same applies to `subtractDays`,
    `nextDay`, `previousDay`, `nextWeek`, `previousWeek`, `firstDayOfWeek`,
-   `lastDayOfWeek`, `addBusinessDays`, `daysUpTo`, and `daysInMonth`. For an
-   exact 24-hour step, use `date.add(const Duration(days: 1))`.
+   `lastDayOfWeek`, `addBusinessDays`, `daysUpTo`, and `daysInMonth`. On the
+   day of a change, a skipped time moves forward by the jump and a repeated
+   time resolves to its first occurrence. For an exact 24-hour step, use
+   `date.add(const Duration(days: 1))`.
 
 4. **Day counts, rounding, and HTTP dates are corrected.** `remainingDays`,
    `passedDays`, `daysDifferenceTo`, `isTomorrow`, and `isYesterday` count
    calendar days. `roundTo`, `floorTo`, and `ceilTo` align to the receiver's
-   wall clock. `httpDateFormat` takes every field from UTC. If you
-   compensated for the old results, remove the workaround.
+   wall clock, never land on the wrong side of the receiver around a clock
+   change, and count whole-day steps as calendar days
+   (`floorTo(const Duration(days: 1))` equals `startOfDay`).
+   `httpDateFormat` takes every field from UTC. If you compensated for the
+   old results, remove the workaround.
 
 5. **Office MIME checks are precise.** `isDOCX` no longer matches `.doc`,
    `isDOC` no longer matches `.docx`, and `isXLSX` no longer matches `.xls`.

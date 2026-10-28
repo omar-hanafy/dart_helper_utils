@@ -636,13 +636,24 @@ void main() {
     });
 
     test('addMonths and addYears clamp to the end of shorter months', () {
-      expect(DateTime(2024, 3, 31).addMonths(-1), DateTime(2024, 2, 29));
-      expect(DateTime(2023, 3, 31).addMonths(-1), DateTime(2023, 2, 28));
-      expect(DateTime(2024, 1, 31).addMonths(1), DateTime(2024, 2, 29));
-      expect(DateTime(2024, 5, 31).addMonths(1), DateTime(2024, 6, 30));
-      expect(DateTime(2024, 2, 29).addYears(1), DateTime(2025, 2, 28));
-      expect(DateTime(2024, 2, 29).addYears(4), DateTime(2028, 2, 29));
-      expect(DateTime(2024, 2, 29).subtractYears(1), DateTime(2023, 2, 28));
+      // Noon exists everywhere; midnight on 2024-03-31 does not in the Azores,
+      // where the clocks jump from 00:00 to 01:00 that night.
+      expect(
+        DateTime(2024, 3, 31, 12).addMonths(-1),
+        DateTime(2024, 2, 29, 12),
+      );
+      expect(
+        DateTime(2023, 3, 31, 12).addMonths(-1),
+        DateTime(2023, 2, 28, 12),
+      );
+      expect(DateTime(2024, 1, 31, 12).addMonths(1), DateTime(2024, 2, 29, 12));
+      expect(DateTime(2024, 5, 31, 12).addMonths(1), DateTime(2024, 6, 30, 12));
+      expect(DateTime(2024, 2, 29, 12).addYears(1), DateTime(2025, 2, 28, 12));
+      expect(DateTime(2024, 2, 29, 12).addYears(4), DateTime(2028, 2, 29, 12));
+      expect(
+        DateTime(2024, 2, 29, 12).subtractYears(1),
+        DateTime(2023, 2, 28, 12),
+      );
     });
 
     test('day arithmetic keeps the wall-clock time across DST changes', () {

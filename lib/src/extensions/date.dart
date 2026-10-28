@@ -249,7 +249,11 @@ extension DHUNullableDateExtensions on DateTime? {
 /// Day-based arithmetic (`addDays`, `nextDay`, `firstDayOfWeek`,
 /// `addBusinessDays`, and friends) moves by calendar days and keeps the
 /// wall-clock time, so it stays correct across daylight-saving transitions.
-/// Sub-day arithmetic (`addHours` and smaller) adds exact durations.
+/// On the day of a change, a time the clocks skip moves forward by the
+/// length of the jump, and a time they repeat resolves to its first
+/// occurrence (unless the receiver is itself the repeat, so `addDays(0)`
+/// returns it). Sub-day arithmetic (`addHours` and smaller) adds exact
+/// durations.
 /// Every helper that builds a new date keeps the receiver's time zone: a UTC
 /// input produces a UTC result.
 extension DHUDateExtensions on DateTime {
@@ -633,7 +637,8 @@ extension DHUDateExtensions on DateTime {
   /// Each entry is computed from this moment's wall-clock time, so the
   /// sequence stays aligned across daylight-saving transitions. A wall-clock
   /// time that does not exist on one day (a skipped hour) is shifted on that
-  /// day only.
+  /// day only, and one that happens twice (a repeated hour) resolves to its
+  /// first occurrence.
   Iterable<DateTime> daysUpTo(DateTime end) sync* {
     for (var offset = 0; ; offset++) {
       final current = _addCalendarDays(this, offset);
@@ -688,34 +693,82 @@ extension DHUDateExtensions on DateTime {
   /// Returns true if this date falls on a weekday.
   bool get isWeekday => !isWeekend;
 
-  /// Rounds this date to the nearest multiple of [duration] on its own wall
-  /// clock; exact halves round up.
+  /// Rounds this date to the nearest instant whose wall clock shows a
+  /// multiple of [duration]; exact halves round up.
   ///
-  /// A local date rounds by local wall-clock time, so `floorTo`-style
-  /// alignment to whole hours also holds in zones with a half-hour offset.
+  /// The result is [floorTo] or [ceilTo], whichever is closer in elapsed
+  /// time; [floorTo] describes the alignment. Returns this date unchanged for
+  /// [Duration.zero]; a negative [duration] behaves like its magnitude.
+  DateTime roundTo(Duration duration) {
+    final floor = floorTo(duration);
+    if (floor == this) return this;
+    final ceil = ceilTo(duration);
+    return difference(floor) < ceil.difference(this) ? floor : ceil;
+  }
+
+  /// The latest instant at or before this date whose wall clock shows a
+  /// multiple of [duration], counted from midnight on January 1, 1970.
+  ///
+  /// A local date aligns to the local wall clock, so whole hours stay whole
+  /// in zones with a half-hour offset. Around a clock change:
+  ///
+  /// * an aligned time the clocks skip counts as reached at the moment they
+  ///   jump forward;
+  /// * an aligned time the clocks show again after falling back counts
+  ///   again, so by the hour the second 01:30 of the night floors to the
+  ///   second 01:00;
+  /// * whole-day steps count calendar days instead, so
+  ///   `floorTo(const Duration(days: 1))` always equals [startOfDay].
+  ///
   /// Returns this date unchanged for [Duration.zero]; a negative [duration]
   /// behaves like its magnitude.
-  DateTime roundTo(Duration duration) =>
-      _alignWallClock(this, duration, (micros, step) {
-        final floor = _floorDiv(micros, step) * step;
-        return micros - floor >= step - (micros - floor) ? floor + step : floor;
-      });
+  DateTime floorTo(Duration duration) {
+    final step = duration.inMicroseconds.abs();
+    if (step == 0) return this;
+    if (isUtc) {
+      return DateTime.fromMicrosecondsSinceEpoch(
+        _floorDiv(microsecondsSinceEpoch, step) * step,
+        isUtc: true,
+      );
+    }
+    final floor = DateTime.fromMicrosecondsSinceEpoch(
+      _floorLocal(microsecondsSinceEpoch, step),
+    );
+    // A whole-day step counts a repeated midnight once, at its first
+    // occurrence, the way startOfDay does.
+    return step % Duration.microsecondsPerDay == 0
+        ? _firstOccurrence(floor)
+        : floor;
+  }
 
-  /// Rounds this date down to a multiple of [duration] on its own wall
-  /// clock. See [roundTo].
-  DateTime floorTo(Duration duration) => _alignWallClock(
-    this,
-    duration,
-    (micros, step) => _floorDiv(micros, step) * step,
-  );
-
-  /// Rounds this date up to a multiple of [duration] on its own wall clock.
-  /// See [roundTo].
-  DateTime ceilTo(Duration duration) => _alignWallClock(
-    this,
-    duration,
-    (micros, step) => -_floorDiv(-micros, step) * step,
-  );
+  /// The earliest instant at or after this date whose wall clock shows a
+  /// multiple of [duration]. Clock changes are handled as in [floorTo].
+  ///
+  /// Returns this date unchanged for [Duration.zero]; a negative [duration]
+  /// behaves like its magnitude.
+  DateTime ceilTo(Duration duration) {
+    final step = duration.inMicroseconds.abs();
+    if (step == 0) return this;
+    if (isUtc) {
+      return DateTime.fromMicrosecondsSinceEpoch(
+        -_floorDiv(-microsecondsSinceEpoch, step) * step,
+        isUtc: true,
+      );
+    }
+    // floorTo keeps exactly the aligned instants, including a forward jump
+    // that skipped an aligned time.
+    if (floorTo(duration) == this) return this;
+    final ceil = DateTime.fromMicrosecondsSinceEpoch(
+      _ceilLocal(microsecondsSinceEpoch, step),
+    );
+    if (step % Duration.microsecondsPerDay != 0 || !_isRepeat(ceil)) {
+      return ceil;
+    }
+    // A whole-day step already counted this midnight at its first occurrence.
+    return DateTime.fromMicrosecondsSinceEpoch(
+      _ceilLocal(ceil.microsecondsSinceEpoch + 1, step),
+    );
+  }
 
   /// Moves [days] business days forward (or back, when negative), skipping
   /// Saturdays and Sundays. Keeps the wall-clock time.
@@ -823,6 +876,12 @@ DateTime _dateOnly(DateTime date) =>
 
 /// Rebuilds [date] on another calendar day while keeping its wall-clock time
 /// and time zone.
+///
+/// Like the local [DateTime] constructor, a time the clocks skip moves
+/// forward by the length of the jump, and a time they repeat resolves to its
+/// first occurrence. The exception is a [date] that is itself the repeat: the
+/// result keeps its offset when the target time has that offset too, so
+/// `addDays(0)` returns [date].
 DateTime _withDate(DateTime date, int year, int month, int day) {
   if (date.isUtc) {
     return DateTime.utc(
@@ -836,44 +895,48 @@ DateTime _withDate(DateTime date, int year, int month, int day) {
       date.microsecond,
     );
   }
-  return _keepOffset(
-    DateTime(
-      year,
-      month,
-      day,
-      date.hour,
-      date.minute,
-      date.second,
-      date.millisecond,
-      date.microsecond,
-    ),
-    date,
+  final moved = DateTime(
+    year,
+    month,
+    day,
+    date.hour,
+    date.minute,
+    date.second,
+    date.millisecond,
+    date.microsecond,
   );
+  return _isRepeat(date) ? _keepOffset(moved, date) : moved;
 }
 
-/// Resolves an ambiguous local wall-clock time to [reference]'s UTC offset.
-///
-/// When clocks fall back, one wall-clock hour happens twice, and the local
-/// [DateTime] constructor always picks the first (daylight-time) instance.
-/// If [candidate]'s wall-clock time also exists with [reference]'s offset,
-/// this returns that instance, so a receiver in the repeated hour stays in
-/// it; otherwise [candidate] is returned unchanged.
+/// The other occurrence of [candidate]'s wall-clock time when that one has
+/// [reference]'s offset, otherwise [candidate].
 DateTime _keepOffset(DateTime candidate, DateTime reference) {
   final offset = reference.timeZoneOffset;
-  if (candidate.isUtc || candidate.timeZoneOffset == offset) return candidate;
+  if (candidate.timeZoneOffset == offset) return candidate;
   final shifted = candidate.add(candidate.timeZoneOffset - offset);
-  final sameWallClock =
-      shifted.timeZoneOffset == offset &&
-      shifted.year == candidate.year &&
-      shifted.month == candidate.month &&
-      shifted.day == candidate.day &&
-      shifted.hour == candidate.hour &&
-      shifted.minute == candidate.minute &&
-      shifted.second == candidate.second &&
-      shifted.millisecond == candidate.millisecond &&
-      shifted.microsecond == candidate.microsecond;
-  return sameWallClock ? shifted : candidate;
+  // With that offset, shifted shows the same wall clock as candidate.
+  return shifted.timeZoneOffset == offset ? shifted : candidate;
 }
+
+/// The first instant whose local wall clock shows [date]'s wall-clock time.
+///
+/// When clocks fall back they repeat a stretch of wall-clock time, and the
+/// local [DateTime] constructor resolves a repeated time to its first
+/// occurrence.
+DateTime _firstOccurrence(DateTime date) => DateTime(
+  date.year,
+  date.month,
+  date.day,
+  date.hour,
+  date.minute,
+  date.second,
+  date.millisecond,
+  date.microsecond,
+);
+
+/// Whether local [date] is the second occurrence of a repeated wall-clock
+/// time.
+bool _isRepeat(DateTime date) => _firstOccurrence(date) != date;
 
 DateTime _addCalendarDays(DateTime date, int days) =>
     _withDate(date, date.year, date.month, date.day + days);
@@ -882,48 +945,69 @@ DateTime _addCalendarDays(DateTime date, int days) =>
 /// [b] must be positive.
 int _floorDiv(int a, int b) => (a - a % b) ~/ b;
 
-/// Aligns [date] to a multiple of [step] measured on its wall clock.
+/// The local UTC offset, in microseconds, at [micros] since the epoch.
+int _offsetAt(int micros) =>
+    DateTime.fromMicrosecondsSinceEpoch(micros).timeZoneOffset.inMicroseconds;
+
+/// The first instant after [from], at or before [to], whose local offset
+/// differs from the offset at [from]. The offset at [to] must differ.
 ///
-/// The wall-clock fields are projected onto a UTC timeline (which has no
-/// offsets or daylight-saving gaps), aligned there with [align], and rebuilt
-/// in the original time zone.
-DateTime _alignWallClock(
-  DateTime date,
-  Duration step,
-  int Function(int micros, int step) align,
-) {
-  final stepMicros = step.inMicroseconds.abs();
-  if (stepMicros == 0) return date;
-  final projected = date.isUtc
-      ? date
-      : DateTime.utc(
-          date.year,
-          date.month,
-          date.day,
-          date.hour,
-          date.minute,
-          date.second,
-          date.millisecond,
-          date.microsecond,
-        );
-  final aligned = DateTime.fromMicrosecondsSinceEpoch(
-    align(projected.microsecondsSinceEpoch, stepMicros),
-    isUtc: true,
-  );
-  if (date.isUtc) return aligned;
-  return _keepOffset(
-    DateTime(
-      aligned.year,
-      aligned.month,
-      aligned.day,
-      aligned.hour,
-      aligned.minute,
-      aligned.second,
-      aligned.millisecond,
-      aligned.microsecond,
-    ),
-    date,
-  );
+/// The instant just before the result has the offset at [from].
+int _offsetChange(int from, int to) {
+  final offset = _offsetAt(from);
+  var low = from;
+  var high = to;
+  while (high - low > 1) {
+    final middle = low + (high - low) ~/ 2;
+    if (_offsetAt(middle) == offset) {
+      low = middle;
+    } else {
+      high = middle;
+    }
+  }
+  return high;
+}
+
+/// The latest instant at or before [micros] whose local wall clock shows a
+/// multiple of [step]; an aligned time skipped by a forward jump counts as
+/// reached at the jump.
+int _floorLocal(int micros, int step) {
+  var receiver = micros;
+  var offset = _offsetAt(receiver);
+  while (true) {
+    final wall = _floorDiv(receiver + offset, step) * step;
+    final candidate = wall - offset;
+    final earlierOffset = _offsetAt(candidate);
+    if (earlierOffset == offset) return candidate;
+    // The clocks changed between the aligned time and the receiver.
+    final change = _offsetChange(candidate, receiver);
+    // Jumped forward over the aligned time: it was skipped.
+    if (wall >= change + earlierOffset) return change;
+    // The aligned time, or a later one, happened before the change.
+    receiver = change - 1;
+    offset = earlierOffset;
+  }
+}
+
+/// The earliest instant at or after [micros] whose local wall clock shows a
+/// multiple of [step]; an aligned time skipped by a forward jump counts as
+/// reached at the jump.
+int _ceilLocal(int micros, int step) {
+  var receiver = micros;
+  var offset = _offsetAt(receiver);
+  while (true) {
+    final wall = -_floorDiv(-(receiver + offset), step) * step;
+    final candidate = wall - offset;
+    if (_offsetAt(candidate) == offset) return candidate;
+    // The clocks change between the receiver and the aligned time.
+    final change = _offsetChange(receiver, candidate);
+    final laterOffset = _offsetAt(change);
+    // Jumping forward over the aligned time: it is skipped.
+    if (wall < change + laterOffset) return change;
+    // The aligned time, or an earlier one, happens after the change.
+    receiver = change;
+    offset = laterOffset;
+  }
 }
 
 /// Calendar days from [from]'s date to [to]'s date, ignoring the time of day.

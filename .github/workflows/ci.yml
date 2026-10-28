@@ -73,13 +73,25 @@ jobs:
         run: dart test
 
       # Runners use UTC, where daylight-saving and half-hour-offset bugs
-      # cannot show up. Re-run the calendar suites where they can.
+      # cannot show up. Re-run the calendar suites where they can: changes at
+      # 02:00, a half-hour offset, gaps at midnight, 30-minute shifts, a
+      # repeated midnight, 2-hour shifts, and a 45-minute offset.
       - name: Test calendar logic in other time zones
         run: |
           set -euo pipefail
-          for zone in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe; do
+          for zone in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe Atlantic/Azores Antarctica/Troll Pacific/Chatham; do
             echo "::group::TZ=$zone"
-            TZ="$zone" dart test test/date_extension_test.dart test/date_extension_additional_test.dart
+            TZ="$zone" dart test test/date_extension_test.dart test/date_extension_additional_test.dart test/date_time_zone_test.dart
+            echo "::endgroup::"
+          done
+
+      # Web builds resolve local times through JavaScript's Date, not the VM.
+      - name: Test clock-change handling compiled to JavaScript
+        run: |
+          set -euo pipefail
+          for zone in America/New_York Australia/Lord_Howe; do
+            echo "::group::TZ=$zone (node)"
+            TZ="$zone" dart test --platform node test/date_time_zone_test.dart
             echo "::endgroup::"
           done
 

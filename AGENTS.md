@@ -16,9 +16,12 @@ dart fix test_fixes --compare-to-golden    # dart fix migrations stay valid
 dart run tool/check_repo.dart              # em-dash, changelog, platform, deprecation rules
 dart run tool/validate_agent_plugin.dart   # AI plugin/marketplace consistency
 dart test
-for z in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe; do
-  TZ=$z dart test test/date_extension_test.dart test/date_extension_additional_test.dart
+for z in America/New_York Asia/Kolkata Africa/Cairo Australia/Lord_Howe \
+         Atlantic/Azores Antarctica/Troll Pacific/Chatham; do
+  TZ=$z dart test test/date_extension_test.dart \
+    test/date_extension_additional_test.dart test/date_time_zone_test.dart
 done
+TZ=America/New_York dart test --platform node test/date_time_zone_test.dart
 dart pub publish --dry-run                 # must stay at 0 warnings
 ```
 
@@ -56,10 +59,16 @@ the reason, `unnecessary_ignore` removes stale ones).
   disagree (for example, a null-safe member that delegates to the other).
 - **Date semantics.** Helpers that build a date keep the receiver's time zone
   (UTC in, UTC out). Day-based arithmetic moves by calendar days and keeps
-  the wall-clock time across daylight-saving changes; hours and smaller add
-  exact durations; day counts project both dates onto UTC midnights. CI
-  re-runs the calendar suites in DST and half-hour-offset zones because the
-  runners use UTC, where these bugs cannot appear.
+  the wall-clock time across daylight-saving changes; on a change day a
+  skipped time moves forward by the jump and a repeated time resolves to its
+  first occurrence, unless the receiver is itself the repeat. Hours and
+  smaller add exact durations; day counts project both dates onto UTC
+  midnights. `floorTo`/`ceilTo` return the latest/earliest instant whose wall
+  clock shows an aligned time (a skipped aligned time counts at the jump);
+  whole-day steps count calendar days, so `floorTo(1 day) == startOfDay`.
+  `test/date_time_zone_test.dart` checks these invariants around every clock
+  change of whatever zone it runs in; CI runs it in seven zones and on Node
+  because the runners use UTC, where these bugs cannot appear.
 - Any public API change needs matching tests in the flat `test/` directory
   (one file per domain) and doc comments on every public member. A bug fix
   needs a regression test that fails on the old code.

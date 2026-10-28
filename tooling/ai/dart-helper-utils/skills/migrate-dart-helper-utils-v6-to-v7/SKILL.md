@@ -70,7 +70,7 @@ grep -rnE "isDOC|isXLSX|isValidPhoneNumber|executionHistory|DebouncerState|buffe
 | UTC receivers stay UTC in `startOfDay`, `dateOnly`, `startOfMonth`, `startOfYear`, `firstDayOfMonth`, `lastDayOfMonth`, `previousMonth`, `nextMonth`, `addMonths`, `addYears` | Remove `toUtc()`/`toLocal()` workarounds around these calls |
 | Day arithmetic (`addDays`, `nextDay`, `nextWeek`, `firstDayOfWeek`, `addBusinessDays`, `daysUpTo`, `daysInMonth`, ...) keeps wall-clock time across DST | Use `date.add(const Duration(days: n))` where exact 24-hour steps are required |
 | `remainingDays`, `passedDays`, `daysDifferenceTo`, `isTomorrow`, `isYesterday` count calendar days | Drop off-by-one compensation around DST |
-| `roundTo`/`floorTo`/`ceilTo` align to the receiver's wall clock | Matters in half-hour zones and for pre-1970 dates |
+| `roundTo`/`floorTo`/`ceilTo` align to the receiver's wall clock; whole-day steps match `startOfDay` | Matters in half-hour zones, around clock changes, and for pre-1970 dates |
 | `httpDateFormat` takes every field from UTC | Drop manual `toUtc()` workarounds |
 | `isDOCX` is only .docx, `isDOC` only .doc, `isXLSX` only .xlsx | Use `isWord` / `isExcel` to accept either format |
 | `String?.isValidPhoneNumber` uses the same permissive check as `String` | For the old strict pattern use `patternValidPhoneNumber` |
