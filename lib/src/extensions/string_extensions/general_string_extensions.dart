@@ -264,6 +264,20 @@ extension DHUNullSafeStringExtensions on String? {
     return '${this!.substring(0, 2)}****${this!.substring(index)}';
   }
 
+  /// Deprecated alias of `isBlank` (from the re-exported stringo package).
+  ///
+  /// stringo 2.0.0 removed this synonym; dart_helper_utils keeps it on
+  /// `String?` through 7.x so `dart fix --apply` can migrate every caller,
+  /// including nullable receivers.
+  @Deprecated('Use isBlank. This alias will be removed in 8.0.0.')
+  bool get isEmptyOrNull => isBlank;
+
+  /// Deprecated alias of `isNotBlank` (from the re-exported stringo package).
+  ///
+  /// See [isEmptyOrNull] for why this alias still exists.
+  @Deprecated('Use isNotBlank. This alias will be removed in 8.0.0.')
+  bool get isNotEmptyOrNull => isNotBlank;
+
   /// Whether this string is non-null and [pattern] matches it.
   bool _matches(RegExp pattern) {
     final value = this;

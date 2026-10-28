@@ -393,3 +393,63 @@ transforms:
     changes:
       - kind: 'rename'
         newName: 'DHUCollectionsExtensionsNS'
+
+  # stringo 2.0.0 removed the String? synonyms isEmptyOrNull and
+  # isNotEmptyOrNull, which this package re-exported. 7.x keeps deprecated
+  # aliases on String? (see DHUNullSafeStringExtensions) so these transforms
+  # also reach nullable receivers. Explicit overrides name stringo's
+  # StringChecksExtensions, which still declares isBlank and isNotBlank.
+  - title: "Rename to 'isBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isEmptyOrNull'
+      inClass: 'String'
+    changes:
+      - kind: 'rename'
+        newName: 'isBlank'
+  - title: "Rename to 'isBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isEmptyOrNull'
+      inExtension: 'StringChecksExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isBlank'
+  - title: "Rename to 'isBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isEmptyOrNull'
+      inExtension: 'DHUNullSafeStringExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isBlank'
+  - title: "Rename to 'isNotBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isNotEmptyOrNull'
+      inClass: 'String'
+    changes:
+      - kind: 'rename'
+        newName: 'isNotBlank'
+  - title: "Rename to 'isNotBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isNotEmptyOrNull'
+      inExtension: 'StringChecksExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isNotBlank'
+  - title: "Rename to 'isNotBlank'"
+    date: 2026-10-28
+    element:
+      uris: ['dart_helper_utils.dart']
+      getter: 'isNotEmptyOrNull'
+      inExtension: 'DHUNullSafeStringExtensions'
+    changes:
+      - kind: 'rename'
+        newName: 'isNotBlank'
