@@ -749,9 +749,10 @@ extension DHUDateExtensions on DateTime {
   /// The earliest instant at or after this date whose wall clock shows a
   /// multiple of [duration]. Clock changes are handled as in [floorTo].
   ///
-  /// For whole-day steps the result is the first moment of the next aligned
-  /// date, or that date's repeated midnight when the clocks fell back past
-  /// the first one before this date.
+  /// For whole-day steps the result is the earliest start of an aligned date
+  /// at or after this date. A date starts twice where the clocks fall back
+  /// past its midnight, so the result can be the second start of this
+  /// date's own day.
   ///
   /// Returns this date unchanged for [Duration.zero]; a negative [duration]
   /// behaves like its magnitude.
@@ -1146,8 +1147,10 @@ int _offsetChange(int from, int to) {
 /// days apart (the closest were in Cambridge Bay in 2000), so a day holds at
 /// most one. Outside 1901-2038 the VM reuses the rules of an equivalent
 /// year, which can put two changes an hour apart at the turn of a year
-/// (Africa/Sao_Tome after 2040); an aligned time between such a pair can be
-/// missed there.
+/// (Africa/Sao_Tome after 2040). There, an aligned time between such a pair
+/// can be missed, and a day move into the repeated hour can resolve to its
+/// second occurrence: [_local] compares with the offset a day earlier, which
+/// already equals the offset after the pair.
 const _changeFreeSpan = Duration.microsecondsPerDay;
 
 /// The latest instant at or before [micros] whose local wall clock shows a
