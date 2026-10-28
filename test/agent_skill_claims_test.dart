@@ -113,6 +113,28 @@ void main() {
     );
     check('truncate counts the suffix', 'Hello World'.truncate(5), 'He...');
     check('mask on a null String? returns null', _maskNullable(null), null);
+    check(
+      'truncate returns String? even on a String',
+      _staticType('Hello World'.truncate(5)),
+      _type<String?>(),
+    );
+    check(
+      'mask returns String? even on a String',
+      _staticType('secret'.mask(visibleStart: 1)),
+      _type<String?>(),
+    );
+    check('Stringo.truncate returns String', _staticType(_truncated), String);
+    check(
+      'maskEmail keeps one char of a short local part',
+      'ab@x.com'.maskEmail,
+      'a****@x.com',
+    );
+    check('lastIndex is the last character', 'abc'.lastIndex, 'c');
+    check(
+      'toWords is a list',
+      _staticType('a b'.toWords),
+      _type<List<String>>(),
+    );
 
     // MIME and phone checks.
     check('isDOCX is .docx only', 'a.doc'.isDOCX, false);
@@ -169,6 +191,13 @@ void main() {
     check('int mean is exact', [1, 2].mean, 1.5);
     check('int median is exact', [1, 2].median, 1.5);
     check('int mode stays int', [1, 1, 2].mode, [1]);
+    check('mode lists every most-frequent value', [1, 1, 2, 2].mode, [1, 2]);
+    check('mode is a List<int>', _staticType([1].mode), _type<List<int>>());
+    check(
+      'retry delay for other codes',
+      500.statusCodeRetryDelay,
+      Duration.zero,
+    );
     check('percentile 0-100', [0, 10, 20, 30, 40].percentile(100), 40);
     check('asBool > 0 (convert_object)', (-1).asBool, false);
     check('int.gcd (SDK)', 12.gcd(18), 6);
@@ -199,6 +228,23 @@ void main() {
       DateTime.utc(2024, 3, 15, 22).startOfDay.isUtc,
       true,
     );
+    check(
+      'month navigation returns midnight',
+      DateTime(2024, 1, 31, 15).nextMonth,
+      DateTime(2024, 2),
+    );
+    check(
+      'multi-day floorTo counts from a Thursday',
+      DateTime.utc(2024, 6, 12).floorTo(const Duration(days: 7)).weekday,
+      DateTime.thursday,
+    );
+    check(
+      'isBetween throws when start is after end',
+      _throws<ArgumentError>(
+        () => DateTime(2024, 6).isBetween(DateTime(2024, 7), DateTime(2024, 5)),
+      ),
+      true,
+    );
     final changeDay = DateTime(2024, 3, 10, 15);
     check(
       'whole-day floorTo matches startOfDay',
@@ -221,6 +267,25 @@ void main() {
       'pluralize',
       1.pluralize(other: 'items', one: 'item', locale: 'en'),
       'item',
+    );
+    check(
+      'genderSelect takes the gender as its receiver',
+      'female'.genderSelect(female: 'she', male: 'he', other: 'they'),
+      'she',
+    );
+    check(
+      'symbolCurrencyFormat is a method returning NumberFormat',
+      _staticType(r'$'.symbolCurrencyFormat()),
+      NumberFormat,
+    );
+    check(
+      'setPath throws when a typed nested map cannot hold the value',
+      _throws<TypeError>(
+        () => <String, Object?>{
+          'db': {'host': 'x'},
+        }.setPath('db.port', 5432),
+      ),
+      true,
     );
 
     expect(failures, isEmpty, reason: failures.join('\n'));
@@ -259,6 +324,67 @@ void main() {
     throttled.dispose();
 
     expect(() => const Stream<int>.empty().bufferCount(0), throwsArgumentError);
+
+    final disposed = Debouncer(delay: const Duration(milliseconds: 5))
+      ..dispose();
+    expect(
+      () => disposed.run(() {}),
+      throwsStateError,
+      reason: 'a disposed Debouncer throws',
+    );
+    disposed.dispose(); // dispose is the one member safe to repeat
+
+    final disposedThrottler = Throttler(
+      interval: const Duration(milliseconds: 5),
+    )..dispose();
+    expect(() => disposedThrottler.run(() {}), throwsStateError);
+    disposedThrottler.cancel(); // cancel after dispose is a no-op
+
+    var leading = 0;
+    final immediate = Debouncer(
+      delay: const Duration(milliseconds: 5),
+      immediate: true,
+    );
+    immediate
+      ..run(() => leading++)
+      ..run(() => leading++);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    expect(leading, 1, reason: 'immediate runs the first call only');
+    immediate.dispose();
+
+    final pausableSource = StreamController<int>();
+    final pausable = pausableSource.stream.asPausable();
+    final buffered = <int>[];
+    final pausableSubscription = pausable.stream.listen(buffered.add);
+    pausable.pause();
+    pausableSource
+      ..add(1)
+      ..add(2);
+    await pumpEventQueue();
+    expect(buffered, isEmpty, reason: 'asPausable buffers while paused');
+    expect(
+      pausableSource.isPaused,
+      isFalse,
+      reason: 'the source keeps running: asPausable is not backpressure',
+    );
+    pausable.resume();
+    await pumpEventQueue();
+    expect(buffered, [1, 2]);
+    await pausableSubscription.cancel();
+    await pausableSource.close();
+
+    // A single-subscription stream cannot be listened to twice, so the
+    // first retry fails with StateError instead of retrying the source.
+    final singleSource = StreamController<int>()
+      ..addError(const FormatException('boom'));
+    unawaited(singleSource.close());
+    await expectLater(
+      singleSource.stream
+          .retry(retryCount: 2, delayFactor: const Duration(milliseconds: 1))
+          .drain<void>(),
+      throwsA(isA<StateError>()),
+      reason: 'retry cannot re-listen to a single-subscription stream',
+    );
 
     final source = StreamController<int>();
     final limited = source.stream.rateLimit(1, const Duration(minutes: 1));
@@ -322,6 +448,13 @@ void main() {
 }
 
 String? _maskNullable(String? value) => value.mask();
+
+final String _truncated = Stringo.truncate('Hello World', 5);
+
+/// The static type of [value], for claims about return types.
+Type _staticType<T>(T value) => T;
+
+Type _type<T>() => T;
 
 bool _phoneNullable(String? value) => value.isValidPhoneNumber;
 

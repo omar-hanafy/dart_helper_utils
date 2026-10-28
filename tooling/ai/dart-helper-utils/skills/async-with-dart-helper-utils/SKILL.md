@@ -1,6 +1,6 @@
 ---
 name: async-with-dart-helper-utils
-description: Use when Dart/Flutter code needs debouncing, throttling, stream shaping, or bounded-concurrency async work with the dart_helper_utils package - search-input debounce, rate-limited event streams, Debouncer/DebouncedCallback/Throttler lifecycle and disposal, TimeUtils.debounce/throttle/runWithTimeout, stream bufferCount/window/rateLimit/asPausable/withLatestValue/retry/replaceOnError, StreamController safeAdd/safeClose, Future minWait/timeoutOrNull, retry with exponential backoff, waitConcurrency, or mapConcurrent.
+description: Use when Dart/Flutter code in a project that depends on the dart_helper_utils package needs debouncing, throttling, stream shaping, or bounded-concurrency async work - search-input debounce, rate-limited event streams, Debouncer/DebouncedCallback/Throttler lifecycle and disposal, TimeUtils.debounce/throttle/runWithTimeout, stream bufferCount/window/rateLimit/asPausable/withLatestValue/retry/replaceOnError, StreamController safeAdd/safeClose, Future minWait/timeoutOrNull, retry with exponential backoff, waitConcurrency, or mapConcurrent.
 ---
 
 # Async, timing, and streams with dart_helper_utils
@@ -9,15 +9,26 @@ These APIs carry lifecycle and ordering semantics that agents reliably get
 wrong from memory (wrong names, wrong parameter names, missed disposal,
 wrong result ordering). Use the exact contracts below.
 
+## Step 0: Inspect the project first
+
+1. Resolved version:
+   `dart pub deps --style=compact | grep '^- dart_helper_utils '`
+   (`flutter pub deps` in a Flutter app). This skill documents 7.x;
+   `preserveOrder` and the typed `executionHistory` are 7.0 additions, and
+   `TimeUtils.throttle` had a DIFFERENT signature in 5.x.
+2. In Flutter, find where the enclosing State/BLoC disposes resources and
+   wire `dispose()` of any Debouncer/DebouncedCallback/Throttler/
+   ThrottledCallback there; creating them per build is a leak.
+
 ## Choosing the right primitive
 
 | Need | Use |
 |---|---|
 | Collapse a burst into one trailing call (search input) | `TimeUtils.debounce(fn, duration)` or a `Debouncer` you manage |
-| At most one call per interval (scroll, resize) | `TimeUtils.throttle(fn, interval, trailing: ...)` |
+| At most one call per interval (scroll, resize) | `TimeUtils.throttle(fn, interval, trailing: ...)` or a `Throttler` you manage |
 | Cap a STREAM's event rate | `stream.rateLimit(maxEvents, window)` - overflow events are DROPPED, not queued |
 | Batch stream events by count / by time | `bufferCount(n)` / `window(duration)` |
-| Hold stream events until ready | `stream.asPausable()` |
+| Hold stream events while the consumer is busy | `stream.asPausable()` |
 | Late subscribers need the last value | `stream.withLatestValue()` |
 | Bound how many futures run at once | `thunks.waitConcurrency(concurrency: 5)` or `items.mapConcurrent(fn, parallelism: 3)`; add `preserveOrder: true` for input-order results |
 | Retry a flaky async call | `(() => call()).retry(retries: 3)` |
@@ -41,6 +52,8 @@ debounced.dispose();  // REQUIRED cleanup (idempotent)
 
 - Returned type is `DebouncedCallback` (`call`, `flush`, `cancel`,
   `dispose`, `isRunning`, `isDisposed`).
+- `immediate: true` runs the FIRST call of a burst and skips the trailing
+  call; a `maxWait` timer can still fire during a long burst.
 - For pause/resume, observability, or history, construct `Debouncer`
   directly: `run(action)`, `flush()`, `tryFlush()`, `runIfNotPending()`,
   `cancel()`, `reset()`, `pause()`, `resume()`, `dispose()`, plus
@@ -53,9 +66,10 @@ debounced.dispose();  // REQUIRED cleanup (idempotent)
   maps.
 - `DebouncerState` has value equality (`==`/`hashCode`) and `copyWith`; since
   7.0 it is a plain immutable class, not an `Equatable`.
-- `Debouncer` validates `delay > 0`, `maxWait > delay`, and throws
-  `StateError` if used after `dispose()`. `stateStream` is closed by
-  `dispose()` - in Flutter, dispose in `State.dispose()`.
+- `Debouncer` validates `delay > 0` and `maxWait > delay`. After
+  `dispose()`, `run`, `flush`, `cancel`, and the other members throw
+  `StateError`; only `dispose()` itself is safe to repeat. `stateStream` is
+  closed by `dispose()` - in Flutter, dispose in `State.dispose()`.
 
 ## Throttle
 
@@ -73,6 +87,11 @@ throttled.dispose();  // REQUIRED cleanup
 
 - Returned type is `ThrottledCallback` - NOT `ThrottledFunction`; `cancel`
   and `dispose` are separate members and dispose is the terminal one.
+- For a throttler you own, construct
+  `Throttler(interval: ..., leading: true, trailing: false, onError: ...)`
+  and use `run(action)`, `cancel()`, `dispose()`, `isThrottled`, and
+  `isDisposed`. `run` after `dispose()` throws `StateError`; `cancel()` and
+  `dispose()` are no-ops then.
 - Set `trailing: true` when the LAST call of a burst must run; the default
   leading-only mode silently drops it.
 - Errors (sync or async) go to `onError`; without one they surface in the
@@ -90,13 +109,16 @@ throttled.dispose();  // REQUIRED cleanup
   propagate to it; each broadcast listener gets its own budget, and the
   result is broadcast when the source is.
 - `asPausable()` returns `PausableStream<T>`: listen on `.stream`, control
-  with `pause()`/`resume()` (events are held with backpressure, not lost);
-  cleanup happens when the subscription on `.stream` is cancelled.
+  with `pause()`/`resume()`. While paused, events are BUFFERED IN MEMORY and
+  delivered in order on `resume()`; the source keeps producing, so this is
+  not backpressure and an endless source grows the buffer. Cleanup happens
+  when the subscription on `.stream` is cancelled.
 - `withLatestValue()` - behavior-subject wrapper; internally broadcast.
 - Error recovery on `Stream<T>`: `replaceOnError({required T defaultValue})`
   (emit default, then close) and `completeOnError()` (swallow, close).
-- RETRY TRAP: `stream.retry(...)` on an already-listened single-subscription
-  stream throws `StateError`. For single-subscription sources, retry the
+- RETRY TRAP: `stream.retry(...)` can only retry BROADCAST streams. On any
+  single-subscription stream, even a fresh one, the first retry throws
+  `StateError` because the stream cannot be listened to twice. Retry the
   FACTORY instead:
 
 ```dart
@@ -157,15 +179,6 @@ final pages = await urls.mapConcurrent(
   `executionDurations(tasks)`, `compareExecutionTimes(taskA:, taskB:)`,
   `runPeriodically(interval:, onExecute: (timer, count) {...})`.
 
-## Step 0: Inspect the project first
-
-1. Resolved version: `grep -A2 'dart_helper_utils' pubspec.lock` (this skill
-   documents 7.x; `preserveOrder` and typed `executionHistory` are 7.0
-   additions, and TimeUtils.throttle had a DIFFERENT signature in 5.x).
-2. In Flutter, find where the enclosing State/BLoC disposes resources and
-   wire `dispose()` of any Debouncer/DebouncedCallback/ThrottledCallback
-   there; creating them per-build is a leak.
-
 ## Verification
 
 - `dart analyze` the touched paths; run the project's tests.
@@ -176,9 +189,11 @@ final pages = await urls.mapConcurrent(
 
 ## Failure handling
 
-- "Stream has already been listened to" or a StateError naming the retry
-  extension: you retried a listened single-subscription stream - switch to
-  the factory form above.
+- "Stream has already been listened to" or a StateError from the retry
+  extension: you retried a single-subscription stream - switch to the
+  factory form above.
+- `StateError` mentioning dispose: a Debouncer or Throttler was used after
+  `dispose()`; check the owner's lifecycle.
 - Results in unexpected order after waitConcurrency/mapConcurrent: that is
   the documented completion-order default; pass `preserveOrder: true`.
 - Undefined member errors: check the resolved version; 6.x lacks the 7.0
@@ -186,3 +201,9 @@ final pages = await urls.mapConcurrent(
   (migrate-dart-helper-utils-v5-to-v6).
 - For non-async utility APIs (strings, maps, dates, formatting), use the
   use-dart-helper-utils skill.
+
+## When NOT to use
+
+- A project that does not depend on dart_helper_utils: do not add the
+  package only for one debounce or throttle; a `Timer` or the project's
+  existing reactive library is enough.

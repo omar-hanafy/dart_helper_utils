@@ -1,6 +1,6 @@
 ---
 name: use-dart-helper-utils
-description: Use when writing or reviewing Dart/Flutter code that uses the dart_helper_utils package - deep map utilities (flatMap, unflatten, getPath, setPath, deepMerge), string casing/slugify/masking/parseDuration/truncate, MIME filename checks, iterable chunks/windowed/partition/distinctBy/swapped, number stats and HTTP status helpers, DateTime and Duration extensions (isSameDayAs, addMonths, calendar-day arithmetic), intl formatting wrappers (formatAsReadableNumber, dateFormat, pluralize), Uri rebuild, or deciding between dart_helper_utils and direct collection/intl/convert_object/stringo imports.
+description: Use when writing or reviewing Dart/Flutter code in a project that depends on the dart_helper_utils package - deep map utilities (flatMap, unflatten, getPath, setPath, deepMerge), string casing/slugify/masking/parseDuration/truncate, MIME filename checks, iterable chunks/windowed/partition/distinctBy/swapped, number stats and HTTP status helpers, DateTime and Duration extensions (isSameDayAs, addMonths, calendar-day arithmetic), intl formatting wrappers (formatAsReadableNumber, dateFormat, pluralize), Uri rebuild, or deciding between dart_helper_utils and direct collection/intl/convert_object/stringo imports.
 ---
 
 # Use dart_helper_utils correctly
@@ -25,17 +25,18 @@ across them - use the exact names below instead of memory.
 
 Consequences:
 
-- Do NOT add `collection` or `convert_object` imports next to a DHU import;
-  the DHU import already provides them and duplicate imports invite
-  ambiguous-extension errors with pre-6 DHU code.
+- Do NOT add `collection`, `convert_object`, or `stringo` imports next to a
+  DHU import; the DHU import already provides them, and `dart analyze`
+  reports the extra import as `unnecessary_import`.
 - Conversion questions (getInt, fromJson factories, ConvertConfig, enum
   parsing) belong to convert_object. If the convert-object plugin is
   installed, its parse-with-convert-object skill is the deeper source.
 
 ## Step 0: Inspect the project first
 
-1. Resolved version: `grep -A2 'dart_helper_utils' pubspec.lock`. This skill
-   documents 7.x. For a 6.x project, use the
+1. Resolved version: `dart pub deps --style=compact | grep '^- dart_helper_utils '`
+   (`flutter pub deps` in a Flutter app) prints `- dart_helper_utils 7.0.0 [...]`.
+   This skill documents 7.x. For a 6.x project, use the
    migrate-dart-helper-utils-v6-to-v7 skill before writing new code (it is
    mostly `dart fix --apply`); for 5.x or older, start with
    migrate-dart-helper-utils-v5-to-v6.
@@ -64,7 +65,7 @@ Consequences:
 | First match or null | `find` (removed 7.0) | `iterable.firstWhereOrNull(test)` (collection) |
 | Blank string check | `isEmptyOrNull` on `String?` (deprecated 7.0) | `text.isBlank` / `text.isNotBlank` (stringo) |
 
-## Casing, slugify, masking (all on String)
+## Casing, slugify, truncating, masking (stringo)
 
 Since DHU 6.1.0 these come from the re-exported `stringo` package. The one
 DHU import still reaches them - do NOT add a `stringo` import or dependency to
@@ -79,14 +80,21 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
   `'the lord of the rings'.toTitleCase` gives `'The Lord of the Rings'`.
 - `slugify()` is a method (`separator` param). ASCII-only: non-ASCII letters
   are DROPPED, not transliterated - do not use it for i18n slugs.
-- `maskEmail` (getter) keeps the first two chars of the local part
-  (`'johndoe@gmail.com'` becomes `'jo****@gmail.com'`); returns the original
-  string unchanged when it is not a valid email.
 - `truncate(length)` counts the suffix AGAINST `length` (stringo 2+):
   `'Hello World'.truncate(5)` is `'He...'`, never longer than `length`. It
   only truncates when the string is longer than `length`.
-- On `String?`, `mask(...)` and `insert(...)` return `String?`; append `?? ''`
-  where a `String` is required.
+- `truncate`, `mask`, `insert`, `removeSurrounding`, `replaceAfter`, and
+  `replaceBefore` are declared only on `String?` and return `String?` even
+  on a non-null `String` (`final String t = s.truncate(5);` does not
+  compile). Append `?? ''`, or call `Stringo.truncate(s, 5)`, which returns
+  `String`.
+
+## Validators and MIME checks (dart_helper_utils, not stringo)
+
+- `maskEmail` (getter) keeps the first two chars of the local part, or one
+  when the local part has two chars or fewer (`'johndoe@gmail.com'` becomes
+  `'jo****@gmail.com'`); it returns a non-email string unchanged and `''`
+  for `null`.
 - MIME checks are filename/extension based getters on `String?`: `isImage`,
   `isVideo`, `isPDF`, `isJSON`, ... They do not read file contents unless you
   pass `headerBytes` to `mimeType()`. Office checks are precise since 7.0:
@@ -94,7 +102,8 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
   `isWord` / `isExcel` / `isPowerPoint` for either format.
 - `isValidPhoneNumber` is a permissive "looks like a phone number" check
   (optional `+`, 3+ digits/spaces/hyphens/parentheses) for both `String` and
-  `String?`. For anything stricter, validate with your own rule.
+  `String?`. For the stricter North-American pattern 6.x applied to
+  `String?`, match `patternValidPhoneNumber`.
 
 ## Map and collection semantics worth knowing
 
@@ -110,7 +119,9 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
   `Iterable<num>` directly; `percentile(90)` takes the 0-100 range (v6 change
   from 0-1). On `Iterable<int>`, `mean`/`median`/`variance`/
   `standardDeviation` return exact `double`s (`[1, 2].mean` is `1.5`; 6.x
-  truncated); `mode` and `percentile` return elements, so they stay `int`.
+  truncated); `percentile` returns an `int` element, and `mode` returns a
+  `List<int>` of every most-frequent value (`[1, 1, 2, 2].mode` is
+  `[1, 2]`).
 
 ## Dates and durations
 
@@ -121,7 +132,12 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
   `addBusinessDays`, `daysUpTo`) moves by CALENDAR days and keeps the
   wall-clock time across DST; `add(Duration(days: 1))` is the exact-24-hour
   alternative. `addHours` and smaller add exact durations.
-- `date.isBetween(start, end)` is start-INclusive, end-EXclusive by default.
+- `previousMonth`, `nextMonth`, `firstDayOfMonth`, `lastDayOfMonth`, and the
+  `startOf*` getters return MIDNIGHT (`DateTime(2024, 1, 31, 15).nextMonth`
+  is `2024-02-01 00:00`). For the same day and time next month, use
+  `addMonths(1)`.
+- `date.isBetween(start, end)` is start-INclusive, end-EXclusive by default
+  and throws `ArgumentError` when `start` is after `end`.
 - `daysInMonth` returns a full CALENDAR GRID (padded to whole Mon-Sun weeks),
   not just the month's days - use `lastDayOfMonth.day` for the day count.
 - `addBusinessDays(n)` skips weekends (negative n supported).
@@ -136,9 +152,12 @@ ONLY these helpers can depend on `stringo` alone; it is zero-dependency.)
   `formatAsCurrency`, `formatAsCompact`, `formatAsPercentage` on num.
 - `dateTime.format('yMMMd')` plus ~30 `formatAsX` shortcuts
   (`formatAsyMMMMd`, `formatAsEEEE`, ...).
-- `'string'.dateFormat([locale])` returns a `DateFormat` for that string.
+- `'yyyy-MM-dd'.dateFormat([locale])` returns a `DateFormat` whose pattern
+  is the receiver string.
 - `count.pluralize(other: 'items', one: 'item')` and
-  `'name'.genderSelect(...)` wrap Intl.
+  `gender.genderSelect(female: 'she', male: 'he', other: 'they')` wrap Intl;
+  the receiver of `genderSelect` is the gender value (`'female'`, `'male'`,
+  or `'other'`).
 
 ## Verification
 
@@ -152,11 +171,13 @@ errors on undefined members mean a wrong name or a pre-6 DHU version).
   resolved package version first (`pubspec.lock`); 6.x lacks the 7.0
   additions (`isSameMinuteAs`, `addMonths`, `swapped`, `isFuture`, ...) and
   5.x has different names (see the migrate skills).
-- `deprecated_member_use` warnings on dart_helper_utils members: the code
-  uses a 7.0 alias; run `dart fix --apply`.
-- Ambiguous-extension errors: the file probably imports `collection`,
-  `convert_object`, or an old DHU alongside the DHU import - keep exactly one
-  provider per file.
+- `deprecated_member_use` infos on dart_helper_utils members: the code uses
+  a 7.0 alias; run `dart fix --apply`.
+- Ambiguous-extension errors come from another package, or the project's own
+  extensions, declaring the same member name on the same type; disambiguate
+  with `hide` on one import or an explicit extension override. A direct
+  `collection`/`convert_object`/`stringo` import beside the DHU import is
+  only an `unnecessary_import` info; remove it.
 - Anything about debouncing, throttling, streams, or bounded-concurrency
   futures: use the async-with-dart-helper-utils skill; those APIs have
   lifecycle rules this skill does not cover.

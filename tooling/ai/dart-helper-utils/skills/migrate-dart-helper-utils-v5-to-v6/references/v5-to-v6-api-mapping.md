@@ -42,9 +42,9 @@ Verified against the repository's migration_guides.md and the 6.x source.
 | `map.getString('k', altKeys: [...])` | `map.getString('k', alternativeKeys: [...])` (every typed getter) |
 | `map.firstValueForKeys('k', altKeys: a)` | `map.tryGetRaw('k', alternativeKeys: a)` (first NON-null wins) |
 | `iterable.firstElementForIndices(...)` | `tryGetX(i, alternativeIndices: [...])` typed getters |
-| `map.flatJson(...)` | `map.flatMap(...)` |
-| `map.makeEncodable` / `encodableCopy` | `map.toJsonSafe()` / `map.toJsonMap()` |
-| `map.safelyEncodedJson` / `encodedJsonString` | `map.toJsonString(indent: '  ')` / `map.encodeWithIndent` |
+| `map.flatJson(...)` (pre-2.0 name) | `map.flatMap(...)` |
+| `map.encodableCopy` (pre-2.0: `makeEncodable`) | `map.toJsonSafe()` / `map.toJsonMap()` |
+| `map.encodedJsonString` (pre-2.0: `safelyEncodedJson`) | `map.toJsonString(indent: '  ')` / `map.encodeWithIndent` |
 | `list.convertTo<T>()` | `convertToList<T>(list)` (`Set.convertTo` unchanged) |
 | `iter.firstOrNull`, `lastOrNull`, `firstWhereOrNull`, `whereNotNull`, `mapIndexed`, `forEachIndexed`, `whereIndexed`, `groupBy` | same names from re-exported `package:collection` (no code change with a single DHU import) |
 | `iter.sortedDescending()` | `iter.sorted((a, b) => b.compareTo(a))` |

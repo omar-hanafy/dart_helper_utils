@@ -42,7 +42,7 @@ explicitly (`show ...`, or `Ext('x').member`).
   negates); anything else throws `FormatException`. Any `:` in the string
   selects the clock parser.
 - On `String?`: `isBlank`(g), `isNotBlank`(g), `toCharArray()` (by code
-  point), `insert(index, str)` (returns `String?`), `isPalindrome`(g),
+  point), `insert(index, str)`, `isPalindrome`(g),
   `isAlphanumeric`(g), `hasSpecialChars`(g), `startsWithNumber`(g),
   `containsDigits`(g), `isValidUsername`(g), `isValidCurrency`(g),
   `isValidPhoneNumber`(g) (permissive; same answer as on `String`),
@@ -52,17 +52,22 @@ explicitly (`show ...`, or `Ext('x').member`).
   `hasMatch(pattern, {multiLine, caseSensitive, unicode, dotAll})`,
   `equalsIgnoreCase(other)`, `removeSurrounding(delimiter)`,
   `replaceAfter`/`replaceBefore`, `orEmpty`(g), `ifEmpty(action)`,
-  `lastIndex`(g), `limitFromEnd(n)`/`limitFromStart(n)`,
+  `lastIndex`(g) (the last character, not an index),
+  `limitFromEnd(n)`/`limitFromStart(n)`,
   `truncate(int length, {String suffix = '...'})` (suffix counts against
   `length`: `'Hello World'.truncate(5)` is `'He...'`),
   `wrapString({wordCount, wrapEach, delimiter})`.
-- `isUuid`(g), `maskEmail`(g),
-  `mask({visibleStart = 0, visibleEnd = 0, char = '*'})` (returns `String?`
-  on a `String?` receiver).
+- `isUuid`(g), `maskEmail`(g) (keeps two chars of the local part, one when
+  it has two or fewer), `mask({visibleStart = 0, visibleEnd = 0,
+  char = '*'})`.
+- `insert`, `mask`, `truncate`, `removeSurrounding`, `replaceAfter`, and
+  `replaceBefore` exist only on `String?` and return `String?` for every
+  receiver, including a non-null `String`; append `?? ''` or use the
+  `Stringo.truncate(text, n)`/`Stringo.mask(...)` statics for a `String`.
 
 ## Casing (`String`, ALL getters except noted)
 
-`toWords`, `toPascalCase`, `toTitleCase`, `toCamelCase`, `toSnakeCase`,
+`toWords` (`List<String>`), `toPascalCase`, `toTitleCase`, `toCamelCase`, `toSnakeCase`,
 `toKebabCase`, `toScreamingSnakeCase`, `toScreamingKebabCase`,
 `toPascalSnakeCase`, `toPascalKebabCase`, `toTrainCase` (same output as
 `toPascalKebabCase`), `toCamelSnakeCase`, `toCamelKebabCase`, `toDotCase`,
@@ -114,8 +119,12 @@ now returns `'The Lord of the Rings'`.
     returns a new map.
   - `getPath(path, {delimiter = '.', parseIndices = true})` - supports
     `items[0].id`; null on miss.
-  - `setPath(path, value, {delimiter = '.', parseIndices = true})` - creates
-    intermediate maps/lists, pads lists with nulls, returns bool success.
+  - `setPath(path, value, {delimiter = '.', parseIndices = true})` - mutates
+    in place, creates intermediate maps/lists, pads lists with nulls, and
+    returns false for an unusable path. It throws `TypeError` when an
+    existing nested map's value type cannot hold the value
+    (`{'db': {'host': 'x'}}` is a `Map<String, String>` inside); use
+    `Map<String, dynamic>` or `Object?` maps, as `jsonDecode` returns.
 - Typed getters (`getInt`, `tryGetString`, `getList<T>`, ...) come from
   convert_object; `tryGetRaw(key, alternativeKeys: [...])` returns the first
   NON-null raw value.
@@ -154,7 +163,7 @@ now returns `'The Lord of the Rings'`.
   (401/403), `isValidationError` (422), `isRateLimitError` (429),
   `isTimeoutError` (408/504), `isConflictError` (409), `isNotFoundError`,
   `isRetryableError` (408/429/503/504), `statusCodeRetryDelay` (408 5s,
-  429 1m, 503 5m, 504 10s, else zero unless retryable),
+  429 1m, 503 5m, 504 10s, zero for every other code),
   `toHttpStatusMessage`, `toHttpStatusUserMessage`, `toHttpStatusDevMessage`.
 - `num?`: `tryToInt()`, `tryToDouble()`,
   `percentage(total, {allowDecimals = true})`, `isZeroOrNull`(g),
@@ -183,7 +192,8 @@ now returns `'The Lord of the Rings'`.
   `median`(g), `mode`(g), `variance`(g), `standardDeviation`(g),
   `percentile(double p)` with p in 0-100. Mean, variance, and standard
   deviation are `double` everywhere; on `Iterable<int>` the median is a
-  `double` too, while `mode` and `percentile` stay `int`. `Iterable<num?>?.total`(g) treats
+  `double` too, `percentile` returns an `int` element, and `mode` returns a
+  `List<int>` of every most-frequent value. `Iterable<num?>?.total`(g) treats
   null as 0. Static twins on `NumbersHelper` (`safeDivide`, `mean`,
   `median`, `percentile(values, p)`, `gcd`, `isPerfectSquare`).
 - Top-level: `randomInRange(min, max, [seed])` (inclusive; throws when
@@ -197,7 +207,9 @@ now returns `'The Lord of the Rings'`.
   (`formatAsyMMMMd`, `formatAsEEEE`, `formatAsMMMEd`, `formatAsHms`,
   `formatAsyQQQ`, ...). On `DateTime?`: `tryFormat(pattern, [locale])`.
 - Navigation (each keeps the receiver's time zone; day steps are calendar
-  days that keep the wall-clock time across DST):
+  days that keep the wall-clock time across DST; the `startOf*`, month,
+  `firstDayOf*`, and `lastDayOf*` getters return midnight, so use
+  `addMonths(1)` for the same day and time next month):
   `startOfDay`(g)/`startOfMonth`(g)/`startOfYear`(g), `dateOnly`(g),
   `previousDay`(g)/`nextDay`(g),
   `previousWeek`(g)/`nextWeek`(g), `firstDayOfMonth`(g)/`lastDayOfMonth`(g),
@@ -211,7 +223,9 @@ now returns `'The Lord of the Rings'`.
   `addHours(n)`...`addMicroseconds(n)` and `subtractHours(n)`... (exact
   durations), `addBusinessDays(n)` (skips weekends, negatives ok),
   `min(other)`/`max(other)`, `roundTo(Duration)`/`floorTo`/`ceilTo` (on the
-  receiver's wall clock; whole-day steps match `startOfDay`),
+  receiver's wall clock; `floorTo(const Duration(days: 1))` equals
+  `startOfDay`; multi-day steps count calendar dates from 1970-01-01, a
+  Thursday, so use `firstDayOfWeek` for weeks),
   `clampBetween(a, b)`.
 - Queries: `isToday`(g), `isTomorrow`(g), `isYesterday`(g), `isPast`(g),
   `isFuture`(g), `isInPastWeek`(g), `isInThisMonth`(g), `isLeapYear`(g),
@@ -219,7 +233,8 @@ now returns `'The Lord of the Rings'`.
   `isSameWeekAs`, `isSameDayAs`, `isSameHourAs`, `isSameMinuteAs`,
   `isSameSecondAs`, `isSameMillisecondAs`, `isSameMicrosecondAs`,
   `isBetween(start, end, {inclusiveStart = true, inclusiveEnd = false,
-  ignoreTime = false, normalize = false})`, `passedDuration`(g)/
+  ignoreTime = false, normalize = false})` (throws `ArgumentError` when
+  start is after end), `passedDuration`(g)/
   `remainingDuration`(g), `passedDays`(g)/`remainingDays`(g) (calendar
   days), `daysDifferenceTo([other])`, `daysUpTo(end)` (DST-aware iterable),
   `calculateAge()` -> `({int years, int months, int days})` record.
@@ -262,12 +277,16 @@ Iterable query values expand to repeated keys (`?ids=1&ids=2`).
   `formatAsScientific`, `formatWithCustomPattern(pattern, {locale})`,
   `formatAsReadableNumber({locale, decimalDigits = 2, groupingSeparator,
   decimalSeparator, trimTrailingZeros = false})`.
-- String: `symbolCurrencyFormat`(g), `simpleCurrencyFormat`(g),
-  `compactCurrencyFormat`(g), `numberFormat({locale})` on `String?`,
-  `dateFormat([locale])` on `String?` -> `DateFormat`.
+- String (the receiver is the currency symbol or name; all methods returning
+  `NumberFormat`): `symbolCurrencyFormat({locale, name, decimalDigits,
+  customPattern})`, `simpleCurrencyFormat({locale, decimalDigits})`,
+  `compactCurrencyFormat({locale, decimalDigits})`. On `String?`:
+  `numberFormat({locale})`, and `dateFormat([locale])` -> `DateFormat` with
+  the receiver as its pattern.
 - Plural/gender: `count.pluralize({required other, zero, one, two, few,
   many, locale, ...})`, `count.getPluralCategory(...)`,
-  `'f'.genderSelect({required other, female, male, ...})`,
+  `gender.genderSelect({required other, female, male, ...})` (the receiver
+  is the gender: `'female'`, `'male'`, or `'other'`),
   `'locale'.setAsDefaultLocale()`, `translate({...})`.
 - Bidi on String: `stripHtmlIfNeeded()`, `startsWithLtr`/`startsWithRtl`,
   `hasAnyLtr`/`hasAnyRtl`, `isRtlLanguage([lang])`, `enforceRtlInHtml()`,
@@ -283,9 +302,11 @@ Iterable query values expand to repeated keys (`?ids=1&ids=2`).
 `oneSecond`/`oneMinute`/`oneHour`/`oneDay`, `httpStatusMessages`/
 `httpStatusUserMessage`/`httpStatusDevMessage`, regex source constants
 (`regexValidEmail`, `regexValidIp4`, `regexValidUuid`, `regexValidHexColor`,
-...) and their precompiled `RegExp` twins (`patternValidEmail`,
-`patternValidIp4`, `patternValidUuid`, `patternValidUrl`, ...; prefer these
-over `RegExp(regexX)`, which recompiles on every call).
+...). The validator regexes have precompiled `RegExp` twins
+(`patternValidEmail`, `patternValidIp4`, `patternValidUuid`,
+`patternValidUrl`, `patternValidPhoneNumber`, ...; prefer these over
+`RegExp(regexX)`, which recompiles on every call); the color regexes have
+none.
 
 ## Exceptions
 
