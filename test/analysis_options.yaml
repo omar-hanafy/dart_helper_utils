@@ -1,0 +1,42 @@
+# test/analysis_options.yaml - low-noise override for tests.
+# The analyzer applies the NEAREST options file up the tree, so this governs
+# everything under test/ while lib/ keeps the strict root rules.
+# Bug-catching rules (unawaited_futures, close_sinks, avoid_dynamic_calls in
+# lib) stay ON here unless listed below: an unawaited future in a test is a
+# real bug that makes the test lie.
+
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    # docs and API-shape rules have no business in tests
+    public_member_api_docs: false
+    comment_references: false
+    missing_code_block_language_in_doc_comment: false
+    prefer_asserts_with_message: false
+    avoid_positional_boolean_parameters: false
+    avoid_equals_and_hash_code_on_mutable_classes: false
+    avoid_implementing_value_types: false
+    always_put_required_named_parameters_first: false
+    type_annotate_public_apis: false
+    # print-debugging in tests is fine
+    avoid_print: false
+    # explicit arguments in tests are a feature, not a smell
+    avoid_redundant_argument_values: false
+    prefer_const_constructors: false
+    # subscriptions and controllers are torn down by the test or addTearDown
+    cancel_subscriptions: false
+    close_sinks: false
+    # tests probe dynamic and loosely typed values on purpose
+    avoid_dynamic_calls: false
+    avoid_annotating_with_dynamic: false
+    cast_nullable_to_non_nullable: false
+    # tests deliberately exercise thrown errors and literal expressions
+    avoid_catching_errors: false
+    literal_only_boolean_expressions: false
+    unnecessary_statements: false
+    # readability over ceremony in test bodies
+    discarded_futures: false
+    prefer_final_locals: false
+    prefer_final_in_for_each: false
+    unnecessary_lambdas: false

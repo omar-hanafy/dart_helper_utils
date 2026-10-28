@@ -1,0 +1,12 @@
+# example/analysis_options.yaml - relaxed override for the package example.
+# Examples are documentation: they print and stay simple.
+
+include: ../analysis_options.yaml
+
+linter:
+  rules:
+    public_member_api_docs: false
+    comment_references: false
+    avoid_print: false
+    prefer_asserts_with_message: false
+    discarded_futures: false
