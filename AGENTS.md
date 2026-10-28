@@ -27,7 +27,7 @@ requires a PERFECT pana score on PRs ("CI / Pana" is a required check, pinned
 pana version, `--exit-code-threshold 0`). Avoid changes that cost points
 (missing doc comments, dependency issues, format drift).
 
-`analysis_options.yaml` is strict (strict-casts/inference/raw-types and 81
+`analysis_options.yaml` is strict (strict-casts/inference/raw-types and 80
 validated rules); `test/` and `example/` relax only doc and API-shape rules.
 Never weaken a rule to get a green run; fix the code, or add an
 `// ignore:` whose preceding comment says why (`document_ignores` enforces
